@@ -1,0 +1,48 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+.idea/
+cmake-build-debug/
+cmake-build-release/
+
+*.user
+build-*-Debug/
+build-*-Release*/
+
+version.h
+/build/cmake/
+/build/output/
+
+/build/codelite/debug/
+/build/codelite/release/
+/build/codelite/.codelite/
+/build/codelite/.clang/
+
+script_engine/c_api_toluapp/c_api_toluapp.cpp
+script_engine/c_api_toluapp/c_api_toluapp.h
