@@ -1,0 +1,2 @@
+type,name,xpath,group,virtual,with_default,default
+int,conf_check_interval,/conf/conf_check_interval,0,1,1,0

@@ -1,0 +1,83 @@
+#ifndef LOG_ENGINE_INC_CONSOLE_LOG_ENGINE_H_
+#define LOG_ENGINE_INC_CONSOLE_LOG_ENGINE_H_
+
+#include <log4cplus/consoleappender.h>
+#include <log4cplus/logger.h>
+#include "log_engine_interface.h"
+
+/**
+ * @brief 方便测试用例中使用的console log engine
+ */
+class ConsoleLogEngine : public LogEngineInterface
+{
+public:
+    ConsoleLogEngine() : log_engine_ctx_(), logger_()
+    {
+        // 定义Logger
+        logger_ = log4cplus::Logger::getInstance("console_logger");
+
+        // 定义一个控制台的Appender
+        log4cplus::SharedAppenderPtr console_appender(new log4cplus::ConsoleAppender());
+
+        // 将需要关联Logger的Appender添加到Logger上
+        logger_.addAppender(console_appender);
+
+        // 所有的日志级别都打印
+        logger_.setLogLevel(log4cplus::ALL_LOG_LEVEL);
+    }
+
+    virtual ~ConsoleLogEngine()
+    {
+        log4cplus::Logger::shutdown(); // 放在最后关闭，使得在其它模块的Release接口中也能正常打印日志
+    }
+
+    ///////////////////////// ModuleInterface /////////////////////////
+    const char* GetVersion() const override
+    {
+        return NULL;
+    }
+
+    const char* GetLastErrMsg() const override
+    {
+        return NULL;
+    }
+
+    void Release() override
+    {
+    }
+
+    int Initialize(const void* ctx) override
+    {
+        return 0;
+    }
+
+    void Finalize() override
+    {
+    }
+
+    int Activate() override
+    {
+        return 0;
+    }
+
+    void Freeze() override
+    {
+    }
+
+    ///////////////////////// LogEngineInterface /////////////////////////
+    const log4cplus::Logger& GetLogger() const override
+    {
+        return logger_;
+    }
+
+    int Reload() override
+    {
+        return 0;
+    }
+
+private:
+    LogEngineCtx log_engine_ctx_;
+    log4cplus::Logger logger_;
+};
+
+#endif // LOG_ENGINE_INC_CONSOLE_LOG_ENGINE_H_

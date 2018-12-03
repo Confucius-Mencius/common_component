@@ -1,0 +1,8 @@
+#ifndef MSG_CODEC_CENTER_SRC_EXPORTER_H_
+#define MSG_CODEC_CENTER_SRC_EXPORTER_H_
+
+#include "module_util.h"
+
+MODULE_EXPORTER_DECL();
+
+#endif // MSG_CODEC_CENTER_SRC_EXPORTER_H_

@@ -1,0 +1,8 @@
+#ifndef EVENT_CENTER_SRC_EXPORTER_H_
+#define EVENT_CENTER_SRC_EXPORTER_H_
+
+#include "module_util.h"
+
+MODULE_EXPORTER_DECL();
+
+#endif // EVENT_CENTER_SRC_EXPORTER_H_

@@ -1,0 +1,8 @@
+#ifndef TIME_SERVICE_SRC_EXPORTER_H_
+#define TIME_SERVICE_SRC_EXPORTER_H_
+
+#include "module_util.h"
+
+MODULE_EXPORTER_DECL();
+
+#endif // TIME_SERVICE_SRC_EXPORTER_H_

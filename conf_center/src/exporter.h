@@ -1,0 +1,8 @@
+#ifndef CONF_CENTER_SRC_EXPORTER_H_
+#define CONF_CENTER_SRC_EXPORTER_H_
+
+#include "module_util.h"
+
+MODULE_EXPORTER_DECL();
+
+#endif // CONF_CENTER_SRC_EXPORTER_H_

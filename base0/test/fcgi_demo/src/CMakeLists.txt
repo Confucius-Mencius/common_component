@@ -1,0 +1,37 @@
+###############################################################################
+# author: BrentHuang (guang11cheng@qq.com)
+###############################################################################
+
+set(EXE_NAME ${PROJ_NAME})
+
+###############################################################################
+# lib version
+set(BUILD_VERSION 1.0.0)
+CreateVersionFile(${CMAKE_CURRENT_SOURCE_DIR} ${PROJ_NAME} ${EXE_NAME})
+
+###############################################################################
+# include/link dir
+include_directories(${PROJ_INC_DIR} ${BASE_LIB_INC_DIR} ${FCGI_INC_DIR} ${GPERFTOOLS_INC_DIR})
+link_directories(${BASE_LIB_LIB_DIR} ${FCGI_LIB_DIR} ${GPERFTOOLS_LIB_DIR})
+
+###############################################################################
+# target
+file(GLOB HEADERS *.h ${PROJ_INC_DIR}/*.h)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} CUR_DIR_SRCS)
+add_executable(${EXE_NAME} ${HEADERS} ${CUR_DIR_SRCS})
+
+###############################################################################
+# library depend
+target_link_libraries(${EXE_NAME} ${BASE_LIB_LIB_NAME} ${FCGI_LIB_NAME} ${GPERFTOOLS_LIB_NAME} pthread)
+
+###############################################################################
+# output dir
+set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR})
+
+###############################################################################
+# install dir
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    install(TARGETS ${EXE_NAME} RUNTIME DESTINATION lib/debug)
+elseif (${CMAKE_BUILD_TYPE} STREQUAL "Release")
+    install(TARGETS ${EXE_NAME} RUNTIME DESTINATION lib/release)
+endif ()

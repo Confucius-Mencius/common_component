@@ -1,0 +1,8 @@
+#ifndef THREAD_CENTER_SRC_EXPORTER_H_
+#define THREAD_CENTER_SRC_EXPORTER_H_
+
+#include "module_util.h"
+
+MODULE_EXPORTER_DECL();
+
+#endif // THREAD_CENTER_SRC_EXPORTER_H_

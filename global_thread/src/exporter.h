@@ -1,0 +1,8 @@
+#ifndef GLOBAL_THREAD_SRC_EXPORTER_H_
+#define GLOBAL_THREAD_SRC_EXPORTER_H_
+
+#include "module_util.h"
+
+MODULE_EXPORTER_DECL();
+
+#endif // GLOBAL_THREAD_SRC_EXPORTER_H_

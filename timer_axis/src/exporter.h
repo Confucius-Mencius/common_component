@@ -1,0 +1,8 @@
+#ifndef TIMER_AXIS_SRC_EXPORTER_H_
+#define TIMER_AXIS_SRC_EXPORTER_H_
+
+#include "module_util.h"
+
+MODULE_EXPORTER_DECL();
+
+#endif // TIMER_AXIS_SRC_EXPORTER_H_

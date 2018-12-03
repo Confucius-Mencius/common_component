@@ -1,0 +1,53 @@
+###############################################################################
+# author: BrentHuang (guang11cheng@qq.com)
+###############################################################################
+
+cmake_minimum_required(VERSION 2.8)
+
+###############################################################################
+# project name
+set(PROJ_NAME thread_center)
+project(${PROJ_NAME} CXX)
+
+set(CXX_LANGUAGE on CACHE INTERNAL "this is a cxx language project")
+
+###############################################################################
+# third party
+set(THIRD_PARTY_DIR ${PROJECT_SOURCE_DIR}/../third_party)
+include(${THIRD_PARTY_DIR}/cmake/third_party.cmake)
+
+###############################################################################
+# 启用-Werror
+SetCompileFlags(TRUE)
+
+###############################################################################
+# output dir
+SetOutputDir(${PROJECT_SOURCE_DIR}/../build/output "")
+
+###############################################################################
+# 打印编译选项
+ShowBuildOptions()
+
+###############################################################################
+# external dependence
+set(BASE_INC_DIR ${PROJECT_SOURCE_DIR}/../base/inc)
+set(BASE_LIB_DIR ${OUTPUT_DIR})
+set(BASE_LIB_NAME base)
+
+set(LOG_ENGINE_INC_DIR ${PROJECT_SOURCE_DIR}/../log_engine/inc)
+set(MSG_CODEC_CENTER_INC_DIR ${PROJECT_SOURCE_DIR}/../msg_codec_center/inc)
+set(TIMER_AXIS_INC_DIR ${PROJECT_SOURCE_DIR}/../timer_axis/inc)
+set(TIME_SERVICE_INC_DIR ${PROJECT_SOURCE_DIR}/../time_service/inc)
+set(RANDOM_ENGINE_INC_DIR ${PROJECT_SOURCE_DIR}/../random_engine/inc)
+set(TRANS_CENTER_INC_DIR ${PROJECT_SOURCE_DIR}/../trans_center/inc)
+set(CONN_CENTER_MGR_INC_DIR ${PROJECT_SOURCE_DIR}/../conn_center_mgr/inc)
+set(CLIENT_CENTER_MGR_INC_DIR ${PROJECT_SOURCE_DIR}/../client_center_mgr/inc)
+
+###############################################################################
+# project inc dir
+set(PROJ_INC_DIR ${PROJECT_SOURCE_DIR}/inc)
+
+###############################################################################
+# sub dir
+add_subdirectory(src)
+add_subdirectory(test)

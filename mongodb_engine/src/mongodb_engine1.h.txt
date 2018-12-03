@@ -1,0 +1,60 @@
+#ifndef DB_ENGINE_SRC_MONGODB_ENGINE1_H_
+#define DB_ENGINE_SRC_MONGODB_ENGINE1_H_
+
+#include <string>
+#include <map>
+#include <vector>
+#include <semaphore.h>
+#include "mongo/client/dbclient.h"
+#include "mongo/client/dbclientinterface.h"
+
+using namespace std;
+using namespace mongo;
+
+//函数返回0:成功 >0 出错
+class cmongo
+{
+public:
+    //默认构造函数，默认连接数为1
+    cmongo();
+    //传入连接数到构造函数，默认连接数为size
+    cmongo(int size);
+    //析构函数
+    ~cmongo();
+public:
+    //设置tcp读写超时时间
+    int set_wr_timeout(double t);
+    //连接
+    int conn(string mhost = "127.0.0.1", int mport = 27017);
+    //设置db collection
+    int setdb(string mdb, string mcollection);
+
+    int setindex(string key);
+    //查询
+    int get(map<string, string>& out, vector<string> in, string key, string key_val);
+    //投递一批要查询的字段，fields为要查询哪些字段
+    int gets(map<string, map<string, string> >& rout, vector<string> fields, vector<string> in, string key);
+    //dump key-value dumpkey对应一个value
+    int dumpkey(map<string, string>& rout, string key, string val);
+    //dump key->map<key,value> dumpkey对应一组value
+    int dumpvals(map<string, map<string, string> >& rout, vector<string> in, string key);
+    //写入
+    int set(map<string, string> in, string key, string key_val);
+    //批量写入
+    //更新接口，批量更新key="id"
+    //  "123456":<key,value>,<key,value>
+    //  "123457":<key,value>,<key,value>
+    int sets(map<string, map<string, string> > in, string key);
+    //删除
+    int remove(string key, string key_val);
+private:
+    string doc;
+    //tcp读写超时时间
+    double wr_timeout;
+    pthread_mutex_t _jobmux;
+    sem_t _jobsem;
+    map<DBClientConnection*, bool> _joblst;
+    pthread_mutex_t _dbmux;
+};
+
+#endif // DB_ENGINE_SRC_MONGODB_ENGINE1_H_

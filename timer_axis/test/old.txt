@@ -1,0 +1,501 @@
+#include "timer_axis_test.h"
+#include "mock_timer_sink.h"
+#include "mock_timer_axis.h"
+#include "TimerAxis/TimerAssist.h"
+#include "MemUtil.h"
+#include "NumUtil.h"
+#include "MiscUtil.h"
+#include "Log/LogUtil.h"
+#include "TimerAxis/TimerAssist.h"
+
+using testing::NiceMock;
+using testing::Return;
+
+enum
+{
+    TIMER_ID_1 = 1,
+    TIMER_ID_2
+};
+
+static const TimerValue TIMER_INTERVAL_1 = 1000; // 1秒
+static const TimerValue TIMER_INTERVAL_2 = 1600; // 1.6秒
+
+TimerAxisTest::TimerAxisTest()
+{
+    timer_axis_ = NULL;
+    _timeService = NULL;
+}
+
+TimerAxisTest::~TimerAxisTest()
+{
+}
+
+void TimerAxisTest::SetUpTestCase()
+{
+    ASSERT_TRUE(START_LOG_SYSTEM("Log.properties"));
+}
+
+void TimerAxisTest::TearDownTestCase()
+{
+    STOP_LOG_SYSTEM();
+}
+
+void TimerAxisTest::SetUp()
+{
+    // timer axis
+    if (!loader_.Load("../libTimerAxis.so"))
+    {
+        FAIL() << loader_.GetLastErrDesc();
+    }
+
+    timer_axis_ = STATIC_CAST(ITimerAxis * , loader_.CreateModule());
+    if (NULL == timer_axis_)
+    {
+        FAIL() << loader_.GetLastErrDesc();
+    }
+
+    // time service
+    if (!_maTimeService.Load("../libTimeService.so"))
+    {
+        FAIL() << _maTimeService.GetLastErrDesc();
+    }
+
+    _timeService = STATIC_CAST(ITimeService * , _maTimeService.CreateModule());
+    if (NULL == _timeService)
+    {
+        FAIL() << _maTimeService.GetLastErrDesc();
+    }
+}
+
+void TimerAxisTest::TearDown()
+{
+    SAFE_RELEASE(timer_axis_);
+    SAFE_RELEASE(_timeService);
+}
+
+/**
+ * @brief 时间轴测试-接口基本功能测试，检查、添加、删除定时器
+ * @details
+ *  - Set Up:
+ 1，
+ *  - Expectation:
+ 1，
+ *  - Tear Down:
+ 1，
+ * @note
+ */
+void TimerAxisTest::Test001()
+{
+    TimerID id1 = TIMER_ID_1;
+    TimerValue interval1 = TIMER_INTERVAL_1;
+    const char desc1[] = "timer 1";
+
+    CMockTimerSink1 sink1;
+
+    EXPECT_FALSE(timer_axis_->IsTimerExist(&sink1, id1));
+
+    // 添加定时器
+    EXPECT_TRUE(timer_axis_->SetTimer(&sink1, id1, interval1, desc1));
+    EXPECT_TRUE(timer_axis_->IsTimerExist(&sink1, id1));
+
+    const TTimerInfo* timerInfo = timer_axis_->GetTimerInfo(&sink1, id1);
+    EXPECT_TRUE(timerInfo != NULL);
+    EXPECT_EQ(interval1, timerInfo->_interval);
+    EXPECT_STREQ(desc1, timerInfo->_desc.c_str());
+
+    // 定时器已经在了，再添加则失败
+    EXPECT_FALSE(timer_axis_->SetTimer(&sink1, id1, interval1, desc1));
+
+    for (i32 i = 0; i < 100; ++i)
+    {
+        // 移除定时器
+        timer_axis_->KillTimer(&sink1, id1);
+
+        timer_axis_->Schedule(interval1 + 1);
+
+        EXPECT_FALSE(timer_axis_->IsTimerExist(&sink1, id1));
+
+        EXPECT_TRUE(timer_axis_->SetTimer(&sink1, id1, interval1, desc1));
+        EXPECT_TRUE(timer_axis_->IsTimerExist(&sink1, id1));
+    }
+
+    // 移除定时器
+    timer_axis_->KillTimer(&sink1, id1);
+}
+
+/**
+ * @brief 时间轴测试-检查、添加、删除定时器，推动时间轴向前走
+ * @details
+ *  - Set Up:
+ 1，定时器回调能被正常触发
+ *  - Expectation:
+ 1，定时器回到次数正确，回调时间正确
+ *  - Tear Down:
+ 1，
+ * @note
+ */
+void TimerAxisTest::Test002()
+{
+    const i32 loopCount = 1000;
+    const TimerValue scheduleInterval = timer_axis_->GetScheduleInterval();
+
+    TimerID id1 = TIMER_ID_1;
+    TimerValue interval1 = TIMER_INTERVAL_1;
+    const char desc1[] = "timer 1";
+
+    TimerID id2 = TIMER_ID_2;
+    TimerValue interval2 = TIMER_INTERVAL_2;
+    const char desc2[] = "timer 2";
+
+    CMockTimerSink1 sink1;
+
+    i32 times1 = loopCount / CEIL<TimerValue>(interval1, scheduleInterval);
+    EXPECT_CALL(sink1, OnTimer(id1)).Times(times1);
+
+    i32 times2 = loopCount / CEIL<TimerValue>(interval2, scheduleInterval);
+    EXPECT_CALL(sink1, OnTimer(id2)).Times(times2);
+
+    EXPECT_FALSE(timer_axis_->IsTimerExist(&sink1, id1));
+    EXPECT_FALSE(timer_axis_->IsTimerExist(&sink1, id2));
+
+    // 添加定时器
+    EXPECT_TRUE(timer_axis_->SetTimer(&sink1, id1, interval1, desc1));
+    EXPECT_TRUE(timer_axis_->SetTimer(&sink1, id2, interval2, desc2));
+
+    EXPECT_TRUE(timer_axis_->IsTimerExist(&sink1, id1));
+    EXPECT_TRUE(timer_axis_->IsTimerExist(&sink1, id2));
+
+    const TTimerInfo* timerInfo1 = timer_axis_->GetTimerInfo(&sink1, id1);
+    EXPECT_TRUE(timerInfo1 != NULL);
+    EXPECT_EQ(interval1, timerInfo1->_interval);
+    EXPECT_STREQ(desc1, timerInfo1->_desc.c_str());
+
+    const TTimerInfo* timerInfo2 = timer_axis_->GetTimerInfo(&sink1, id2);
+    EXPECT_TRUE(timerInfo2 != NULL);
+    EXPECT_EQ(interval2, timerInfo2->_interval);
+    EXPECT_STREQ(desc2, timerInfo2->_desc.c_str());
+
+    // 定时器已经在了，再添加则失败
+    EXPECT_FALSE(timer_axis_->SetTimer(&sink1, id1, interval1, desc1));
+    EXPECT_FALSE(timer_axis_->SetTimer(&sink1, id2, interval2, desc2));
+
+    // 推动时间轴往前走
+    for (i32 i = 0; i < loopCount; ++i)
+    {
+        LOG_TRACE("loop: " << i);
+        timer_axis_->Schedule((i + 1) * scheduleInterval);
+    }
+
+    EXPECT_TRUE(timer_axis_->IsTimerExist(&sink1, id1));
+    EXPECT_TRUE(timer_axis_->IsTimerExist(&sink1, id2));
+
+    // 移除定时器
+    timer_axis_->KillTimer(&sink1, id1);
+    timer_axis_->KillTimer(&sink1, id2);
+}
+
+/**
+ * @brief 时间轴测试-在定时器回调过程中移除自己
+ * @details
+ *  - Set Up:
+ 1，在后续的时间轴推动中，定时器不会被回调
+ *  - Expectation:
+ 1，
+ *  - Tear Down:
+ 1，
+ * @note
+ */
+void TimerAxisTest::Test003()
+{
+    const i32 loopCount = 1000;
+    const TimerValue scheduleInterval = timer_axis_->GetScheduleInterval();
+
+    TimerID id1 = TIMER_ID_1;
+    TimerValue interval1 = TIMER_INTERVAL_1;
+    const char desc1[] = "timer 1";
+
+    TimerID id2 = TIMER_ID_2;
+    TimerValue interval2 = TIMER_INTERVAL_2;
+    const char desc2[] = "timer 2";
+
+    CMockTimerSink1 sink1;
+
+    CMockTimerSink2 sink2;
+    sink2.DelegateToFake(timer_axis_);
+
+    i32 times1 = loopCount / CEIL<TimerValue>(interval1, scheduleInterval);
+    EXPECT_CALL(sink1, OnTimer(id1)).Times(times1);
+
+    EXPECT_CALL(sink2, OnTimer(id2)).Times(1);
+
+    // 添加定时器
+    EXPECT_TRUE(timer_axis_->SetTimer(&sink1, id1, interval1, desc1));
+    EXPECT_TRUE(timer_axis_->SetTimer(&sink2, id2, interval2, desc2));
+
+    EXPECT_TRUE(timer_axis_->IsTimerExist(&sink1, id1));
+    EXPECT_TRUE(timer_axis_->IsTimerExist(&sink2, id2));
+
+    // 推动时间轴往前走
+    for (i32 i = 0; i < loopCount; ++i)
+    {
+        LOG_DEBUG("loop: " << i);
+        timer_axis_->Schedule((i + 1) * scheduleInterval);
+    }
+
+    EXPECT_TRUE(timer_axis_->IsTimerExist(&sink1, id1));
+    EXPECT_FALSE(timer_axis_->IsTimerExist(&sink2, id2));
+
+    // 移除定时器
+    timer_axis_->KillTimer(&sink1, id1);
+}
+
+/**
+ * @brief 时间轴测试-在定时器回调过程中先移除自己，再添加自己
+ * @details
+ *  - Set Up:
+ 1，在后续的时间轴推动中，定时器会被回调
+ *  - Expectation:
+ 1，
+ *  - Tear Down:
+ 1，
+ * @note
+ */
+void TimerAxisTest::Test004()
+{
+    const i32 loopCount = 1000;
+    const TimerValue scheduleInterval = timer_axis_->GetScheduleInterval();
+
+    CMockTimerSink1 sink1;
+
+    CMockTimerSink3 sink3;
+    sink3.DelegateToFake(timer_axis_);
+
+    TimerID id1 = TIMER_ID_1;
+    TimerValue interval1 = TIMER_INTERVAL_1;
+    const char desc1[] = "timer 1";
+
+    TimerID id2 = TIMER_ID_2;
+    TimerValue interval2 = TIMER_INTERVAL_2;
+    const char desc2[] = "timer 2";
+
+    i32 times1 = loopCount / CEIL<TimerValue>(interval1, scheduleInterval);
+    EXPECT_CALL(sink1, OnTimer(id1)).Times(times1);
+
+    i32 times2 = loopCount / CEIL<TimerValue>(interval2, scheduleInterval);
+    EXPECT_CALL(sink3, OnTimer(id2)).Times(times2);
+
+    EXPECT_FALSE(timer_axis_->IsTimerExist(&sink1, id1));
+    EXPECT_FALSE(timer_axis_->IsTimerExist(&sink3, id2));
+
+    // 添加定时器
+    EXPECT_TRUE(timer_axis_->SetTimer(&sink1, id1, interval1, desc1));
+    EXPECT_TRUE(timer_axis_->SetTimer(&sink3, id2, interval2, desc2));
+
+    EXPECT_TRUE(timer_axis_->IsTimerExist(&sink1, id1));
+    EXPECT_TRUE(timer_axis_->IsTimerExist(&sink3, id2));
+
+    // 定时器已经在了，再添加则失败
+    EXPECT_FALSE(timer_axis_->SetTimer(&sink1, id1, interval1, desc1));
+    EXPECT_FALSE(timer_axis_->SetTimer(&sink3, id2, interval2, desc2));
+
+    // 推动时间轴往前走
+    for (i32 i = 0; i < loopCount; ++i)
+    {
+        LOG_DEBUG("loop: " << i);
+        timer_axis_->Schedule((i + 1) * scheduleInterval);
+    }
+
+    EXPECT_TRUE(timer_axis_->IsTimerExist(&sink1, id1));
+    EXPECT_TRUE(timer_axis_->IsTimerExist(&sink3, id2));
+
+    // 移除定时器
+    timer_axis_->KillTimer(&sink1, id1);
+    timer_axis_->KillTimer(&sink3, id2);
+}
+
+/**
+ * @brief 时间轴测试-在定时器回调过程中移除其它的定时器
+ * @details
+ *  - Set Up:
+ 1，在后续的时间轴推动中，被移除的定时器不会被回调
+ *  - Expectation:
+ 1，
+ *  - Tear Down:
+ 1，
+ * @note
+ */
+void TimerAxisTest::Test005()
+{
+    const i32 loopCount = 1000;
+    const TimerValue scheduleInterval = timer_axis_->GetScheduleInterval();
+
+    TimerID id1 = TIMER_ID_1;
+    TimerValue interval1 = TIMER_INTERVAL_1;
+    const char desc1[] = "timer 1";
+
+    TimerID id2 = TIMER_ID_2;
+    TimerValue interval2 = TIMER_INTERVAL_2;
+    const char desc2[] = "timer 2";
+
+    CMockTimerSink1 sink1;
+
+    CMockTimerSink4 oTimerSink4;
+    oTimerSink4.DelegateToFake(timer_axis_, &sink1, id1);
+
+    EXPECT_CALL(sink1, OnTimer(id1)).Times(1);
+
+    i32 times2 = loopCount / CEIL<TimerValue>(interval2, scheduleInterval);
+    EXPECT_CALL(oTimerSink4, OnTimer(id2)).Times(times2);
+
+    // 添加定时器
+    EXPECT_TRUE(timer_axis_->SetTimer(&sink1, id1, interval1, desc1));
+    EXPECT_TRUE(timer_axis_->SetTimer(&oTimerSink4, id2, interval2, desc2));
+
+    EXPECT_TRUE(timer_axis_->IsTimerExist(&sink1, id1));
+    EXPECT_TRUE(timer_axis_->IsTimerExist(&oTimerSink4, id2));
+
+    // 推动时间轴往前走
+    for (i32 i = 0; i < loopCount; ++i)
+    {
+        LOG_DEBUG("loop: " << i);
+        timer_axis_->Schedule((i + 1) * scheduleInterval);
+    }
+
+    EXPECT_FALSE(timer_axis_->IsTimerExist(&sink1, id1));
+    EXPECT_TRUE(timer_axis_->IsTimerExist(&oTimerSink4, id2));
+
+    // 移除定时器
+    timer_axis_->KillTimer(&oTimerSink4, id1);
+}
+
+/**
+ * @brief 时间轴测试-在定时器回调过程中添加别的定时器
+ * @details
+ *  - Set Up:
+ 1，
+ *  - Expectation:
+ 1，在后续的时间轴推动中，新添加的定时器会被回调，且回调次数正确
+ *  - Tear Down:
+ 1，
+ * @note
+ */
+void TimerAxisTest::Test006()
+{
+    const i32 loopCount = 1000;
+    const TimerValue scheduleInterval = timer_axis_->GetScheduleInterval();
+
+    TimerID id1 = TIMER_ID_1;
+    TimerValue interval1 = TIMER_INTERVAL_1;
+    const char desc1[] = "timer 1";
+
+    TimerID id2 = TIMER_ID_2;
+    TimerValue interval2 = TIMER_INTERVAL_2;
+    const char desc2[] = "timer 2";
+
+    CMockTimerSink1 sink1;
+
+    CMockTimerSink5 oTimerSink5;
+    oTimerSink5.DelegateToFake(timer_axis_, &sink1, id1, interval1, desc1);
+
+    i32 times1 = (loopCount - CEIL<TimerValue>(interval2, scheduleInterval))
+        / CEIL<TimerValue>(interval1, scheduleInterval);
+    EXPECT_CALL(sink1, OnTimer(id1)).Times(times1);
+
+    i32 times2 = loopCount / CEIL<TimerValue>(interval2, scheduleInterval);
+    EXPECT_CALL(oTimerSink5, OnTimer(id2)).Times(times2);
+
+    // 添加定时器
+    EXPECT_TRUE(timer_axis_->SetTimer(&oTimerSink5, id2, interval2, desc2));
+
+    EXPECT_FALSE(timer_axis_->IsTimerExist(&sink1, id1));
+    EXPECT_TRUE(timer_axis_->IsTimerExist(&oTimerSink5, id2));
+
+    // 推动时间轴往前走
+    for (i32 i = 0; i < loopCount; ++i)
+    {
+        LOG_DEBUG("loop: " << i);
+        timer_axis_->Schedule((i + 1) * scheduleInterval);
+    }
+
+    EXPECT_TRUE(timer_axis_->IsTimerExist(&sink1, id1));
+    EXPECT_TRUE(timer_axis_->IsTimerExist(&oTimerSink5, id2));
+
+    // 移除定时器
+    timer_axis_->KillTimer(&sink1, id1);
+    timer_axis_->KillTimer(&oTimerSink5, id1);
+}
+
+/**
+ * @brief 时间轴测试-助手类测试
+ * @details
+ *  - Set Up:
+ 1，使用助手类添加定时器
+ 2，不手动移除定时器
+ *  - Expectation:
+ 1，助手类在退出时会自动移除定时器
+ *  - Tear Down:
+ 1，
+ * @note
+ */
+void TimerAxisTest::Test007()
+{
+    TimerID id1 = TIMER_ID_1;
+    TimerValue interval1 = TIMER_INTERVAL_1;
+    const char desc1[] = "timer 1";
+
+    NiceMock <CMockTimerAxis> mockTimerAxis;
+
+    EXPECT_CALL(mockTimerAxis, SetTimer(_, _, _, _)).Times(1).WillOnce(
+        Return(true));
+
+    EXPECT_CALL(mockTimerAxis, KillTimer(_, _)).Times(1);
+
+    {
+        CTimerAssist timerAssist;
+        timerAssist.SetTimerAxis(&mockTimerAxis);
+
+        CMockTimerSink1 sink1;
+        EXPECT_TRUE(timerAssist.SetTimer(&sink1, id1, interval1, desc1));
+    }
+}
+
+/**
+ * @brief 时间轴测试-tick溢出测试
+ * @details
+ *  - Set Up:
+ 1，tick达到临界值，后续check均会溢出
+ *  - Expectation:
+ 1，定时器回调能被正常触发
+ *  - Tear Down:
+ 1，
+ * @note
+ */
+void TimerAxisTest::Test008()
+{
+}
+
+void TimerAxisTest::Test009()
+{
+    CTimerAssist ta;
+}
+
+// 删除定时器后不调度，再次添加定时器，应该添加成功且后续可以回调。
+
+ADD_TEST_F(CTimerAxisTest, Test001
+);
+ADD_TEST_F(CTimerAxisTest, Test002
+);
+ADD_TEST_F(CTimerAxisTest, Test003
+);
+ADD_TEST_F(CTimerAxisTest, Test004
+);
+ADD_TEST_F(CTimerAxisTest, Test005
+);
+ADD_TEST_F(CTimerAxisTest, Test006
+);
+ADD_TEST_F(CTimerAxisTest, Test007
+);
+ADD_TEST_F(CTimerAxisTest, Test008
+);
+ADD_TEST_F(CTimerAxisTest, Test009
+);

@@ -1,0 +1,8 @@
+#ifndef TCP_THREADS_SRC_EXPORTER_H_
+#define TCP_THREADS_SRC_EXPORTER_H_
+
+#include "module_util.h"
+
+MODULE_EXPORTER_DECL();
+
+#endif // TCP_THREADS_SRC_EXPORTER_H_

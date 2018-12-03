@@ -1,0 +1,336 @@
+#include "timer_axis_test.h"
+#include <event2/event.h>
+#include "log_util.h"
+#include "mem_util.h"
+#include "mock_timer_sink.h"
+#include "timer_axis_util.h"
+
+namespace timer_axis_test
+{
+static int n = 0;
+
+class TimerSink : public TimerSinkInterface
+{
+public:
+    TimerSink()
+    {
+        event_base_ = NULL;
+    }
+
+    virtual ~TimerSink()
+    {
+    }
+
+    void SetCtx(struct event_base* event_base)
+    {
+        event_base_ = event_base;
+    }
+
+    ///////////////////////// TimerSinkInterface /////////////////////////
+    virtual void OnTimer(TimerID timer_id, const void* async_data, size_t async_data_len, int times)
+    {
+        LOG_TRACE("on timer, times: " << times);
+        LOG_TRACE("n: " << n);
+
+        if (2 == n)
+        {
+            event_base_loopbreak(event_base_);
+            return;
+        }
+
+        ++n;
+    }
+
+private:
+    struct event_base* event_base_;
+};
+} // namespace timer_axis_test
+
+using testing::NiceMock;
+using testing::Return;
+
+TimerAxisTest::TimerAxisTest() : loader_()
+{
+    event_base_ = NULL;
+    timer_axis_ = NULL;
+}
+
+TimerAxisTest::~TimerAxisTest()
+{
+}
+
+void TimerAxisTest::SetUp()
+{
+    event_base_ = event_base_new();
+    if (NULL == event_base_)
+    {
+        FAIL();
+    }
+
+    if (loader_.Load("../libtimer_axis.so") != 0)
+    {
+        FAIL() << loader_.GetLastErrMsg();
+    }
+
+    timer_axis_ = (TimerAxisInterface*) loader_.GetModuleInterface();
+    if (NULL == timer_axis_)
+    {
+        FAIL() << loader_.GetLastErrMsg();
+    }
+
+    TimerAxisCtx timer_axis_ctx;
+    timer_axis_ctx.thread_ev_base = event_base_;
+
+    if (timer_axis_->Initialize(&timer_axis_ctx) != 0)
+    {
+        FAIL() << timer_axis_->GetLastErrMsg();
+    }
+
+    if (timer_axis_->Activate() != 0)
+    {
+        FAIL() << timer_axis_->GetLastErrMsg();
+    }
+}
+
+void TimerAxisTest::TearDown()
+{
+    SAFE_DESTROY_MODULE(timer_axis_, loader_);
+
+    if (event_base_ != NULL)
+    {
+        event_base_free(event_base_);
+        event_base_ = NULL;
+    }
+}
+
+void TimerAxisTest::Test001()
+{
+    timer_axis_test::n = 0;
+
+    struct timeval interval;
+    interval.tv_sec = 1;
+    interval.tv_usec = 0;
+
+    timer_axis_test::TimerSink timer_sink;
+    timer_sink.SetCtx(event_base_);
+
+    ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
+    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, NULL, 0));
+    ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
+
+    timer_axis_->KillTimer(&timer_sink, 1);
+    ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
+    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, NULL, 0));
+    ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
+
+    event_base_dispatch(event_base_);
+    ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
+}
+
+/**
+ * @brief 在回调过程中移除自己
+ * @details
+ *  - Set Up:
+
+ *  - Expect:
+
+ *  - Tear Down:
+
+ * @attention
+
+ */
+void TimerAxisTest::Test002()
+{
+    struct timeval interval;
+    interval.tv_sec = 1;
+    interval.tv_usec = 0;
+
+    MockTimerSink1 timer_sink;
+    timer_sink.Delegate(event_base_, timer_axis_);
+
+    ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
+    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, NULL, 0));
+    ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
+
+    EXPECT_CALL(timer_sink, OnTimer(1, NULL, 0, 1)).Times(1);
+
+    event_base_dispatch(event_base_);
+    ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
+}
+
+/**
+ * @brief 在回调过程中先移除自己，再添加自己
+ * @details
+ *  - Set Up:
+
+ *  - Expect:
+
+ *  - Tear Down:
+
+ * @attention
+
+ */
+void TimerAxisTest::Test003()
+{
+    struct timeval interval;
+    interval.tv_sec = 1;
+    interval.tv_usec = 0;
+
+    MockTimerSink2 timer_sink;
+    timer_sink.Delegate(event_base_, timer_axis_, interval);
+
+    ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
+    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, NULL, 0));
+    ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
+
+    EXPECT_CALL(timer_sink, OnTimer(1, NULL, 0, _)).Times(3);
+
+    event_base_dispatch(event_base_);
+    ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
+}
+
+/**
+ * @brief 在回调过程中移除其它的定时器
+ * @details
+ *  - Set Up:
+
+ *  - Expect:
+
+ *  - Tear Down:
+
+ * @attention
+
+ */
+void TimerAxisTest::Test004()
+{
+    timer_axis_test::n = 0;
+
+    struct timeval interval;
+    interval.tv_sec = 1;
+    interval.tv_usec = 0;
+
+    timer_axis_test::TimerSink timer_sink;
+    timer_sink.SetCtx(event_base_);
+
+    ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
+    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, NULL, 0));
+    ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
+
+    MockTimerSink3 timer_sink3;
+    timer_sink3.Delegate(event_base_, timer_axis_, &timer_sink, 1);
+
+    ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink3, 1));
+    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink3, 1, interval, NULL, 0));
+    ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink3, 1));
+
+    EXPECT_CALL(timer_sink3, OnTimer(1, NULL, 0, _)).Times(3);
+
+    event_base_dispatch(event_base_);
+    ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink3, 1));
+    ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
+}
+
+/**
+ * @brief 在回调过程中添加其它的定时器
+ * @details
+ *  - Set Up:
+
+ *  - Expect:
+
+ *  - Tear Down:
+
+ * @attention
+
+ */
+void TimerAxisTest::Test005()
+{
+    struct timeval interval;
+    interval.tv_sec = 1;
+    interval.tv_usec = 0;
+
+    MockTimerSink timer_sink;
+
+    ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
+
+    MockTimerSink4 timer_sink4;
+    timer_sink4.Delegate(event_base_, timer_axis_, &timer_sink, 1, interval);
+
+    ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink4, 1));
+    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink4, 1, interval, NULL, 0));
+    ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink4, 1));
+
+    EXPECT_CALL(timer_sink4, OnTimer(1, NULL, 0, _)).Times(3);
+    EXPECT_CALL(timer_sink, OnTimer(1, NULL, 0, 1)).Times(1);
+
+    event_base_dispatch(event_base_);
+    ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink4, 1));
+    ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
+}
+
+/**
+ * @brief util类测试
+ * @details
+ *  - Set Up:
+
+ *  - Expect:
+
+ *  - Tear Down:
+
+ * @attention
+
+ */
+void TimerAxisTest::Test006()
+{
+    timer_axis_test::n = 0;
+
+    TimerAxisUtil util;
+    util.SetTimerAxis(timer_axis_);
+
+    struct timeval interval;
+    interval.tv_sec = 1;
+    interval.tv_usec = 0;
+
+    timer_axis_test::TimerSink timer_sink;
+    timer_sink.SetCtx(event_base_);
+
+    ASSERT_FALSE(util.TimerExist(&timer_sink, 1));
+    ASSERT_EQ(0, util.SetTimer(&timer_sink, 1, interval, NULL, 0, 5));
+    ASSERT_TRUE(util.TimerExist(&timer_sink, 1));
+
+    util.KillTimer(&timer_sink, 1);
+    ASSERT_FALSE(util.TimerExist(&timer_sink, 1));
+    ASSERT_EQ(0, util.SetTimer(&timer_sink, 1, interval, NULL, 0, -1));
+    ASSERT_TRUE(util.TimerExist(&timer_sink, 1));
+
+    event_base_dispatch(event_base_);
+    ASSERT_TRUE(util.TimerExist(&timer_sink, 1));
+}
+
+void TimerAxisTest::Test007()
+{
+    struct timeval interval;
+    interval.tv_sec = 1;
+    interval.tv_usec = 0;
+
+    const int ntimes = 10;
+
+    MockTimerSink5 timer_sink;
+    timer_sink.Delegate(event_base_, timer_axis_, ntimes);
+
+    ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
+    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, NULL, 0, ntimes));
+    ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
+
+    EXPECT_CALL(timer_sink, OnTimer(1, NULL, 0, _)).Times(ntimes);
+
+    event_base_dispatch(event_base_);
+    ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
+}
+
+ADD_TEST_F(TimerAxisTest, Test001);
+ADD_TEST_F(TimerAxisTest, Test002);
+ADD_TEST_F(TimerAxisTest, Test003);
+ADD_TEST_F(TimerAxisTest, Test004);
+ADD_TEST_F(TimerAxisTest, Test005);
+ADD_TEST_F(TimerAxisTest, Test006);
+ADD_TEST_F(TimerAxisTest, Test007);
