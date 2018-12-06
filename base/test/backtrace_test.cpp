@@ -1,6 +1,6 @@
-#include "test_util.h"
 #include "backtrace.h"
 #include "simple_log.h"
+#include "test_util.h"
 
 namespace backtrace_test
 {

@@ -1,9 +1,9 @@
 #include "uuid_util.h"
 #include "str_util.h"
 
-Uuid MakeUuid()
+UUID MakeUUID()
 {
-    Uuid uuid;
+    UUID uuid;
 
 #if (defined(__linux__))
     ::uuid_generate((unsigned char*) &uuid);
@@ -14,7 +14,7 @@ Uuid MakeUuid()
     return uuid;
 }
 
-char* Uuid38(char* buf, size_t buf_size, const Uuid& uuid)
+char* UUID38(char* buf, size_t buf_size, const UUID& uuid)
 {
     if (NULL == buf || buf_size != (UUID_LEN_38 + 1))
     {
@@ -30,7 +30,7 @@ char* Uuid38(char* buf, size_t buf_size, const Uuid& uuid)
     return buf;
 }
 
-char* Uuid32(char* buf, size_t buf_size, const Uuid& uuid)
+char* UUID32(char* buf, size_t buf_size, const UUID& uuid)
 {
     if (NULL == buf || buf_size != (UUID_LEN_32 + 1))
     {

@@ -21,8 +21,7 @@
 #include <string>
 
 #if (defined(__linux__))
-
-#include "uuid/uuid.h"
+#include <uuid/uuid.h>
 
 #define UUID_LEN_38 38
 #define UUID_LEN_32 32
@@ -33,17 +32,17 @@ typedef struct
     unsigned short Data2;
     unsigned short Data3;
     unsigned char Data4[8];
-} Uuid;
+} UUID;
 #elif (defined(_WIN32) || defined(_WIN64))
 #include <objbase.h>
-typedef GUID Uuid;
+typedef GUID UUID;
 #endif
 
 /**
  * @brief 生成UUID
  * @return
  */
-Uuid MakeUuid();
+UUID MakeUUID();
 
 /**
  * @brief 获取UUID的字符串格式，长度为38个字符（短线间隔）
@@ -52,7 +51,7 @@ Uuid MakeUuid();
  * @param uuid
  * @return
  */
-char* Uuid38(char* buf, size_t buf_size, const Uuid& uuid);
+char* UUID38(char* buf, size_t buf_size, const UUID& uuid);
 
 /**
  * @brief 获取UUID的字符串格式，长度为32个字符
@@ -61,7 +60,7 @@ char* Uuid38(char* buf, size_t buf_size, const Uuid& uuid);
  * @param uuid
  * @return
  */
-char* Uuid32(char* buf, size_t buf_size, const Uuid& uuid);
+char* UUID32(char* buf, size_t buf_size, const UUID& uuid);
 
 /** @} Module_UUID */
 /** @} Module_Base */

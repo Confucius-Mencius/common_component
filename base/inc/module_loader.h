@@ -39,7 +39,9 @@ private:
     void SetFindSymFailedErrMsg(const char* module_file_path, const char* err);
     void SetCloseFailedErrMsg(const char* module_file_path, const char* err);
 
+private:
     std::string module_file_path_;
+    LastErrMsg last_err_msg_;
 
 #if (defined(__linux__))
     void* module_;
@@ -48,7 +50,6 @@ private:
 #endif
 
     GetModuleInterfaceFunc get_module_interface_func_;
-    LastErrMsg last_err_msg_;
 };
 
 /** @} Module_ModuleLoader */

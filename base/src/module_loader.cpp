@@ -1,5 +1,11 @@
 #include "module_loader.h"
 
+#if (defined(__linux__))
+#include <dlfcn.h>
+#endif
+
+#include <string.h>
+
 ModuleLoader::ModuleLoader() : module_file_path_(""), last_err_msg_()
 {
     module_ = NULL;
@@ -16,12 +22,9 @@ const char* ModuleLoader::GetLastErrMsg() const
 }
 
 #if (defined(__linux__))
-
-#include <dlfcn.h>
-
 int ModuleLoader::Load(const char* module_file_path)
 {
-    if (NULL == module_file_path)
+    if (NULL == module_file_path || strlen(module_file_path) < 1)
     {
         return -1;
     }
@@ -37,25 +40,38 @@ int ModuleLoader::Load(const char* module_file_path)
     }
 
     dlerror();
+    int ret = -1;
 
-    get_module_interface_func_ = (GetModuleInterfaceFunc) dlsym(module_, GET_MODULE_INTERFACE_NAME);
-    if (NULL == get_module_interface_func_)
+    do
     {
-        char* err = dlerror();
-        SetFindSymFailedErrMsg(module_file_path, err);
-        return -1;
-    }
-    else
-    {
-        char* err = dlerror();
-        if (err != NULL)
+        get_module_interface_func_ = (GetModuleInterfaceFunc) dlsym(module_, GET_MODULE_INTERFACE_NAME);
+        if (NULL == get_module_interface_func_)
         {
+            char* err = dlerror();
             SetFindSymFailedErrMsg(module_file_path, err);
-            return -1;
+            break;
         }
+        else
+        {
+            char* err = dlerror();
+            if (err != NULL)
+            {
+                SetFindSymFailedErrMsg(module_file_path, err);
+                break;
+            }
+        }
+
+        ret = 0;
+    } while (0);
+
+    if (ret != 0)
+    {
+        dlclose(module_);
+        module_ = NULL;
+        get_module_interface_func_ = NULL;
     }
 
-    return 0;
+    return ret;
 }
 
 int ModuleLoader::Unload()
@@ -74,11 +90,10 @@ int ModuleLoader::Unload()
     get_module_interface_func_ = NULL;
     return 0;
 }
-
 #elif (defined(_WIN32) || defined(_WIN64))
 int ModuleLoader::Load(const char* module_file_path)
 {
-    if (NULL == module_file_path)
+    if (NULL == module_file_path || strlen(module_file_path) < 1)
     {
         return -1;
     }
@@ -96,7 +111,11 @@ int ModuleLoader::Load(const char* module_file_path)
     if (NULL == get_module_interface_func_)
     {
         SetFindSymFailedErrMsg(module_file_path, err);
-        Unload();
+
+        FreeLibrary(module_);
+        module_ = NULL;
+        get_module_interface_func_ = NULL;
+
         return -1;
     }
 
@@ -133,8 +152,8 @@ void ModuleLoader::SetOpenFailedErrMsg(const char* module_file_path, const char*
 
 void ModuleLoader::SetFindSymFailedErrMsg(const char* module_file_path, const char* err)
 {
-    SET_LAST_ERR_MSG(&last_err_msg_, "failed to Find symbol " << GET_MODULE_INTERFACE_NAME
-        << " in file " << module_file_path << ": " << err);
+    SET_LAST_ERR_MSG(&last_err_msg_, "failed to find symbol " << GET_MODULE_INTERFACE_NAME
+                     << " in file " << module_file_path << ": " << err);
 }
 
 void ModuleLoader::SetCloseFailedErrMsg(const char* module_file_path, const char* err)

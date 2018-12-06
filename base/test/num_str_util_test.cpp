@@ -1,8 +1,16 @@
-#include "test_util.h"
 #include "num_str_util.h"
+#include "test_util.h"
 
 namespace num_str_util_test
 {
+void atoiTest()
+{
+    EXPECT_EQ(0, atoi(""));
+//    EXPECT_EQ(0, atoi(NULL)); // SIGSEGV
+    EXPECT_EQ(123, atoi("0123"));
+    EXPECT_EQ(0, atoi("x123"));
+}
+
 void NumToStrTest()
 {
     // i8
@@ -151,6 +159,7 @@ void StrToNumTest()
     EXPECT_DOUBLE_EQ(1234567890123456.78, f2);
 }
 
+ADD_TEST(NumStrUtilTest, atoiTest);
 ADD_TEST(NumStrUtilTest, NumToStrTest);
 ADD_TEST(NumStrUtilTest, StrToNumTest);
 } // namespace num_str_util_test

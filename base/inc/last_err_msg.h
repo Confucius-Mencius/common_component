@@ -8,7 +8,7 @@
 #ifndef BASE_INC_LAST_ERR_MSG_H_
 #define BASE_INC_LAST_ERR_MSG_H_
 
-/** 
+/**
  * @defgroup Module_Base 基础库
  * @{
  */
@@ -22,13 +22,16 @@
 #include <sstream>
 
 /**
+  * 超过这个最大长度的err msg会被截断。
+  */
+#define MAX_ERR_MSG_LEN 1023
+
+/**
  * @brief 最近一次的出错信息
  */
 class LastErrMsg
 {
 public:
-    static const int MAX_ERR_MSG_LEN = 1023;
-
     LastErrMsg()
     {
         what_[0] = '\0';
@@ -40,8 +43,8 @@ public:
 
     void SetWhat(const std::ostringstream& what)
     {
-        snprintf(what_, MAX_ERR_MSG_LEN + 1, "%s", what.str().c_str());
-        what_[MAX_ERR_MSG_LEN] = '\0';
+        const int n = snprintf(what_, sizeof(what_), "%s", what.str().c_str());
+        what_[n] = '\0';
     }
 
     const char* What() const
@@ -55,16 +58,16 @@ private:
 
 /**
  * @brief 设置最近的错误猫叔
- * @param [in,out] last_err_msg_ptr LastErrMsg对象指针
+ * @param [in,out] obj_ptr LastErrMsg对象指针
  * @param [in] err_msg 最近的错误描述，是一个输入流（<<）的形式
  * @hideinitializer
  */
-#define SET_LAST_ERR_MSG(last_err_msg_ptr, err_msg) \
-do { \
-    std::ostringstream what; \
-    what << err_msg; \
-    (last_err_msg_ptr)->SetWhat(what); \
-} while (0)
+#define SET_LAST_ERR_MSG(obj_ptr, err_msg)\
+    do {\
+        std::ostringstream what;\
+        what << err_msg;\
+        (obj_ptr)->SetWhat(what);\
+    } while (0)
 
 /** @} Module_LastErrMsg */
 /** @} Module_Base */

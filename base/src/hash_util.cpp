@@ -1,6 +1,6 @@
 #include "hash_util.h"
 
-unsigned long HashPJW(const char* data, size_t len)
+unsigned long PJWHash(const char* data, size_t len)
 {
     const char* end = data + len;
     unsigned long h = 0;

@@ -14,19 +14,19 @@
  */
 
 /**
- * @defgroup Module_HashUtil HashUtil
+ * @defgroup Module_HashUtil 一些hash算法
  * @{
  */
 
 #include <stddef.h>
 
 /**
- * @brief 计算一段数据的hash值
+ * @brief
  * @param [in] data
  * @param [in] len
  * @return
  */
-unsigned long HashPJW(const char* data, size_t len);
+unsigned long PJWHash(const char* data, size_t len);
 
 /** @} Module_HashUtil */
 /** @} Module_Base */

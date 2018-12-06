@@ -1,19 +1,18 @@
 #include "file_util.h"
-#include "common_define.h"
 
 #if (defined(__linux__))
-
 #include <unistd.h>
-
 #elif (defined(_WIN32) || defined(_WIN64))
 #include <io.h>
 #endif
 
 #include <dirent.h>
+#include <string.h>
 #include <sys/uio.h>
 #include <fstream>
 #include <sstream>
-#include "misc_util.h"
+#include "shell_util.h"
+#include "str_util.h"
 
 bool FileExist(const char* file_path)
 {
@@ -99,6 +98,11 @@ int CreateFile(const char* file_path, mode_t mode)
         return -1;
     }
 
+    if (FileExist(file_path))
+    {
+        return 0;
+    }
+
     char file_dir[MAX_PATH_LEN + 1] = "";
     if (GetFileDir(file_dir, sizeof(file_dir), file_path) != 0)
     {
@@ -113,7 +117,8 @@ int CreateFile(const char* file_path, mode_t mode)
         }
     }
 
-    return creat(file_path, mode);
+    const int fd = creat(file_path, mode);
+    return fd;
 }
 
 int CreateDir(const char* file_path)
@@ -160,6 +165,64 @@ int GetFileName(char* buf, int buf_size, const char* file_path)
     return 0;
 }
 
+int GetAbsolutePath(char* buf, int buf_size, const char* path, const char* cur_working_dir)
+{
+    if (NULL == buf || buf_size < 2 || NULL == path)
+    {
+        return -1;
+    }
+
+    std::string absolute_path;
+
+    if (path[0] != '/')
+    {
+        if (NULL == cur_working_dir)
+        {
+            return -1;
+        }
+
+        if (0 == strcmp(path, "."))
+        {
+            absolute_path.append(cur_working_dir);
+        }
+        else
+        {
+            if (StrNoCaseEndWith(cur_working_dir, "/"))
+            {
+                absolute_path.append(cur_working_dir);
+            }
+            else
+            {
+                absolute_path.append(cur_working_dir);
+                absolute_path.append("/");
+            }
+
+            if (StrNoCaseBeginWith(path, "./"))
+            {
+                absolute_path.append(path + 2);
+            }
+            else
+            {
+                absolute_path.append(path);
+            }
+        }
+    }
+    else
+    {
+        absolute_path.append(path);
+    }
+
+    if (buf_size - 1 < (int) absolute_path.length())
+    {
+        return -1;
+    }
+
+    strncpy(buf, absolute_path.data(), absolute_path.length());
+    buf[absolute_path.length()] = '\0';
+
+    return 0;
+}
+
 int GetFileDir(char* buf, int buf_size, const char* file_path)
 {
     if (NULL == buf || buf_size < 1 || NULL == file_path)
@@ -178,6 +241,27 @@ int GetFileDir(char* buf, int buf_size, const char* file_path)
     return 0;
 }
 
+int AppendBinFile(const char* file_path, const void* data, size_t len)
+{
+    if (NULL == file_path || NULL == data || len < 1)
+    {
+        return -1;
+    }
+
+    /* 文件不存在则创建 */
+    std::fstream fs;
+    fs.open(file_path, std::fstream::out | std::fstream::binary | std::ios::app);
+    if (!fs)
+    {
+        return -1;
+    }
+
+    (void) fs.write((const char*) data, len);
+
+    fs.close();
+    return 0;
+}
+
 int WriteBinFile(const char* file_path, const void* data, size_t len)
 {
     if (NULL == file_path || NULL == data || len < 1)
@@ -187,16 +271,21 @@ int WriteBinFile(const char* file_path, const void* data, size_t len)
 
     /* 文件不存在则创建 */
     std::fstream fs;
-    fs.open(file_path, std::fstream::out | std::fstream::binary | std::fstream::trunc);
-    (void) fs.write((const char*) data, len);
-    fs.close();
+    fs.open(file_path, std::ios::out | std::ios::binary | std::ios::trunc);
+    if (!fs)
+    {
+        return -1;
+    }
 
+    (void) fs.write((const char*) data, len);
+
+    fs.close();
     return 0;
 }
 
-int ReadBinFile(const char* file_path, void* data, size_t& len)
+int ReadBinFile(void* data, size_t& len, const char* file_path)
 {
-    if (NULL == file_path || NULL == data)
+    if (NULL == data || NULL == file_path)
     {
         return -1;
     }
@@ -216,11 +305,16 @@ int ReadBinFile(const char* file_path, void* data, size_t& len)
     }
 
     std::fstream fs;
-    fs.open(file_path, std::fstream::binary | std::fstream::in);
+    fs.open(file_path, std::ios::in | std::ios::binary);
+    if (!fs)
+    {
+        return -1;
+    }
+
     (void) fs.read((char*) data, file_size);
     len = fs.gcount();
-    fs.close();
 
+    fs.close();
     return 0;
 }
 
@@ -233,14 +327,19 @@ int WriteTxtFile(const char* file_path, const void* data, size_t len)
 
     /* 文件不存在则创建 */
     std::fstream fs;
-    fs.open(file_path, std::fstream::out | std::fstream::trunc);
-    (void) fs.write((const char*) data, len);
-    fs.close();
+    fs.open(file_path, std::ios::out | std::ios::trunc);
+    if (!fs)
+    {
+        return -1;
+    }
 
+    (void) fs.write((const char*) data, len);
+
+    fs.close();
     return 0;
 }
 
-int ReadTxtFile(const char* file_path, void* data, size_t& len)
+int ReadTxtFile(void* data, size_t& len, const char* file_path)
 {
     if (NULL == file_path || NULL == data)
     {
@@ -262,93 +361,36 @@ int ReadTxtFile(const char* file_path, void* data, size_t& len)
     }
 
     std::fstream fs;
-    fs.open(file_path, std::fstream::in);
+    fs.open(file_path, std::ios::in);
+    if (!fs)
+    {
+        return -1;
+    }
+
     (void) fs.read((char*) data, file_size);
     len = fs.gcount();
-    fs.close();
 
+    fs.close();
     return 0;
 }
 
-int OpenFileWithRetry(const char* file_path, int flags, mode_t mode, int nretrys, int sleep_ms)
+int AppendTxtFile(const char* file_path, const void* data, size_t len)
 {
-    if (NULL == file_path || nretrys < 0 || sleep_ms <= 0)
+    if (NULL == file_path || NULL == data || len < 1)
     {
         return -1;
     }
 
-    int fd = open(file_path, flags, mode);
-    if (fd >= 0)
-    {
-        return fd;
-    }
-
-    int n = 0;
-    while (n < nretrys)
-    {
-        int fd = open(file_path, flags, mode);
-        if (fd >= 0)
-        {
-            return fd;
-        }
-
-        ++n;
-        usleep(1000 * sleep_ms);
-    }
-
-    return -1;
-}
-
-int WriteFileWithRetry(int fd, const void* data, size_t len, int nretrys, int sleep_ms)
-{
-    if (fd < 0 || NULL == data || len < 1 || nretrys < 0 || sleep_ms <= 0)
+    /* 文件不存在则创建 */
+    std::fstream fs;
+    fs.open(file_path, std::ios::out | std::ios::app);
+    if (!fs)
     {
         return -1;
     }
 
-    if (write(fd, data, len) == (ssize_t) len)
-    {
-        return 0;
-    }
+    (void) fs.write((const char*) data, len);
 
-    int n = 0;
-    while (n < nretrys)
-    {
-        if (write(fd, data, len) == (ssize_t) len)
-        {
-            return 0;
-        }
-
-        ++n;
-        usleep(1000 * sleep_ms);
-    }
-
-    return -1;
-}
-
-int WriteFileWithRetry(int fd, const struct iovec* iov, int iovcnt, size_t total_data_len, int nretrys, int sleep_ms)
-{
-    if (fd < 0 || NULL == iov || iovcnt <= 0 || iovcnt > 1024 || total_data_len <= 0 || nretrys < 0 || sleep_ms <= 0)
-    {
-        return -1;
-    }
-
-    if (writev(fd, iov, iovcnt) == (ssize_t) total_data_len)
-    {
-        return 0;
-    }
-
-    int n = 0;
-    while (n < nretrys)
-    {
-        if (writev(fd, iov, iovcnt) == (ssize_t) total_data_len)
-        {
-            return 0;
-        }
-
-        ++n;
-        usleep(1000 * sleep_ms);
-    }
-
-    return -1;
+    fs.close();
+    return 0;
 }

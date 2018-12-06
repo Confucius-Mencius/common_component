@@ -19,9 +19,9 @@
 
 #include <stdlib.h>
 #include "data_type.h"
-#include "type2type.h"
-#include "str_util.h"
 #include "misc_util.h"
+#include "str_util.h"
+#include "type2type.h"
 
 /**
  *
@@ -99,7 +99,7 @@ int Num2Str(char* buf, int buf_size, Type2Type<f64>, f64 num)
 
 /**
  *
- * @param str
+ * @param str 不能为空指针
  * @return
  * @attention 只支持十进制
  */
@@ -110,7 +110,7 @@ i32 Str2Num(Type2Type<i32>, const char* str)
 
 /**
  *
- * @param str
+ * @param str 不能为空指针
  * @return
  * @attention 只支持十进制
  */
@@ -121,7 +121,7 @@ u32 Str2Num(Type2Type<u32>, const char* str)
 
 /**
  *
- * @param str
+ * @param str 不能为空指针
  * @return
  * @attention 只支持十进制
  */
@@ -132,7 +132,7 @@ i64 Str2Num(Type2Type<i64>, const char* str)
 
 /**
  *
- * @param str
+ * @param str 不能为空指针
  * @return
  * @attention 只支持十进制
  */
@@ -143,7 +143,7 @@ u64 Str2Num(Type2Type<u64>, const char* str)
 
 /**
  *
- * @param str
+ * @param str 不能为空指针
  * @return
  * @attention 只支持十进制
  */
@@ -154,7 +154,7 @@ f32 Str2Num(Type2Type<f32>, const char* str)
 
 /**
  *
- * @param str
+ * @param str 不能为空指针
  * @return
  * @attention 只支持十进制
  */

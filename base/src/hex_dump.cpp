@@ -3,7 +3,7 @@
 
 int HexDump(char* buf, size_t buf_size, const void* data, size_t len)
 {
-    if (NULL == data || len <= 0 || NULL == buf || buf_size <= 0)
+    if (NULL == buf || buf_size < 2 || NULL == data || len < 1)
     {
         return -1;
     }
@@ -21,7 +21,7 @@ int HexDump(char* buf, size_t buf_size, const void* data, size_t len)
     {
         if (buf_size - offset <= 1)
         {
-            return -2;
+            return -1;
         }
 
         n = StrPrintf(buf + offset, buf_size - offset, "%3x", i);
@@ -32,7 +32,7 @@ int HexDump(char* buf, size_t buf_size, const void* data, size_t len)
     {
         if (buf_size - offset <= 1)
         {
-            return -3;
+            return -1;
         }
 
         // 行号

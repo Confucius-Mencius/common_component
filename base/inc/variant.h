@@ -22,7 +22,7 @@
 //所以， 有时候在我们写下如 AAA a = xxx， 这样的代码， 且恰好xxx的类型正好是AAA单参数构造器的参数类型， 这时候编译器就自动调用这个构造器， 创建一个AAA的对象， 相当于AAA tmp(xxx); AAA a = tmp;两句。
 //在这样的构造函数前面加上explicit修饰， 指定这个构造函数只能被明确的调用/使用， 不能作为类型转换操作符被隐含的使用， 即类似AAA a = xxx只有的语句编译不过。
 
-#include "string.h"
+#include <string.h>
 #include <ostream>
 #include "data_type.h"
 #include "type2type.h"

@@ -152,9 +152,9 @@ int ReadTxtFile(const char* file_path, void* data, size_t& len);
 /**
  * @brief open file with retry
  * @param file_path
- * @param flags
- * @param mode
- * @param nretrys
+ * @param flags 参见 man 2 open
+ * @param mode 参见 man 2 open
+ * @param nretrys 尝试次数
  * @param sleep_ms 睡眠等待时间，单位：毫秒
  * @return =0表示成功，否则失败
  */
@@ -165,8 +165,8 @@ int OpenFileWithRetry(const char* file_path, int flags, mode_t mode, int nretrys
  * @param fd
  * @param data
  * @param len
- * @param nretrys
- * @param sleep_ms
+ * @param nretrys 尝试次数
+ * @param sleep_ms 睡眠等待时间，单位：毫秒
  * @return
  */
 int WriteFileWithRetry(int fd, const void* data, size_t len, int nretrys, int sleep_ms);
@@ -177,7 +177,7 @@ int WriteFileWithRetry(int fd, const void* data, size_t len, int nretrys, int sl
  * @param iov
  * @param iovcnt 不能超过1024
  * @param total_data_len
- * @param nretrys
+ * @param nretrys 尝试次数
  * @param sleep_ms 睡眠等待时间，单位：毫秒
  * @return =0表示成功，否则失败
  */

@@ -16,14 +16,14 @@ namespace uuid_test
  */
 void Test001()
 {
-    Uuid uuid = MakeUuid();
+    UUID uuid = MakeUUID();
 
     char buf38[UUID_LEN_38 + 1] = "";
-    const char* s38 = Uuid38(buf38, sizeof(buf38), uuid);
+    const char* s38 = UUID38(buf38, sizeof(buf38), uuid);
     std::cout << "uuid: " << s38 << std::endl;
 
     char buf32[UUID_LEN_32 + 1] = "";
-    const char* s32 = Uuid32(buf32, sizeof(buf32), uuid);
+    const char* s32 = UUID32(buf32, sizeof(buf32), uuid);
     std::cout << "uuid: " << s32 << std::endl;
 }
 

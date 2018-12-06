@@ -3,6 +3,8 @@
 
 #include "test_util.h"
 
+namespace fast_crc32_test
+{
 class FastCRC32Test : public GTest
 {
 public:
@@ -11,9 +13,7 @@ public:
 
     void Test001();
     void Test002();
-
-private:
-
 };
+}
 
 #endif // BASE_TEST_FAST_CRC32_TEST_H_

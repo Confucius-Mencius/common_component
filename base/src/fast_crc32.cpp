@@ -20,8 +20,8 @@
 
 #include "fast_crc32.h"
 #include <stdio.h>
-#include "std_int.h"
 #include "file_util.h"
+#include "std_int.h"
 
 // define endianess and some integer data types
 #ifdef _MSC_VER
@@ -101,7 +101,8 @@ uint32_t crc32_halfbyte(const void* data, size_t length, uint32_t previousCrc32 
     const uint8_t* current = (const uint8_t*) data;
 
     /// look-up table for half-byte, same as crc32Lookup[0][16*i]
-    static const uint32_t Crc32Lookup16[16] = {
+    static const uint32_t Crc32Lookup16[16] =
+    {
         0x00000000, 0x1DB71064, 0x3B6E20C8, 0x26D930AC, 0x76DC4190, 0x6B6B51F4, 0x4DB26158, 0x5005713C,
         0xEDB88320, 0xF00F9344, 0xD6D6A3E8, 0xCB61B38C, 0x9B64C2B0, 0x86D3D2D4, 0xA00AE278, 0xBDBDF21C
     };
@@ -427,7 +428,8 @@ uint32_t crc32_fast(const void* data, size_t length, uint32_t previous_crc32)
 
 
 /// look-up table, already declared above
-const uint32_t Crc32Lookup[MaxSlice][256] = {
+const uint32_t Crc32Lookup[MaxSlice][256] =
+{
     //// same algorithm as crc32_bitwise
     //for (int i = 0; i <= 0xFF; i++)
     //{
@@ -1011,17 +1013,17 @@ unsigned int FastCRC32(const void* data, size_t length, unsigned int previous_cr
     return crc32_fast(data, length, previous_crc32);
 }
 
-unsigned int FastFileCRC32(const char* file_path)
+unsigned int FileFastCRC32(const char* file_path)
 {
     if (NULL == file_path || !FileExist(file_path))
     {
-        return -1;
+        return 0;
     }
 
     FILE* fp = fopen(file_path, "r");
     if (NULL == fp)
     {
-        return -2;
+        return 0;
     }
 
     uint32_t file_crc32 = 0;

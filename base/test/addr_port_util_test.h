@@ -3,6 +3,8 @@
 
 #include "test_util.h"
 
+namespace addr_port_util_test
+{
 class AddrPortUtilTest : public GTest
 {
 public:
@@ -14,5 +16,6 @@ public:
     void Test003();
     void Test004();
 };
+}
 
 #endif // BASE_TEST_ADDR_PORT_UTIL_TEST_H_

@@ -1,29 +1,8 @@
-#include "test_util.h"
 #include "num_util.h"
+#include "test_util.h"
 
-static i32 Distance(i32 x1, i32 y1, i32 x2, i32 y2)
+namespace num_util_test
 {
-    const i64 h = ((i64) x2) - ((i64) x1);
-    const i64 v = ((i64) y2) - ((i64) y1);
-    const i64 r = h * h + v * v;
-
-    assert(r < F32_MAX);
-    const i64 ret = (i64) Round(QuickReciprocalSQRT((float) r) * r, 0);
-
-    assert(ret <= I32_MAX);
-    return (i32) ret;
-}
-
-static bool DistanceGT(i32 x1, i32 y1, i32 x2, i32 y2, i32 threshold)
-{
-    const i64 h = ((i64) x2) - ((i64) x1);
-    const i64 v = ((i64) y2) - ((i64) y1);
-    const i64 r = h * h + v * v;
-    const i64 t = threshold;
-
-    return ((r > (t * t)) ? true : false);
-}
-
 /**
  * @brief 取整计算测试-i32类型
  * @details
@@ -35,7 +14,7 @@ static bool DistanceGT(i32 x1, i32 y1, i32 x2, i32 y2, i32 threshold)
  1，
  * @note
  */
-static void Test001()
+void Test001()
 {
     // 被除数为正数，除数为正数
     // 能整除
@@ -117,7 +96,7 @@ static void Test001()
  1，
  * @note
  */
-static void Test002()
+void Test002()
 {
     // 能整除
     u32 a = UINT32_C(100);
@@ -147,7 +126,7 @@ static void Test002()
  1，
  * @note
  */
-static void Test003()
+void Test003()
 {
     // 被除数为正数，除数为正数
     // 能整除
@@ -229,7 +208,7 @@ static void Test003()
  1，
  * @note
  */
-static void Test004()
+void Test004()
 {
     // 能整除
     u64 a = UINT64_C(100);
@@ -259,7 +238,7 @@ static void Test004()
  1，
  * @note
  */
-static void Test005()
+void Test005()
 {
     // a为正数，b为正数
     i32 a = 100;
@@ -303,7 +282,7 @@ static void Test005()
  1，
  * @note
  */
-static void Test006()
+void Test006()
 {
     u32 a = UINT32_C(100);
     u32 b = UINT32_C(200);
@@ -326,7 +305,7 @@ static void Test006()
  1，
  * @note
  */
-static void Test007()
+void Test007()
 {
     // a为正数，b为正数
     i64 a = INT64_C(100);
@@ -370,7 +349,7 @@ static void Test007()
  1，
  * @note
  */
-static void Test008()
+void Test008()
 {
     u64 a = UINT64_C(100);
     u64 b = UINT64_C(200);
@@ -393,7 +372,7 @@ static void Test008()
  1，
  * @note
  */
-static void Test009()
+void Test009()
 {
     f32 f;
     f32 ret;
@@ -561,7 +540,7 @@ static void Test009()
  1，
  * @note
  */
-static void Test010()
+void Test010()
 {
     f64 f;
     f64 ret;
@@ -729,7 +708,7 @@ static void Test010()
  1，
  * @note
  */
-static void Test011()
+void Test011()
 {
     f32 f1 = 1.1f;
     f32 f2 = 1.2f;
@@ -759,7 +738,7 @@ static void Test011()
  1，
  * @note
  */
-static void Test012()
+void Test012()
 {
     f64 f1 = 1.1;
     f64 f2 = 1.2;
@@ -779,601 +758,6 @@ static void Test012()
 }
 
 /**
- * @brief 安全加测试-i32类型
- * @details
- *  - Set Up:
- 1，
- *  - Expectation:
- 1，
- *  - Tear Down:
- 1，
- * @note
- */
-static void Test013()
-{
-    // 不会超过逻辑上限
-    i32 cur_val = 100;
-    i32 delta = 50;
-    i32 limit = 151;
-    bool exceed = false;
-    EXPECT_TRUE(CanPlus(cur_val, delta, limit, I32_MAX, exceed));
-    EXPECT_EQ(cur_val + delta, Plus(cur_val, delta, limit, I32_MAX, exceed));
-
-    cur_val = 100;
-    delta = 50;
-    limit = 151;
-    exceed = true;
-    EXPECT_TRUE(CanPlus(cur_val, delta, limit, I32_MAX, exceed));
-    EXPECT_EQ(cur_val + delta, Plus(cur_val, delta, limit, I32_MAX, exceed));
-
-    // 会超过逻辑上限
-    cur_val = 100;
-    delta = 50;
-    limit = 149;
-    exceed = false;
-    EXPECT_FALSE(CanPlus(cur_val, delta, limit, I32_MAX, exceed));
-    EXPECT_EQ(cur_val, Plus(cur_val, delta, limit, I32_MAX, exceed));
-
-    cur_val = 100;
-    delta = 50;
-    limit = 149;
-    exceed = true;
-    EXPECT_TRUE(CanPlus(cur_val, delta, limit, I32_MAX, exceed));
-    EXPECT_EQ(cur_val + delta, Plus(cur_val, delta, limit, I32_MAX, exceed));
-
-    cur_val = I32_MAX - 1;
-    delta = 50;
-    limit = 149;
-    exceed = true;
-    EXPECT_TRUE(CanPlus(cur_val, delta, limit, I32_MAX, exceed));
-    EXPECT_EQ(I32_MAX, Plus(cur_val, delta, limit, I32_MAX, exceed));
-
-    // cur_val为负数，limit为正数
-    cur_val = -100;
-    delta = I32_MAX;
-    limit = I32_MAX - 101;
-    exceed = false;
-    EXPECT_FALSE(CanPlus(cur_val, delta, limit, I32_MAX, exceed));
-    EXPECT_EQ(cur_val, Plus(cur_val, delta, limit, I32_MAX, exceed));
-
-    cur_val = -100;
-    delta = I32_MAX;
-    limit = I32_MAX - 101;
-    exceed = true;
-    EXPECT_TRUE(CanPlus(cur_val, delta, limit, I32_MAX, exceed));
-    EXPECT_EQ(cur_val + delta, Plus(cur_val, delta, limit, I32_MAX, exceed));
-}
-
-/**
- * @brief 安全加测试-u32类型
- * @details
- *  - Set Up:
- 1，
- *  - Expectation:
- 1，
- *  - Tear Down:
- 1，
- * @note
- */
-static void Test014()
-{
-    // 不会超过逻辑上限
-    u32 cur_val = UINT32_C(100);
-    u32 delta = UINT32_C(50);
-    u32 limit = UINT32_C(151);
-    bool exceed = false;
-    EXPECT_TRUE(CanPlus(cur_val, delta, limit, U32_MAX, exceed));
-    EXPECT_EQ(cur_val + delta, Plus(cur_val, delta, limit, U32_MAX, exceed));
-
-    cur_val = UINT32_C(100);
-    delta = UINT32_C(50);
-    limit = UINT32_C(151);
-    exceed = true;
-    EXPECT_TRUE(CanPlus(cur_val, delta, limit, U32_MAX, exceed));
-    EXPECT_EQ(cur_val + delta, Plus(cur_val, delta, limit, U32_MAX, exceed));
-
-    // 会超过逻辑上限
-    cur_val = UINT32_C(100);
-    delta = UINT32_C(50);
-    limit = UINT32_C(149);
-    exceed = false;
-    EXPECT_FALSE(CanPlus(cur_val, delta, limit, U32_MAX, exceed));
-    EXPECT_EQ(cur_val, Plus(cur_val, delta, limit, U32_MAX, exceed));
-
-    cur_val = UINT32_C(100);
-    delta = UINT32_C(50);
-    limit = UINT32_C(149);
-    exceed = true;
-    EXPECT_TRUE(CanPlus(cur_val, delta, limit, U32_MAX, exceed));
-    EXPECT_EQ(cur_val + delta, Plus(cur_val, delta, limit, U32_MAX, exceed));
-
-    cur_val = U32_MAX - 1;
-    delta = UINT32_C(50);
-    limit = UINT32_C(149);
-    exceed = true;
-    EXPECT_TRUE(CanPlus(cur_val, delta, limit, U32_MAX, exceed));
-    EXPECT_EQ(U32_MAX, Plus(cur_val, delta, limit, U32_MAX, exceed));
-}
-
-/**
- * @brief 安全加测试-i64类型
- * @details
- *  - Set Up:
- 1，
- *  - Expectation:
- 1，
- *  - Tear Down:
- 1，
- * @note
- */
-static void Test015()
-{
-    // 不会超过逻辑上限
-    i64 cur_val = INT64_C(100);
-    i64 delta = INT64_C(50);
-    i64 limit = INT64_C(151);
-    bool exceed = false;
-    EXPECT_TRUE(CanPlus(cur_val, delta, limit, I64_MAX, exceed));
-    EXPECT_EQ(cur_val + delta, Plus(cur_val, delta, limit, I64_MAX, exceed));
-
-    cur_val = INT64_C(100);
-    delta = INT64_C(50);
-    limit = INT64_C(151);
-    exceed = true;
-    EXPECT_TRUE(CanPlus(cur_val, delta, limit, I64_MAX, exceed));
-    EXPECT_EQ(cur_val + delta, Plus(cur_val, delta, limit, I64_MAX, exceed));
-
-    // 会超过逻辑上限
-    cur_val = INT64_C(100);
-    delta = INT64_C(50);
-    limit = INT64_C(149);
-    exceed = false;
-    EXPECT_FALSE(CanPlus(cur_val, delta, limit, I64_MAX, exceed));
-    EXPECT_EQ(cur_val, Plus(cur_val, delta, limit, I64_MAX, exceed));
-
-    cur_val = INT64_C(100);
-    delta = INT64_C(50);
-    limit = INT64_C(149);
-    exceed = true;
-    EXPECT_TRUE(CanPlus(cur_val, delta, limit, I64_MAX, exceed));
-    EXPECT_EQ(cur_val + delta, Plus(cur_val, delta, limit, I64_MAX, exceed));
-
-    cur_val = I64_MAX - 1;
-    delta = INT64_C(50);
-    limit = INT64_C(149);
-    exceed = true;
-    EXPECT_TRUE(CanPlus(cur_val, delta, limit, I64_MAX, exceed));
-    EXPECT_EQ(I64_MAX, Plus(cur_val, delta, limit, I64_MAX, exceed));
-
-    // cur_val为负数，limit为正数
-    cur_val = -100;
-    delta = I64_MAX;
-    limit = I64_MAX - 101;
-    exceed = false;
-    EXPECT_FALSE(CanPlus(cur_val, delta, limit, I64_MAX, exceed));
-    EXPECT_EQ(cur_val, Plus(cur_val, delta, limit, I64_MAX, exceed));
-
-    cur_val = -100;
-    delta = I64_MAX;
-    limit = I64_MAX - 101;
-    exceed = true;
-    EXPECT_TRUE(CanPlus(cur_val, delta, limit, I64_MAX, exceed));
-    EXPECT_EQ(cur_val + delta, Plus(cur_val, delta, limit, I64_MAX, exceed));
-}
-
-/**
- * @brief 安全加测试-u64类型
- * @details
- *  - Set Up:
- 1，
- *  - Expectation:
- 1，
- *  - Tear Down:
- 1，
- * @note
- */
-static void Test016()
-{
-    // 不会超过逻辑上限
-    u64 cur_val = UINT64_C(100);
-    u64 delta = UINT64_C(50);
-    u64 limit = UINT64_C(151);
-    bool exceed = false;
-    EXPECT_TRUE(CanPlus(cur_val, delta, limit, U64_MAX, exceed));
-    EXPECT_EQ(cur_val + delta, Plus(cur_val, delta, limit, U64_MAX, exceed));
-
-    cur_val = UINT64_C(100);
-    delta = UINT64_C(50);
-    limit = UINT64_C(151);
-    exceed = true;
-    EXPECT_TRUE(CanPlus(cur_val, delta, limit, U64_MAX, exceed));
-    EXPECT_EQ(cur_val + delta, Plus(cur_val, delta, limit, U64_MAX, exceed));
-
-    // 会超过逻辑上限
-    cur_val = UINT64_C(100);
-    delta = UINT64_C(50);
-    limit = UINT64_C(149);
-    exceed = false;
-    EXPECT_FALSE(CanPlus(cur_val, delta, limit, U64_MAX, exceed));
-    EXPECT_EQ(cur_val, Plus(cur_val, delta, limit, U64_MAX, exceed));
-
-    cur_val = UINT64_C(100);
-    delta = UINT64_C(50);
-    limit = UINT64_C(149);
-    exceed = true;
-    EXPECT_TRUE(CanPlus(cur_val, delta, limit, U64_MAX, exceed));
-    EXPECT_EQ(cur_val + delta, Plus(cur_val, delta, limit, U64_MAX, exceed));
-
-    cur_val = U64_MAX - 1;
-    delta = UINT64_C(50);
-    limit = UINT64_C(149);
-    exceed = true;
-    EXPECT_TRUE(CanPlus(cur_val, delta, limit, U64_MAX, exceed));
-    EXPECT_EQ(U64_MAX, Plus(cur_val, delta, limit, U64_MAX, exceed));
-}
-
-/**
- * @brief 安全加测试-f32类型
- * @details
- *  - Set Up:
- 1，
- *  - Expectation:
- 1，
- *  - Tear Down:
- 1，
- * @note
- */
-static void Test017()
-{
-//    FAIL()<< "f32 plus test";
-}
-
-/**
- * @brief 安全加测试-f64类型
- * @details
- *  - Set Up:
- 1，
- *  - Expectation:
- 1，
- *  - Tear Down:
- 1，
- * @note
- */
-static void Test018()
-{
-//    FAIL()<< "f64 plus test";
-}
-
-/**
- * @brief 安全减测试-i32类型
- * @details
- *  - Set Up:
- 1，
- *  - Expectation:
- 1，
- *  - Tear Down:
- 1，
- * @note
- */
-static void Test019()
-{
-    // 不会超过逻辑下限
-    i32 cur_val = 100;
-    i32 delta = 50;
-    i32 limit = 49;
-    bool exceed = false;
-    EXPECT_TRUE(CanMinus(cur_val, delta, limit, I32_MIN, exceed));
-    EXPECT_EQ(cur_val - delta, Minus(cur_val, delta, limit, I32_MIN, exceed));
-
-    cur_val = 100;
-    delta = 50;
-    limit = 49;
-    exceed = true;
-    EXPECT_TRUE(CanMinus(cur_val, delta, limit, I32_MIN, exceed));
-    EXPECT_EQ(cur_val - delta, Minus(cur_val, delta, limit, I32_MIN, exceed));
-
-    // 会超过逻辑下限
-    cur_val = 100;
-    delta = 50;
-    limit = 51;
-    exceed = false;
-    EXPECT_FALSE(CanMinus(cur_val, delta, limit, I32_MIN, exceed));
-    EXPECT_EQ(cur_val, Minus(cur_val, delta, limit, I32_MIN, exceed));
-
-    cur_val = 100;
-    delta = 50;
-    limit = 51;
-    exceed = true;
-    EXPECT_TRUE(CanMinus(cur_val, delta, limit, I32_MIN, exceed));
-    EXPECT_EQ(cur_val - delta, Minus(cur_val, delta, limit, I32_MIN, exceed));
-
-    cur_val = I32_MIN + 1;
-    delta = 50;
-    limit = 51;
-    exceed = true;
-    EXPECT_TRUE(CanMinus(cur_val, delta, limit, I32_MIN, exceed));
-    EXPECT_EQ(I32_MIN, Minus(cur_val, delta, limit, I32_MIN, exceed));
-
-    // cur_val为负数，limit为正数
-    cur_val = 100;
-    delta = I32_MAX;
-    limit = I32_MIN + 102;
-    exceed = false;
-    EXPECT_FALSE(CanMinus(cur_val, delta, limit, I32_MIN, exceed));
-    EXPECT_EQ(cur_val, Minus(cur_val, delta, limit, I32_MIN, exceed));
-
-    cur_val = 100;
-    delta = I32_MAX;
-    limit = I32_MIN + 102;
-    exceed = true;
-    EXPECT_TRUE(CanMinus(cur_val, delta, limit, I32_MIN, exceed));
-    EXPECT_EQ(cur_val - delta, Minus(cur_val, delta, limit, I32_MIN, exceed));
-}
-
-/**
- * @brief 安全减测试-u32类型
- * @details
- *  - Set Up:
- 1，
- *  - Expectation:
- 1，
- *  - Tear Down:
- 1，
- * @note
- */
-static void Test020()
-{
-    // 不会超过逻辑下限
-    u32 cur_val = UINT32_C(100);
-    u32 delta = UINT32_C(50);
-    u32 limit = UINT32_C(49);
-    bool exceed = false;
-    EXPECT_TRUE(CanMinus(cur_val, delta, limit, U32_MIN, exceed));
-    EXPECT_EQ(cur_val - delta, Minus(cur_val, delta, limit, U32_MIN, exceed));
-
-    cur_val = UINT32_C(100);
-    delta = UINT32_C(50);
-    limit = UINT32_C(49);
-    exceed = true;
-    EXPECT_TRUE(CanMinus(cur_val, delta, limit, U32_MIN, exceed));
-    EXPECT_EQ(cur_val - delta, Minus(cur_val, delta, limit, U32_MIN, exceed));
-
-    // 会超过逻辑下限
-    cur_val = UINT32_C(100);
-    delta = UINT32_C(50);
-    limit = UINT32_C(51);
-    exceed = false;
-    EXPECT_FALSE(CanMinus(cur_val, delta, limit, U32_MIN, exceed));
-    EXPECT_EQ(cur_val, Minus(cur_val, delta, limit, U32_MIN, exceed));
-
-    cur_val = UINT32_C(100);
-    delta = UINT32_C(50);
-    limit = UINT32_C(51);
-    exceed = true;
-    EXPECT_TRUE(CanMinus(cur_val, delta, limit, U32_MIN, exceed));
-    EXPECT_EQ(cur_val - delta, Minus(cur_val, delta, limit, U32_MIN, exceed));
-
-    cur_val = U32_MIN + 1;
-    delta = UINT32_C(50);
-    limit = UINT32_C(51);
-    exceed = true;
-    EXPECT_TRUE(CanMinus(cur_val, delta, limit, U32_MIN, exceed));
-    EXPECT_EQ(U32_MIN, Minus(cur_val, delta, limit, U32_MIN, exceed));
-}
-
-/**
- * @brief 安全减测试-i64类型
- * @details
- *  - Set Up:
- 1，
- *  - Expectation:
- 1，
- *  - Tear Down:
- 1，
- * @note
- */
-static void Test021()
-{
-    // 不会超过逻辑下限
-    i64 cur_val = INT64_C(100);
-    i64 delta = INT64_C(50);
-    i64 limit = INT64_C(49);
-    bool exceed = false;
-    EXPECT_TRUE(CanMinus(cur_val, delta, limit, I64_MIN, exceed));
-    EXPECT_EQ(cur_val - delta, Minus(cur_val, delta, limit, I64_MIN, exceed));
-
-    cur_val = INT64_C(100);
-    delta = INT64_C(50);
-    limit = INT64_C(49);
-    exceed = true;
-    EXPECT_TRUE(CanMinus(cur_val, delta, limit, I64_MIN, exceed));
-    EXPECT_EQ(cur_val - delta, Minus(cur_val, delta, limit, I64_MIN, exceed));
-
-    // 会超过逻辑下限
-    cur_val = INT64_C(100);
-    delta = INT64_C(50);
-    limit = INT64_C(51);
-    exceed = false;
-    EXPECT_FALSE(CanMinus(cur_val, delta, limit, I64_MIN, exceed));
-    EXPECT_EQ(cur_val, Minus(cur_val, delta, limit, I64_MIN, exceed));
-
-    cur_val = INT64_C(100);
-    delta = INT64_C(50);
-    limit = INT64_C(51);
-    exceed = true;
-    EXPECT_TRUE(CanMinus(cur_val, delta, limit, I64_MIN, exceed));
-    EXPECT_EQ(cur_val - delta, Minus(cur_val, delta, limit, I64_MIN, exceed));
-
-    cur_val = I64_MIN + 1;
-    delta = INT64_C(50);
-    limit = INT64_C(51);
-    exceed = true;
-    EXPECT_TRUE(CanMinus(cur_val, delta, limit, I64_MIN, exceed));
-    EXPECT_EQ(I64_MIN, Minus(cur_val, delta, limit, I64_MIN, exceed));
-}
-
-/**
- * @brief 安全减测试-u64类型
- * @details
- *  - Set Up:
- 1，
- *  - Expectation:
- 1，
- *  - Tear Down:
- 1，
- * @note
- */
-static void Test022()
-{
-    // 不会超过逻辑下限
-    u64 cur_val = UINT64_C(100);
-    u64 delta = UINT64_C(50);
-    u64 limit = UINT64_C(49);
-    bool exceed = false;
-    EXPECT_TRUE(CanMinus(cur_val, delta, limit, U64_MIN, exceed));
-    EXPECT_EQ(cur_val - delta, Minus(cur_val, delta, limit, U64_MIN, exceed));
-
-    cur_val = UINT64_C(100);
-    delta = UINT64_C(50);
-    limit = UINT64_C(49);
-    exceed = true;
-    EXPECT_TRUE(CanMinus(cur_val, delta, limit, U64_MIN, exceed));
-    EXPECT_EQ(cur_val - delta, Minus(cur_val, delta, limit, U64_MIN, exceed));
-
-    // 会超过逻辑下限
-    cur_val = UINT64_C(100);
-    delta = UINT64_C(50);
-    limit = UINT64_C(51);
-    exceed = false;
-    EXPECT_FALSE(CanMinus(cur_val, delta, limit, U64_MIN, exceed));
-    EXPECT_EQ(cur_val, Minus(cur_val, delta, limit, U64_MIN, exceed));
-
-    cur_val = UINT64_C(100);
-    delta = UINT64_C(50);
-    limit = UINT64_C(51);
-    exceed = true;
-    EXPECT_TRUE(CanMinus(cur_val, delta, limit, U64_MIN, exceed));
-    EXPECT_EQ(cur_val - delta, Minus(cur_val, delta, limit, U64_MIN, exceed));
-
-    cur_val = U64_MIN + 1;
-    delta = UINT64_C(50);
-    limit = UINT64_C(51);
-    exceed = true;
-    EXPECT_TRUE(CanMinus(cur_val, delta, limit, U64_MIN, exceed));
-    EXPECT_EQ(U64_MIN, Minus(cur_val, delta, limit, U64_MIN, exceed));
-}
-
-/**
- * @brief 安全减测试-f32类型
- * @details
- *  - Set Up:
- 1，
- *  - Expectation:
- 1，
- *  - Tear Down:
- 1，
- * @note
- */
-static void Test023()
-{
-//    FAIL()<< "f32 minus test";
-}
-
-/**
- * @brief 安全减测试-f64类型
- * @details
- *  - Set Up:
- 1，
- *  - Expectation:
- 1，
- *  - Tear Down:
- 1，
- * @note
- */
-static void Test024()
-{
-//    FAIL()<< "f64 minus test";
-}
-
-/**
- * @brief 两个i32类型的正数相乘测试
- * @details
- *  - Set Up:
- 1，
- *  - Expectation:
- 1，
- *  - Tear Down:
- 1，
- * @note
- */
-static void Test025()
-{
-    // 结果不会溢出
-    i32 a = 100;
-    i32 b = 200;
-    i32 i;
-    i32 ret;
-
-    i = 100 * 200;
-    EXPECT_TRUE(Multiply(ret, a, b));
-    EXPECT_EQ(i, ret);
-
-    // 结果会溢出
-    a = I32_MAX - 1;
-    EXPECT_FALSE(Multiply(ret, a, b));
-
-    // 参数错误
-    a = -1;
-    EXPECT_FALSE(Multiply(ret, a, b));
-
-    // 参数错误
-    a = 0;
-    EXPECT_FALSE(Multiply(ret, a, b));
-}
-
-/**
- * @brief 平方根的倒数测试
- * @details
- *  - Set Up:
- 1，
- *  - Expectation:
- 1，
- *  - Tear Down:
- 1，
- * @note
- */
-static void Test026()
-{
-    i32 x = 4;
-    f32 ret = 0.49915358f; //0.5f;
-    EXPECT_FLOAT_EQ(ret, QuickReciprocalSQRT(x));
-    //EXPECT_FLOAT_EQ(ret, Q_RSQRT(x)); // 两种实现一样
-}
-
-/**
- * @brief 两点间的距离测试
- * @details
- *  - Set Up:
- 1，
- *  - Expectation:
- 1，
- *  - Tear Down:
- 1，
- * @note
- */
-static void Test027()
-{
-    i32 x1 = 0;
-    i32 y1 = 0;
-    i32 x2 = 3;
-    i32 y2 = 4;
-    i32 d = 5;
-    EXPECT_EQ(d, Distance(x1, y1, x2, y2));
-    EXPECT_TRUE(DistanceGT(x1, y1, x2, y2, 4));
-    EXPECT_FALSE(DistanceGT(x1, y1, x2, y2, 6));
-}
-
-/**
  * @brief NOT_LT_MULTI_M测试
  * @details
  *  - Set Up:
@@ -1384,7 +768,7 @@ static void Test027()
  1，
  * @note
  */
-static void Test028()
+void Test013()
 {
     i32 x = 10;
     i32 m = 2;
@@ -1399,7 +783,7 @@ static void Test028()
     EXPECT_EQ(ret, NOT_LT_MULTI_M(x, m));
 }
 
-static void Test029()
+void Test014()
 {
     i32 x = 10;
     i32 m = 2;
@@ -1434,77 +818,4 @@ ADD_TEST(NumUtilTest, Test011);
 ADD_TEST(NumUtilTest, Test012);
 ADD_TEST(NumUtilTest, Test013);
 ADD_TEST(NumUtilTest, Test014);
-ADD_TEST(NumUtilTest, Test015);
-ADD_TEST(NumUtilTest, Test016);
-ADD_TEST(NumUtilTest, Test017);
-ADD_TEST(NumUtilTest, Test018);
-ADD_TEST(NumUtilTest, Test019);
-ADD_TEST(NumUtilTest, Test020);
-ADD_TEST(NumUtilTest, Test021);
-ADD_TEST(NumUtilTest, Test022);
-ADD_TEST(NumUtilTest, Test023);
-ADD_TEST(NumUtilTest, Test024);
-ADD_TEST(NumUtilTest, Test025);
-ADD_TEST(NumUtilTest, Test026);
-ADD_TEST(NumUtilTest, Test027);
-ADD_TEST(NumUtilTest, Test028);
-ADD_TEST(NumUtilTest, Test029);
-
-namespace int_min_test
-{
-/*
- INT_MIN in <limits.h> is a macro that expands to the minimum value for an object of type int. In the 32-bit C compilers I have installed at the moment, it is defined as:
-
- #define INT_MIN     (-2147483647 - 1)
- So what exactly is wrong with the integer constant -2147483648 ?
-
- Well, firstly it is not an integer constant. Let’s see what the standard says:
-
- “An integer constant begins with a digit, but has no period or exponent part. It may have a prefix that specifies its base and a suffix that specifies its type.”
- You will notice there is no mention of a sign. So -2147483648 is in fact a constant expression, consisting of the unary minus operator, and the integer constant 2147483648.
-
- This still does not explain why that expression is not used directly in the macro. To see that, we have to revisit the rules for the type of integer constants.
-
- The type of an unsuffixed integer constant is the first of these in which its value can be represented:
-
- C89 :   int, long int, unsigned long int
- C99 :   int, long int, long long int
- C++ :   int, long int, long long int
- The problem is that 2147483648 cannot be represented in a signed 32-bit integer, so it becomes either an unsigned long int or a long long int.
-
- So we have to resort to a little trickery, and compute -2147483648 as (-2147483647 – 1), which all fit nicely into 32-bit signed integers, and INT_MIN gets the right type and value.
-
- If you happen to look up INT_MIN in the standard you will see:
-
- minimum value for an object of type int
-
- INT_MIN                 -32767
- Which brings up the question why isn’t it (-32767 – 1)?
-
- Pretty much any computer available today uses two’s complement to represent signed numbers, but this hasn’t always been the case.
-
- Since C was designed to work efficiently on a variety of architectures, the standard’s limits allow for using other representations as well.
-
- I will end this post with a little (not quite standard conformant) example. Try compiling it with your favorite C compiler, and let us know if something puzzles you.
- */
-
-//int main(void)
-//{
-//    // 在vc++2008下，下列if都是true
-//    if (-2147483648 > 0)     printf("positive\n");
-//    if (-2147483647 - 1 < 0) printf("negative\n");
-//    if (INT_MIN == -INT_MIN) printf("equal\n");
-//    if (FLT_MIN > 0)         printf("floating\n");
-//
-//    return 0;
-//}
-static void Test001()
-{
-    //EXPECT_TRUE(-2147483648 > 0); // linux下编译报错
-    EXPECT_TRUE(-2147483647 - 1 < 0);
-    //EXPECT_TRUE(INT_MIN == -INT_MIN); // linux下编译报错，因为-INT_MIN已经超出了I32_MAX
-    EXPECT_TRUE(FLT_MIN > 0);
 }
-
-ADD_TEST(IntMinTest, Test001);
-} // namespace int_min_test

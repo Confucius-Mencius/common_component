@@ -3,6 +3,8 @@
 
 #include "test_util.h"
 
+namespace file_util_test
+{
 class FileUtilTest : public GTest
 {
 public:
@@ -17,9 +19,8 @@ public:
     void Test006();
     void Test007();
     void Test008();
-
-private:
-
+    void Test009();
 };
+}
 
 #endif // BASE_TEST_FILE_UTIL_TEST_H_

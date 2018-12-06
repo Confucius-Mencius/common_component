@@ -1,9 +1,11 @@
 #ifndef BASE_TEST_LAST_ERR_MSG_TEST_H_
 #define BASE_TEST_LAST_ERR_MSG_TEST_H_
 
-#include "test_util.h"
 #include "last_err_msg.h"
+#include "test_util.h"
 
+namespace last_err_msg_test
+{
 class LastErrMsgTest : public GTest
 {
 private:
@@ -17,6 +19,8 @@ public:
     virtual void TearDown();
 
     void Test001();
+    void Test002();
 };
+}
 
 #endif // BASE_TEST_LAST_ERR_MSG_TEST_H_

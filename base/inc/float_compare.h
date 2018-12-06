@@ -1,6 +1,6 @@
 /**
  * @file float_compare.h
- * @brief 浮点数比较的方法，来自google test
+ * @brief 浮点数比较的方法，来自gtest/internal/gtest-port.h和gtest/internal/gtest-internal.h
  * @author BrentHuang (guang11cheng@qq.com)
  * @copyright Copyright (C) 2008-2016, MOON Corporation. All rights reserved.
  */
@@ -8,30 +8,29 @@
 #ifndef BASE_INC_FLOAT_COMPARE_H_
 #define BASE_INC_FLOAT_COMPARE_H_
 
-#include <stddef.h>
 #include <limits>
 
 namespace google_test
 {
-// This template class serves as a compile-time function from size_ to
-// Type.  It maps a size_ in bytes to a primitive Type with that
-// size_. e.g.
+// This template class serves as a compile-time function from size to
+// type.  It maps a size in bytes to a primitive type with that
+// size. e.g.
 //
 //   TypeWithSize<4>::UInt
 //
 // is typedef-ed to be unsigned int (unsigned integer made up of 4
 // bytes).
 //
-// Such functionality should belong to STL, but I cannot Find it
+// Such functionality should belong to STL, but I cannot find it
 // there.
 //
-// Google Func uses this class in the implementation of floating-point
+// Google Test uses this class in the implementation of floating-point
 // comparison.
 //
-// For now it only handles UInt (unsigned int) as that's all Google Func
+// For now it only handles UInt (unsigned int) as that's all Google Test
 // needs.  Other types can be easily added in the future if need
 // arises.
-template<size_t size>
+template <size_t size>
 class TypeWithSize
 {
 public:
@@ -40,12 +39,12 @@ public:
     typedef void UInt;
 };
 
-// The specialization for size_ 4.
-template<>
+// The specialization for size 4.
+template <>
 class TypeWithSize<4>
 {
 public:
-    // unsigned int has size_ 4 in both gcc and MSVC.
+    // unsigned int has size 4 in both gcc and MSVC.
     //
     // As base/basictypes.h doesn't compile on Windows, we cannot use
     // uint32, uint64, and etc here.
@@ -53,20 +52,28 @@ public:
     typedef unsigned int UInt;
 };
 
-// The specialization for size_ 8.
-template<>
+// The specialization for size 8.
+template <>
 class TypeWithSize<8>
 {
 public:
 #if GTEST_OS_WINDOWS
     typedef __int64 Int;
-  typedef unsigned __int64 UInt;
+    typedef unsigned __int64 UInt;
 #else
     typedef long long Int;  // NOLINT
     typedef unsigned long long UInt;  // NOLINT
 #endif  // GTEST_OS_WINDOWS
 };
 
+// Integer types of known sizes.
+typedef TypeWithSize<4>::Int Int32;
+typedef TypeWithSize<4>::UInt UInt32;
+typedef TypeWithSize<8>::Int Int64;
+typedef TypeWithSize<8>::UInt UInt64;
+typedef TypeWithSize<8>::Int TimeInMillis;  // Represents time in milliseconds.
+
+///////////////////////////////////////////////////////////////////////////////
 // This template class represents an IEEE floating-point number
 // (either single-precision or double-precision, depending on the
 // template parameters).
@@ -95,12 +102,12 @@ public:
 //
 // Template parameter:
 //
-//   RawType: the raw floating-point Type (either float or double)
-template<typename RawType>
+//   RawType: the raw floating-point type (either float or double)
+template <typename RawType>
 class FloatingPoint
 {
 public:
-    // Defines the unsigned integer Type that has the same size_ as the
+    // Defines the unsigned integer type that has the same size as the
     // floating point number.
     typedef typename TypeWithSize<sizeof(RawType)>::UInt Bits;
 
@@ -217,14 +224,16 @@ public:
         // The IEEE standard says that any comparison operation involving
         // a NAN must return false.
         if (is_nan() || rhs.is_nan())
-        { return false; }
+        {
+            return false;
+        }
 
         return DistanceBetweenSignAndMagnitudeNumbers(u_.bits_, rhs.u_.bits_)
                <= kMaxUlps;
     }
 
 private:
-    // The data Type used to store the actual floating-point number.
+    // The data type used to store the actual floating-point number.
     union FloatingPointUnion
     {
         RawType value_;  // The raw floating-point number.
@@ -263,7 +272,7 @@ private:
     // Given two numbers in the sign-and-magnitude representation,
     // returns the distance between them as an unsigned number.
     static Bits DistanceBetweenSignAndMagnitudeNumbers(const Bits& sam1,
-                                                       const Bits& sam2)
+            const Bits& sam2)
     {
         const Bits biased1 = SignAndMagnitudeToBiased(sam1);
         const Bits biased2 = SignAndMagnitudeToBiased(sam2);
@@ -272,6 +281,24 @@ private:
 
     FloatingPointUnion u_;
 };
+
+// We cannot use std::numeric_limits<T>::max() as it clashes with the max()
+// macro defined by <windows.h>.
+template <>
+inline float FloatingPoint<float>::Max()
+{
+    return FLT_MAX;
+}
+template <>
+inline double FloatingPoint<double>::Max()
+{
+    return DBL_MAX;
+}
+
+// Typedefs the instances of the FloatingPoint template class that we
+// care to use.
+typedef FloatingPoint<float> Float;
+typedef FloatingPoint<double> Double;
 }
 
 #endif // BASE_INC_FLOAT_COMPARE_H_

@@ -1,6 +1,8 @@
-#include "test_util.h"
 #include "byte_util.h"
+#include "test_util.h"
 
+namespace byte_util_test
+{
 /**
  * @brief bit设置与清除测试-u8类型
  * @details
@@ -527,3 +529,4 @@ ADD_TEST(ByteUtilTest, Test011);
 ADD_TEST(ByteUtilTest, Test012);
 ADD_TEST(ByteUtilTest, Test013);
 ADD_TEST(ByteUtilTest, Test014);
+}

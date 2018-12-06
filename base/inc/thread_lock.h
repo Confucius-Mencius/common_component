@@ -31,13 +31,6 @@ struct ThreadMutex
 {
     DISALLOW_COPY_AND_ASSIGN(ThreadMutex);
 
-private:
-#if (defined(__linux__))
-    pthread_mutex_t mutex_;
-#elif (defined(_WIN32) || defined(_WIN64))
-    CRITICAL_SECTION rwlock_;
-#endif
-
 public:
     ThreadMutex()
     {
@@ -49,7 +42,7 @@ public:
         pthread_mutex_init(&mutex_, &mattr);
         pthread_mutexattr_destroy(&mattr);
 #elif (defined(_WIN32) || defined(_WIN64))
-        ::InitializeCriticalSection(&rwlock_);
+        ::InitializeCriticalSection(&mutex_);
 #endif
     }
 
@@ -58,7 +51,7 @@ public:
 #if (defined(__linux__))
         pthread_mutex_destroy(&mutex_);
 #elif (defined(_WIN32) || defined(_WIN64))
-        ::DeleteCriticalSection(&rwlock_);
+        ::DeleteCriticalSection(&mutex_);
 #endif
     }
 
@@ -67,7 +60,7 @@ public:
 #if (defined(__linux__))
         pthread_mutex_lock(&mutex_);
 #elif (defined(_WIN32) || defined(_WIN64))
-        ::EnterCriticalSection(&rwlock_);
+        ::EnterCriticalSection(&mutex_);
 #endif
     }
 
@@ -76,7 +69,7 @@ public:
 #if (defined(__linux__))
         pthread_mutex_unlock(&mutex_);
 #elif (defined(_WIN32) || defined(_WIN64))
-        ::LeaveCriticalSection(&rwlock_);
+        ::LeaveCriticalSection(&mutex_);
 #endif
     }
 
@@ -89,18 +82,22 @@ public:
 #if (defined(__linux__))
         return (0 == pthread_mutex_trylock(&mutex_));
 #elif (defined(_WIN32) || defined(_WIN64))
-        return (TRUE == ::TryEnterCriticalSection(&rwlock_));
+        return (TRUE == ::TryEnterCriticalSection(&mutex_));
 #endif
     }
+
+private:
+#if (defined(__linux__))
+    pthread_mutex_t mutex_;
+#elif (defined(_WIN32) || defined(_WIN64))
+    CRITICAL_SECTION mutex_;
+#endif
 };
 
 template<typename MutexType>
 class AutoThreadMutex
 {
     DISALLOW_COPY_AND_ASSIGN(AutoThreadMutex);
-
-private:
-    MutexType* mutex_;
 
 public:
     AutoThreadMutex(MutexType* mutex)
@@ -121,14 +118,14 @@ public:
             mutex_ = NULL;
         }
     }
+
+private:
+    MutexType* mutex_;
 };
 
 struct ThreadRWLock
 {
     DISALLOW_COPY_AND_ASSIGN(ThreadRWLock);
-
-private:
-    pthread_rwlock_t rwlock_;
 
 public:
     ThreadRWLock()
@@ -174,15 +171,15 @@ public:
     {
         return (0 == pthread_rwlock_tryrdlock(&rwlock_));
     }
+
+private:
+    pthread_rwlock_t rwlock_;
 };
 
 template<typename RWLockType>
 class AutoThreadWLock
 {
     DISALLOW_COPY_AND_ASSIGN(AutoThreadWLock);
-
-private:
-    RWLockType* rwlock_;
 
 public:
     AutoThreadWLock(RWLockType* rwlock)
@@ -203,15 +200,15 @@ public:
             rwlock_ = NULL;
         }
     }
+
+private:
+    RWLockType* rwlock_;
 };
 
 template<typename RWLockType>
 class AutoThreadRLock
 {
     DISALLOW_COPY_AND_ASSIGN(AutoThreadRLock);
-
-private:
-    RWLockType* rwlock_;
 
 public:
     AutoThreadRLock(RWLockType* rwlock)
@@ -232,6 +229,9 @@ public:
             rwlock_ = NULL;
         }
     }
+
+private:
+    RWLockType* rwlock_;
 };
 
 #define SCOPE_GUARD_LINE_NAME(name, line) TOKEN_CAT(name, line)

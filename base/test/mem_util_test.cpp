@@ -1,4 +1,8 @@
+#include "mem_util.h"
 #include "test_util.h"
+
+#define LOG_WITH_CONTEXT 0
+#include "simple_log.h"
 
 //   operator new 和 operator delete 函数有两个重载版本，每个版本支持相关的new表达式和delete表达式：
 //
@@ -9,7 +13,7 @@
 //   void operator delete [] (void*);    // free an array
 //
 
-namespace delete_test
+namespace mem_util_test
 {
 /**
  * @brief 基本类型new[] delete[]测试
@@ -30,10 +34,10 @@ void Test001()
     for (int i = 0; i < 10; ++i)
     {
         p = new int[100];
-        printf("%d\n", *((int*) ((char*) p - 4))); // 前4个字节的内容
-        printf("%ld\n", *((int64_t*) ((char*) p - 8))); // 在64位系统中，前8个字节的内容也不为100，不是数组中元素的个数
+        LOG_C("%d", *((int*) ((char*) p - 4))); // 前4个字节的内容
+        LOG_C("%ld", *((int64_t*) ((char*) p - 8))); // 在64位系统中，前8个字节的内容也不为100，不是数组中元素的个数
 
-        printf("%p\n", p);
+        LOG_C("%p", p);
         delete p; // 或者delete[] p;亦可，不会有内存泄露
         p = NULL;
     }
@@ -42,22 +46,35 @@ void Test001()
 class T
 {
 public:
-    T()
+    T(char c = 'x')
     {
+        c_ = c;
+        u_ = 0xffffffff;
     }
 
     ~T()
     {
-        printf("destructor\n");
+        LOG_C("destructor");
+    }
+
+    void Set(char c)
+    {
+        c_ = c;
+    }
+
+    char Get() const
+    {
+        return c_;
     }
 
 private:
     char c_;
+    unsigned int u_;
 };
 
 /**
  * @brief 自定义类型new[] delete[]测试
- * @details 
+ * @details
  *  - Set Up:
 
  *  - Expect:
@@ -74,11 +91,11 @@ void Test002()
     for (int i = 0; i < 10; ++i)
     {
         p = new T[100];
-        printf("%d\n", *((int*) ((char*) p - 4))); // 前4个字节的内容
-        printf("%ld\n", *((int64_t*) ((char*) p - 8))); // 在64位系统中，前8个字节的内容为100，是数组中元素的个数
+        LOG_C("%d", *((int*) ((char*) p - 4))); // 前4个字节的内容
+        LOG_C("%ld", *((int64_t*) ((char*) p - 8))); // 在64位系统中，前8个字节的内容为100，是数组中元素的个数
 
-        printf("%p\n", p);
-        delete[] p; // 换做delete p;直接段错误。在windows上未验证，可能不会段错误，但是只会调用p[0]的析构函数
+        LOG_C("%p", p);
+        delete[] p; // 换做delete p;直接段错误。在windows上未验证，可能不会段错误，可能只会调用p[0]的析构函数
         p = NULL;
     }
 }
@@ -118,7 +135,51 @@ void Test003()
     Release(&p, n);
 }
 
+// placement new分配和释放单个对象
+void Test004()
+{
+    unsigned char buf[256];
+    T* p = Construct((T*) buf); // 分配对象
+    EXPECT_EQ((int) p->Get(), (int) 'x');
+    Destory(p); // 释放对象
+}
+
+void Test005()
+{
+    T t;
+    t.Set('y');
+
+    unsigned char buf[256];
+    T* p = Construct((T*) buf, t); // 分配对象
+    EXPECT_EQ((int) p->Get(), (int) 'y');
+    Destory(p); // 释放对象
+}
+
+// placement new分配和释放一批连续的对象
+void Test006()
+{
+    unsigned char buf[256];
+    T* p = Construct((T*) buf, 10); // 分配对象
+    EXPECT_EQ((int) p->Get(), (int) 'x');
+    Destory(p, 10); // 释放对象
+}
+
+void Test007()
+{
+    T t;
+    t.Set('y');
+
+    unsigned char buf[256];
+    T* p = Construct((T*) buf, t, 10); // 分配对象
+    EXPECT_EQ((int) p->Get(), (int) 'y');
+    Destory(p, 10); // 释放对象
+}
+
 ADD_TEST(MemUtilTest, Test001);
 ADD_TEST(MemUtilTest, Test002);
 ADD_TEST(MemUtilTest, Test003);
-} // namespace delete_test
+ADD_TEST(MemUtilTest, Test004);
+ADD_TEST(MemUtilTest, Test005);
+ADD_TEST(MemUtilTest, Test006);
+ADD_TEST(MemUtilTest, Test007);
+} // namespace mem_util_test

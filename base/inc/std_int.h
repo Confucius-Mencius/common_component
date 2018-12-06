@@ -14,7 +14,7 @@ extern "C"
 #endif /* __cplusplus */
 #ifndef __STDC_CONSTANT_MACROS
 /**
- * @brief 宏INTn_C(val)定义在stdint.h头文件中，只有\n
+ * @brief 宏INTn_C(val)定义在stdint.h头文件中，是将参数强转成指定的整数类型。需要注意的是，只有\n
  * （1）在纯C语言中，或者\n
  * （2）在C++语言中，且在'#include <stdint.h>'之前定义了宏__STDC_LIMIT_MACROS时\n
  * 才有效，否则编译报错。\n

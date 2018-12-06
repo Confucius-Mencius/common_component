@@ -27,18 +27,22 @@
 *.out
 *.app
 
-.idea/
-cmake-build-debug/
-cmake-build-release/
-
 *.user
 build-*-Debug/
 build-*-Release*/
+
+*.orig
 
 version.h
 /build/cmake/
 /build/output/
 
+# clion
+.idea/
+cmake-build-debug/
+cmake-build-release/
+
+# codelite
 /build/codelite/debug/
 /build/codelite/release/
 /build/codelite/.codelite/

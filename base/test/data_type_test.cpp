@@ -1,5 +1,6 @@
-#include "test_util.h"
 #include "data_type.h"
+#include "simple_log.h"
+#include "test_util.h"
 
 namespace data_type_test
 {
@@ -57,7 +58,76 @@ void Test001()
     // f64
     EXPECT_EQ(-std::numeric_limits<f64>::max(), F64_MIN);
     EXPECT_EQ(std::numeric_limits<f64>::max(), F64_MAX);
+
+    // long
+    EXPECT_EQ(std::numeric_limits<long>::min(), LONG_MIN);
+    EXPECT_EQ(std::numeric_limits<long>::max(), LONG_MAX);
+
+    // ulong
+    EXPECT_EQ(std::numeric_limits<ulong>::min(), ULONG_MIN);
+    EXPECT_EQ(std::numeric_limits<ulong>::max(), ULONG_MAX);
+}
+
+void Test002()
+{
+    LOG_CPP(GCC_VERSION);
+}
+
+/*
+ INT_MIN in <limits.h> is a macro that expands to the minimum value for an object of type int. In the 32-bit C compilers I have installed at the moment, it is defined as:
+
+ #define INT_MIN     (-2147483647 - 1)
+ So what exactly is wrong with the integer constant -2147483648 ?
+
+ Well, firstly it is not an integer constant. Let’s see what the standard says:
+
+ “An integer constant begins with a digit, but has no period or exponent part. It may have a prefix that specifies its base and a suffix that specifies its type.”
+ You will notice there is no mention of a sign. So -2147483648 is in fact a constant expression, consisting of the unary minus operator, and the integer constant 2147483648.
+
+ This still does not explain why that expression is not used directly in the macro. To see that, we have to revisit the rules for the type of integer constants.
+
+ The type of an unsuffixed integer constant is the first of these in which its value can be represented:
+
+ C89 :   int, long int, unsigned long int
+ C99 :   int, long int, long long int
+ C++ :   int, long int, long long int
+ The problem is that 2147483648 cannot be represented in a signed 32-bit integer, so it becomes either an unsigned long int or a long long int.
+
+ So we have to resort to a little trickery, and compute -2147483648 as (-2147483647 – 1), which all fit nicely into 32-bit signed integers, and INT_MIN gets the right type and value.
+
+ If you happen to look up INT_MIN in the standard you will see:
+
+ minimum value for an object of type int
+
+ INT_MIN                 -32767
+ Which brings up the question why isn’t it (-32767 – 1)?
+
+ Pretty much any computer available today uses two’s complement to represent signed numbers, but this hasn’t always been the case.
+
+ Since C was designed to work efficiently on a variety of architectures, the standard’s limits allow for using other representations as well.
+
+ I will end this post with a little (not quite standard conformant) example. Try compiling it with your favorite C compiler, and let us know if something puzzles you.
+ */
+
+//int main(void)
+//{
+//    // 在vc++2008下，下列if都是true
+//    if (-2147483648 > 0)     printf("positive\n");
+//    if (-2147483647 - 1 < 0) printf("negative\n");
+//    if (INT_MIN == -INT_MIN) printf("equal\n");
+//    if (FLT_MIN > 0)         printf("floating\n");
+//
+//    return 0;
+//}
+void IntMinTest()
+{
+    EXPECT_FALSE(-2147483648 > 0);
+    EXPECT_TRUE(-2147483647 - 1 < 0);
+    EXPECT_TRUE(INT_MIN == -INT_MIN);
+    EXPECT_TRUE(FLT_MIN > 0);
 }
 
 ADD_TEST(DataTypeTest, Test001);
+ADD_TEST(DataTypeTest, Test002);
+ADD_TEST(DataTypeTest, IntMinTest);
 } /* namespace data_type_test */

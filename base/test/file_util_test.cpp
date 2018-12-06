@@ -1,15 +1,20 @@
 #include "file_util_test.h"
-#include <utime.h>
 #include <fcntl.h>
-#include "file_util.h"
+#include <utime.h>
 #include "data_type.h"
-#include "common_define.h"
+#include "file_util.h"
+
+#define LOG_WITH_CONTEXT 0
+#include "simple_log.h"
+
 #include "str_util.h"
 
 #define DIR_1_NAME "hello"
 #define DIR_2_NAME "world"
 #define FILE_NAME "me"
 
+namespace file_util_test
+{
 struct SomeStruct
 {
     i32 _a;
@@ -22,12 +27,10 @@ struct SomeStruct
 
 FileUtilTest::FileUtilTest()
 {
-
 }
 
 FileUtilTest::~FileUtilTest()
 {
-
 }
 
 /**
@@ -43,7 +46,7 @@ FileUtilTest::~FileUtilTest()
  */
 void FileUtilTest::Test001()
 {
-    const char file_path[] = "./" FILE_NAME;
+    const char file_path[] = "./data/" FILE_NAME;
     EXPECT_FALSE(FileExist(file_path));
 
     EXPECT_TRUE(CreateFile(file_path) != -1);
@@ -67,7 +70,7 @@ void FileUtilTest::Test001()
 void FileUtilTest::Test002()
 {
     // 一个目录
-    const char file_path1[] = "./" DIR_1_NAME;
+    const char file_path1[] = "./data/" DIR_1_NAME;
     EXPECT_FALSE(FileExist(file_path1));
 
     EXPECT_EQ(0, CreateDir(file_path1));
@@ -77,7 +80,7 @@ void FileUtilTest::Test002()
     EXPECT_FALSE(FileExist(file_path1));
 
     // 多个目录嵌套
-    const char file_path2[] = "./" DIR_1_NAME "/" DIR_2_NAME;
+    const char file_path2[] = "./data/" DIR_1_NAME "/" DIR_2_NAME;
     EXPECT_FALSE(FileExist(file_path2));
 
     EXPECT_EQ(0, CreateDir(file_path2));
@@ -107,7 +110,7 @@ void FileUtilTest::Test002()
 void FileUtilTest::Test003()
 {
     // 当前目录下的一个文件
-    const char file_path1[] = "./" FILE_NAME;
+    const char file_path1[] = "./data/" FILE_NAME;
     if (!FileExist(file_path1))
     {
         EXPECT_TRUE(CreateFile(file_path1) != -1);
@@ -122,7 +125,7 @@ void FileUtilTest::Test003()
     EXPECT_FALSE(FileExist(file_path1));
 
     // 一个目录
-    const char file_path2[] = "./" DIR_1_NAME;
+    const char file_path2[] = "./data/" DIR_1_NAME;
     if (!FileExist(file_path2))
     {
         EXPECT_EQ(0, CreateDir(file_path2));
@@ -134,7 +137,7 @@ void FileUtilTest::Test003()
     EXPECT_STREQ(DIR_1_NAME, file_name2);
 
     // 多个目录嵌套
-    const char file_path3[] = "./" DIR_1_NAME "/" DIR_2_NAME;
+    const char file_path3[] = "./data/" DIR_1_NAME "/" DIR_2_NAME;
     if (!FileExist(file_path3))
     {
         EXPECT_EQ(0, CreateDir(file_path3));
@@ -146,7 +149,7 @@ void FileUtilTest::Test003()
     EXPECT_STREQ(DIR_2_NAME, file_name3);
 
     // 多个目录嵌套下的文件
-    const char file_path4[] = "./" DIR_1_NAME "/" DIR_2_NAME "/" FILE_NAME;
+    const char file_path4[] = "./data/" DIR_1_NAME "/" DIR_2_NAME "/" FILE_NAME;
     if (!FileExist(file_path4))
     {
         EXPECT_TRUE(CreateFile(file_path4) != -1);
@@ -187,7 +190,7 @@ void FileUtilTest::Test003()
 void FileUtilTest::Test004()
 {
     // 当前目录下的一个文件
-    const char file_path1[] = "./" FILE_NAME;
+    const char file_path1[] = "./data/" FILE_NAME;
     if (!FileExist(file_path1))
     {
         EXPECT_TRUE(CreateFile(file_path1) != -1);
@@ -196,13 +199,13 @@ void FileUtilTest::Test004()
 
     char file_dir1[MAX_PATH_LEN + 1] = "";
     EXPECT_EQ(0, GetFileDir(file_dir1, sizeof(file_dir1), file_path1));
-    EXPECT_STREQ(".", file_dir1);
+    EXPECT_STREQ("./data", file_dir1);
 
     EXPECT_EQ(0, DelFile(file_path1));
     EXPECT_FALSE(FileExist(file_path1));
 
     // 一个目录
-    const char file_path2[] = "./" DIR_1_NAME;
+    const char file_path2[] = "./data/" DIR_1_NAME;
     if (!FileExist(file_path2))
     {
         EXPECT_EQ(0, CreateDir(file_path2));
@@ -211,10 +214,10 @@ void FileUtilTest::Test004()
 
     char file_dir2[MAX_PATH_LEN + 1] = "";
     EXPECT_EQ(0, GetFileDir(file_dir2, sizeof(file_dir2), file_path2));
-    EXPECT_STREQ(".", file_dir2);
+    EXPECT_STREQ("./data", file_dir2);
 
     // 多个目录嵌套
-    const char file_path3[] = "./" DIR_1_NAME "/" DIR_2_NAME;
+    const char file_path3[] = "./data/" DIR_1_NAME "/" DIR_2_NAME;
     if (!FileExist(file_path3))
     {
         EXPECT_EQ(0, CreateDir(file_path3));
@@ -226,7 +229,7 @@ void FileUtilTest::Test004()
     EXPECT_STREQ(file_path2, file_dir3);
 
     // 多个目录嵌套下的文件
-    const char file_path4[] = "./" DIR_1_NAME "/" DIR_2_NAME "/" FILE_NAME;
+    const char file_path4[] = "./data/" DIR_1_NAME "/" DIR_2_NAME "/" FILE_NAME;
     if (!FileExist(file_path4))
     {
         EXPECT_TRUE(CreateFile(file_path4) != -1);
@@ -266,7 +269,7 @@ void FileUtilTest::Test004()
  */
 void FileUtilTest::Test005()
 {
-    const char file_path[] = "./shfslfjl.bin";
+    const char file_path[] = "./data/shfslfjl.bin";
 
     SomeStruct in;
     const size_t in_len = sizeof(in);
@@ -276,7 +279,7 @@ void FileUtilTest::Test005()
 
     SomeStruct out;
     size_t out_len = in_len;
-    ASSERT_EQ(0, ReadBinFile(file_path, &out, out_len));
+    ASSERT_EQ(0, ReadBinFile(&out, out_len, file_path));
 
     EXPECT_EQ(in._a, out._a);
     EXPECT_STREQ(in._b, out._b);
@@ -299,7 +302,7 @@ void FileUtilTest::Test005()
  */
 void FileUtilTest::Test006()
 {
-    const char file_path[] = "./ahfglajfl.txt";
+    const char file_path[] = "./data/ahfglajfl.txt";
 
     const char in[] = "dflafjlsad  fal34- 04flafj d-02-43";
     const size_t in_len = StrLen(in, sizeof(in));
@@ -307,26 +310,26 @@ void FileUtilTest::Test006()
 
     char out[512] = "";
     size_t out_len = in_len;
-    ASSERT_EQ(0, ReadTxtFile(file_path, out, out_len));
+    ASSERT_EQ(0, ReadTxtFile(out, out_len, file_path));
     EXPECT_STREQ(in, out);
 }
 
 void FileUtilTest::Test007()
 {
-    char file_name[] = "123.txt";
+    char file_name[] = "./data/123.txt";
     int fd = creat(file_name, S_IRWXU | S_IRWXG);
     ASSERT_TRUE(fd != -1);
 
-    fd = creat("abc.txt", S_IRWXU | S_IRWXG);
+    fd = creat("./data/abc.txt", S_IRWXU | S_IRWXG);
     ASSERT_TRUE(fd != -1);
 
     struct stat stat_info;
     int ret = stat(file_name, &stat_info);
     ASSERT_TRUE(0 == ret);
 
-    std::cout << stat_info.st_atime << std::endl;   /* time of last access */
-    std::cout << stat_info.st_mtime << std::endl;   /* time of last modification */
-    std::cout << stat_info.st_ctime << std::endl;   /* time of last status change */
+    LOG_CPP(stat_info.st_atime);   /* time of last access */
+    LOG_CPP(stat_info.st_mtime);   /* time of last modification */
+    LOG_CPP(stat_info.st_ctime);   /* time of last status change */
 
     sleep(1);
     time_t now = time(NULL);
@@ -340,9 +343,9 @@ void FileUtilTest::Test007()
     ret = stat(file_name, &stat_info);
     ASSERT_TRUE(0 == ret);
 
-    std::cout << stat_info.st_atime << std::endl;   /* time of last access */
-    std::cout << stat_info.st_mtime << std::endl;   /* time of last modification */
-    std::cout << stat_info.st_ctime << std::endl;   /* time of last status change */
+    LOG_CPP(stat_info.st_atime);   /* time of last access */
+    LOG_CPP(stat_info.st_mtime);   /* time of last modification */
+    LOG_CPP(stat_info.st_ctime);   /* time of last status change */
 }
 
 /**
@@ -360,7 +363,7 @@ void FileUtilTest::Test007()
 void FileUtilTest::Test008()
 {
     // 多个目录嵌套下的文件
-    const char file_path[] = "./" DIR_1_NAME "/" DIR_2_NAME "/" FILE_NAME;
+    const char file_path[] = "./data/" DIR_1_NAME "/" DIR_2_NAME "/" FILE_NAME;
     if (!FileExist(file_path))
     {
         EXPECT_TRUE(CreateFile(file_path) != -1);
@@ -380,6 +383,25 @@ void FileUtilTest::Test008()
     EXPECT_FALSE(FileExist(file_dir1));
 }
 
+void FileUtilTest::Test009()
+{
+    char buf[MAX_PATH_LEN + 1] = "";
+    ASSERT_EQ(0, GetAbsolutePath(buf, sizeof(buf), ".", "/"));
+    LOG_CPP(buf);
+
+    ASSERT_EQ(0, GetAbsolutePath(buf, sizeof(buf), ".", "/home"));
+    LOG_CPP(buf);
+
+    ASSERT_EQ(0, GetAbsolutePath(buf, sizeof(buf), "./www", "/home/"));
+    LOG_CPP(buf);
+
+    ASSERT_EQ(0, GetAbsolutePath(buf, sizeof(buf), "./www/", "/home/"));
+    LOG_CPP(buf);
+
+    ASSERT_EQ(0, GetAbsolutePath(buf, sizeof(buf), "/www/", "/home/"));
+    LOG_CPP(buf);
+}
+
 ADD_TEST_F(FileUtilTest, Test001);
 ADD_TEST_F(FileUtilTest, Test002);
 ADD_TEST_F(FileUtilTest, Test003);
@@ -388,3 +410,5 @@ ADD_TEST_F(FileUtilTest, Test005);
 ADD_TEST_F(FileUtilTest, Test006);
 ADD_TEST_F(FileUtilTest, Test007);
 ADD_TEST_F(FileUtilTest, Test008);
+ADD_TEST_F(FileUtilTest, Test009);
+}

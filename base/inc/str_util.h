@@ -45,12 +45,6 @@
 #define TOKEN_CAT_TWICE(x, y) TOKEN_CAT(x, y)
 
 /**
- * @brief 执行o的成员函数f，输出成员函数名和结果
- * @hideinitializer
- */
-#define PRINT_OF(o, f) std::cout << #f ": " << o.f << std::endl
-
-/**
  * @brief 获取C语言字符串的长度
  * @param str C语言字符串
  * @param buf_size 字符串缓冲区的大小
@@ -139,6 +133,11 @@ int StrTrim(char* buf, int buf_size, const char* str, int len, const char* delim
  */
 int StrReplace(char* buf, int buf_size, const char* str, const char* search, const char* replace);
 
+/**
+ * @brief StrReverse 颠倒
+ * @param str
+ * @param len
+ */
 void StrReverse(char str[], int len);
 
 /**
@@ -150,14 +149,6 @@ void StrReverse(char str[], int len);
  * @return =0表示匹配成功，否则失败
  */
 int MatchWithAsteriskW(const char* str, int len1, const char* pattern, int len2);
-
-/**
- * @brief 获取path相对于cur_work_dir的绝对路径
- * @param cur_work_dir 必须是绝对路径
- * @param path 可以是相对路径，也可以是绝对路径
- * @return
- */
-std::string GetAbsolutePath(const char* path, const char* cur_work_dir);
 
 /** @} Module_StrUtil */
 /** @} Module_Base */

@@ -1,4 +1,5 @@
 #include "global_test_env.h"
+#include "simple_log.h"
 
 GlobalTestEnv::GlobalTestEnv()
 {
@@ -10,10 +11,10 @@ GlobalTestEnv::~GlobalTestEnv()
 
 void GlobalTestEnv::SetUp()
 {
-    std::cout << "this funtion execute before all test suite executing" << std::endl;
+    LOG_CPP("this funtion execute before all test suite executing");
 }
 
 void GlobalTestEnv::TearDown()
 {
-    std::cout << "this function execute after all test suite executed" << std::endl;
+    LOG_CPP("this function execute after all test suite executed");
 }

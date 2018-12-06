@@ -18,8 +18,6 @@
  * @{
  */
 
-#include <string>
-
 /**
  * @brief placement new
  * @details 从指定内存区中分配一个对象，要求其有一个无参数的构造函数
@@ -37,7 +35,7 @@
 template<typename Type>
 Type* Construct(Type* buf)
 {
-    return new(buf) Type();
+    return new (buf) Type();
 }
 
 /**
@@ -58,7 +56,7 @@ Type* Construct(Type* buf)
 template<typename Type>
 Type* Construct(Type* buf, const Type& obj)
 {
-    return ::new(buf) Type(obj);
+    return new (buf) Type(obj);
 }
 
 /**
@@ -74,8 +72,50 @@ void Destory(Type* obj)
     obj->~Type();
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// 一次分配n个连续的对象
+template<typename Type>
+Type* Construct(Type* buf, int n)
+{
+    for (int i = 0; i < n; ++i)
+    {
+        new (buf + i) Type();
+    }
+
+    return buf;
+}
+
+template<typename Type>
+Type* Construct(Type* buf, const Type& obj, int n)
+{
+    for (int i = 0; i < n; ++i)
+    {
+        new (buf + i) Type(obj);
+    }
+
+    return buf;
+}
+
+/**
+ * @param obj 连续对象中第一个对象的地址
+ * @param n 连续对象个数
+ */
+template<typename Type>
+void Destory(Type* obj, int n)
+{
+    for (int i = 0; i < n; ++i)
+    {
+        (obj + i)->~Type();
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+  * 类中的一个静态Create方法，动态创建一个对象。
+  * 要求有一个无参（或默认参数）的构造函数。
+  */
 #define CREATE_FUNC(Type)\
-public:\
+    public:\
     static Type* Create()\
     {\
         return new Type();\
@@ -83,100 +123,100 @@ public:\
 
 /**
  * @brief 释放通过new分配的单个对象
- * @param [in,out] obj 通过new分配的单个对象指针
+ * @param [in,out] obj_ptr 通过new分配的单个对象指针
  * @attention obj必须是通过new分配的单个对象
  * @hideinitializer
  */
-#define SAFE_DELETE(obj)\
-do {\
-    if (obj != NULL)\
-    {\
-        ::delete obj;\
-        obj = NULL;\
-    }\
-} while (0)
+#define SAFE_DELETE(obj_ptr)\
+    do {\
+        if (obj_ptr != NULL)\
+        {\
+            delete obj_ptr;\
+            obj_ptr = NULL;\
+        }\
+    } while (0)
 
 /**
  * @brief 释放通过new分配的对象数组
- * @param [in,out] obj_array 通过new分配的对象数组指针
+ * @param [in,out] obj_ptr_array 通过new分配的对象数组指针
  * @attention obj_array必须是通过new分配的对象数组
  * @hideinitializer
  */
-#define SAFE_DELETE_ARRAY(obj_array)\
-do {\
-    if (obj_array != NULL)\
-    {\
-        ::delete [] obj_array;\
-        obj_array = NULL;\
-    }\
-} while (0)
+#define SAFE_DELETE_ARRAY(obj_ptr_array)\
+    do {\
+        if (obj_ptr_array != NULL)\
+        {\
+            delete [] obj_ptr_array;\
+            obj_ptr_array = NULL;\
+        }\
+    } while (0)
 
 /**
  * @brief 安全释放具有Release方法的对象并将对象指针置为NULL
- * @param [in,out] obj 具有Release方法的对象指针
+ * @param [in,out] obj_ptr 具有Release方法的对象指针
  * @hideinitializer
  */
-#define SAFE_RELEASE(obj)\
-do {\
-    if (obj != NULL)\
-    {\
-        obj->Release();\
-        obj = NULL;\
-    }\
-} while (0)
+#define SAFE_RELEASE(obj_ptr)\
+    do {\
+        if (obj_ptr != NULL)\
+        {\
+            obj_ptr->Release();\
+            obj_ptr = NULL;\
+        }\
+    } while (0)
 
-#define SAFE_RELEASE_MODULE(module, module_loader)\
-do {\
-    if (module != NULL)\
-    {\
-        module->Release();\
-        module = NULL;\
-    }\
-    module_loader.Unload();\
-} while (0)
+#define SAFE_RELEASE_MODULE(module_ptr, module_loader)\
+    do {\
+        if (module_ptr != NULL)\
+        {\
+            module_ptr->Release();\
+            module_ptr = NULL;\
+        }\
+        module_loader.Unload();\
+    } while (0)
 
-#define SAFE_INITIALIZE_FAILED(obj, ctx) (obj != NULL && obj->Initialize(ctx) != 0)
+#define SAFE_INITIALIZE_FAILED(obj_ptr, ctx) (obj_ptr != NULL && obj_ptr->Initialize(ctx) != 0)
 
-#define SAFE_FINALIZE(obj)\
-do {\
-    if (obj != NULL)\
-    {\
-        obj->Finalize();\
-    }\
-} while (0)
+#define SAFE_FINALIZE(obj_ptr)\
+    do {\
+        if (obj_ptr != NULL)\
+        {\
+            obj_ptr->Finalize();\
+        }\
+    } while (0)
 
-#define SAFE_ACTIVATE_FAILED(obj) (obj != NULL && obj->Activate() != 0)
+#define SAFE_ACTIVATE_FAILED(obj_ptr) (obj_ptr != NULL && obj_ptr->Activate() != 0)
 
-#define SAFE_FREEZE(obj)\
-do {\
-    if (obj != NULL)\
-    {\
-        obj->Freeze();\
-    }\
-} while (0)
+#define SAFE_FREEZE(obj_ptr)\
+    do {\
+        if (obj_ptr != NULL)\
+        {\
+            obj_ptr->Freeze();\
+        }\
+    } while (0)
 
-#define SAFE_DESTROY(obj)\
-do {\
-    if (obj != NULL)\
-    {\
-        obj->Freeze();\
-        obj->Finalize();\
-        obj->Release();\
-        obj = NULL;\
-    }\
-} while (0)
+#define SAFE_DESTROY(obj_ptr)\
+    do {\
+        if (obj_ptr != NULL)\
+        {\
+            obj_ptr->Freeze();\
+            obj_ptr->Finalize();\
+            obj_ptr->Release();\
+            obj_ptr = NULL;\
+        }\
+    } while (0)
 
-#define SAFE_DESTROY_MODULE(module, module_loader)\
-do {\
-    if (module != NULL)\
-    {\
-        module->Freeze();\
-        module->Finalize();\
-        module->Release();\
-        module = NULL;\
-    }\
-    module_loader.Unload();\
-} while (0)
+#define SAFE_DESTROY_MODULE(module_ptr, module_loader)\
+    do {\
+        if (module_ptr != NULL)\
+        {\
+            module_ptr->Freeze();\
+            module_ptr->Finalize();\
+            module_ptr->Release();\
+            module_ptr = NULL;\
+        }\
+        module_loader.Unload();\
+    } while (0)
 
 /** @} Module_MemUtil */
 /** @} Module_Base */

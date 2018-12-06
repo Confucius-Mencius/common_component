@@ -1,6 +1,11 @@
 #include "hex_dump_test.h"
 #include "hex_dump.h"
 
+#define LOG_WITH_CONTEXT 0
+#include "simple_log.h"
+
+namespace hex_dump_test
+{
 HexDumpTest::HexDumpTest()
 {
 }
@@ -17,8 +22,8 @@ void HexDumpTest::Test001()
     char buf[4096] = ""; // 可以放下
 
     int len = HexDump(buf, sizeof(buf), data, data_len);
-    std::cout << len << std::endl;
-    std::cout << buf << std::endl;
+    LOG_CPP(len);
+    LOG_CPP(buf);
 }
 
 void HexDumpTest::Test002()
@@ -31,10 +36,11 @@ void HexDumpTest::Test002()
     char buf[4096] = ""; // 放不下
 
     int len = HexDump(buf, sizeof(buf), data, data_len);
-    std::cout << len << std::endl;
+    LOG_CPP(len);
     EXPECT_LE(len, 0);
-    std::cout << buf << std::endl;
+    LOG_CPP(buf);
 }
 
 ADD_TEST_F(HexDumpTest, Test001);
 ADD_TEST_F(HexDumpTest, Test002);
+}

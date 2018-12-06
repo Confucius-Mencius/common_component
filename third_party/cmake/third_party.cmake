@@ -21,12 +21,14 @@ endif ()
 # treat_warn_as_error: TRUR/FALSE
 function(SetCompileFlags treat_warn_as_error)
     if (${treat_warn_as_error})
-        set(COMPILE_FLAGS "-g -Wall -Werror -Wno-deprecated-declarations -Wno-unused-function -Wno-unused-result -Wno-unused-variable -Wno-unused-but-set-variable")
+        # set(COMPILE_FLAGS "-g -Wall -Werror -Wno-deprecated-declarations -Wno-unused-function -Wno-unused-result -Wno-unused-variable -Wno-unused-but-set-variable")
+        set(COMPILE_FLAGS "-g -Wall -Werror")
     else (${treat_warn_as_error})
         set(COMPILE_FLAGS "-g -Wall")
     endif ()
 
-    set(CPP11_FLAG "-std=c++11")
+    # set(CPP11_FLAG "-std=c++11")
+    set(CPP11_FLAG "-std=gnu++11")
 
     if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
         set(OPTIMIZE_FLAG "-O0")

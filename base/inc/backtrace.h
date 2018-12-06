@@ -5,8 +5,8 @@
  * @copyright Copyright (C) 2008-2016, MOON Corporation. All rights reserved.
  */
 
-#ifndef base_inc_backtrace_H_
-#define base_inc_backtrace_H_
+#ifndef BASE_INC_BACKTRACE_H_
+#define BASE_INC_BACKTRACE_H_
 
 /**
  * @defgroup Module_Base 基础库
@@ -38,4 +38,4 @@ int Backtrace(char* buf, int buf_size, int nframes = 50);
 /** @} Module_Backtrace */
 /** @} Module_Base */
 
-#endif // base_inc_backtrace_H_
+#endif // BASE_INC_BACKTRACE_H_

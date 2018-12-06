@@ -1,6 +1,6 @@
-#include "test_util.h"
-#include "str_util.h"
 #include "num_util.h"
+#include "str_util.h"
+#include "test_util.h"
 
 namespace str_util_test
 {
@@ -377,6 +377,27 @@ void StrBeginEndWithTest()
     EXPECT_TRUE(StrNoCaseEndWith(str, "World"));
 }
 
+class O
+{
+public:
+    int func(int i)
+    {
+        return i;
+    }
+};
+
+/**
+ * 执行o的成员函数f，输出成员函数名和结果
+ */
+#define PRINT_OF(o, f) std::cout << #f ": " << o.f << std::endl
+
+void PrintOfTest()
+{
+    O o;
+    PRINT_OF(o, func(0));
+    PRINT_OF(o, func(1));
+}
+
 ADD_TEST(StrUtilTest, ToStrTest);
 ADD_TEST(StrUtilTest, ExpandMacroTest);
 ADD_TEST(StrUtilTest, TokenCatTest);
@@ -394,4 +415,5 @@ ADD_TEST(StrUtilTest, StrReverseTest);
 ADD_TEST(StrUtilTest, WildcardCmpTest);
 ADD_TEST(StrUtilTest, strtok_test);
 ADD_TEST(StrUtilTest, StrBeginEndWithTest);
+ADD_TEST(StrUtilTest, PrintOfTest);
 } // namespace str_util_test

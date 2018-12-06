@@ -20,7 +20,7 @@
 
 /**
  * @brief 模块实例创建函数原型
- * @param class_id 一般情况下，一个模块只导出一个接口，导出多个接口时，根据该参数（通常是某个枚举）来创建不同类的实例
+ * @param class_id 一般情况下，一个模块只导出一个接口，导出多个接口时，根据该参数（例如某个枚举定义）来创建不同类的实例
  */
 typedef void* (* GetModuleInterfaceFunc)(int type);
 
@@ -32,11 +32,11 @@ typedef void* (* GetModuleInterfaceFunc)(int type);
  * @hideinitializer
  */
 #if (defined(__linux__))
-#define MODULE_EXPORTER_DECL() \
-extern "C" void* GET_MODULE_INTERFACE(int type)
+#define MODULE_EXPORTER_DECL()\
+    extern "C" void* GET_MODULE_INTERFACE(int type)
 #elif (defined(_WIN32) || defined(_WIN64))
-#define MODULE_EXPORTER_DECL() \
-extern "C" __declspec(dllexport) void* GET_MODULE_INTERFACE(int Type)
+#define MODULE_EXPORTER_DECL()\
+    extern "C" __declspec(dllexport) void* GET_MODULE_INTERFACE(int type)
 #endif
 
 /**
@@ -48,17 +48,17 @@ extern "C" __declspec(dllexport) void* GET_MODULE_INTERFACE(int Type)
  * @hideinitializer
  */
 #if (defined(__linux__))
-#define MODULE_EXPORTER_IMPL(ImplType) \
-extern "C" void* GET_MODULE_INTERFACE(int type) \
-{ \
-    return (void*) new ImplType(); \
-}
+#define MODULE_EXPORTER_IMPL(ImplType)\
+    extern "C" void* GET_MODULE_INTERFACE(int type)\
+    {\
+        return (void*) new ImplType();\
+    }
 #elif (defined(_WIN32) || defined(_WIN64))
-#define MODULE_EXPORTER_IMPL(ImplType) \
-void* GET_MODULE_INTERFACE(int Type) \
-{ \
-    return (void*) new ImplType(); \
-}
+#define MODULE_EXPORTER_IMPL(ImplType)\
+    void* GET_MODULE_INTERFACE(int type)\
+    {\
+        return (void*) new ImplType();\
+    }
 #endif
 
 /** @} Module_ModuleUtil */

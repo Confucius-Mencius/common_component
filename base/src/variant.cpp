@@ -220,42 +220,42 @@ void Variant::ToString(char* buf, int buf_size) const
         {
             Num2Str(buf, buf_size, Type2Type<i32>(), u_.i);
         }
-            break;
+        break;
 
         case TYPE_I64:
         {
             Num2Str(buf, buf_size, Type2Type<i64>(), u_.l);
         }
-            break;
+        break;
 
         case TYPE_F32:
         {
             Num2Str(buf, buf_size, Type2Type<f32>(), u_.f);
         }
-            break;
+        break;
 
         case TYPE_F64:
         {
             Num2Str(buf, buf_size, Type2Type<f64>(), u_.d);
         }
-            break;
+        break;
 
         case TYPE_STR:
         {
             StrCpy(buf, buf_size, u_.chunk.data);
         }
-            break;
+        break;
 
         case TYPE_BIN:
         {
             memmove(buf, u_.chunk.data, u_.chunk.len);
         }
-            break;
+        break;
 
         default:
         {
         }
-            break;
+        break;
     }
 }
 
@@ -267,42 +267,42 @@ std::ostream& operator<<(std::ostream& out, const Variant& instance)
         {
             out << instance.u_.i;
         }
-            break;
+        break;
 
         case Variant::TYPE_I64:
         {
             out << instance.u_.l;
         }
-            break;
+        break;
 
         case Variant::TYPE_F32:
         {
             out << instance.u_.f;
         }
-            break;
+        break;
 
         case Variant::TYPE_F64:
         {
             out << instance.u_.d;
         }
-            break;
+        break;
 
         case Variant::TYPE_STR:
         {
             out << instance.u_.chunk.data;
         }
-            break;
+        break;
 
         case Variant::TYPE_BIN:
         {
             out << instance.u_.chunk.data;
         }
-            break;
+        break;
 
         default:
         {
         }
-            break;
+        break;
     }
 
     return out;

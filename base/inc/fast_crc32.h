@@ -32,9 +32,9 @@ unsigned int FastCRC32(const void* data, size_t length, unsigned int previous_cr
 /**
  * @brief 快速计算文件的crc32
  * @param [in] file_path
- * @return crc32
+ * @return crc32 =0表示失败
  */
-unsigned int FastFileCRC32(const char* file_path);
+unsigned int FileFastCRC32(const char* file_path);
 
 /** @} Module_CRC32 */
 /** @} Module_Base */

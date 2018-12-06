@@ -46,17 +46,17 @@ protected:
 };
 
 /**
- * @brief 定义一个自己的异常类，它会自动继承上面的异常基类CException
+ * @brief 定义一个自己的异常类，它会自动继承上面的异常基类Exception
  * @param [in] ExceptionType 自定义的异常类型名
  * @hideinitializer
  */
 #define DEFINE_EXCEPTION(ExceptionType)\
-class ExceptionType : public Exception\
-{\
-public:\
-    explicit ExceptionType(const std::string& msg = "") throw () : Exception(msg) {}\
-    virtual ~ExceptionType() throw () {}\
-}
+    class ExceptionType : public Exception\
+    {\
+    public:\
+        explicit ExceptionType(const std::string& msg = "") throw () : Exception(msg) {}\
+        virtual ~ExceptionType() throw () {}\
+    }
 
 /**
  * @brief 抛出自定义的异常
@@ -69,11 +69,11 @@ public:\
  * @hideinitializer
  */
 #define THROW_EXCEPTION(ExceptionType, msg)\
-do {\
-    std::ostringstream oss("");\
-    oss << "<" << __FILE__ << ":" << __LINE__ << " " << __PRETTY_FUNCTION__ << "> " << msg << std::endl;\
-    throw ExceptionType(oss.str());\
-} while (0)
+    do {\
+        std::ostringstream oss("");\
+        oss << "<" << __FILE__ << ":" << __LINE__ << " " << __PRETTY_FUNCTION__ << "> " << msg << std::endl;\
+        throw ExceptionType(oss.str());\
+    } while (0)
 
 /** @} Module_ExceptionUtil */
 /** @} Module_Base */

@@ -1,4 +1,5 @@
 #include "global_test_env.h"
+#include "simple_log.h"
 
 GlobalTestEnv* g_global_test_env;
 
@@ -7,7 +8,7 @@ int main(int argc, char* argv[])
     g_global_test_env = new GlobalTestEnv();
     if (NULL == g_global_test_env)
     {
-        std::cout << "failed to create global test env" << std::endl;
+        LOG_CPPE("failed to create global test env");
         return -1;
     }
 

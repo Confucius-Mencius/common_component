@@ -21,44 +21,37 @@
 #include <string>
 
 /**
- * @brief
- * @param [out] addr
- * @param [in] addr_buf_size
- * @param [out] port
- * @param [in] addr_port
- * @param [in] addr_port_len
- * @return =0表示成功，否则失败
+  * ip地址或者host名称的最大长度
+  */
+#define MAX_ADDR_LEN 255
+
+#ifndef MAX_IPV4_ADDRESS_LEN
+/**
+ * @brief max ipv4 address len
  */
-int ParseAddrPort(char* addr, size_t addr_buf_size, unsigned short& port, const char* addr_port, size_t addr_port_len);
+#define MAX_IPV4_ADDRESS_LEN 15 // INET_ADDRSTRLEN - 1
+#endif // MAX_IPV4_ADDRESS_LEN
 
 /**
  * @brief
  * @param [out] addr
- * @param [in] addr_buf_size
+ * @param [in] buf_size
  * @param [out] port
  * @param [in] addr_port
+ * @param [in] len
  * @return =0表示成功，否则失败
  */
-int ParseHostPort(char* addr, size_t addr_buf_size, unsigned short& port, const std::string& addr_port);
+int ParseAddrPort(char* addr, size_t buf_size, unsigned short& port, const char* addr_port, size_t len);
 
 /**
  * @brief
  * @param [out] addr
- * @param [out] port
- * @param [in] addr_port
- * @param [in] addr_port_len
- * @return =0表示成功，否则失败
- */
-int ParseAddPort(std::string& addr, unsigned short& port, const char* addr_port, size_t addr_port_len);
-
-/**
- * @brief
- * @param [out] addr
+ * @param [in] buf_size
  * @param [out] port
  * @param [in] addr_port
  * @return =0表示成功，否则失败
  */
-int ParseAddPort(std::string& addr, unsigned short& port, const std::string& addr_port);
+int ParseAddrPort(char* addr, size_t buf_size, unsigned short& port, const std::string& addr_port);
 
 /** @} Module_AddrPortUtil */
 /** @} Module_Base */

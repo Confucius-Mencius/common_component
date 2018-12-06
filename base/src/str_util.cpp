@@ -1,10 +1,11 @@
 #include "str_util.h"
-#include <string.h>
 #include <stdarg.h>
+#include <string.h>
+
 
 int StrLen(const char* str, size_t buf_size)
 {
-    if (NULL == str || buf_size <= 1)
+    if (NULL == str || buf_size < 2)
     {
         return 0;
     }
@@ -14,7 +15,7 @@ int StrLen(const char* str, size_t buf_size)
 
 char* StrCpy(char* buf, size_t buf_size, const char* str)
 {
-    if (NULL == buf || buf_size <= 1 || NULL == str)
+    if (NULL == buf || buf_size < 2 || NULL == str)
     {
         return NULL;
     }
@@ -28,7 +29,7 @@ char* StrCpy(char* buf, size_t buf_size, const char* str)
 
 char* StrCat(char* buf, size_t buf_size_left, const char* str)
 {
-    if (NULL == buf || buf_size_left <= 1 || NULL == str)
+    if (NULL == buf || buf_size_left < 2 || NULL == str)
     {
         return NULL;
     }
@@ -41,7 +42,7 @@ char* StrCat(char* buf, size_t buf_size_left, const char* str)
 
 bool StrCaseEQ(const char* str1, const char* str2, size_t min_buf_size)
 {
-    if (NULL == str1 || NULL == str2 || min_buf_size <= 1)
+    if (NULL == str1 || NULL == str2 || min_buf_size < 2)
     {
         return false;
     }
@@ -51,7 +52,7 @@ bool StrCaseEQ(const char* str1, const char* str2, size_t min_buf_size)
 
 bool StrNoCaseEQ(const char* str1, const char* str2, size_t min_buf_size)
 {
-    if (NULL == str1 || NULL == str2 || min_buf_size <= 1)
+    if (NULL == str1 || NULL == str2 || min_buf_size < 2)
     {
         return false;
     }
@@ -137,7 +138,7 @@ bool StrNoCaseEndWith(const char* str, const char* needle)
 
 int StrPrintf(char* buf, size_t buf_size, const char* fmt, ...)
 {
-    if (NULL == buf || buf_size <= 1 || NULL == fmt)
+    if (NULL == buf || buf_size < 2 || NULL == fmt)
     {
         return 0;
     }
@@ -308,23 +309,4 @@ int MatchWithAsteriskW(const char* str, int len1, const char* pattern, int len2)
     }
 
     return 0;
-}
-
-std::string GetAbsolutePath(const char* path, const char* cur_work_dir)
-{
-    std::string absolute_path;
-
-    if (path[0] != '/')
-    {
-        absolute_path.append(cur_work_dir);
-        absolute_path.append("/");
-        absolute_path.append(path);
-    }
-    else
-    {
-        absolute_path.append(path);
-    }
-
-    return absolute_path;
-
 }

@@ -18,9 +18,16 @@
  * @{
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#ifndef MAX_PATH_LEN
+/**
+ * @brief max path len
+ */
+#define MAX_PATH_LEN 255
+#endif // MAX_PATH_LEN
 
 /**
  * @brief 文件属性结构体
@@ -43,7 +50,7 @@ struct FileStat
      */
     bool Equals(const FileStat& rhs) const
     {
-        return file_size == rhs.file_size && last_modify_time == rhs.last_modify_time;
+        return (file_size == rhs.file_size) && (last_modify_time == rhs.last_modify_time);
     }
 };
 
@@ -79,7 +86,7 @@ bool IsDirEmpty(const char* file_path);
  * @attention 如果上层目录不存在则自动创建，允许多级目录
  * @return 创建成功后返回文件的fd，否则返回-1
  */
-int CreateFile(const char* file_path, mode_t mode = S_IRWXU | S_IRWXG | S_IROTH);
+int CreateFile(const char* file_path, mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
 
 /**
  * @brief 创建一个新目录
@@ -89,7 +96,7 @@ int CreateFile(const char* file_path, mode_t mode = S_IRWXU | S_IRWXG | S_IROTH)
 int CreateDir(const char* file_path);
 
 /**
- * @brief 删除文件/目录
+ * @brief 删除文件或者目录
  * @param [in] file_path
  * @return =0表示成功，否则失败
  */
@@ -105,13 +112,21 @@ int DelFile(const char* file_path);
 int GetFileName(char* buf, int buf_size, const char* file_path);
 
 /**
- * @brief 获取文件所在的目录名
+ * @brief 获取文件所在的目录
  * @param [out] buf
  * @param [in] buf_size
  * @param [in] file_path
  * @return =0表示成功，否则失败
  */
 int GetFileDir(char* buf, int buf_size, const char* file_path);
+
+/**
+ * @brief 获取path相对于cur_working_dir的绝对路径
+ * @param cur_working_dir 必须是绝对路径
+ * @param path 可以是相对路径，也可以是绝对路径
+ * @return
+ */
+int GetAbsolutePath(char* buf, int buf_size, const char* path, const char* cur_working_dir);
 
 /**
  * @brief 将一段二进制数据写入指定文件中，如果文件不存在则先创建
@@ -124,12 +139,14 @@ int WriteBinFile(const char* file_path, const void* data, size_t len);
 
 /**
  * @brief 从指定文件中读取二进制数据
- * @param [in] file_path
  * @param [out] data 存放二进制数据的缓冲区
  * @param [in, out] len 输入时为缓冲区的大小，输出时为所读取数据的实际长度
+ * @param [in] file_path
  * @return =0表示成功，否则失败
  */
-int ReadBinFile(const char* file_path, void* data, size_t& len);
+int ReadBinFile(void* data, size_t& len, const char* file_path);
+
+int AppendBinFile(const char* file_path, const void* data, size_t len);
 
 /**
  * @brief 将一段文本数据写入指定文件中，如果文件不存在则先创建
@@ -142,46 +159,14 @@ int WriteTxtFile(const char* file_path, const void* data, size_t len);
 
 /**
  * @brief 从指定文件中读取文本数据
- * @param [in] file_path
  * @param [out] data 存放文本数据的缓冲区
  * @param [in, out] len 输入时为缓冲区的大小，输出时为所读取数据的实际长度
+ * @param [in] file_path
  * @return =0表示成功，否则失败
  */
-int ReadTxtFile(const char* file_path, void* data, size_t& len);
+int ReadTxtFile(void* data, size_t& len, const char* file_path);
 
-/**
- * @brief open file with retry
- * @param file_path
- * @param flags
- * @param mode
- * @param nretrys
- * @param sleep_ms 睡眠等待时间，单位：毫秒
- * @return =0表示成功，否则失败
- */
-int OpenFileWithRetry(const char* file_path, int flags, mode_t mode, int nretrys, int sleep_ms);
-
-/**
- * @brief  write file with retry
- * @param fd
- * @param data
- * @param len
- * @param nretrys
- * @param sleep_ms
- * @return
- */
-int WriteFileWithRetry(int fd, const void* data, size_t len, int nretrys, int sleep_ms);
-
-/**
- * @brief write file with retry
- * @param fd
- * @param iov
- * @param iovcnt 不能超过1024
- * @param total_data_len
- * @param nretrys
- * @param sleep_ms 睡眠等待时间，单位：毫秒
- * @return =0表示成功，否则失败
- */
-int WriteFileWithRetry(int fd, const struct iovec* iov, int iovcnt, size_t total_data_len, int nretrys, int sleep_ms);
+int AppendTxtFile(const char* file_path, const void* data, size_t len);
 
 /** @} Module_FileUtil */
 /** @} Module_Base */

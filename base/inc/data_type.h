@@ -201,10 +201,10 @@ typedef long double f96;
  */
 #define U64_MIN UINT64_C(0)
 
-//#define LONG_MAX LONG_MAX
-//#define LONG_MIN LONG_MIN
-//#define ULONG_MAX ULONG_MAX
-//#define ULONG_MIN 0UL
+//#define LONG_MAX LONG_MAX // LONG_MAX已经定义
+//#define LONG_MIN LONG_MIN // LONG_MIN已经定义
+//#define ULONG_MAX ULONG_MAX // ULONG_MAX已经定义
+#define ULONG_MIN 0UL
 
 /**
  * @brief float32类型的最大值

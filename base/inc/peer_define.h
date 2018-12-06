@@ -1,17 +1,17 @@
 #ifndef BASE_INC_PEER_DEFINE_H_
 #define BASE_INC_PEER_DEFINE_H_
 
-#include <string>
 #include <ostream>
 #include "addr_port_util.h"
 
 enum PeerType
 {
     PEER_TYPE_MIN = 0,
-    PEER_TYPE_TCP = PEER_TYPE_MIN,
-    PEER_TYPE_HTTP,
-    PEER_TYPE_UDP,
-    PEER_TYPE_THREAD,
+    PEER_TYPE_THREAD = PEER_TYPE_MIN, // 内部线程
+    PEER_TYPE_HTTP, // http服务
+    PEER_TYPE_WS,   // websocket服务
+    PEER_TYPE_TCP,  // tcp服务
+    PEER_TYPE_UDP,  // udp服务
     PEER_TYPE_MAX,
 };
 
@@ -45,8 +45,8 @@ struct Peer
     {
         this->type = type;
 
-        char addr[256] = "";
-        ParseHostPort(addr, sizeof(addr), this->port, addr_port);
+        char addr[MAX_ADDR_LEN + 1] = "";
+        ParseAddrPort(addr, sizeof(addr), this->port, addr_port);
         this->addr.assign(addr);
     }
 
@@ -54,8 +54,8 @@ struct Peer
     {
         this->type = type;
 
-        char addr[256] = "";
-        ParseHostPort(addr, sizeof(addr), this->port, addr_port);
+        char addr[MAX_ADDR_LEN + 1] = "";
+        ParseAddrPort(addr, sizeof(addr), this->port, addr_port);
         this->addr.assign(addr);
     }
 
