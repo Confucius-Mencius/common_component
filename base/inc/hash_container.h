@@ -8,9 +8,11 @@
 #ifndef BASE_INC_HASH_CONTAINER_H_
 #define BASE_INC_HASH_CONTAINER_H_
 
-#include "data_type.h"
-
 // http://fgda.pl/post/7/gcc-hash-map-vs-unordered-map
+
+#if (defined(__linux__))
+#define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+#endif
 
 /**
  * @attention DO NOT USE hash<const char*> EVER AGAIN.

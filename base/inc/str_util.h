@@ -90,10 +90,36 @@ bool StrCaseEQ(const char* str1, const char* str2, size_t min_buf_size);
  */
 bool StrNoCaseEQ(const char* str1, const char* str2, size_t min_buf_size);
 
+/**
+ * @brief StrCaseBeginWith
+ * @param str
+ * @param needle
+ * @return
+ */
 bool StrCaseBeginWith(const char* str, const char* needle);
+
+/**
+ * @brief StrNoCaseBeginWith
+ * @param str
+ * @param needle
+ * @return
+ */
 bool StrNoCaseBeginWith(const char* str, const char* needle);
 
+/**
+ * @brief StrCaseEndWith
+ * @param str
+ * @param needle
+ * @return
+ */
 bool StrCaseEndWith(const char* str, const char* needle);
+
+/**
+ * @brief StrNoCaseEndWith
+ * @param str
+ * @param needle
+ * @return
+ */
 bool StrNoCaseEndWith(const char* str, const char* needle);
 
 /**
@@ -143,9 +169,9 @@ void StrReverse(char str[], int len);
 /**
  * @brief 通配符匹配算法
  * @param str
- * @param len1
+ * @param len1 str len
  * @param pattern ?代表一个任意的字符，*代表0个或多个字符
- * @param len2
+ * @param len2 pattern len
  * @return =0表示匹配成功，否则失败
  */
 int MatchWithAsteriskW(const char* str, int len1, const char* pattern, int len2);

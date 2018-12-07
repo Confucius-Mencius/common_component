@@ -15,5 +15,11 @@ void Test001()
     LOG_CPPE(1 << "-hgc");
 }
 
+void Test002()
+{
+    printf("%s| %s| %s| %s| %d| %s\n", __func__, __FUNCTION__, __PRETTY_FUNCTION__, __FILE__, __LINE__, basename(__FILE__));
+}
+
 ADD_TEST(SimplyLogTest, Test001);
+ADD_TEST(SimplyLogTest, Test002);
 }

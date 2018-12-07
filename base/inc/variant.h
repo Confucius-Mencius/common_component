@@ -46,12 +46,6 @@ public:
     {
         char* data;
         int len;
-
-        Chunk()
-        {
-            data = NULL;
-            len = 0;
-        }
     };
 
     Variant();
@@ -93,7 +87,9 @@ private:
     void SetValue(f32 val);
     void SetValue(f64 val);
     void SetValue(Type type, const char* val, int len);
+    void Release();
 
+private:
     Type type_;
 
     union U

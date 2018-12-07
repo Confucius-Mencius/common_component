@@ -125,22 +125,6 @@ bool FloatLT(Type v1, Type v2)
 }
 
 /**
- * @brief 返回一个不小于整数x且为m的整数倍的最小值
- * @hideinitializer
- */
-#ifndef NOT_LT_MULTI_M
-#define NOT_LT_MULTI_M(x, m) (((x) + ((m) - 1)) / (m)) * (m)
-#endif
-
-/**
- * @brief 返回一个不大于整数x且为m的整数倍的最大值
- * @hideinitializer
- */
-#ifndef NOT_GT_MULTI_M
-#define NOT_GT_MULTI_M(x, m) ((x) / (m)) * (m)
-#endif
-
-/**
  * @brief 防止溢出的加1。
  * @param [in, out] x
  * @hideinitializer
@@ -167,17 +151,17 @@ bool FloatLT(Type v1, Type v2)
  * @return 如果能整除则取准确的商值，否则向上取整
  * @note 尽可能把宏定义改为模板或者内联函数，原因：（1）宏不好调试（2）宏定义容易出漏洞，不安全（3）多行时逻辑容易出错
  */
-template<typename Type>
-Type Ceil(Type dividend, Type divisor)
+template<typename T>
+T Ceil(T dividend, T divisor)
 {
-    const Type v = dividend / divisor;
+    const T v = dividend / divisor;
 
     if (0 == (dividend % divisor))
     {
         return v; // 能够整除
     }
 
-    Type t = v;
+    T t = v;
     INCREASE(t);
 
     return ((v > 0) ? t : v);
@@ -189,17 +173,17 @@ Type Ceil(Type dividend, Type divisor)
  * @param [in] divisor 除数
  * @return 商的整数部分
  */
-template<typename Type>
-Type Floor(Type dividend, Type divisor)
+template<typename T>
+T Floor(T dividend, T divisor)
 {
-    const Type v = dividend / divisor;
+    const T v = dividend / divisor;
 
     if (0 == (dividend % divisor))
     {
         return v; // 能够整除
     }
 
-    Type t = v;
+    T t = v;
     DECREASE(t);
 
     return ((v > 0) ? v : t);
@@ -207,12 +191,12 @@ Type Floor(Type dividend, Type divisor)
 
 /**
  * @brief 浮点数四舍五入，Type为f32或f64
- * @param [in] v 数据
+ * @param [in] v
  * @param [in] precision 需要保留的小数位数
  * @return 四舍五入后的结果
  */
-template<typename Type>
-Type Round(Type v, int precision = 2)
+template<typename T>
+T Round(T v, int precision = 2)
 {
     f64 a = v * pow(10, precision);
     i64 b;
@@ -228,6 +212,22 @@ Type Round(Type v, int precision = 2)
 
     return ((f64) b * pow(10, -precision));
 }
+
+/**
+ * @brief 返回一个不小于整数x且为m的整数倍的最小值
+ * @hideinitializer
+ */
+#ifndef GE_X_MULTI_M
+#define GE_X_MULTI_M(x, m) (((x) + ((m) - 1)) / (m)) * (m)
+#endif
+
+/**
+ * @brief 返回一个不大于整数x且为m的整数倍的最大值
+ * @hideinitializer
+ */
+#ifndef LE_X_MULTI_M
+#define LE_X_MULTI_M(x, m) ((x) / (m)) * (m)
+#endif
 
 /** @} Module_NumUtil */
 /** @} Module_Base */

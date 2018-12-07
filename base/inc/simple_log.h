@@ -10,6 +10,7 @@
 
 #include <pthread.h>
 #include <sys/time.h>
+#include <iomanip>
 
 /**
  * @defgroup Module_Base 基础库
@@ -49,8 +50,8 @@ extern pthread_mutex_t g_simple_log_mutex;
         gettimeofday(&tv, NULL);\
         struct tm* p = localtime(&tv.tv_sec);\
         pthread_mutex_lock(&g_simple_log_mutex);\
-        fprintf(stdout, "<%04d-%02d-%02d %02d:%02d:%02d %03ld %s:%d %s %lu> " format "\n", (1900 + p->tm_year), (1 + p->tm_mon), \
-                p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec / 1000, __FILE__, __LINE__, __PRETTY_FUNCTION__, pthread_self(), ##__VA_ARGS__);\
+        fprintf(stdout, "<%04d-%02d-%02d %02d:%02d:%02d %03ld %s:%d %s %#lX> " format "\n", (1900 + p->tm_year), (1 + p->tm_mon), \
+                p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec / 1000, basename(__FILE__), __LINE__, __FUNCTION__, pthread_self(), ##__VA_ARGS__);\
         pthread_mutex_unlock(&g_simple_log_mutex);\
     } while (0)
 
@@ -63,8 +64,8 @@ extern pthread_mutex_t g_simple_log_mutex;
         gettimeofday(&tv, NULL);\
         struct tm* p = localtime(&tv.tv_sec);\
         pthread_mutex_lock(&g_simple_log_mutex);\
-        fprintf(stderr, "<%04d-%02d-%02d %02d:%02d:%02d %03ld %s:%d %s %lu> " format "\n", (1900 + p->tm_year), (1 + p->tm_mon), \
-                p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec / 1000, __FILE__, __LINE__, __PRETTY_FUNCTION__, pthread_self(), ##__VA_ARGS__);\
+        fprintf(stderr, "<%04d-%02d-%02d %02d:%02d:%02d %03ld %s:%d %s %#lX> " format "\n", (1900 + p->tm_year), (1 + p->tm_mon), \
+                p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec / 1000, basename(__FILE__), __LINE__, __FUNCTION__, pthread_self(), ##__VA_ARGS__);\
         pthread_mutex_unlock(&g_simple_log_mutex);\
     } while (0)
 
@@ -86,7 +87,7 @@ extern pthread_mutex_t g_simple_log_mutex;
         std::ostringstream result("");\
         result << std::setfill('0') << "<" << std::setw(4) << (1900 + p->tm_year) << "-" << std::setw(2) << (1 + p->tm_mon) << "-" << std::setw(2) << p->tm_mday\
                << " " << std::setw(2) << p->tm_hour << ":" << std::setw(2) << p->tm_min << ":" << std::setw(2) << p->tm_sec << " " << std::setw(3) << tv.tv_usec / 1000\
-               << " " << __FILE__ << ":" << __LINE__ << " " << __PRETTY_FUNCTION__ <<  " " << pthread_self() << "> " << msg;\
+               << " " << basename(__FILE__) << ":" << __LINE__ << " " << __FUNCTION__ << " " << std::hex << std::showbase << setiosflags(std::ios::uppercase) << pthread_self() << "> " << msg;\
         pthread_mutex_lock(&g_simple_log_mutex);\
         std::cout << result.str() << std::endl;\
         pthread_mutex_unlock(&g_simple_log_mutex);\
@@ -103,7 +104,7 @@ extern pthread_mutex_t g_simple_log_mutex;
         std::ostringstream result("");\
         result << std::setfill('0') << "<" << std::setw(4) << (1900 + p->tm_year) << "-" << std::setw(2) << (1 + p->tm_mon) << "-" << std::setw(2) << p->tm_mday\
                << " " << std::setw(2) << p->tm_hour << ":" << std::setw(2) << p->tm_min << ":" << std::setw(2) << p->tm_sec << " " << std::setw(3) << tv.tv_usec / 1000\
-               << " " << __FILE__ << ":" << __LINE__ << " " << __PRETTY_FUNCTION__ << " " << pthread_self() << "> " << msg;\
+               << " " << basename(__FILE__) << ":" << __LINE__ << " " << __FUNCTION__ << " " << std::hex << std::showbase << setiosflags(std::ios::uppercase) << pthread_self() << "> " << msg;\
         pthread_mutex_lock(&g_simple_log_mutex);\
         std::cerr << result.str() << std::endl;\
         pthread_mutex_unlock(&g_simple_log_mutex);\

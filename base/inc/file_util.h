@@ -80,6 +80,13 @@ int GetFileStat(FileStat& file_stat, const char* file_path);
 bool IsDirEmpty(const char* file_path);
 
 /**
+ * @brief 创建一个新目录
+ * @param [in] file_path，允许多级
+ * @return =0表示成功，否则失败
+ */
+int CreateDir(const char* file_path);
+
+/**
  * @brief 创建一个新文件
  * @param [in] file_path
  * @param [in] mode
@@ -89,27 +96,11 @@ bool IsDirEmpty(const char* file_path);
 int CreateFile(const char* file_path, mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
 
 /**
- * @brief 创建一个新目录
- * @param [in] file_path，允许多级
- * @return =0表示成功，否则失败
- */
-int CreateDir(const char* file_path);
-
-/**
  * @brief 删除文件或者目录
  * @param [in] file_path
  * @return =0表示成功，否则失败
  */
 int DelFile(const char* file_path);
-
-/**
- * 获取文件名
- * @param [out] buf
- * @param [in] buf_size
- * @param [in] file_path
- * @return =0表示成功，否则失败
- */
-int GetFileName(char* buf, int buf_size, const char* file_path);
 
 /**
  * @brief 获取文件所在的目录
@@ -119,6 +110,15 @@ int GetFileName(char* buf, int buf_size, const char* file_path);
  * @return =0表示成功，否则失败
  */
 int GetFileDir(char* buf, int buf_size, const char* file_path);
+
+/**
+ * 获取文件名
+ * @param [out] buf
+ * @param [in] buf_size
+ * @param [in] file_path
+ * @return =0表示成功，否则失败
+ */
+int GetFileName(char* buf, int buf_size, const char* file_path);
 
 /**
  * @brief 获取path相对于cur_working_dir的绝对路径
@@ -138,15 +138,22 @@ int GetAbsolutePath(char* buf, int buf_size, const char* path, const char* cur_w
 int WriteBinFile(const char* file_path, const void* data, size_t len);
 
 /**
+ * @brief 将一段二进制数据追加写入指定文件中，如果文件不存在则先创建
+ * @param [in] file_path
+ * @param [in] data 二进制数据
+ * @param [in] len 数据长度
+ * @return =0表示成功，否则失败
+ */
+int AppendBinFile(const char* file_path, const void* data, size_t len);
+
+/**
  * @brief 从指定文件中读取二进制数据
  * @param [out] data 存放二进制数据的缓冲区
- * @param [in, out] len 输入时为缓冲区的大小，输出时为所读取数据的实际长度
+ * @param [in] len 缓冲区的大小，至少应该等于文件长度（可通过GetFileStat获取）
  * @param [in] file_path
  * @return =0表示成功，否则失败
  */
-int ReadBinFile(void* data, size_t& len, const char* file_path);
-
-int AppendBinFile(const char* file_path, const void* data, size_t len);
+int ReadBinFile(void* data, size_t len, const char* file_path);
 
 /**
  * @brief 将一段文本数据写入指定文件中，如果文件不存在则先创建
@@ -158,15 +165,22 @@ int AppendBinFile(const char* file_path, const void* data, size_t len);
 int WriteTxtFile(const char* file_path, const void* data, size_t len);
 
 /**
+ * @brief 将一段文本数据追加写入指定文件中，如果文件不存在则先创建
+ * @param [in] file_path
+ * @param [in] data 文本数据
+ * @param [in] len 数据长度
+ * @return =0表示成功，否则失败
+ */
+int AppendTxtFile(const char* file_path, const void* data, size_t len);
+
+/**
  * @brief 从指定文件中读取文本数据
  * @param [out] data 存放文本数据的缓冲区
- * @param [in, out] len 输入时为缓冲区的大小，输出时为所读取数据的实际长度
+ * @param [in] len 缓冲区的大小，至少应该等于文件长度（可通过GetFileStat获取）
  * @param [in] file_path
  * @return =0表示成功，否则失败
  */
-int ReadTxtFile(void* data, size_t& len, const char* file_path);
-
-int AppendTxtFile(const char* file_path, const void* data, size_t len);
+int ReadTxtFile(void* data, size_t len, const char* file_path);
 
 /** @} Module_FileUtil */
 /** @} Module_Base */

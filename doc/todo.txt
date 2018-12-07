@@ -1,3 +1,7 @@
+
+base lib中用c++实现的，尽量换成c实现
+
+
 @copyright 统一替换
 
 

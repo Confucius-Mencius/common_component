@@ -18,7 +18,10 @@
  * @{
  */
 
+#include "exception_util.h"
 #include "hash_container.h"
+
+DEFINE_EXCEPTION(SeqNumException);
 
 /**
  * @brief 非法序列号
@@ -31,7 +34,7 @@
  * @param seq_min 序列号的最小值，必须大于0
  * @param seq_max 序列号的最大值，必须大于seq_min
  */
-template<typename T, unsigned long seq_min, unsigned long seq_max>
+template<typename T, T seq_min, T seq_max>
 class SeqNum
 {
 public:
@@ -39,7 +42,7 @@ public:
     {
         if (seq_min < 1 || seq_max <= seq_min)
         {
-            return;
+            THROW_EXCEPTION(SeqNumException, "invalid params! seq_min: " << seq_min << ", seq_max: " << seq_max);
         }
 
         Reset();
@@ -47,7 +50,7 @@ public:
 
     ~SeqNum()
     {
-        used_seq_hash_set_.clear();
+        inuse_seqs_.clear();
     }
 
     /**
@@ -55,9 +58,9 @@ public:
      */
     void Reset()
     {
-        seq_cursor_ = seq_min - 1;
-        overflow_flag_ = 0;
-        used_seq_hash_set_.clear();
+        total_count_ = seq_max - seq_min + 1;
+        cursor_ = seq_min - 1;
+        inuse_seqs_.clear();
     }
 
     /**
@@ -80,50 +83,35 @@ public:
 
     /**
      * @brief 分配下一个可用的序列号，如果下一个序列号在使用中还未释放，则顺次加1，直到找到一个空闲的序列号为止
-     * @return 下一个可用的序列号，如果找不到可用的序列号则返回INVALID_SEQ，调用者需要进行判断
+     * @return 下一个可用的序列号，如果找不到可用的序列号则返回INVALID_SEQ，调用者要判断返回值
      * @attention 该序列号使用完毕时，需要调用Free释放它，否则该序列号就一直处于使用状态
      * @see Free INVALID_SEQ
      */
     T Alloc()
     {
-        if ((unsigned long) seq_cursor_ < seq_max)
-        {
-            ++seq_cursor_;
-        }
-        else
-        {
-            ++overflow_flag_;
-            seq_cursor_ = seq_min;
-        }
-
-        if (overflow_flag_ > 0)
-        {
-            unsigned int loop = 0;
-
-            while (true)
-            {
-                if (used_seq_hash_set_.find(seq_cursor_) == used_seq_hash_set_.end())
-                {
-                    break;
-                }
-
-                ++loop;
-
-                if (loop >= (seq_max - seq_min + 1))
-                {
-                    return INVALID_SEQ_NUM;
-                }
-
-                ++seq_cursor_;
-            }
-        }
-
-        if (!used_seq_hash_set_.insert(seq_cursor_).second)
+        if (inuse_seqs_.size() == total_count_)
         {
             return INVALID_SEQ_NUM;
         }
 
-        return seq_cursor_;
+        while (true)
+        {
+            if ((unsigned long) cursor_ < seq_max)
+            {
+                ++cursor_;
+            }
+            else
+            {
+                cursor_ = seq_min;
+            }
+
+            if (inuse_seqs_.insert(cursor_).second)
+            {
+                break;
+            }
+        }
+
+        return cursor_;
     }
 
     /**
@@ -133,30 +121,30 @@ public:
      */
     void Free(T seq)
     {
-        typename SeqHashSet::iterator it = used_seq_hash_set_.find(seq);
-        if (it != used_seq_hash_set_.end())
+        typename SeqHashSet::iterator it = inuse_seqs_.find(seq);
+        if (it != inuse_seqs_.end())
         {
-            used_seq_hash_set_.erase(it);
+            inuse_seqs_.erase(it);
         }
     }
 
 private:
     typedef __hash_set<T> SeqHashSet;
 
-    T seq_cursor_;
-    SeqHashSet used_seq_hash_set_;
-    int overflow_flag_;
+    unsigned long total_count_;
+    T cursor_;
+    SeqHashSet inuse_seqs_;
 };
 
 /**
  * @brief 32位有符号的自增序列号，取值范围为[1, 0x7fffffff]，不使用负数
  */
-typedef SeqNum<int, 1, (int) 0x7fffffff> I32SeqNum;
+typedef SeqNum<int, (int) 1, (int) 0x7fffffff> I32SeqNum;
 
 /**
  * @brief 32位无符号的自增序列号，取值范围为[1, 0xffffffff]
  */
-typedef SeqNum<unsigned int, 1, (unsigned int) 0xffffffff> U32SeqNum;
+typedef SeqNum<unsigned int, (unsigned int) 1, (unsigned int) 0xffffffff> U32SeqNum;
 
 /** @} Module_SeqNum */
 /** @} Module_Base */

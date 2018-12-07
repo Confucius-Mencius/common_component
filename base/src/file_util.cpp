@@ -1,4 +1,6 @@
 #include "file_util.h"
+#include <dirent.h>
+#include <string.h>
 
 #if (defined(__linux__))
 #include <unistd.h>
@@ -6,13 +8,10 @@
 #include <io.h>
 #endif
 
-#include <dirent.h>
-#include <string.h>
-#include <sys/uio.h>
 #include <fstream>
 #include <sstream>
-#include "shell_util.h"
 #include "str_util.h"
+#include "shell_util.h"
 
 bool FileExist(const char* file_path)
 {
@@ -53,6 +52,11 @@ int GetFileStat(FileStat& file_stat, const char* file_path)
 
 bool IsDirEmpty(const char* file_path)
 {
+    if (!FileExist(file_path))
+    {
+        return true;
+    }
+
     DIR* dir = opendir(file_path);
     if (NULL == dir)
     {
@@ -63,7 +67,7 @@ bool IsDirEmpty(const char* file_path)
     struct dirent* result = NULL;
     bool has_children = false;
 
-    for (;;)
+    while (true)
     {
         if (readdir_r(dir, &entry, &result) != 0)
         {
@@ -79,7 +83,7 @@ bool IsDirEmpty(const char* file_path)
 
         if (0 == strcmp(entry.d_name, ".") || 0 == strcmp(entry.d_name, ".."))
         {
-            continue;
+            continue; // 跳过.和..
         }
 
         has_children = true;
@@ -87,8 +91,20 @@ bool IsDirEmpty(const char* file_path)
     }
 
     closedir(dir);
-
     return !has_children;
+}
+
+int CreateDir(const char* file_path)
+{
+    if (NULL == file_path)
+    {
+        return -1;
+    }
+
+    std::ostringstream cmd;
+    cmd << "mkdir -p " << file_path;
+
+    return ExecShellCmd(NULL, 0, cmd.str().c_str());
 }
 
 int CreateFile(const char* file_path, mode_t mode)
@@ -117,21 +133,15 @@ int CreateFile(const char* file_path, mode_t mode)
         }
     }
 
-    const int fd = creat(file_path, mode);
-    return fd;
-}
-
-int CreateDir(const char* file_path)
-{
-    if (NULL == file_path)
+    int fd = creat(file_path, mode);
+    if (-1 == fd)
     {
+        const int err = errno;
+        (void) err;
         return -1;
     }
 
-    std::ostringstream cmd;
-    cmd << "mkdir -p " << file_path;
-
-    return ExecShellCmd(NULL, 0, cmd.str().c_str());
+    return fd;
 }
 
 int DelFile(const char* file_path)
@@ -147,20 +157,32 @@ int DelFile(const char* file_path)
     return ExecShellCmd(NULL, 0, cmd.str().c_str());
 }
 
-int GetFileName(char* buf, int buf_size, const char* file_path)
+int GetFileDir(char* buf, int buf_size, const char* file_path)
 {
-    if (NULL == buf || buf_size < 1 || NULL == file_path)
+    if (NULL == buf || buf_size < 2 || NULL == file_path)
     {
         return -1;
     }
 
     std::ostringstream cmd;
-    cmd << "basename " << file_path;
+    cmd << "dirname " << file_path;
 
-    if (ExecShellCmd(buf, buf_size, cmd.str().c_str()) != 0)
+    return ExecShellCmd(buf, buf_size, cmd.str().c_str());
+}
+
+int GetFileName(char* buf, int buf_size, const char* file_path)
+{
+    if (NULL == buf || buf_size < 2 || NULL == file_path)
     {
         return -1;
     }
+
+    strncpy(buf, basename(file_path), buf_size - 1);
+
+//    std::ostringstream cmd;
+//    cmd << "basename " << file_path;
+
+//    return ExecShellCmd(buf, buf_size, cmd.str().c_str());
 
     return 0;
 }
@@ -183,10 +205,12 @@ int GetAbsolutePath(char* buf, int buf_size, const char* path, const char* cur_w
 
         if (0 == strcmp(path, "."))
         {
+            // 当前目录，返回cur_working_dir即可
             absolute_path.append(cur_working_dir);
         }
         else
         {
+            // 避免结尾是//
             if (StrNoCaseEndWith(cur_working_dir, "/"))
             {
                 absolute_path.append(cur_working_dir);
@@ -197,6 +221,7 @@ int GetAbsolutePath(char* buf, int buf_size, const char* path, const char* cur_w
                 absolute_path.append("/");
             }
 
+            // 避免结果中有./
             if (StrNoCaseBeginWith(path, "./"))
             {
                 absolute_path.append(path + 2);
@@ -209,6 +234,7 @@ int GetAbsolutePath(char* buf, int buf_size, const char* path, const char* cur_w
     }
     else
     {
+        // 本身就是绝对路径，直接返回
         absolute_path.append(path);
     }
 
@@ -223,20 +249,23 @@ int GetAbsolutePath(char* buf, int buf_size, const char* path, const char* cur_w
     return 0;
 }
 
-int GetFileDir(char* buf, int buf_size, const char* file_path)
+int WriteBinFile(const char* file_path, const void* data, size_t len)
 {
-    if (NULL == buf || buf_size < 1 || NULL == file_path)
+    if (NULL == file_path || NULL == data || len < 1)
     {
         return -1;
     }
 
-    std::ostringstream cmd;
-    cmd << "dirname " << file_path;
-
-    if (ExecShellCmd(buf, buf_size, cmd.str().c_str()) != 0)
+    /* 文件不存在则创建 */
+    std::fstream fs;
+    fs.open(file_path, std::ios::out | std::ios::binary | std::ios::trunc);
+    if (!fs)
     {
         return -1;
     }
+
+    (void) fs.write((const char*) data, len);
+    fs.close();
 
     return 0;
 }
@@ -257,33 +286,12 @@ int AppendBinFile(const char* file_path, const void* data, size_t len)
     }
 
     (void) fs.write((const char*) data, len);
-
     fs.close();
+
     return 0;
 }
 
-int WriteBinFile(const char* file_path, const void* data, size_t len)
-{
-    if (NULL == file_path || NULL == data || len < 1)
-    {
-        return -1;
-    }
-
-    /* 文件不存在则创建 */
-    std::fstream fs;
-    fs.open(file_path, std::ios::out | std::ios::binary | std::ios::trunc);
-    if (!fs)
-    {
-        return -1;
-    }
-
-    (void) fs.write((const char*) data, len);
-
-    fs.close();
-    return 0;
-}
-
-int ReadBinFile(void* data, size_t& len, const char* file_path)
+int ReadBinFile(void* data, size_t len, const char* file_path)
 {
     if (NULL == data || NULL == file_path)
     {
@@ -312,9 +320,9 @@ int ReadBinFile(void* data, size_t& len, const char* file_path)
     }
 
     (void) fs.read((char*) data, file_size);
-    len = fs.gcount();
-
+//    len = fs.gcount();
     fs.close();
+
     return 0;
 }
 
@@ -334,12 +342,33 @@ int WriteTxtFile(const char* file_path, const void* data, size_t len)
     }
 
     (void) fs.write((const char*) data, len);
-
     fs.close();
+
     return 0;
 }
 
-int ReadTxtFile(void* data, size_t& len, const char* file_path)
+int AppendTxtFile(const char* file_path, const void* data, size_t len)
+{
+    if (NULL == file_path || NULL == data || len < 1)
+    {
+        return -1;
+    }
+
+    /* 文件不存在则创建 */
+    std::fstream fs;
+    fs.open(file_path, std::ios::out | std::ios::app);
+    if (!fs)
+    {
+        return -1;
+    }
+
+    (void) fs.write((const char*) data, len);
+    fs.close();
+
+    return 0;
+}
+
+int ReadTxtFile(void* data, size_t len, const char* file_path)
 {
     if (NULL == file_path || NULL == data)
     {
@@ -368,29 +397,8 @@ int ReadTxtFile(void* data, size_t& len, const char* file_path)
     }
 
     (void) fs.read((char*) data, file_size);
-    len = fs.gcount();
-
+//    len = fs.gcount();
     fs.close();
-    return 0;
-}
 
-int AppendTxtFile(const char* file_path, const void* data, size_t len)
-{
-    if (NULL == file_path || NULL == data || len < 1)
-    {
-        return -1;
-    }
-
-    /* 文件不存在则创建 */
-    std::fstream fs;
-    fs.open(file_path, std::ios::out | std::ios::app);
-    if (!fs)
-    {
-        return -1;
-    }
-
-    (void) fs.write((const char*) data, len);
-
-    fs.close();
     return 0;
 }

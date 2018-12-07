@@ -68,11 +68,6 @@ void Test001()
     EXPECT_EQ(std::numeric_limits<ulong>::max(), ULONG_MAX);
 }
 
-void Test002()
-{
-    LOG_CPP(GCC_VERSION);
-}
-
 /*
  INT_MIN in <limits.h> is a macro that expands to the minimum value for an object of type int. In the 32-bit C compilers I have installed at the moment, it is defined as:
 
@@ -128,6 +123,5 @@ void IntMinTest()
 }
 
 ADD_TEST(DataTypeTest, Test001);
-ADD_TEST(DataTypeTest, Test002);
 ADD_TEST(DataTypeTest, IntMinTest);
 } /* namespace data_type_test */

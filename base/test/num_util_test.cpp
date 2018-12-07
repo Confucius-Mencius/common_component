@@ -773,14 +773,14 @@ void Test013()
     i32 x = 10;
     i32 m = 2;
     i32 ret = 10;
-    EXPECT_EQ(ret, NOT_LT_MULTI_M(x, m));
+    EXPECT_EQ(ret, GE_X_MULTI_M(x, m));
 
     x = 11;
     ret = 12;
-    EXPECT_EQ(ret, NOT_LT_MULTI_M(x, m));
+    EXPECT_EQ(ret, GE_X_MULTI_M(x, m));
 
     m = 3;
-    EXPECT_EQ(ret, NOT_LT_MULTI_M(x, m));
+    EXPECT_EQ(ret, GE_X_MULTI_M(x, m));
 }
 
 void Test014()
@@ -788,20 +788,20 @@ void Test014()
     i32 x = 10;
     i32 m = 2;
     i32 ret = 10;
-    EXPECT_EQ(ret, NOT_GT_MULTI_M(x, m));
+    EXPECT_EQ(ret, LE_X_MULTI_M(x, m));
 
     x = 11;
     ret = 10;
-    EXPECT_EQ(ret, NOT_GT_MULTI_M(x, m));
+    EXPECT_EQ(ret, LE_X_MULTI_M(x, m));
 
     x = 9;
     ret = 8;
-    EXPECT_EQ(ret, NOT_GT_MULTI_M(x, m));
+    EXPECT_EQ(ret, LE_X_MULTI_M(x, m));
 
     m = 3;
     ret = 9;
 
-    EXPECT_EQ(ret, NOT_GT_MULTI_M(x, m));
+    EXPECT_EQ(ret, LE_X_MULTI_M(x, m));
 }
 
 ADD_TEST(NumUtilTest, Test001);

@@ -6,7 +6,7 @@
 
 int Backtrace(char* buf, int buf_size, int nframes)
 {
-    if (NULL == buf || buf_size < 1 || nframes <= 0)
+    if (NULL == buf || buf_size < 2 || nframes <= 0)
     {
         StrPrintf(buf, buf_size, "%s\n", "No stack trace because max frame count is not greater than 0!");
         return -1;

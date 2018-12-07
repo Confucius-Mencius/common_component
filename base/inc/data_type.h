@@ -23,10 +23,6 @@
  * @{
  */
 
-#if (defined(__linux__))
-#define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
-#endif
-
 /**
  * @brief 字节类型。
  * @attention 作为函数参数时，缓冲区指针一般用void*，不用byte*

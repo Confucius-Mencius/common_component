@@ -1,3 +1,4 @@
+#include "data_type.h"
 #include "seq_num.h"
 #include "test_util.h"
 
@@ -5,6 +6,20 @@
 
 namespace seq_num_test
 {
+void HashSetTest()
+{
+    typedef __hash_set<int> MyHashSet;
+    MyHashSet x;
+    ASSERT_TRUE(x.insert(100).second);
+    ASSERT_FALSE(x.insert(100).second); // 已经存在则insert失败
+}
+
+void SeqNumExceptionTest()
+{
+    typedef SeqNum<int, 0, -1> MySeqNum;
+    EXPECT_THROW(MySeqNum(), SeqNumException);
+}
+
 /**
  * @brief seq测试-分配第1个int32类型的seq
  * @details
@@ -263,6 +278,9 @@ void Test010()
     n = seq_num.Alloc();
     EXPECT_EQ(INVALID_SEQ_NUM, n);
 }
+
+ADD_TEST(SeqNumTest, HashSetTest);
+ADD_TEST(SeqNumTest, SeqNumExceptionTest);
 
 #if SEQ_NUM_TEST_NO_TIMEOUT
 ADD_TEST(SeqNumTest, Test001);

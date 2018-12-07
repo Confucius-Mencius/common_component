@@ -2,7 +2,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-
 int StrLen(const char* str, size_t buf_size)
 {
     if (NULL == str || buf_size < 2)

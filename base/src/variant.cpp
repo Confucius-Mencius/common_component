@@ -1,7 +1,8 @@
 #include "variant.h"
 #include "num_str_util.h"
 
-static const char empty[] = "";
+static const char EMPTY_STR[] = "";
+static const Variant::Chunk EMPTY_CHUNK = { (char*) EMPTY_STR, 0 };
 
 Variant::Variant() : u_()
 {
@@ -10,15 +11,7 @@ Variant::Variant() : u_()
 
 Variant::~Variant()
 {
-    if (TYPE_STR == type_ || TYPE_BIN == type_)
-    {
-        if (u_.chunk.data != NULL && u_.chunk.len > 0)
-        {
-            delete[] u_.chunk.data;
-            u_.chunk.data = NULL;
-            u_.chunk.len = 0;
-        }
-    }
+    Release();
 }
 
 Variant::Variant(const Variant& v)
@@ -67,15 +60,7 @@ Variant& Variant::operator=(const Variant& v)
 {
     if (&v != this)
     {
-        if (TYPE_STR == type_ || TYPE_BIN == type_)
-        {
-            if (u_.chunk.data != NULL && u_.chunk.len > 0)
-            {
-                delete[] u_.chunk.data;
-                u_.chunk.data = NULL;
-                u_.chunk.len = 0;
-            }
-        }
+        Release();
 
         if (TYPE_STR == v.type_ || TYPE_BIN == v.type_)
         {
@@ -94,81 +79,41 @@ Variant& Variant::operator=(const Variant& v)
 
 Variant& Variant::operator=(i32 val)
 {
-    if (TYPE_STR == type_ || TYPE_BIN == type_)
-    {
-        if (u_.chunk.data != NULL && u_.chunk.len > 0)
-        {
-            delete[] u_.chunk.data;
-            u_.chunk.data = NULL;
-            u_.chunk.len = 0;
-        }
-    }
-
+    Release();
     SetValue(val);
+
     return *this;
 }
 
 Variant& Variant::operator=(i64 val)
 {
-    if (TYPE_STR == type_ || TYPE_BIN == type_)
-    {
-        if (u_.chunk.data != NULL && u_.chunk.len > 0)
-        {
-            delete[] u_.chunk.data;
-            u_.chunk.data = NULL;
-            u_.chunk.len = 0;
-        }
-    }
-
+    Release();
     SetValue(val);
+
     return *this;
 }
 
 Variant& Variant::operator=(f32 val)
 {
-    if (TYPE_STR == type_ || TYPE_BIN == type_)
-    {
-        if (u_.chunk.data != NULL && u_.chunk.len > 0)
-        {
-            delete[] u_.chunk.data;
-            u_.chunk.data = NULL;
-            u_.chunk.len = 0;
-        }
-    }
-
+    Release();
     SetValue(val);
+
     return *this;
 }
 
 Variant& Variant::operator=(f64 val)
 {
-    if (TYPE_STR == type_ || TYPE_BIN == type_)
-    {
-        if (u_.chunk.data != NULL && u_.chunk.len > 0)
-        {
-            delete[] u_.chunk.data;
-            u_.chunk.data = NULL;
-            u_.chunk.len = 0;
-        }
-    }
-
+    Release();
     SetValue(val);
+
     return *this;
 }
 
 Variant& Variant::operator=(std::pair<Variant::Type, Variant::Chunk> p)
 {
-    if (TYPE_STR == type_ || TYPE_BIN == type_)
-    {
-        if (u_.chunk.data != NULL && u_.chunk.len > 0)
-        {
-            delete[] u_.chunk.data;
-            u_.chunk.data = NULL;
-            u_.chunk.len = 0;
-        }
-    }
-
+    Release();
     SetValue(p.first, p.second.data, p.second.len);
+
     return *this;
 }
 
@@ -189,26 +134,51 @@ bool Variant::TypeMatch(Type type) const
 
 i32 Variant::GetValue(Type2Type<i32>) const
 {
+    if (type_ != TYPE_I32)
+    {
+        return 0;
+    }
+
     return u_.i;
 }
 
 i64 Variant::GetValue(Type2Type<i64>) const
 {
+    if (type_ != TYPE_I64)
+    {
+        return 0;
+    }
+
     return u_.l;
 }
 
 f32 Variant::GetValue(Type2Type<f32>) const
 {
+    if (type_ != TYPE_F32)
+    {
+        return 0;
+    }
+
     return u_.f;
 }
 
 f64 Variant::GetValue(Type2Type<f64>) const
 {
+    if (type_ != TYPE_F64)
+    {
+        return 0;
+    }
+
     return u_.d;
 }
 
 const Variant::Chunk& Variant::GetValue(Type2Type<const char*>) const
 {
+    if (type_ != TYPE_STR && type_ != TYPE_BIN)
+    {
+        return EMPTY_CHUNK;
+    }
+
     return u_.chunk;
 }
 
@@ -248,7 +218,7 @@ void Variant::ToString(char* buf, int buf_size) const
 
         case TYPE_BIN:
         {
-            memmove(buf, u_.chunk.data, u_.chunk.len);
+            memmove(buf, u_.chunk.data, u_.chunk.len > buf_size ? buf_size : u_.chunk.len);
         }
         break;
 
@@ -289,13 +259,13 @@ std::ostream& operator<<(std::ostream& out, const Variant& instance)
 
         case Variant::TYPE_STR:
         {
-            out << instance.u_.chunk.data;
+            out << instance.u_.chunk.data << "(" << instance.u_.chunk.len << ")";
         }
         break;
 
         case Variant::TYPE_BIN:
         {
-            out << instance.u_.chunk.data;
+            out << instance.u_.chunk.data << "(" << instance.u_.chunk.len << ")";
         }
         break;
 
@@ -348,7 +318,7 @@ void Variant::SetValue(Type type, const char* val, int len)
 
     if (0 == len)
     {
-        u_.chunk.data = (char*) empty;
+        u_.chunk.data = (char*) EMPTY_STR;
         u_.chunk.len = 0;
     }
     else
@@ -369,5 +339,18 @@ void Variant::SetValue(Type type, const char* val, int len)
         }
 
         u_.chunk.len = len;
+    }
+}
+
+void Variant::Release()
+{
+    if (TYPE_STR == type_ || TYPE_BIN == type_)
+    {
+        if (u_.chunk.data != NULL && u_.chunk.len > 0) // 因为可能为EMPTY_STR，必须判断长度>0
+        {
+            delete[] u_.chunk.data;
+            u_.chunk.data = NULL;
+            u_.chunk.len = 0;
+        }
     }
 }
