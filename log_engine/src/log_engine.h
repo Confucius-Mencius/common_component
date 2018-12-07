@@ -25,6 +25,7 @@ public:
 
     ///////////////////////// LogEngineInterface /////////////////////////
     const log4cplus::Logger& GetLogger() const override;
+    void SetLogLevel(int level) override;
     int Reload() override;
 
 private:
@@ -34,7 +35,7 @@ private:
     LastErrMsg last_err_msg_;
     LogEngineCtx log_engine_ctx_;
     log4cplus::Logger logger_;
-    FileStat file_stat_;
+    FileStat log_conf_file_stat_;
 };
 }
 

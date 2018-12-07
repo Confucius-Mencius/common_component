@@ -20,8 +20,8 @@ aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} CUR_DIR_SRCS)
 
 add_executable(${EXE_NAME} ${HEADERS} ${CUR_DIR_SRCS})
 
-target_link_libraries(${EXE_NAME} ${BASE_LIB_NAME} ${LIBUUID_LIB_NAME} ${GTEST_LIB_NAME} pthread
-        ${GPERFTOOLS_LIB_NAME})
+target_link_libraries(${EXE_NAME} ${BASE_LIB_NAME} ${LIBUUID_LIB_NAME} ${GTEST_LIB_NAME}
+        pthread ${GPERFTOOLS_LIB_NAME})
 
 ###############################################################################
 # output dir
@@ -34,4 +34,6 @@ set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${TEST_OUT
 # add test
 add_test(NAME ${TEST_NAME} WORKING_DIRECTORY ${TEST_OUTPUT_DIR} COMMAND ${EXE_NAME} ${GTEST_EXE_OPTS}${TEST_NAME}.xml)
 
+###############################################################################
+# copy files for testing
 execute_process(COMMAND cp -rf data ${TEST_OUTPUT_DIR}/ WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})

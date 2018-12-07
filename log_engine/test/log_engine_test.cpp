@@ -3,8 +3,8 @@
 #include "log_util.h"
 #include "mem_util.h"
 
-static const char log_conf_file_path[] = "./test_log_conf.properties";
-static const char logger_name[] = "my_server";
+static const char LOG_CONF_FILE_PATH[] = "./test_log_conf.properties";
+static const char LOGGER_NAME[] = "my_server";
 
 LogEngineInterface* g_log_engine;
 
@@ -33,20 +33,20 @@ void LogEngineTest::SetUp()
     std::cout << "log engine version: " << log_engine_->GetVersion() << std::endl;
 
     LogEngineCtx log_engine_ctx;
-    log_engine_ctx.log_conf_file_path = log_conf_file_path;
-    log_engine_ctx.logger_name = logger_name;
+    log_engine_ctx.log_conf_file_path = LOG_CONF_FILE_PATH;
+    log_engine_ctx.logger_name = LOGGER_NAME;
 
     if (log_engine_->Initialize(&log_engine_ctx) != 0)
     {
         FAIL() << log_engine_->GetLastErrMsg();
     }
 
-    g_log_engine = log_engine_;
-
     if (log_engine_->Activate() != 0)
     {
         FAIL() << log_engine_->GetLastErrMsg();
     }
+
+    g_log_engine = log_engine_;
 }
 
 void LogEngineTest::TearDown()
@@ -58,24 +58,39 @@ void LogEngineTest::Test001()
 {
     LOG_TRACE("hello");
     LOG_DEBUG("hello");
+    LOG_INFO("hello");
     LOG_WARN("hello");
     LOG_ERROR("hello");
     LOG_FATAL("hello");
+    LOG_ALWAYS("hello");
 }
 
 void LogEngineTest::Test002()
 {
     LOG_TRACE("hello");
     LOG_DEBUG("hello");
+    LOG_INFO("hello");
     LOG_WARN("hello");
     LOG_ERROR("hello");
     LOG_FATAL("hello");
+    LOG_ALWAYS("hello");
 
-    // 修改日志级别
+    // ... 修改日志级别
     log_engine_->Reload();
 
     LOG_TRACE("hello");
     LOG_DEBUG("hello");
+    LOG_INFO("hello");
+    LOG_WARN("hello");
+    LOG_ERROR("hello");
+    LOG_FATAL("hello");
+    LOG_ALWAYS("hello");
+
+    // 修改日志级别
+    g_log_engine->SetLogLevel(log4cplus::INFO_LOG_LEVEL);
+    LOG_TRACE("hello");
+    LOG_DEBUG("hello");
+    LOG_INFO("hello");
     LOG_WARN("hello");
     LOG_ERROR("hello");
     LOG_FATAL("hello");
@@ -92,7 +107,23 @@ void LogEngineTest::ConsoleLogEngineTest()
 {
     ConsoleLogEngine console_log_engine;
     g_log_engine = &console_log_engine;
+
     LOG_TRACE("console log engine");
+    LOG_DEBUG("hello");
+    LOG_INFO("hello");
+    LOG_WARN("hello");
+    LOG_ERROR("hello");
+    LOG_FATAL("hello");
+    LOG_ALWAYS("console log engine");
+
+    // 修改日志级别
+    g_log_engine->SetLogLevel(log4cplus::INFO_LOG_LEVEL);
+    LOG_TRACE("console log engine");
+    LOG_DEBUG("hello");
+    LOG_INFO("hello");
+    LOG_WARN("hello");
+    LOG_ERROR("hello");
+    LOG_FATAL("hello");
     LOG_ALWAYS("console log engine");
 }
 

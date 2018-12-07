@@ -28,14 +28,13 @@ MakeDir(${TEST_OUTPUT_DIR})
 set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${TEST_OUTPUT_DIR})
 
 ###############################################################################
-# log dir
-set(LOG_DIR ${TEST_OUTPUT_DIR}/log)
-MakeDir(${LOG_DIR})
-
-###############################################################################
 # add test
 add_test(NAME ${TEST_NAME} WORKING_DIRECTORY ${TEST_OUTPUT_DIR} COMMAND ${EXE_NAME} ${GTEST_EXE_OPTS}${TEST_NAME}.xml)
 
 ###############################################################################
+# log dir
+set(LOG_DIR ${TEST_OUTPUT_DIR}/log)
+MakeDir(${LOG_DIR})
+
 # copy files for testing
 execute_process(COMMAND cp -f test_log_conf.properties ${TEST_OUTPUT_DIR} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})

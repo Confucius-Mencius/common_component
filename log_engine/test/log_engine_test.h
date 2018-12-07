@@ -1,7 +1,6 @@
 #ifndef CONF_CENTER_TEST_LOG_ENGINE_TEST_H_
 #define CONF_CENTER_TEST_LOG_ENGINE_TEST_H_
 
-#include "common_define.h"
 #include "log_engine_interface.h"
 #include "module_loader.h"
 #include "test_util.h"

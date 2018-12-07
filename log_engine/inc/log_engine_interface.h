@@ -4,6 +4,9 @@
 #include <stddef.h>
 #include "module_interface.h"
 
+/**
+  * logger name的最大长度
+  */
 #define MAX_LOGGER_NAME_LEN 31
 
 namespace log4cplus
@@ -13,7 +16,7 @@ class Logger;
 
 struct LogEngineCtx
 {
-    const char* log_conf_file_path;
+    const char* log_conf_file_path; // log配置文件
     const char* logger_name;
 
     LogEngineCtx()
@@ -31,6 +34,7 @@ public:
     }
 
     virtual const log4cplus::Logger& GetLogger() const = 0;
+    virtual void SetLogLevel(int level) = 0;
     virtual int Reload() = 0;
 };
 

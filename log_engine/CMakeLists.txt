@@ -18,7 +18,7 @@ include(${THIRD_PARTY_DIR}/cmake/third_party.cmake)
 
 ###############################################################################
 # 启用-Werror
-SetCompileFlags(TRUE)
+SetCompileFlags(FALSE)
 
 ###############################################################################
 # output dir

@@ -70,6 +70,11 @@ public:
         return logger_;
     }
 
+    void SetLogLevel(int level) override
+    {
+        logger_.setLogLevel(level);
+    }
+
     int Reload() override
     {
         return 0;

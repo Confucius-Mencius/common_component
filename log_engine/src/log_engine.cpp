@@ -11,7 +11,7 @@
 
 namespace log_engine
 {
-LogEngine::LogEngine() : last_err_msg_(), log_engine_ctx_(), logger_(), file_stat_()
+LogEngine::LogEngine() : last_err_msg_(), log_engine_ctx_(), logger_(), log_conf_file_stat_()
 {
 }
 
@@ -65,21 +65,26 @@ const log4cplus::Logger& LogEngine::GetLogger() const
     return logger_;
 }
 
+void LogEngine::SetLogLevel(int level)
+{
+    logger_.setLogLevel(level);
+}
+
 int LogEngine::Reload()
 {
     FileStat file_stat;
 
     if (GetFileStat(file_stat, log_engine_ctx_.log_conf_file_path) != 0)
     {
-        return 0;
+        return -1;
     }
 
-    if (file_stat.Equals(file_stat_))
+    if (file_stat.Equals(log_conf_file_stat_))
     {
-        return 0;
+        return 0; // 文件没变化
     }
 
-    file_stat_ = file_stat;
+    log_conf_file_stat_ = file_stat;
 
     try
     {
@@ -142,7 +147,7 @@ int LogEngine::LoadLogConf(const char* log_conf_file_path, const char* logger_na
         if (!log4cplus::Logger::exists(LOG4CPLUS_TEXT(logger_name)))
         {
             SET_LAST_ERR_MSG(&last_err_msg_, "can not find logger name " << logger_name
-                             << " in log conf file " << log_conf_file_path);
+                             << " in file " << log_conf_file_path);
             return -1;
         }
 
@@ -154,9 +159,9 @@ int LogEngine::LoadLogConf(const char* log_conf_file_path, const char* logger_na
         return -1;
     }
 
-    if (GetFileStat(file_stat_, log_conf_file_path) != 0)
+    if (GetFileStat(log_conf_file_stat_, log_conf_file_path) != 0)
     {
-        SET_LAST_ERR_MSG(&last_err_msg_, "failed to get file stat: " << log_conf_file_path);
+        SET_LAST_ERR_MSG(&last_err_msg_, "failed to get stat of file " << log_conf_file_path);
         return -1;
     }
 
