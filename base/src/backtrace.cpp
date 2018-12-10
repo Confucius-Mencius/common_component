@@ -19,7 +19,7 @@ int Backtrace(char* buf, int buf_size, int nframes)
     void* addr_list[nframes + 1];
 
     // retrieve current stack addresses
-    const int naddrs = ::backtrace(addr_list, sizeof(addr_list) / sizeof(void*));
+    const int naddrs = backtrace(addr_list, sizeof(addr_list) / sizeof(void*));
     if (naddrs == 0)
     {
         result << "  <empty, possibly corrupt>" << std::endl;
@@ -29,7 +29,7 @@ int Backtrace(char* buf, int buf_size, int nframes)
 
     // resolve addresses into strings containing "filename(function+address)",
     // this array_ must be free()-ed
-    char** symbol_list = ::backtrace_symbols(addr_list, naddrs);
+    char** symbol_list = backtrace_symbols(addr_list, naddrs);
     if (NULL == symbol_list)
     {
         result << "  Error occured!" << std::endl;
@@ -85,6 +85,7 @@ int Backtrace(char* buf, int buf_size, int nframes)
             {
                 //func_name = ret; // use possibly realloc()-ed string
                 result << "  " << symbol_list[i] << " : " << func_name << "+" << begin_offset << std::endl;
+                free(func_name);
             }
             else
             {
@@ -100,12 +101,7 @@ int Backtrace(char* buf, int buf_size, int nframes)
         }
     }
 
-    if (func_name != NULL)
-    {
-        ::free(func_name);
-    }
-
-    ::free(symbol_list);
+    free(symbol_list);
     StrPrintf(buf, buf_size, "%s", result.str().c_str());
 
     return 0;

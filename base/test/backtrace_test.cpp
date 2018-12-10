@@ -94,9 +94,9 @@ static void Test004()
     LOG_CPP(buf);
 }
 
-ADD_TEST(BackTraceTest, Test001);
-ADD_TEST(BackTraceTest, Test002);
-ADD_TEST(BackTraceTest, Test003);
-ADD_TEST(BackTraceTest, Test004);
+ADD_TEST(BacktraceTest, Test001);
+ADD_TEST(BacktraceTest, Test002);
+ADD_TEST(BacktraceTest, Test003);
+ADD_TEST(BacktraceTest, Test004);
 } // namespace backtrace_test
 
