@@ -1,7 +1,10 @@
 #include "conf_center_test.h"
 #include "mem_util.h"
+#include "simple_log.h"
 
-static const char app_conf_file_path[] = "./test_server_conf.xml";
+namespace conf_center_test
+{
+static const char APP_CONF_FILE_PATH[] = "./test_server_conf.xml";
 
 ConfCenterTest::ConfCenterTest()
 {
@@ -25,10 +28,10 @@ void ConfCenterTest::SetUp()
         FAIL() << loader_.GetLastErrMsg();
     }
 
-    std::cout << "conf center version: " << conf_center_->GetVersion() << std::endl;
+    LOG_CPP("conf center version: " << conf_center_->GetVersion());
 
     ConfCenterCtx conf_center_ctx;
-    conf_center_ctx.app_conf_file_path = app_conf_file_path;
+    conf_center_ctx.app_conf_file_path = APP_CONF_FILE_PATH;
 
     if (conf_center_->Initialize(&conf_center_ctx) != 0)
     {
@@ -479,3 +482,4 @@ ADD_TEST_F(ConfCenterTest, Test003);
 ADD_TEST_F(ConfCenterTest, Test004);
 ADD_TEST_F(ConfCenterTest, Test005);
 ADD_TEST_F(ConfCenterTest, Test006);
+}

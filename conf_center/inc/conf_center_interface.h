@@ -30,6 +30,14 @@ public:
     ////////////////////////////////////////////////////////////////////////////////
     // single api
     ////////////////////////////////////////////////////////////////////////////////
+    /**
+     * @brief GetConf
+     * @param conf
+     * @param xpath
+     * @param with_default 找不到配置时是否返回默认值
+     * @param value default value
+     * @return =0表示成功，否则失败
+     */
     virtual int GetConf(i32& conf, const char* xpath, bool with_default = false, i32 value = 0) = 0;
     virtual int GetConf(i64& conf, const char* xpath, bool with_default = false, i64 value = 0L) = 0;
     virtual int GetConf(f32& conf, const char* xpath, bool with_default = false, f32 value = 0.0f) = 0;
@@ -63,11 +71,14 @@ public:
     virtual int GetConf(f64** conf_array, int& n, const char* xpath, bool with_default = false, f64 value = 0.0) = 0;
     virtual void ReleaseConf(f64** conf_array) = 0;
 
-    virtual int GetConf(char*** conf_array, int& n, const char* xpath, bool with_default = false,
-                        const char* value = "") = 0;
+    virtual int GetConf(char*** conf_array, int& n, const char* xpath, bool with_default = false, const char* value = "") = 0;
     virtual void ReleaseConf(char*** conf_array, int n) = 0;
 
-    // reload
+    /**
+     * @brief Reload
+     * @param changed 是否有配置变化
+     * @return
+     */
     virtual int Reload(bool& changed) = 0;
 };
 

@@ -59,7 +59,7 @@ private:
     typedef std::vector<f64> F64ValueGroup;
     typedef std::vector<std::string> StrValueGroup;
 
-    typedef std::map<std::string, I64ValueGroup> I64ValueGroupMap;
+    typedef std::map<std::string, I64ValueGroup> I64ValueGroupMap; // key -> values
     typedef std::map<std::string, F64ValueGroup> F64ValueGroupMap;
     typedef std::map<std::string, StrValueGroup> StrValueGroupMap;
 
@@ -90,7 +90,7 @@ private:
     std::mutex mutex_; // get的时候有更新内存的操作，不能用读写锁
 
     xmlDocPtr xml_doc_ptr_;
-    FileStat file_stat_;
+    FileStat app_conf_file_stat_;
 
     I64ValueGroupMap i64_value_group_map_;
     F64ValueGroupMap f64_value_group_map_;

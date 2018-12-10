@@ -5,6 +5,8 @@
 #include "module_loader.h"
 #include "test_util.h"
 
+namespace log_engine_test
+{
 class LogEngineTest : public GTest
 {
 public:
@@ -24,5 +26,6 @@ private:
     ModuleLoader loader_;
     LogEngineInterface* log_engine_;
 };
+}
 
 #endif // CONF_CENTER_TEST_LOG_ENGINE_TEST_H_

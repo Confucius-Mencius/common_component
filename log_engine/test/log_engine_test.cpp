@@ -3,6 +3,8 @@
 #include "log_util.h"
 #include "mem_util.h"
 
+namespace log_engine_test
+{
 static const char LOG_CONF_FILE_PATH[] = "./test_log_conf.properties";
 static const char LOGGER_NAME[] = "my_server";
 
@@ -56,18 +58,18 @@ void LogEngineTest::TearDown()
 
 void LogEngineTest::Test001()
 {
-//    while (true)
-//    {
-    LOG_TRACE("hello");
-    LOG_DEBUG("hello");
-    LOG_INFO("hello");
-    LOG_WARN("hello");
-    LOG_ERROR("hello");
-    LOG_FATAL("hello");
-    LOG_ALWAYS("hello");
+    while (true)
+    {
+        LOG_TRACE("hello");
+        LOG_DEBUG("hello");
+        LOG_INFO("hello");
+        LOG_WARN("hello");
+        LOG_ERROR("hello");
+        LOG_FATAL("hello");
+        LOG_ALWAYS("hello");
 
-//        sleep(1);
-//    }
+        sleep(1);
+    }
 }
 
 void LogEngineTest::Test002()
@@ -136,3 +138,4 @@ ADD_TEST_F(LogEngineTest, Test001);
 ADD_TEST_F(LogEngineTest, Test002);
 ADD_TEST_F(LogEngineTest, Test003);
 ADD_TEST_F(LogEngineTest, ConsoleLogEngineTest);
+}

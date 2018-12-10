@@ -5,6 +5,8 @@
 #include "module_loader.h"
 #include "test_util.h"
 
+namespace conf_center_test
+{
 class ConfCenterTest : public GTest
 {
 public:
@@ -25,5 +27,6 @@ private:
     ModuleLoader loader_;
     ConfCenterInterface* conf_center_;
 };
+}
 
 #endif // CONF_CENTER_TEST_CONF_CENTER_TEST_H_
