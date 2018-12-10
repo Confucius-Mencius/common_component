@@ -56,6 +56,8 @@ void LogEngineTest::TearDown()
 
 void LogEngineTest::Test001()
 {
+//    while (true)
+//    {
     LOG_TRACE("hello");
     LOG_DEBUG("hello");
     LOG_INFO("hello");
@@ -63,6 +65,9 @@ void LogEngineTest::Test001()
     LOG_ERROR("hello");
     LOG_FATAL("hello");
     LOG_ALWAYS("hello");
+
+//        sleep(1);
+//    }
 }
 
 void LogEngineTest::Test002()

@@ -19,6 +19,10 @@ public:
         // 定义一个控制台的Appender
         log4cplus::SharedAppenderPtr console_appender(new log4cplus::ConsoleAppender());
 
+        // layout
+        log4cplus::tstring pattern = LOG4CPLUS_TEXT("[%-5p %c %t %D{%Y-%m-%d %H:%M:%S %Q} %b:%L] %m%n");
+        console_appender->setLayout(std::unique_ptr<log4cplus::Layout>(new log4cplus::PatternLayout(pattern)));
+
         // 将需要关联Logger的Appender添加到Logger上
         logger_.addAppender(console_appender);
 
