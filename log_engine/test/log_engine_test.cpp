@@ -58,18 +58,18 @@ void LogEngineTest::TearDown()
 
 void LogEngineTest::Test001()
 {
-    while (true)
-    {
-        LOG_TRACE("hello");
-        LOG_DEBUG("hello");
-        LOG_INFO("hello");
-        LOG_WARN("hello");
-        LOG_ERROR("hello");
-        LOG_FATAL("hello");
-        LOG_ALWAYS("hello");
+//    while (true)
+//    {
+    LOG_TRACE("hello");
+    LOG_DEBUG("hello");
+    LOG_INFO("hello");
+    LOG_WARN("hello");
+    LOG_ERROR("hello");
+    LOG_FATAL("hello");
+    LOG_ALWAYS("hello");
 
-        sleep(1);
-    }
+//        sleep(1);
+//    }
 }
 
 void LogEngineTest::Test002()
