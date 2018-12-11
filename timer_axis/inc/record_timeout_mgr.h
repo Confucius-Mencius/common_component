@@ -77,8 +77,6 @@ public:
 
         RecordHashMap timeout_records; // 记录此时已经超时的record
 
-        std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
-
         for (typename TimeoutMultimap::iterator it_timeout = timeout_multimap_.begin();
                 it_timeout != timeout_multimap_.end();)
         {
@@ -117,8 +115,6 @@ public:
 
     bool RecordExist(const Key& k)
     {
-        std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
-
         typename RecordHashMap::const_iterator it = record_hash_map_.find(k);
         return (it != record_hash_map_.end());
     }
@@ -152,14 +148,11 @@ public:
     */
     int GetRecordCount()
     {
-        std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
         return (int) record_hash_map_.size();
     }
 
     void Display()
     {
-        std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
-
         LOG_CPP("////////////////////////////////////////////////////////////////////////////////");
         LOG_CPP("current time: " << time(NULL));
         LOG_CPP("record count: " << record_hash_map_.size());
@@ -188,7 +181,6 @@ private:
         EXPIRE_CHECK_TIMER_ID = 1
     };
 
-    std::recursive_mutex recursive_mutex_; // todo 是否需要加锁？
     TimerAxisInterface* timer_axis_;
     struct timeval expire_check_interval_;
 
@@ -221,7 +213,7 @@ private:
 };
 
 template<typename Key, typename KeyHash, typename Value>
-RecordTimeoutMgr<Key, KeyHash, Value>::RecordTimeoutMgr() : recursive_mutex_(), record_hash_map_(), timeout_multimap_()
+RecordTimeoutMgr<Key, KeyHash, Value>::RecordTimeoutMgr() : record_hash_map_(), timeout_multimap_()
 {
     timer_axis_ = NULL;
     expire_check_interval_.tv_sec = expire_check_interval_.tv_usec = 0;
@@ -236,7 +228,6 @@ template<typename Key, typename KeyHash, typename Value>
 void RecordTimeoutMgr<Key, KeyHash, Value>::UpsertRecord(const Key& k, const Value& v, int timeout_sec)
 {
     const time_t now = time(NULL);
-    std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
 
     typename RecordHashMap::iterator it = record_hash_map_.find(k);
     if (it != record_hash_map_.end())
@@ -275,8 +266,6 @@ void RecordTimeoutMgr<Key, KeyHash, Value>::UpsertRecord(const Key& k, const Val
 template<typename Key, typename KeyHash, typename Value>
 void RecordTimeoutMgr<Key, KeyHash, Value>::RemoveRecord(const Key& k)
 {
-    std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
-
     typename RecordHashMap::iterator it = record_hash_map_.find(k);
     if (it == record_hash_map_.end())
     {
@@ -302,8 +291,6 @@ void RecordTimeoutMgr<Key, KeyHash, Value>::RemoveRecord(const Key& k)
 template<typename Key, typename KeyHash, typename Value>
 int RecordTimeoutMgr<Key, KeyHash, Value>::GetRecord(Value& v, int& timeout_sec, const Key& k)
 {
-    std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
-
     typename RecordHashMap::iterator it = record_hash_map_.find(k);
     if (it != record_hash_map_.end())
     {
