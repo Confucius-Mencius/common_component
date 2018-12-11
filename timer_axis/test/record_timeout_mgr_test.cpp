@@ -1,8 +1,8 @@
-#include <event2/event.h>
 #include "record_timeout_mgr_test.h"
+#include <event2/event.h>
 #include "mem_util.h"
 
-namespace record_timeout_mgr_test
+namespace timer_axis_test
 {
 MyRecordTimeoutMgr::MyRecordTimeoutMgr()
 {
@@ -16,16 +16,15 @@ MyRecordTimeoutMgr::~MyRecordTimeoutMgr()
 void MyRecordTimeoutMgr::OnTimeout(const Key& k, const Value& v, int timeout_sec)
 {
 #if !defined(NDEBUG)
-    std::cout << "on timeout, " << k << std::endl;
+    LOG_CPP("OnTimeout, key: " << k);
 
     if (0 == GetRecordCount())
     {
-        event_base_loopbreak(event_base_);
+        event_base_loopbreak(thread_event_base_);
     }
 #else
-    event_base_loopbreak(event_base_);
+    event_base_loopbreak(thread_event_base_);
 #endif
-}
 }
 
 RecordTimeoutMgrTest::RecordTimeoutMgrTest()
@@ -38,10 +37,10 @@ RecordTimeoutMgrTest::~RecordTimeoutMgrTest()
 
 void RecordTimeoutMgrTest::SetUp()
 {
-    event_base_ = event_base_new();
-    if (NULL == event_base_)
+    thread_event_base_ = event_base_new();
+    if (NULL == thread_event_base_)
     {
-        FAIL();
+        FAIL() << "failed to create event base";
     }
 
     if (loader_.Load("../libtimer_axis.so") != 0)
@@ -56,7 +55,7 @@ void RecordTimeoutMgrTest::SetUp()
     }
 
     TimerAxisCtx timer_axis_ctx;
-    timer_axis_ctx.thread_ev_base = event_base_;
+    timer_axis_ctx.thread_ev_base = thread_event_base_;
 
     if (timer_axis_->Initialize(&timer_axis_ctx) != 0)
     {
@@ -83,23 +82,23 @@ void RecordTimeoutMgrTest::TearDown()
 
     SAFE_DESTROY_MODULE(timer_axis_, loader_);
 
-    if (event_base_ != NULL)
+    if (thread_event_base_ != NULL)
     {
-        event_base_free(event_base_);
-        event_base_ = NULL;
+        event_base_free(thread_event_base_);
+        thread_event_base_ = NULL;
     }
 }
 
 void RecordTimeoutMgrTest::Test001()
 {
 #if !defined(NDEBUG)
-    record_timeout_mgr_test::MyRecordTimeoutMgr record_timeout_mgr;
+    timer_axis_test::MyRecordTimeoutMgr record_timeout_mgr;
     EXPECT_EQ(0, record_timeout_mgr.GetRecordCount());
 
-    record_timeout_mgr_test::Key k1;
+    timer_axis_test::Key k1;
     k1.s = "i love you.";
 
-    record_timeout_mgr_test::Value v1;
+    timer_axis_test::Value v1;
     v1.i = 1;
 
     const int timeout_sec1 = 1;
@@ -119,9 +118,9 @@ void RecordTimeoutMgrTest::Test001()
     record_timeout_mgr.Display();
 
     const int timeout_sec3 = 3;
-    record_timeout_mgr_test::Key k3;
+    timer_axis_test::Key k3;
     k3.s = "i love you, too.";
-    record_timeout_mgr_test::Value v3;
+    timer_axis_test::Value v3;
     v3.i = 3;
 
     record_timeout_mgr.UpsertRecord(k3, v3, timeout_sec3);
@@ -140,15 +139,15 @@ void RecordTimeoutMgrTest::Test001()
 
 void RecordTimeoutMgrTest::Test002()
 {
-    record_timeout_mgr_.SetEventBase(event_base_);
+    record_timeout_mgr_.SetEventBase(thread_event_base_);
 
 #if !defined(NDEBUG)
     EXPECT_EQ(0, record_timeout_mgr_.GetRecordCount());
 
-    record_timeout_mgr_test::Key k1;
+    timer_axis_test::Key k1;
     k1.s = "i love you.";
 
-    record_timeout_mgr_test::Value v1;
+    timer_axis_test::Value v1;
     v1.i = 1;
 
     const int timeout_sec1 = 1;
@@ -168,9 +167,9 @@ void RecordTimeoutMgrTest::Test002()
     record_timeout_mgr_.Display();
 
     const int timeout_sec3 = 3;
-    record_timeout_mgr_test::Key k3;
+    timer_axis_test::Key k3;
     k3.s = "i love you, too.";
-    record_timeout_mgr_test::Value v3;
+    timer_axis_test::Value v3;
     v3.i = 3;
 
     record_timeout_mgr_.UpsertRecord(k3, v3, timeout_sec3);
@@ -178,8 +177,9 @@ void RecordTimeoutMgrTest::Test002()
     record_timeout_mgr_.Display();
 #endif
 
-    event_base_dispatch(event_base_);
+    event_base_dispatch(thread_event_base_);
 }
 
 ADD_TEST_F(RecordTimeoutMgrTest, Test001);
 ADD_TEST_F(RecordTimeoutMgrTest, Test002);
+}

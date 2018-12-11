@@ -3,8 +3,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //使用的时候要考虑以下几种情况之间的关联，不要漏删数据
-//1、内部超时移除record，在超时回调中需要移除外部关联的数据结构；
-//2、外部调用RemoveRecord移除record，一般是跟外部移除自身数据结构同时做；
+//1、record_timeout_mgr内部超时移除所记录的record，在超时回调中需要移除外部关联的数据结构；
+//2、外部调用RemoveRecord主动移除record时，也要移除自身相关的数据结构；
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -21,18 +21,19 @@
 #define RECORD_TIMEOUT_DEBUG 0
 #endif
 
-#if !defined(NDEBUG) && RECORD_TIMEOUT_DEBUG
-#include <iostream>
-#endif
-
 #include <ctime>
 #include <map>
 #include <mutex>
 #include "hash_container.h"
+
+#if !defined(NDEBUG) && RECORD_TIMEOUT_DEBUG
+#include "simple_log.h"
+#endif
+
 #include "timer_axis_interface.h"
 
 /**
- * Key如果是自定义类型，必须要重载operator<、operator==、operator<<(仅debug模式下)，还要提供一个hash函数子
+ * Key如果是自定义类型，必须要重载operator<、operator==、operator<<(仅debug模式下，且RECORD_TIMEOUT_DEBUG开启时)，还要提供一个hash函数子
  */
 template<typename Key, typename KeyHash, typename Value>
 class RecordTimeoutMgr : public TimerSinkInterface
@@ -57,12 +58,7 @@ public:
 
     virtual int Activate()
     {
-        if (timer_axis_->SetTimer(this, EXPIRE_CHECK_TIMER_ID, expire_check_interval_) != 0)
-        {
-            return -1;
-        }
-
-        return 0;
+        return timer_axis_->SetTimer(this, EXPIRE_CHECK_TIMER_ID, expire_check_interval_);
     }
 
     virtual void Freeze()
@@ -71,35 +67,37 @@ public:
     }
 
     ///////////////////////// TimerSinkInterface /////////////////////////
-    void OnTimer(TimerID timer_id, const void* asyn_data, size_t asyn_data_len, int times) override
+    void OnTimer(TimerID timer_id, void* data, size_t len, int times) override
     {
         const time_t now = time(NULL);
 
 #if !defined(NDEBUG) && RECORD_TIMEOUT_DEBUG
-        std::cout << "on timer, now: " << now << std::endl;
+        LOG_CPP("OnTimer, now: " << now);
 #endif
 
-        RecordHashMap timeout_records;
+        RecordHashMap timeout_records; // 记录此时已经超时的record
 
         std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
 
         for (typename TimeoutMultimap::iterator it_timeout = timeout_multimap_.begin();
                 it_timeout != timeout_multimap_.end();)
         {
-            typename RecordHashMap::iterator it_record = record_hash_map_.find(it_timeout->second);
+            Key& k = it_timeout->second;
+
+            typename RecordHashMap::iterator it_record = record_hash_map_.find(k);
             if (it_record == record_hash_map_.end())
             {
                 continue;
             }
 
 #if !defined(NDEBUG) && RECORD_TIMEOUT_DEBUG
-            std::cout << it_timeout->second << ", record expire time: " << it_timeout->first << std::endl;
+            LOG_CPP("key: " << k << ", record expire time: " << it_timeout->first);
 #endif
 
             if (now >= it_timeout->first)
             {
-                timeout_records[it_timeout->second].v = it_record->second.v;
-                timeout_records[it_timeout->second].timeout_sec = it_record->second.timeout_sec;
+                timeout_records[k].v = it_record->second.v;
+                timeout_records[k].timeout_sec = it_record->second.timeout_sec;
 
                 record_hash_map_.erase(it_record);
                 timeout_multimap_.erase(it_timeout++);
@@ -110,6 +108,7 @@ public:
             }
         }
 
+        // 通知外部移除相关数据结构
         for (typename RecordHashMap::const_iterator it = timeout_records.begin(); it != timeout_records.end(); ++it)
         {
             OnTimeout(it->first, it->second.v, it->second.timeout_sec);
@@ -161,35 +160,35 @@ public:
     {
         std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
 
-        std::cout << "////////////////////////////////////////////////////////////////////////////////" << std::endl;
-        std::cout << "current time: " << time(NULL) << std::endl;
-        std::cout << "record count: " << record_hash_map_.size() << std::endl;
+        LOG_CPP("////////////////////////////////////////////////////////////////////////////////");
+        LOG_CPP("current time: " << time(NULL));
+        LOG_CPP("record count: " << record_hash_map_.size());
 
         for (typename RecordHashMap::const_iterator it = record_hash_map_.begin(); it != record_hash_map_.end(); ++it)
         {
-            std::cout << it->first << ", " << it->second << std::endl;
+            LOG_CPP(it->first << ", " << it->second);
         }
 
-        std::cout << "////////////////////////////////////////////////////////////////////////////////" << std::endl;
+        LOG_CPP("////////////////////////////////////////////////////////////////////////////////");
     }
 #endif
 
 protected:
     /**
-     * @brief 与具体业务相关的超时逻辑，一般在其中会调用RemoveLogic
+     * @brief 与具体业务相关的超时逻辑，在其中移除相关的数据结构
      * @param k
      * @param v
      * @param timeout_sec
      */
     virtual void OnTimeout(const Key& k, const Value& v, int timeout_sec) = 0;
 
-protected:
+private:
     enum
     {
         EXPIRE_CHECK_TIMER_ID = 1
     };
 
-    std::recursive_mutex recursive_mutex_;
+    std::recursive_mutex recursive_mutex_; // todo 是否需要加锁？
     TimerAxisInterface* timer_axis_;
     struct timeval expire_check_interval_;
 
@@ -217,7 +216,7 @@ protected:
     typedef __hash_map<Key, ValueCtx, KeyHash> RecordHashMap;
     RecordHashMap record_hash_map_;
 
-    typedef std::multimap<time_t, Key> TimeoutMultimap; // 根据过期时间升序管理
+    typedef std::multimap<time_t, Key> TimeoutMultimap; // 根据过期时间升序管理。过期时间=最近upsert的时间+timeout_sec
     TimeoutMultimap timeout_multimap_;
 };
 

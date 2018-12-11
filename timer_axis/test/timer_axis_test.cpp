@@ -3,7 +3,9 @@
 #include "log_util.h"
 #include "mem_util.h"
 #include "mock_timer_sink.h"
-#include "timer_axis_util.h"
+
+using testing::NiceMock;
+using testing::Return;
 
 namespace timer_axis_test
 {
@@ -14,27 +16,27 @@ class TimerSink : public TimerSinkInterface
 public:
     TimerSink()
     {
-        event_base_ = NULL;
+        thread_ev_base_ = NULL;
     }
 
     virtual ~TimerSink()
     {
     }
 
-    void SetCtx(struct event_base* event_base)
+    void SetCtx(struct event_base* thread_ev_base)
     {
-        event_base_ = event_base;
+        thread_ev_base_ = thread_ev_base;
     }
 
     ///////////////////////// TimerSinkInterface /////////////////////////
-    virtual void OnTimer(TimerID timer_id, const void* async_data, size_t async_data_len, int times)
+    void OnTimer(TimerID timer_id, void* data, size_t len, int times) override
     {
         LOG_TRACE("on timer, times: " << times);
         LOG_TRACE("n: " << n);
 
         if (2 == n)
         {
-            event_base_loopbreak(event_base_);
+            event_base_loopbreak(thread_ev_base_);
             return;
         }
 
@@ -42,16 +44,12 @@ public:
     }
 
 private:
-    struct event_base* event_base_;
+    struct event_base* thread_ev_base_;
 };
-} // namespace timer_axis_test
-
-using testing::NiceMock;
-using testing::Return;
 
 TimerAxisTest::TimerAxisTest() : loader_()
 {
-    event_base_ = NULL;
+    thread_ev_base_ = NULL;
     timer_axis_ = NULL;
 }
 
@@ -61,10 +59,10 @@ TimerAxisTest::~TimerAxisTest()
 
 void TimerAxisTest::SetUp()
 {
-    event_base_ = event_base_new();
-    if (NULL == event_base_)
+    thread_ev_base_ = event_base_new();
+    if (NULL == thread_ev_base_)
     {
-        FAIL();
+        FAIL() << "failed to create event base";
     }
 
     if (loader_.Load("../libtimer_axis.so") != 0)
@@ -79,7 +77,7 @@ void TimerAxisTest::SetUp()
     }
 
     TimerAxisCtx timer_axis_ctx;
-    timer_axis_ctx.thread_ev_base = event_base_;
+    timer_axis_ctx.thread_ev_base = thread_ev_base_;
 
     if (timer_axis_->Initialize(&timer_axis_ctx) != 0)
     {
@@ -96,10 +94,10 @@ void TimerAxisTest::TearDown()
 {
     SAFE_DESTROY_MODULE(timer_axis_, loader_);
 
-    if (event_base_ != NULL)
+    if (thread_ev_base_ != NULL)
     {
-        event_base_free(event_base_);
-        event_base_ = NULL;
+        event_base_free(thread_ev_base_);
+        thread_ev_base_ = NULL;
     }
 }
 
@@ -112,7 +110,7 @@ void TimerAxisTest::Test001()
     interval.tv_usec = 0;
 
     timer_axis_test::TimerSink timer_sink;
-    timer_sink.SetCtx(event_base_);
+    timer_sink.SetCtx(thread_ev_base_);
 
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
     ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, NULL, 0));
@@ -123,7 +121,7 @@ void TimerAxisTest::Test001()
     ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, NULL, 0));
     ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
 
-    event_base_dispatch(event_base_);
+    event_base_dispatch(thread_ev_base_);
     ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
 }
 
@@ -146,7 +144,7 @@ void TimerAxisTest::Test002()
     interval.tv_usec = 0;
 
     MockTimerSink1 timer_sink;
-    timer_sink.Delegate(event_base_, timer_axis_);
+    timer_sink.Delegate(thread_ev_base_, timer_axis_);
 
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
     ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, NULL, 0));
@@ -154,7 +152,7 @@ void TimerAxisTest::Test002()
 
     EXPECT_CALL(timer_sink, OnTimer(1, NULL, 0, 1)).Times(1);
 
-    event_base_dispatch(event_base_);
+    event_base_dispatch(thread_ev_base_);
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
 }
 
@@ -177,7 +175,7 @@ void TimerAxisTest::Test003()
     interval.tv_usec = 0;
 
     MockTimerSink2 timer_sink;
-    timer_sink.Delegate(event_base_, timer_axis_, interval);
+    timer_sink.Delegate(thread_ev_base_, timer_axis_, interval);
 
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
     ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, NULL, 0));
@@ -185,7 +183,7 @@ void TimerAxisTest::Test003()
 
     EXPECT_CALL(timer_sink, OnTimer(1, NULL, 0, _)).Times(3);
 
-    event_base_dispatch(event_base_);
+    event_base_dispatch(thread_ev_base_);
     ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
 }
 
@@ -210,14 +208,14 @@ void TimerAxisTest::Test004()
     interval.tv_usec = 0;
 
     timer_axis_test::TimerSink timer_sink;
-    timer_sink.SetCtx(event_base_);
+    timer_sink.SetCtx(thread_ev_base_);
 
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
     ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, NULL, 0));
     ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
 
     MockTimerSink3 timer_sink3;
-    timer_sink3.Delegate(event_base_, timer_axis_, &timer_sink, 1);
+    timer_sink3.Delegate(thread_ev_base_, timer_axis_, &timer_sink, 1);
 
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink3, 1));
     ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink3, 1, interval, NULL, 0));
@@ -225,7 +223,7 @@ void TimerAxisTest::Test004()
 
     EXPECT_CALL(timer_sink3, OnTimer(1, NULL, 0, _)).Times(3);
 
-    event_base_dispatch(event_base_);
+    event_base_dispatch(thread_ev_base_);
     ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink3, 1));
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
 }
@@ -253,7 +251,7 @@ void TimerAxisTest::Test005()
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
 
     MockTimerSink4 timer_sink4;
-    timer_sink4.Delegate(event_base_, timer_axis_, &timer_sink, 1, interval);
+    timer_sink4.Delegate(thread_ev_base_, timer_axis_, &timer_sink, 1, interval);
 
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink4, 1));
     ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink4, 1, interval, NULL, 0));
@@ -262,7 +260,7 @@ void TimerAxisTest::Test005()
     EXPECT_CALL(timer_sink4, OnTimer(1, NULL, 0, _)).Times(3);
     EXPECT_CALL(timer_sink, OnTimer(1, NULL, 0, 1)).Times(1);
 
-    event_base_dispatch(event_base_);
+    event_base_dispatch(thread_ev_base_);
     ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink4, 1));
     ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
 }
@@ -281,33 +279,6 @@ void TimerAxisTest::Test005()
  */
 void TimerAxisTest::Test006()
 {
-    timer_axis_test::n = 0;
-
-    TimerAxisUtil util;
-    util.SetTimerAxis(timer_axis_);
-
-    struct timeval interval;
-    interval.tv_sec = 1;
-    interval.tv_usec = 0;
-
-    timer_axis_test::TimerSink timer_sink;
-    timer_sink.SetCtx(event_base_);
-
-    ASSERT_FALSE(util.TimerExist(&timer_sink, 1));
-    ASSERT_EQ(0, util.SetTimer(&timer_sink, 1, interval, NULL, 0, 5));
-    ASSERT_TRUE(util.TimerExist(&timer_sink, 1));
-
-    util.KillTimer(&timer_sink, 1);
-    ASSERT_FALSE(util.TimerExist(&timer_sink, 1));
-    ASSERT_EQ(0, util.SetTimer(&timer_sink, 1, interval, NULL, 0, -1));
-    ASSERT_TRUE(util.TimerExist(&timer_sink, 1));
-
-    event_base_dispatch(event_base_);
-    ASSERT_TRUE(util.TimerExist(&timer_sink, 1));
-}
-
-void TimerAxisTest::Test007()
-{
     struct timeval interval;
     interval.tv_sec = 1;
     interval.tv_usec = 0;
@@ -315,7 +286,7 @@ void TimerAxisTest::Test007()
     const int ntimes = 10;
 
     MockTimerSink5 timer_sink;
-    timer_sink.Delegate(event_base_, timer_axis_, ntimes);
+    timer_sink.Delegate(thread_ev_base_, timer_axis_, ntimes);
 
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
     ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, NULL, 0, ntimes));
@@ -323,7 +294,7 @@ void TimerAxisTest::Test007()
 
     EXPECT_CALL(timer_sink, OnTimer(1, NULL, 0, _)).Times(ntimes);
 
-    event_base_dispatch(event_base_);
+    event_base_dispatch(thread_ev_base_);
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
 }
 
@@ -333,4 +304,4 @@ ADD_TEST_F(TimerAxisTest, Test003);
 ADD_TEST_F(TimerAxisTest, Test004);
 ADD_TEST_F(TimerAxisTest, Test005);
 ADD_TEST_F(TimerAxisTest, Test006);
-ADD_TEST_F(TimerAxisTest, Test007);
+} // namespace timer_axis_test

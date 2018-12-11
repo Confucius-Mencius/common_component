@@ -32,12 +32,6 @@ ShowBuildOptions()
 # project inc dir
 set(PROJ_INC_DIR ${PROJECT_SOURCE_DIR}/inc)
 
-if (NOT COMPILER_SUPPORTS_CXX11)
-    set(OPENCC_INC_DIR "")
-    set(OPENCC_LIB_DIR "")
-    set(OPENCC_LIB_NAME "")
-endif ()
-
 ###############################################################################
 # sub dir
 add_subdirectory(src)

@@ -3,7 +3,7 @@ common components used in Linux server programming, including framework componen
 
 verified in CentOS7/LinuxMint18/Ubuntu16.04 and above
 
-公共组件，包括基础库、日志引擎、配置中心、定时器、线程管理、网络通信、异步管理、app launcher、app frame等，每个都是一个独立的工程。
+公共组件，包括基础库、日志引擎、配置中心、定时器、线程管理、网络通信、异步管理、app launcher、app frame等，每个组件都是一个独立的工程。
 
 ## app_frame
 app框架，根据配置启动tcp、udp、http、work、burden线程组。
@@ -46,9 +46,6 @@ tcp线程组，监听tcp连接并处理io，是第一级线程组，也是一种
 
 ## thread_center
 底层的线程组封装。
-
-## timer_axis
-定时器封装。
 
 ## trans_center
 通用的异步事务接口。一个线程使用一个trans_center管理异步事务。

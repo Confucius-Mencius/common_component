@@ -50,17 +50,17 @@ struct Timer
 {
     TimerKey timer_key;
     struct event* event;
-    char* async_data;
-    size_t async_data_len;
+    void* data;
+    size_t len;
     int total_times; // 定时器一共要运行多少次
     int times; // 已经运行了多少次
-    bool removed;
+    bool removed; // 回调中删除时，置标记为true
 
     Timer() : timer_key()
     {
         event = NULL;
-        async_data = NULL;
-        async_data_len = 0;
+        data = NULL;
+        len = 0;
         total_times = -1;
         times = 0;
         removed = false;
@@ -69,7 +69,7 @@ struct Timer
 
 class TimerAxis : public TimerAxisInterface
 {
-public:
+private:
     static void OnTimer(evutil_socket_t fd, short event, void* arg);
 
 public:
@@ -88,7 +88,7 @@ public:
     ///////////////////////// TimerAxisInterface /////////////////////////
     bool TimerExist(TimerSinkInterface* sink, TimerID timer_id) override;
     int SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct timeval& interval,
-                 const void* async_data = NULL, size_t async_data_len = 0, int total_times = -1) override;
+                 void* data = NULL, size_t len = 0, int total_times = -1) override;
     void KillTimer(TimerSinkInterface* sink, TimerID timer_id) override;
 
 public:
@@ -98,7 +98,7 @@ public:
     }
 
 private:
-    int FillAsyncData(Timer* timer, const void* async_data, size_t async_data_len);
+    int FillAsyncData(Timer* timer, void* data, size_t len);
     void ReleaseAsyncData(Timer* timer);
     void RemoveTimer(Timer* timer);
 

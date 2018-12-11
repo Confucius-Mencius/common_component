@@ -44,7 +44,7 @@ void TimerAxis::OnTimer(evutil_socket_t fd, short event, void* arg)
     Timer* timer = callback_arg->timer;
     const int times = ++(timer->times);
 
-    timer->timer_key.sink->OnTimer(timer->timer_key.timer_id, timer->async_data, timer->async_data_len, times);
+    timer->timer_key.sink->OnTimer(timer->timer_key.timer_id, timer->data, timer->len, times);
 
     if (timer->removed || (timer->total_times > 0 && times >= timer->total_times))
     {
@@ -95,12 +95,8 @@ void TimerAxis::Finalize()
         Timer& timer = it->second;
         CallbackArg* callback_arg = (CallbackArg*) event_get_callback_arg(timer.event);
 
-        if (timer.async_data != NULL)
-        {
-            delete[] timer.async_data;
-            timer.async_data = NULL;
-            timer.async_data_len = 0;
-        }
+        callback_arg->Release();
+        ReleaseAsyncData(&timer);
 
         if (timer.event != NULL)
         {
@@ -108,8 +104,6 @@ void TimerAxis::Finalize()
             event_free(timer.event);
             timer.event = NULL;
         }
-
-        callback_arg->Release();
     }
 
     timer_hash_map_.clear();
@@ -128,7 +122,6 @@ bool TimerAxis::TimerExist(TimerSinkInterface* sink, TimerID timer_id)
 {
     if (NULL == sink)
     {
-        SET_LAST_ERR_MSG(&last_err_msg_, "invalid param");
         return false;
     }
 
@@ -146,11 +139,10 @@ bool TimerAxis::TimerExist(TimerSinkInterface* sink, TimerID timer_id)
 }
 
 int TimerAxis::SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct timeval& interval,
-                        const void* async_data, size_t async_data_len, int total_times)
+                        void* data, size_t len, int total_times)
 {
     if (NULL == sink)
     {
-        SET_LAST_ERR_MSG(&last_err_msg_, "invalid param");
         return -1;
     }
 
@@ -161,15 +153,11 @@ int TimerAxis::SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct
     TimerHashMap::iterator it = timer_hash_map_.find(timer_key);
     if (it != timer_hash_map_.end())
     {
+        // timer存在
         Timer& timer = it->second;
         if (!timer.removed)
         {
             SET_LAST_ERR_MSG(&last_err_msg_, "timer already exist");
-            return -1;
-        }
-
-        if (FillAsyncData(&timer, async_data, async_data_len) != 0)
-        {
             return -1;
         }
 
@@ -179,12 +167,15 @@ int TimerAxis::SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct
             timer.times = 0;
         }
 
+        if (FillAsyncData(&timer, data, len) != 0)
+        {
+            return -1;
+        }
+
         if (event_add(timer.event, &interval) != 0)
         {
             const int err = errno;
-            SET_LAST_ERR_MSG(&last_err_msg_, "failed to add timer event, errno: "
-                             << err << ", err msg: " << strerror(errno));
-            ReleaseAsyncData(&timer);
+            SET_LAST_ERR_MSG(&last_err_msg_, "failed to add event, errno: " << err << ", err msg: " << strerror(errno));
             return -1;
         }
 
@@ -195,7 +186,7 @@ int TimerAxis::SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct
         // 添加新的
         Timer& timer = timer_hash_map_[timer_key];
 
-        if (FillAsyncData(&timer, async_data, async_data_len) != 0)
+        if (FillAsyncData(&timer, data, len) != 0)
         {
             timer_hash_map_.erase(timer_key);
             return -1;
@@ -204,6 +195,7 @@ int TimerAxis::SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct
         if (total_times > 0)
         {
             timer.total_times = total_times;
+            timer.times = 0;
         }
 
         CallbackArg* callback_arg = CallbackArg::Create(this, &timer);
@@ -214,31 +206,37 @@ int TimerAxis::SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct
             return -1;
         }
 
-        struct event* timer_event = event_new(timer_axis_ctx_.thread_ev_base, -1, EV_PERSIST,
-                                              TimerAxis::OnTimer, callback_arg);
-        if (NULL == timer_event)
-        {
-            const int err = errno;
-            SET_LAST_ERR_MSG(&last_err_msg_, "failed to create timer event, errno: " << err
-                             << ", err msg: " << strerror(err));
+        struct event* timer_event = NULL;
+        int ret = -1;
 
+        do
+        {
+            timer_event = event_new(timer_axis_ctx_.thread_ev_base, -1, EV_PERSIST, TimerAxis::OnTimer, callback_arg);
+            if (NULL == timer_event)
+            {
+                const int err = errno;
+                SET_LAST_ERR_MSG(&last_err_msg_, "failed to create event, errno: " << err << ", err msg: " << strerror(err));
+                break;
+            }
+
+            if (event_add(timer_event, &interval) != 0)
+            {
+                const int err = errno;
+                SET_LAST_ERR_MSG(&last_err_msg_, "failed to add event, errno: " << err << ", err msg: " << strerror(err));
+                event_free(timer_event);
+                break;
+            }
+
+            ret = 0;
+        } while (0);
+
+        if (ret != 0)
+        {
             callback_arg->Release();
             ReleaseAsyncData(&timer);
             timer_hash_map_.erase(timer_key);
-            return -1;
-        }
 
-        if (event_add(timer_event, &interval) != 0)
-        {
-            const int err = errno;
-            SET_LAST_ERR_MSG(&last_err_msg_, "failed to add timer event, errno: " << err
-                             << ", err msg: " << strerror(err));
-
-            event_free(timer_event);
-            callback_arg->Release();
-            ReleaseAsyncData(&timer);
-            timer_hash_map_.erase(timer_key);
-            return -1;
+            return ret;
         }
 
         timer.timer_key = timer_key;
@@ -252,7 +250,6 @@ void TimerAxis::KillTimer(TimerSinkInterface* sink, TimerID timer_id)
 {
     if (NULL == sink)
     {
-        SET_LAST_ERR_MSG(&last_err_msg_, "invalid param");
         return;
     }
 
@@ -264,42 +261,55 @@ void TimerAxis::KillTimer(TimerSinkInterface* sink, TimerID timer_id)
     if (it != timer_hash_map_.end())
     {
         Timer& timer = it->second;
-        event_del(timer.event);
+
+        if (event_del(timer.event) != 0)
+        {
+            const int err = errno;
+            SET_LAST_ERR_MSG(&last_err_msg_, "failed to del event, errno: " << err << ", err msg: " << strerror(errno));
+            return;
+        }
+
         timer.removed = true;
     }
 }
 
-int TimerAxis::FillAsyncData(Timer* timer, const void* async_data, size_t async_data_len)
+int TimerAxis::FillAsyncData(Timer* timer, void* data, size_t len)
 {
-    if (NULL == async_data || async_data_len < 1)
+    if (NULL == data || len < 0)
     {
-        // 没有异步数据需要暂存
+        return 0; // 没有异步数据需要暂存
+    }
+
+    if (0 == len)
+    {
+        // 记录对象指针
+        timer->data = data;
+        timer->len = 0;
         return 0;
     }
 
     ReleaseAsyncData(timer);
 
-    timer->async_data = new char[async_data_len + 1];
-    if (NULL == timer->async_data)
+    timer->data = new char[len + 1];
+    if (NULL == timer->data)
     {
         const int err = errno;
         SET_LAST_ERR_MSG(&last_err_msg_, "failed to alloc memory, errno: " << err << ", err msg: " << strerror(err));
         return -1;
     }
 
-    memcpy(timer->async_data, async_data, async_data_len);
-    timer->async_data_len = async_data_len;
-
+    memcpy(timer->data, data, len);
+    timer->len = len;
     return 0;
 }
 
 void TimerAxis::ReleaseAsyncData(Timer* timer)
 {
-    if (timer->async_data != NULL)
+    if (timer->data != NULL && timer->len > 0)
     {
-        delete[] timer->async_data;
-        timer->async_data = NULL;
-        timer->async_data_len = 0;
+        delete[] (char*) timer->data;
+        timer->data = NULL;
+        timer->len = 0;
     }
 }
 

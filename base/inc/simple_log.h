@@ -9,8 +9,10 @@
 #define BASE_INC_SIMPLE_LOG_H_
 
 #include <pthread.h>
+#include <string.h>
 #include <sys/time.h>
 #include <iomanip>
+#include <iostream>
 
 /**
  * @defgroup Module_Base 基础库

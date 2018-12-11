@@ -6,6 +6,8 @@
 #include "test_util.h"
 #include "timer_axis_interface.h"
 
+namespace timer_axis_test
+{
 class TimerAxisTest : public GTest
 {
 public:
@@ -21,12 +23,12 @@ public:
     void Test004();
     void Test005();
     void Test006();
-    void Test007();
 
 private:
-    struct event_base* event_base_;
-    ModuleLoader loader_; // 这个对象里面要保存模块的信息，必须在进程的生存期都有效，不能使用局部变量
+    struct event_base* thread_ev_base_;
+    ModuleLoader loader_;
     TimerAxisInterface* timer_axis_;
 };
+}
 
 #endif // TIMER_AXIS_TEST_TIMER_AXIS_TEST_H_

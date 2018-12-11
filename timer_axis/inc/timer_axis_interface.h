@@ -48,11 +48,11 @@ public:
     /**
      * @brief 定时器回调接口
      * @param timer_id 定时器ID
-     * @param async_data 回调时使用的异步数据，必须是基本数据类型或者基本数据类型组合的结构体
-     * @param async_data_len 异步数据的长度
+     * @param data 回调时使用的异步数据，可以是一个对象的指针，也可以是一块内存区
+     * @param len 如果data是一个对象的指针，len为0；如果时一块内存区，len为内存区的长度
      * @param 定时器执行的次数，从1开始
      */
-    virtual void OnTimer(TimerID timer_id, const void* async_data, size_t async_data_len, int times) = 0;
+    virtual void OnTimer(TimerID timer_id, void* data, size_t len, int times) = 0;
 };
 
 class TimerAxisInterface : public ModuleInterface
@@ -79,7 +79,7 @@ public:
      * @param total_times 定时器执行的总次数，=-1表示一直执行
      */
     virtual int SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct timeval& interval,
-                         const void* async_data = NULL, size_t async_data_len = 0, int total_times = -1) = 0;
+                         void* data = NULL, size_t len = 0, int total_times = -1) = 0;
 
     /**
      * @brief 删除定时器
