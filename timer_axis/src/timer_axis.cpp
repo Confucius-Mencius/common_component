@@ -175,7 +175,7 @@ int TimerAxis::SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct
         if (event_add(timer.event, &interval) != 0)
         {
             const int err = errno;
-            SET_LAST_ERR_MSG(&last_err_msg_, "failed to add event, errno: " << err << ", err msg: " << strerror(errno));
+            SET_LAST_ERR_MSG(&last_err_msg_, "failed to add timer event, errno: " << err << ", err msg: " << strerror(errno));
             return -1;
         }
 
@@ -215,14 +215,14 @@ int TimerAxis::SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct
             if (NULL == timer_event)
             {
                 const int err = errno;
-                SET_LAST_ERR_MSG(&last_err_msg_, "failed to create event, errno: " << err << ", err msg: " << strerror(err));
+                SET_LAST_ERR_MSG(&last_err_msg_, "failed to create timer event, errno: " << err << ", err msg: " << strerror(err));
                 break;
             }
 
             if (event_add(timer_event, &interval) != 0)
             {
                 const int err = errno;
-                SET_LAST_ERR_MSG(&last_err_msg_, "failed to add event, errno: " << err << ", err msg: " << strerror(err));
+                SET_LAST_ERR_MSG(&last_err_msg_, "failed to add timer event, errno: " << err << ", err msg: " << strerror(err));
                 event_free(timer_event);
                 break;
             }
@@ -265,7 +265,7 @@ void TimerAxis::KillTimer(TimerSinkInterface* sink, TimerID timer_id)
         if (event_del(timer.event) != 0)
         {
             const int err = errno;
-            SET_LAST_ERR_MSG(&last_err_msg_, "failed to del event, errno: " << err << ", err msg: " << strerror(errno));
+            SET_LAST_ERR_MSG(&last_err_msg_, "failed to del timer event, errno: " << err << ", err msg: " << strerror(errno));
             return;
         }
 

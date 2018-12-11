@@ -98,10 +98,10 @@ function(CreateVersionFile dir proj_name lib_name)
     STRING(TOUPPER ${lib_name} UPPER_LIB_NAME)
 
     FILE(WRITE ${dir}/version.h
-            "\#ifndef " ${UPPER_PROJ_NAME} "_" ${UPPER_LIB_NAME} "_VERSION_H_ \n"
-            "\#define " ${UPPER_PROJ_NAME} "_" ${UPPER_LIB_NAME} "_VERSION_H_\n\n"
-            "\#define " ${UPPER_PROJ_NAME} "_" ${UPPER_LIB_NAME} "_VERSION \"" ${BUILD_VERSION} "\"\n\n"
-            "\#endif // " ${UPPER_PROJ_NAME} "_" ${UPPER_LIB_NAME} "_VERSION_H_\n\n")
+            "\#ifndef " ${UPPER_PROJ_NAME} "_SRC_VERSION_H_ \n"
+            "\#define " ${UPPER_PROJ_NAME} "_SRC_VERSION_H_\n\n"
+            "\#define " ${UPPER_PROJ_NAME} "_SRC_VERSION \"" ${BUILD_VERSION} "\"\n\n"
+            "\#endif // " ${UPPER_PROJ_NAME} "_SRC_VERSION_H_\n\n")
 endfunction()
 
 ###############################################################################
@@ -165,7 +165,7 @@ endif ()
 # 下列include需要先定义THIRD_PARTY_DIR
 include(${THIRD_PARTY_DIR}/cmake/common_define.cmake)
 
-# 下列几个库的include路径有修改，覆盖common_define.cmake中的值
+# 下列几个库的include和lib路径有修改，需要覆盖common_define.cmake中的值
 set(LIBXML2_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libxml2/include/libxml2)
 set(IMAGE_MAGICK_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/image_magick/include/ImageMagick-6)
 set(ZOOKEEPER_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/zookeeper/include/zookeeper)

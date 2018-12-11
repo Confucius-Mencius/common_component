@@ -23,7 +23,6 @@
 
 #include <ctime>
 #include <map>
-#include <mutex>
 #include "hash_container.h"
 
 #if !defined(NDEBUG) && RECORD_TIMEOUT_DEBUG
