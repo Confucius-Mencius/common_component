@@ -147,7 +147,7 @@ ConnInterface* ConnCenter::CreateBufferEventConn(int io_thread_idx, int sock_fd,
     }
 
     conn->SetCreatedTime(time(NULL));
-    conn->SetConnGuid(io_thread_idx, conn_id);
+    conn->SetConnGUID(io_thread_idx, conn_id);
     conn->SetSockFD(sock_fd);
     conn->SetBufEvent(buf_event);
     conn->SetClientIP(ip);
@@ -234,7 +234,7 @@ ConnInterface* ConnCenter::CreateNormalConn(int io_thread_idx, int sock_fd, stru
     }
 
     conn->SetCreatedTime(time(NULL));
-    conn->SetConnGuid(io_thread_idx, conn_id);
+    conn->SetConnGUID(io_thread_idx, conn_id);
     conn->SetSockFD(sock_fd);
     conn->SetReadEvent(read_event);
     conn->SetClientIP(ip);
@@ -278,7 +278,7 @@ ConnInterface* ConnCenter::CreateNormalConn(int io_thread_idx, int sock_fd, stru
             RemoveRecord(conn_id);
         }
 
-        RemoveLogic(conn);
+        Clear(conn);
         return NULL;
     }
 

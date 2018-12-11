@@ -18,10 +18,10 @@ typedef I32SeqNum ConnIDSeq; /**< ConnIdSeq类型 */
 enum IOThreadType
 {
     IO_THREAD_TYPE_MIN = 0,
-    IO_THREAD_TYPE_HTTP = IO_THREAD_TYPE_MIN, // http服务
-    IO_THREAD_TYPE_WS,  // websocket服务
-    IO_THREAD_TYPE_TCP, // tcp服务
+    IO_THREAD_TYPE_TCP = IO_THREAD_TYPE_MIN, // tcp服务
     IO_THREAD_TYPE_UDP, // udp服务
+    IO_THREAD_TYPE_HTTP, // http服务
+    IO_THREAD_TYPE_WS,  // websocket服务
     IO_THREAD_TYPE_MAX,
 };
 

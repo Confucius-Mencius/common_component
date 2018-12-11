@@ -52,7 +52,7 @@ public:
         created_time_ = t;
     }
 
-    void SetConnGuid(int io_thread_idx, ConnID conn_id)
+    void SetConnGUID(int io_thread_idx, ConnID conn_id)
     {
         conn_guid_.io_thread_type = IO_THREAD_TYPE_TCP;
         conn_guid_.io_thread_idx = io_thread_idx;
