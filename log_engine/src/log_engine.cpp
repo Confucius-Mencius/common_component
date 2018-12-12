@@ -22,7 +22,7 @@ LogEngine::~LogEngine()
 
 const char* LogEngine::GetVersion() const
 {
-    return LOG_ENGINE_LOG_ENGINE_VERSION;
+    return LOG_ENGINE_VERSION;
 }
 
 const char* LogEngine::GetLastErrMsg() const

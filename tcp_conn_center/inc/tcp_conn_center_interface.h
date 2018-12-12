@@ -39,7 +39,7 @@ public:
 };
 
 /**
- * @brief 连接不再活跃
+ * @brief 连接持续一段时间不活跃则回收空闲连接
  */
 class ConnInactiveSinkInterface
 {
@@ -76,7 +76,7 @@ public:
     virtual void DestroyConn(int sock_fd) = 0;
 
     virtual ConnInterface* GetConn(int sock_fd) const = 0;
-    virtual ConnInterface* GetConnByConnId(ConnID conn_id) const = 0;
+    virtual ConnInterface* GetConnByID(ConnID conn_id) const = 0;
 
     /**
      * @brief

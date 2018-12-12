@@ -35,7 +35,7 @@ public:
 
     void DestroyConn(int sock_fd) override;
     ConnInterface* GetConn(int sock_fd) const override;
-    ConnInterface* GetConnByConnId(ConnID conn_id) const override;
+    ConnInterface* GetConnByID(ConnID conn_id) const override;
     void UpdateConnStatus(ConnID conn_id) override;
     int AddConnInactiveSink(ConnInactiveSinkInterface* sink) override;
     void RemoveConnInactiveSink(ConnInactiveSinkInterface* sink) override;

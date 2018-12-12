@@ -4,6 +4,7 @@
 #include "log_util.h"
 #include "mem_util.h"
 #include "normal_conn.h"
+#include "version.h"
 
 namespace tcp
 {
@@ -44,6 +45,16 @@ void ConnCenter::Clear(ConnInterface* conn)
     conn_id_seq_.Free(conn_id);
     conn_id_hash_map_.erase(conn_id);
 #endif
+}
+
+const char* ConnCenter::GetVersion() const
+{
+    return TCP_CONN_CENTER_VERSION;
+}
+
+const char* ConnCenter::GetLastErrMsg() const
+{
+    return NULL;
 }
 
 void ConnCenter::Release()
@@ -327,7 +338,7 @@ ConnInterface* ConnCenter::GetConn(int sock_fd) const
     return NULL;
 }
 
-ConnInterface* ConnCenter::GetConnByConnId(ConnID conn_id) const
+ConnInterface* ConnCenter::GetConnByID(ConnID conn_id) const
 {
     ConnIDHashMap::const_iterator it = conn_id_hash_map_.find(conn_id);
     if (it != conn_id_hash_map_.end())

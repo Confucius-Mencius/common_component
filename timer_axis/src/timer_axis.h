@@ -4,7 +4,6 @@
 #include <set>
 #include <event2/event.h>
 #include "hash_container.h"
-#include "last_err_msg.h"
 #include "timer_axis_interface.h"
 
 namespace timer_axis
@@ -91,19 +90,12 @@ public:
                  void* data = NULL, size_t len = 0, int total_times = -1) override;
     void KillTimer(TimerSinkInterface* sink, TimerID timer_id) override;
 
-public:
-    LastErrMsg& LastErrMsgInstance()
-    {
-        return last_err_msg_;
-    }
-
 private:
     int FillAsyncData(Timer* timer, void* data, size_t len);
     void ReleaseAsyncData(Timer* timer);
     void RemoveTimer(Timer* timer);
 
 private:
-    LastErrMsg last_err_msg_;
     TimerAxisCtx timer_axis_ctx_;
 
     typedef __hash_map<TimerKey, Timer, TimerKeyHash> TimerHashMap;

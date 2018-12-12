@@ -100,7 +100,7 @@ function(CreateVersionFile dir proj_name lib_name)
     FILE(WRITE ${dir}/version.h
             "\#ifndef " ${UPPER_PROJ_NAME} "_SRC_VERSION_H_ \n"
             "\#define " ${UPPER_PROJ_NAME} "_SRC_VERSION_H_\n\n"
-            "\#define " ${UPPER_PROJ_NAME} "_SRC_VERSION \"" ${BUILD_VERSION} "\"\n\n"
+            "\#define " ${UPPER_PROJ_NAME} "_VERSION \"" ${BUILD_VERSION} "\"\n\n"
             "\#endif // " ${UPPER_PROJ_NAME} "_SRC_VERSION_H_\n\n")
 endfunction()
 

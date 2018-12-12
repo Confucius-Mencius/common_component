@@ -1,5 +1,6 @@
 #include "timer_axis.h"
 #include <string.h>
+#include "log_util.h"
 #include "version.h"
 
 namespace timer_axis
@@ -21,8 +22,7 @@ struct CallbackArg
         if (NULL == callback_arg)
         {
             const int err = errno;
-            SET_LAST_ERR_MSG(&timer_axis->LastErrMsgInstance(), "failed to alloc memory, errno: "
-                             << err << ", err msg: " << strerror(err));
+            LOG_ERROR("failed to alloc memory, errno: " << err << ", err msg: " << strerror(err));
             return NULL;
         }
 
@@ -54,7 +54,7 @@ void TimerAxis::OnTimer(evutil_socket_t fd, short event, void* arg)
     }
 }
 
-TimerAxis::TimerAxis() : last_err_msg_(), timer_axis_ctx_(), timer_hash_map_()
+TimerAxis::TimerAxis() : timer_axis_ctx_(), timer_hash_map_()
 {
 }
 
@@ -64,12 +64,12 @@ TimerAxis::~TimerAxis()
 
 const char* TimerAxis::GetVersion() const
 {
-    return TIMER_AXIS_TIMER_AXIS_VERSION;
+    return TIMER_AXIS_VERSION;
 }
 
 const char* TimerAxis::GetLastErrMsg() const
 {
-    return last_err_msg_.What();
+    return NULL;
 }
 
 void TimerAxis::Release()
@@ -157,7 +157,7 @@ int TimerAxis::SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct
         Timer& timer = it->second;
         if (!timer.removed)
         {
-            SET_LAST_ERR_MSG(&last_err_msg_, "timer already exist");
+            LOG_ERROR("timer already exist");
             return -1;
         }
 
@@ -175,7 +175,7 @@ int TimerAxis::SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct
         if (event_add(timer.event, &interval) != 0)
         {
             const int err = errno;
-            SET_LAST_ERR_MSG(&last_err_msg_, "failed to add timer event, errno: " << err << ", err msg: " << strerror(errno));
+            LOG_ERROR("failed to add timer event, errno: " << err << ", err msg: " << strerror(errno));
             return -1;
         }
 
@@ -215,14 +215,14 @@ int TimerAxis::SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct
             if (NULL == timer_event)
             {
                 const int err = errno;
-                SET_LAST_ERR_MSG(&last_err_msg_, "failed to create timer event, errno: " << err << ", err msg: " << strerror(err));
+                LOG_ERROR("failed to create timer event, errno: " << err << ", err msg: " << strerror(err));
                 break;
             }
 
             if (event_add(timer_event, &interval) != 0)
             {
                 const int err = errno;
-                SET_LAST_ERR_MSG(&last_err_msg_, "failed to add timer event, errno: " << err << ", err msg: " << strerror(err));
+                LOG_ERROR("failed to add timer event, errno: " << err << ", err msg: " << strerror(err));
                 event_free(timer_event);
                 break;
             }
@@ -265,7 +265,7 @@ void TimerAxis::KillTimer(TimerSinkInterface* sink, TimerID timer_id)
         if (event_del(timer.event) != 0)
         {
             const int err = errno;
-            SET_LAST_ERR_MSG(&last_err_msg_, "failed to del timer event, errno: " << err << ", err msg: " << strerror(errno));
+            LOG_ERROR("failed to del timer event, errno: " << err << ", err msg: " << strerror(errno));
             return;
         }
 
@@ -294,7 +294,7 @@ int TimerAxis::FillAsyncData(Timer* timer, void* data, size_t len)
     if (NULL == timer->data)
     {
         const int err = errno;
-        SET_LAST_ERR_MSG(&last_err_msg_, "failed to alloc memory, errno: " << err << ", err msg: " << strerror(err));
+        LOG_ERROR("failed to alloc memory, errno: " << err << ", err msg: " << strerror(err));
         return -1;
     }
 
