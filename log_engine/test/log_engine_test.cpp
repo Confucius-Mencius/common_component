@@ -37,6 +37,7 @@ void LogEngineTest::SetUp()
     LogEngineCtx log_engine_ctx;
     log_engine_ctx.log_conf_file_path = LOG_CONF_FILE_PATH;
     log_engine_ctx.logger_name = LOGGER_NAME;
+    log_engine_ctx.log_conf_file_check_interval = 10;
 
     if (log_engine_->Initialize(&log_engine_ctx) != 0)
     {
@@ -83,18 +84,23 @@ void LogEngineTest::Test002()
     LOG_ALWAYS("hello");
 
     // ... 修改日志级别
-    log_engine_->Reload();
 
-    LOG_TRACE("hello");
-    LOG_DEBUG("hello");
-    LOG_INFO("hello");
-    LOG_WARN("hello");
-    LOG_ERROR("hello");
-    LOG_FATAL("hello");
-    LOG_ALWAYS("hello");
+    while (true)
+    {
+        LOG_TRACE("hello");
+        LOG_DEBUG("hello");
+        LOG_INFO("hello");
+        LOG_WARN("hello");
+        LOG_ERROR("hello");
+        LOG_FATAL("hello");
+        LOG_ALWAYS("hello");
+
+        sleep(1);
+    }
 
     // 修改日志级别
     g_log_engine->SetLogLevel(log4cplus::INFO_LOG_LEVEL);
+
     LOG_TRACE("hello");
     LOG_DEBUG("hello");
     LOG_INFO("hello");
@@ -102,12 +108,6 @@ void LogEngineTest::Test002()
     LOG_ERROR("hello");
     LOG_FATAL("hello");
     LOG_ALWAYS("hello");
-}
-
-void LogEngineTest::Test003()
-{
-    // 主线程，不停地修改日志级别
-    // 子线程，不停地写日志
 }
 
 void LogEngineTest::ConsoleLogEngineTest()
@@ -124,7 +124,10 @@ void LogEngineTest::ConsoleLogEngineTest()
     LOG_ALWAYS("console log engine");
 
     // 修改日志级别
+#if !defined(NDEBUG)
     g_log_engine->SetLogLevel(log4cplus::INFO_LOG_LEVEL);
+#endif
+
     LOG_TRACE("console log engine");
     LOG_DEBUG("hello");
     LOG_INFO("hello");
@@ -136,6 +139,5 @@ void LogEngineTest::ConsoleLogEngineTest()
 
 ADD_TEST_F(LogEngineTest, Test001);
 ADD_TEST_F(LogEngineTest, Test002);
-ADD_TEST_F(LogEngineTest, Test003);
 ADD_TEST_F(LogEngineTest, ConsoleLogEngineTest);
 }

@@ -1,8 +1,8 @@
 #ifndef LOG_ENGINE_SRC_LOG_ENGINE_H_
 #define LOG_ENGINE_SRC_LOG_ENGINE_H_
 
+#include <log4cplus/configurator.h>
 #include <log4cplus/logger.h>
-#include "file_util.h"
 #include "last_err_msg.h"
 #include "log_engine_interface.h"
 
@@ -25,8 +25,10 @@ public:
 
     ///////////////////////// LogEngineInterface /////////////////////////
     const log4cplus::Logger& GetLogger() const override;
+
+#if !defined(NDEBUG)
     void SetLogLevel(int level) override;
-    int Reload() override;
+#endif
 
 private:
     int LoadLogConf(const char* log_conf_file_path, const char* logger_name);
@@ -34,8 +36,8 @@ private:
 private:
     LastErrMsg last_err_msg_;
     LogEngineCtx log_engine_ctx_;
+    log4cplus::ConfigureAndWatchThread* log_conf_file_watch_thread;
     log4cplus::Logger logger_;
-    FileStat log_conf_file_stat_;
 };
 }
 
