@@ -83,7 +83,7 @@ void LogEngineTest::Test002()
     LOG_FATAL("hello");
     LOG_ALWAYS("hello");
 
-    // ... 修改日志级别
+    // ... 手动修改日志配置文件
 
     while (true)
     {
@@ -99,7 +99,9 @@ void LogEngineTest::Test002()
     }
 
     // 修改日志级别
+#if !defined(NDEBUG)
     g_log_engine->SetLogLevel(log4cplus::INFO_LOG_LEVEL);
+#endif
 
     LOG_TRACE("hello");
     LOG_DEBUG("hello");
