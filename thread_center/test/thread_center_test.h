@@ -1,9 +1,8 @@
 #ifndef THREAD_CENTER_TEST_THREAD_CENTER_TEST_H_
 #define THREAD_CENTER_TEST_THREAD_CENTER_TEST_H_
 
-#include "test_util.h"
 #include "module_loader.h"
-#include "thread_center_interface.h"
+#include "test_util.h"
 #include "thread_sink.h"
 
 namespace thread_center_test
@@ -23,7 +22,7 @@ public:
     void Test004();
 
 private:
-    ModuleLoader thread_center_loader_;
+    ModuleLoader loader_;
     ThreadCenterInterface* thread_center_;
 };
 }

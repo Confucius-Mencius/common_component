@@ -19,6 +19,7 @@ void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
 
         while (true)
         {
+            // write的时候对端关闭了，会收到一个RST的响应，服务端再往这个socket写数据时，系统会发出一个SIGPIPE信号给进程，通知进程这个连接已经断开
             ssize_t n = write(fd, ((char*) (*it).data()) + sent_len, want_send_len);
             if (0 == n)
             {
@@ -166,7 +167,7 @@ int NormalConn::Send(const void* data, size_t len)
             return -1;
         }
 
-        LOG_TRACE("add write event ok");
+        LOG_DEBUG("add write event ok");
     }
     else
     {

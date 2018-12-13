@@ -22,7 +22,7 @@ public:
     void Freeze() override;
 
     ///////////////////////// ThreadCenterInterface /////////////////////////
-    ThreadGroupInterface* CreateThreadGroup() override;
+    ThreadGroupInterface* CreateThreadGroup(const void* ctx) override;
 
 public:
     void RemoveThreadGroup(ThreadGroup* thread_group)

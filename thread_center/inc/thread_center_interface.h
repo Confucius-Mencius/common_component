@@ -32,39 +32,12 @@
 class ThreadSinkInterface;
 struct event_base;
 class TimerAxisInterface;
-class TimeServiceInterface;
-class RandomEngineInterface;
-class TransCenterInterface;
-class ConnCenterMgrInterface;
-class ClientCenterMgrInterface;
 
-enum ThreadType
-{
-    THREAD_TYPE_MIN = 0,
-    THREAD_TYPE_GLOBAL = THREAD_TYPE_MIN,
-    THREAD_TYPE_WORK,
-    THREAD_TYPE_BURDEN,
-    THREAD_TYPE_TCP_LISTEN,
-    THREAD_TYPE_TCP,
-    THREAD_TYPE_HTTP,
-    THREAD_TYPE_UDP,
-    THREAD_TYPE_MAX
-};
-
-namespace base
-{
-class MsgDispatcherInterface;
-}
-
-namespace base
-{
-struct AsyncParams;
-}
+typedef int ThreadType;
 
 struct ThreadCtx
 {
     const char* common_component_dir;
-    int need_reply_msg_check_interval;
 
     // thread的属性
     std::string name;
@@ -74,7 +47,6 @@ struct ThreadCtx
     ThreadCtx() : name("")
     {
         common_component_dir = NULL;
-        need_reply_msg_check_interval = 0;
         idx = -1;
         sink = NULL;
     }
@@ -92,25 +64,8 @@ public:
     virtual pthread_t GetThreadID() const = 0;
     virtual struct event_base* GetThreadEvBase() const = 0;
     virtual TimerAxisInterface* GetTimerAxis() const = 0;
-    virtual TimeServiceInterface* GetTimeService() const = 0;
-    virtual RandomEngineInterface* GetRandomEngine() = 0;
-    virtual TransCenterInterface* GetTransCenter() const = 0;
-    virtual ConnCenterMgrInterface* GetConnCenterMgr() const = 0;
-    virtual ClientCenterMgrInterface* GetClientCenterMgr() const = 0;
-    virtual base::MsgDispatcherInterface* GetMsgDispatcher() const = 0;
-
     virtual bool IsStopping() const = 0;
-
     virtual int PushTask(Task* task) = 0;
-
-    /**
-     *
-     * @param task
-     * @param params 为NULL时接口返回OK_TRANS_ID表示成功，返回FAILED_TRANS_ID表示失败
-     * @param target_thread
-     * @return
-     */
-//    virtual TransId ScheduleTask(Task* task, const base::AsyncParams* params, ThreadInterface* target_thread) = 0;
 };
 
 class ThreadSinkInterface
@@ -118,7 +73,7 @@ class ThreadSinkInterface
 public:
     ThreadSinkInterface()
     {
-        thread_ = NULL;
+        self_thread_ = NULL;
     }
 
     virtual ~ThreadSinkInterface()
@@ -129,26 +84,25 @@ public:
 
     virtual int OnInitialize(ThreadInterface* thread)
     {
-        thread_ = thread;
-        LOG_TRACE(thread_->GetThreadName()
-                  << " initializing..."); // TODO 把这几个函数里的LOG_TRACE改为LOG_INFO，但是LOG_INFO会报错：invalid operands of types ‘const char*’ and ‘const char [23]’ to binary ‘operator<<’
+        self_thread_ = thread;
+        LOG_DEBUG(self_thread_->GetThreadName() << " OnInitialize");
         return 0;
     }
 
     virtual void OnFinalize()
     {
-        LOG_TRACE(thread_->GetThreadName() << " finalizing...");
+        LOG_DEBUG(self_thread_->GetThreadName() << " OnFinalize");
     }
 
     virtual int OnActivate()
     {
-        LOG_TRACE(thread_->GetThreadName() << " activating...");
+        LOG_DEBUG(self_thread_->GetThreadName() << " OnActivate");
         return 0;
     }
 
     virtual void OnFreeze()
     {
-        LOG_TRACE(thread_->GetThreadName() << " freezing...");
+        LOG_DEBUG(self_thread_->GetThreadName() << " OnFreeze");
     }
 
     /**
@@ -156,13 +110,13 @@ public:
      */
     virtual void OnThreadStartOk()
     {
-        LOG_TRACE(thread_->GetThreadName() << " start ok. thread id: " << setiosflags(std::ios::showbase) << std::hex
-                  << thread_->GetThreadID());
+        LOG_DEBUG(self_thread_->GetThreadName() << " OnThreadStartOk. thread id: "
+                  << setiosflags(std::ios::showbase) << std::hex << self_thread_->GetThreadID());
     }
 
     virtual void OnStop()
     {
-        LOG_TRACE(thread_->GetThreadName() << " stopping...");
+        LOG_DEBUG(self_thread_->GetThreadName() << " OnStop");
 
         ////////////////////////////////////////////////////////////////////////////////
         // stop routine here...
@@ -171,23 +125,23 @@ public:
 
     virtual void OnReload()
     {
-        LOG_TRACE(thread_->GetThreadName() << " reloading...");
+        LOG_DEBUG(self_thread_->GetThreadName() << " OnReload");
     }
 
     virtual void OnTask(const Task* task)
     {
-        LOG_TRACE(thread_->GetThreadName() << " on task, type: " << task->GetCtx()->task_type);
+        LOG_DEBUG(self_thread_->GetThreadName() << " OnTask, task type: " << task->GetType());
     }
 
     virtual bool CanExit() const = 0;
 
     ThreadInterface* GetThread()
     {
-        return thread_;
+        return self_thread_;
     }
 
 protected:
-    ThreadInterface* thread_;
+    ThreadInterface* self_thread_;
 };
 
 class ThreadGroupInterface : public ModuleInterface
@@ -200,6 +154,9 @@ public:
     virtual ThreadInterface* CreateThread(const ThreadCtx* thread_ctx) = 0;
     virtual int GetThreadCount() const = 0;
     virtual ThreadInterface* GetThread(int thread_idx) const = 0;
+
+    virtual int Start() = 0;
+    virtual void Join() = 0;
 
     virtual int NotifyStop() = 0;
     virtual int NotifyReload() = 0;
@@ -223,7 +180,7 @@ public:
     {
     }
 
-    virtual ThreadGroupInterface* CreateThreadGroup() = 0;
+    virtual ThreadGroupInterface* CreateThreadGroup(const void* ctx) = 0;
 };
 
 /** @} Module_ThreadCenter */

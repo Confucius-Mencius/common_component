@@ -1,5 +1,6 @@
 #include "thread_center.h"
 #include "container_util.h"
+#include "version.h"
 
 namespace thread_center
 {
@@ -13,7 +14,7 @@ ThreadCenter::~ThreadCenter()
 
 const char* ThreadCenter::GetVersion() const
 {
-    return NULL;
+    return THREAD_CENTER_VERSION;
 }
 
 const char* ThreadCenter::GetLastErrMsg() const
@@ -47,9 +48,8 @@ void ThreadCenter::Freeze()
     FREEZE_CONTAINER(thread_group_set_);
 }
 
-ThreadGroupInterface* ThreadCenter::CreateThreadGroup()
+ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const void* ctx)
 {
-    // 注意，create的时候要把创建出的对象激活后再交给使用者，不要让使用者再去调用Initialize和Activate。对于需要的参数，可以通过增加参数的方式传进来。
     ThreadGroup* thread_group = ThreadGroup::Create();
     if (NULL == thread_group)
     {
@@ -64,31 +64,26 @@ ThreadGroupInterface* ThreadCenter::CreateThreadGroup()
 
     do
     {
-        if (thread_group->Initialize(NULL) != 0)
+        if (thread_group->Initialize(ctx) != 0)
         {
             break;
         }
 
-        // not activated here
-
-        if (!thread_group_set_.insert(thread_group).second)
-        {
-            const int err = errno;
-            LOG_ERROR("failed to insert to set, thread group: " << thread_group
-                          << ", errno: " << err << ", err msg: " << strerror(err));
-            break;
-        }
+//        if (thread_group->Activate() != 0)
+//        {
+//            break;
+//        }
 
         ret = 0;
     } while (0);
 
     if (ret != 0)
     {
-        thread_group_set_.erase(thread_group);
         SAFE_DESTROY(thread_group);
         return NULL;
     }
 
+    thread_group_set_.insert(thread_group);
     return thread_group;
 }
 } // namespace thread_center

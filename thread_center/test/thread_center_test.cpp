@@ -2,7 +2,7 @@
 
 namespace thread_center_test
 {
-ThreadCenterTest::ThreadCenterTest() : thread_center_loader_()
+ThreadCenterTest::ThreadCenterTest() : loader_()
 {
     thread_center_ = NULL;
 }
@@ -13,15 +13,15 @@ ThreadCenterTest::~ThreadCenterTest()
 
 void ThreadCenterTest::SetUp()
 {
-    if (thread_center_loader_.Load("../libthread_center.so") != 0)
+    if (loader_.Load("../libthread_center.so") != 0)
     {
-        FAIL() << thread_center_loader_.GetLastErrMsg();
+        FAIL() << loader_.GetLastErrMsg();
     }
 
-    thread_center_ = (ThreadCenterInterface*) thread_center_loader_.GetModuleInterface();
+    thread_center_ = (ThreadCenterInterface*) loader_.GetModuleInterface();
     if (NULL == thread_center_)
     {
-        FAIL() << thread_center_loader_.GetLastErrMsg();
+        FAIL() << loader_.GetLastErrMsg();
     }
 
     ASSERT_EQ(0, thread_center_->Initialize(NULL));
@@ -30,7 +30,7 @@ void ThreadCenterTest::SetUp()
 
 void ThreadCenterTest::TearDown()
 {
-    SAFE_RELEASE_MODULE(thread_center_, thread_center_loader_);
+    SAFE_DESTROY_MODULE(thread_center_, loader_);
 }
 
 /**
@@ -47,7 +47,7 @@ void ThreadCenterTest::TearDown()
  */
 void ThreadCenterTest::Test001()
 {
-    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup();
+    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(NULL);
     ASSERT_TRUE(thread_group != NULL);
 
     for (int i = 0; i < 10; ++i)
@@ -66,16 +66,18 @@ void ThreadCenterTest::Test001()
         }
     }
 
+    thread_group->Activate();
+    thread_group->Start();
+
     thread_group->NotifyStop();
 
     if (thread_group->CanExit())
     {
         thread_group->NotifyExit();
+        thread_group->Join();
     }
 
-    thread_group->Freeze();
-    thread_group->Finalize();
-    thread_group->Release();
+    SAFE_DESTROY(thread_group);
 }
 
 /**
@@ -92,7 +94,7 @@ void ThreadCenterTest::Test001()
  */
 void ThreadCenterTest::Test002()
 {
-    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup();
+    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(NULL);
     ASSERT_TRUE(thread_group != NULL);
 
     for (int i = 0; i < 10; ++i)
@@ -111,17 +113,19 @@ void ThreadCenterTest::Test002()
         }
     }
 
+    thread_group->Activate();
+    thread_group->Start();
+
     thread_group->NotifyReload();
     thread_group->NotifyStop();
 
     if (thread_group->CanExit())
     {
         thread_group->NotifyExit();
+        thread_group->Join();
     }
 
-    thread_group->Freeze();
-    thread_group->Finalize();
-    thread_group->Release();
+    SAFE_DESTROY(thread_group);
 }
 
 /**
@@ -138,7 +142,7 @@ void ThreadCenterTest::Test002()
  */
 void ThreadCenterTest::Test003()
 {
-    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup();
+    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(NULL);
     ASSERT_TRUE(thread_group != NULL);
 
     for (int i = 0; i < 10; ++i)
@@ -157,7 +161,10 @@ void ThreadCenterTest::Test003()
         }
     }
 
-    Task* task = Task::Create(NULL);
+    thread_group->Activate();
+    thread_group->Start();
+
+    Task* task = new Task();
     ASSERT_TRUE(task != NULL);
 
     thread_group->PushTaskToThread(task, 5);
@@ -166,11 +173,10 @@ void ThreadCenterTest::Test003()
     if (thread_group->CanExit())
     {
         thread_group->NotifyExit();
+        thread_group->Join();
     }
 
-    thread_group->Freeze();
-    thread_group->Finalize();
-    thread_group->Release();
+    SAFE_DESTROY(thread_group);
 }
 
 /**
@@ -187,7 +193,7 @@ void ThreadCenterTest::Test003()
  */
 void ThreadCenterTest::Test004()
 {
-    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup();
+    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(NULL);
     ASSERT_TRUE(thread_group != NULL);
 
     for (int i = 0; i < 10; ++i)
@@ -206,7 +212,10 @@ void ThreadCenterTest::Test004()
         }
     }
 
-    Task* task = Task::Create(NULL);
+    thread_group->Activate();
+    thread_group->Start();
+
+    Task* task = new Task();
     ASSERT_TRUE(task != NULL);
 
     thread_group->PushTaskToThread(task, -1);
@@ -215,11 +224,10 @@ void ThreadCenterTest::Test004()
     if (thread_group->CanExit())
     {
         thread_group->NotifyExit();
+        thread_group->Join();
     }
 
-    thread_group->Freeze();
-    thread_group->Finalize();
-    thread_group->Release();
+    SAFE_DESTROY(thread_group);
 }
 
 ADD_TEST_F(ThreadCenterTest, Test001);

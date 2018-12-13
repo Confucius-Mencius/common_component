@@ -8,7 +8,7 @@ namespace thread_center_test
 {
 class ThreadSink : public ThreadSinkInterface
 {
-    CREATE_FUNC(ThreadSink);
+    CREATE_FUNC(ThreadSink)
 
 public:
     ThreadSink();
@@ -25,9 +25,6 @@ public:
     void OnReload() override;
     void OnTask(const Task* task) override;
     bool CanExit() const override;
-
-private:
-
 };
 }
 

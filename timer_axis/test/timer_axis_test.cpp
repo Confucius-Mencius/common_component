@@ -31,8 +31,8 @@ public:
     ///////////////////////// TimerSinkInterface /////////////////////////
     void OnTimer(TimerID timer_id, void* data, size_t len, int times) override
     {
-        LOG_TRACE("on timer, times: " << times);
-        LOG_TRACE("n: " << n);
+        LOG_DEBUG("on timer, times: " << times);
+        LOG_DEBUG("n: " << n);
 
         if (2 == n)
         {

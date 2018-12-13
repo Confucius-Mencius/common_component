@@ -6,18 +6,18 @@
 
 namespace thread_center_test
 {
-struct UpstreamThreadSinkCtx
+struct SourceThreadSinkCtx
 {
     ThreadGroupInterface* thread_group; // 需要交互的线程组
 };
 
-class UpstreamThreadSink : public ThreadSinkInterface
+class SourceThreadSink : public ThreadSinkInterface
 {
-    CREATE_FUNC(UpstreamThreadSink);
+    CREATE_FUNC(SourceThreadSink)
 
 public:
-    UpstreamThreadSink();
-    virtual ~UpstreamThreadSink();
+    SourceThreadSink();
+    virtual ~SourceThreadSink();
 
     ///////////////////////// ThreadSinkInterface /////////////////////////
     void Release() override;
@@ -32,18 +32,18 @@ public:
     bool CanExit() const override;
 
 public:
-    void SetSinkCtx(const UpstreamThreadSinkCtx& ctx)
+    void SetSinkCtx(const SourceThreadSinkCtx& ctx)
     {
         sink_ctx_ = ctx;
     }
 
 private:
-    UpstreamThreadSinkCtx sink_ctx_;
+    SourceThreadSinkCtx sink_ctx_;
 };
 
 class ThreadSinkEx : public ThreadSinkInterface
 {
-    CREATE_FUNC(ThreadSinkEx);
+    CREATE_FUNC(ThreadSinkEx)
 
 public:
     ThreadSinkEx();
@@ -59,9 +59,6 @@ public:
     virtual void OnReload();
     virtual void OnTask(const Task* task);
     bool CanExit() const override;
-
-private:
-
 };
 }
 

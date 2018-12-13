@@ -1,4 +1,8 @@
 #include <gmock/gmock.h>
+#include "console_log_engine.h"
+
+ConsoleLogEngine log_engine;
+LogEngineInterface* g_log_engine = &log_engine;
 
 int main(int argc, char* argv[])
 {

@@ -4,12 +4,10 @@ namespace thread_center_test
 {
 ThreadSink::ThreadSink()
 {
-
 }
 
 ThreadSink::~ThreadSink()
 {
-
 }
 
 void ThreadSink::Release()

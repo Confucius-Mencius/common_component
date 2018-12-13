@@ -2,22 +2,20 @@
 
 namespace thread_center_test
 {
-UpstreamThreadSink::UpstreamThreadSink()
+SourceThreadSink::SourceThreadSink()
 {
-
 }
 
-UpstreamThreadSink::~UpstreamThreadSink()
+SourceThreadSink::~SourceThreadSink()
 {
-
 }
 
-void UpstreamThreadSink::Release()
+void SourceThreadSink::Release()
 {
     delete this;
 }
 
-int UpstreamThreadSink::OnInitialize(ThreadInterface* thread)
+int SourceThreadSink::OnInitialize(ThreadInterface* thread)
 {
     if (ThreadSinkInterface::OnInitialize(thread) != 0)
     {
@@ -27,12 +25,12 @@ int UpstreamThreadSink::OnInitialize(ThreadInterface* thread)
     return 0;
 }
 
-void UpstreamThreadSink::OnFinalize()
+void SourceThreadSink::OnFinalize()
 {
     ThreadSinkInterface::OnFinalize();
 }
 
-int UpstreamThreadSink::OnActivate()
+int SourceThreadSink::OnActivate()
 {
     if (ThreadSinkInterface::OnActivate() != 0)
     {
@@ -42,17 +40,17 @@ int UpstreamThreadSink::OnActivate()
     return 0;
 }
 
-void UpstreamThreadSink::OnFreeze()
+void SourceThreadSink::OnFreeze()
 {
     ThreadSinkInterface::OnFreeze();
 }
 
-void UpstreamThreadSink::OnThreadStartOk()
+void SourceThreadSink::OnThreadStartOk()
 {
     ThreadSinkInterface::OnThreadStartOk();
 }
 
-void UpstreamThreadSink::OnStop()
+void SourceThreadSink::OnStop()
 {
     ThreadSinkInterface::OnStop();
 
@@ -61,40 +59,36 @@ void UpstreamThreadSink::OnStop()
     ////////////////////////////////////////////////////////////////////////////////
 }
 
-void UpstreamThreadSink::OnReload()
+void SourceThreadSink::OnReload()
 {
     ThreadSinkInterface::OnReload();
 
-    TaskCtx task_ctx;
-    task_ctx.source_thread = thread_;
-
-    Task* task = Task::Create(&task_ctx);
+    Task* task = new Task(-1, self_thread_, NULL, NULL, 0);
     if (NULL == task)
     {
+        LOG_ERROR("failed to create task");
         return;
     }
 
     sink_ctx_.thread_group->PushTaskToThread(task, 5);
 }
 
-void UpstreamThreadSink::OnTask(const Task* task)
+void SourceThreadSink::OnTask(const Task* task)
 {
     ThreadSinkInterface::OnTask(task);
 }
 
-bool UpstreamThreadSink::CanExit() const
+bool SourceThreadSink::CanExit() const
 {
     return true;
 }
 
 ThreadSinkEx::ThreadSinkEx()
 {
-
 }
 
 ThreadSinkEx::~ThreadSinkEx()
 {
-
 }
 
 void ThreadSinkEx::Release()
@@ -150,16 +144,14 @@ void ThreadSinkEx::OnTask(const Task* task)
 {
     ThreadSinkInterface::OnTask(task);
 
-    TaskCtx new_task_ctx;
-    new_task_ctx.source_thread = thread_;
-
-    Task* new_task = Task::Create(&new_task_ctx);
+    Task* new_task = new Task(-1, self_thread_, NULL, NULL, 0);
     if (NULL == new_task)
     {
+        LOG_ERROR("failed to create task");
         return;
     }
 
-    task->GetCtx()->source_thread->PushTask(new_task);
+    task->GetSourceThread()->PushTask(new_task);
 }
 
 bool ThreadSinkEx::CanExit() const

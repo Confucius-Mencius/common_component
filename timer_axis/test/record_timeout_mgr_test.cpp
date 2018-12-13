@@ -1,5 +1,6 @@
 #include "record_timeout_mgr_test.h"
 #include <event2/event.h>
+#include "log_util.h"
 #include "mem_util.h"
 
 namespace timer_axis_test
@@ -16,7 +17,7 @@ MyRecordTimeoutMgr::~MyRecordTimeoutMgr()
 void MyRecordTimeoutMgr::OnTimeout(const Key& k, const Value& v, int timeout_sec)
 {
 #if !defined(NDEBUG)
-    LOG_CPP("OnTimeout, key: " << k);
+    LOG_DEBUG("OnTimeout, key: " << k);
 
     if (0 == GetRecordCount())
     {

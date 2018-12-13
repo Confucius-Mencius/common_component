@@ -390,7 +390,7 @@ void ConnCenter::RemoveConnInactiveSink(ConnInactiveSinkInterface* conn_timeout_
 
 void ConnCenter::OnTimeout(const ConnID& k, ConnInterface* const& v, int timeout_sec)
 {
-    LOG_TRACE("ConnCenter::OnTimeout, key: " << k << ", val: " << v << ", timeout: " << timeout_sec);
+    LOG_DEBUG("ConnCenter::OnTimeout, key: " << k << ", val: " << v << ", timeout: " << timeout_sec);
 
     for (ConnInactiveSinkSet::iterator it = conn_inactive_sink_set_.begin(); it != conn_inactive_sink_set_.end(); ++it)
     {

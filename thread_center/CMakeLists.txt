@@ -35,13 +35,7 @@ set(BASE_LIB_DIR ${OUTPUT_DIR})
 set(BASE_LIB_NAME base)
 
 set(LOG_ENGINE_INC_DIR ${PROJECT_SOURCE_DIR}/../log_engine/inc)
-set(MSG_CODEC_CENTER_INC_DIR ${PROJECT_SOURCE_DIR}/../msg_codec_center/inc)
 set(TIMER_AXIS_INC_DIR ${PROJECT_SOURCE_DIR}/../timer_axis/inc)
-set(TIME_SERVICE_INC_DIR ${PROJECT_SOURCE_DIR}/../time_service/inc)
-set(RANDOM_ENGINE_INC_DIR ${PROJECT_SOURCE_DIR}/../random_engine/inc)
-set(TRANS_CENTER_INC_DIR ${PROJECT_SOURCE_DIR}/../trans_center/inc)
-set(CONN_CENTER_MGR_INC_DIR ${PROJECT_SOURCE_DIR}/../conn_center_mgr/inc)
-set(CLIENT_CENTER_MGR_INC_DIR ${PROJECT_SOURCE_DIR}/../client_center_mgr/inc)
 
 ###############################################################################
 # project inc dir

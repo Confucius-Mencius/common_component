@@ -1,6 +1,6 @@
 #include "conf_center_test.h"
+#include "log_util.h"
 #include "mem_util.h"
-#include "simple_log.h"
 
 namespace conf_center_test
 {
@@ -28,7 +28,7 @@ void ConfCenterTest::SetUp()
         FAIL() << loader_.GetLastErrMsg();
     }
 
-    LOG_CPP("conf center version: " << conf_center_->GetVersion());
+    LOG_DEBUG("conf center version: " << conf_center_->GetVersion());
 
     ConfCenterCtx conf_center_ctx;
     conf_center_ctx.app_conf_file_path = APP_CONF_FILE_PATH;

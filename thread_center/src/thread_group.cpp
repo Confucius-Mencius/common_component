@@ -2,7 +2,6 @@
 #include "container_util.h"
 #include "num_util.h"
 #include "thread_center.h"
-#include "version.h"
 
 namespace thread_center
 {
@@ -17,12 +16,12 @@ ThreadGroup::~ThreadGroup()
 
 const char* ThreadGroup::GetVersion() const
 {
-    return THREAD_CENTER_THREAD_CENTER_VERSION;
+    return NULL;
 }
 
 const char* ThreadGroup::GetLastErrMsg() const
 {
-    return nullptr;
+    return NULL;
 }
 
 void ThreadGroup::Release()
@@ -44,12 +43,7 @@ void ThreadGroup::Finalize()
 
 int ThreadGroup::Activate()
 {
-    if (ACTIVATE_CONTAINER(thread_vec_) != 0)
-    {
-        return -1;
-    }
-
-    return 0;
+    return ACTIVATE_CONTAINER(thread_vec_);
 }
 
 void ThreadGroup::Freeze()
@@ -76,7 +70,10 @@ ThreadInterface* ThreadGroup::CreateThread(const ThreadCtx* thread_ctx)
             break;
         }
 
-        // not activated here
+//        if (thread->Activate() != 0)
+//        {
+//            break;
+//        }
 
         ret = 0;
     } while (0);
@@ -100,6 +97,27 @@ ThreadInterface* ThreadGroup::GetThread(int thread_idx) const
     }
 
     return thread_vec_[thread_idx];
+}
+
+int ThreadGroup::Start()
+{
+    for (ThreadVec::iterator it = thread_vec_.begin(); it != thread_vec_.end(); ++it)
+    {
+        if ((*it)->Start() != 0)
+        {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+void ThreadGroup::Join()
+{
+    for (ThreadVec::iterator it = thread_vec_.begin(); it != thread_vec_.end(); ++it)
+    {
+        (*it)->Join();
+    }
 }
 
 int ThreadGroup::NotifyStop()

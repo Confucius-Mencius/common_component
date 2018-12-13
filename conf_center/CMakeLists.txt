@@ -34,6 +34,8 @@ set(BASE_INC_DIR ${PROJECT_SOURCE_DIR}/../base/inc)
 set(BASE_LIB_DIR ${OUTPUT_DIR})
 set(BASE_LIB_NAME base)
 
+set(LOG_ENGINE_INC_DIR ${PROJECT_SOURCE_DIR}/../log_engine/inc)
+
 ###############################################################################
 # project inc dir
 set(PROJ_INC_DIR ${PROJECT_SOURCE_DIR}/inc)

@@ -11,7 +11,7 @@ class ThreadCenter;
 
 class ThreadGroup : public ThreadGroupInterface
 {
-    CREATE_FUNC(ThreadGroup);
+    CREATE_FUNC(ThreadGroup)
 
 public:
     ThreadGroup();
@@ -35,6 +35,9 @@ public:
     }
 
     ThreadInterface* GetThread(int thread_idx) const override;
+
+    int Start() override;
+    void Join() override;
 
     int NotifyStop() override;
     int NotifyReload() override;
