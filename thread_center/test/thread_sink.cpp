@@ -1,4 +1,5 @@
 #include "thread_sink.h"
+#include "task_count.h"
 
 namespace thread_center_test
 {
@@ -67,6 +68,7 @@ void ThreadSink::OnReload()
 void ThreadSink::OnTask(const Task* task)
 {
     ThreadSinkInterface::OnTask(task);
+    g_task_count--;
 }
 
 bool ThreadSink::CanExit() const

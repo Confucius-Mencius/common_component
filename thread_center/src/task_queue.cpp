@@ -1,5 +1,6 @@
 #include "task_queue.h"
 #include "container_util.h"
+#include "thread.h"
 
 namespace thread_center
 {
@@ -7,6 +8,7 @@ TaskQueue::TaskQueue() : mutex_(), task_list_()
 {
     cur_task_count_ = 0;
     max_task_count_ = 0;
+    thread_ = NULL;
 }
 
 TaskQueue::~TaskQueue()
@@ -29,6 +31,7 @@ int TaskQueue::PushBack(Task* task)
     if (cur_task_count_ > max_task_count_)
     {
         max_task_count_ = cur_task_count_;
+        LOG_WARN(thread_->GetThreadName() << " " << thread_->GetThreadIdx() << " max task count: " << max_task_count_);
     }
 
     return 0;

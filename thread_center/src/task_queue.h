@@ -5,6 +5,8 @@
 #include <mutex>
 #include "task_define.h"
 
+class ThreadInterface;
+
 namespace thread_center
 {
 class TaskQueue
@@ -12,6 +14,11 @@ class TaskQueue
 public:
     TaskQueue();
     ~TaskQueue();
+
+    void SetThread(ThreadInterface* thread)
+    {
+        thread_ = thread;
+    }
 
     void Release();
 
@@ -30,6 +37,8 @@ private:
 
     int cur_task_count_;
     int max_task_count_;
+
+    ThreadInterface* thread_;
 };
 } // namespace thread_center
 

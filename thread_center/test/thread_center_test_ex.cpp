@@ -129,23 +129,5 @@ void ThreadCenterTestEx::Test001()
     SAFE_DESTROY(source_thread_group);
 }
 
-void ThreadCenterTestEx::Test002()
-{
-
-}
-
-void ThreadCenterTestEx::Test003()
-{
-
-}
-
-void ThreadCenterTestEx::Test004()
-{
-
-}
-
 ADD_TEST_F(ThreadCenterTestEx, Test001);
-ADD_TEST_F(ThreadCenterTestEx, Test002);
-ADD_TEST_F(ThreadCenterTestEx, Test003);
-ADD_TEST_F(ThreadCenterTestEx, Test004);
 }

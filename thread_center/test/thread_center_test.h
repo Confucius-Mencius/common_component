@@ -20,6 +20,7 @@ public:
     void Test002();
     void Test003();
     void Test004();
+    void Test005();
 
 private:
     ModuleLoader loader_;

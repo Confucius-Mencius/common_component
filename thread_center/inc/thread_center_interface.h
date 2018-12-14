@@ -8,7 +8,6 @@
 #ifndef THREAD_CENTER_INC_THREAD_CENTER_INTERFACE_H_
 #define THREAD_CENTER_INC_THREAD_CENTER_INTERFACE_H_
 
-#include <iomanip>
 #include <pthread.h>
 #include "module_interface.h"
 #include "task_define.h"
@@ -85,24 +84,24 @@ public:
     virtual int OnInitialize(ThreadInterface* thread)
     {
         self_thread_ = thread;
-        LOG_DEBUG(self_thread_->GetThreadName() << " OnInitialize");
+        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnInitialize");
         return 0;
     }
 
     virtual void OnFinalize()
     {
-        LOG_DEBUG(self_thread_->GetThreadName() << " OnFinalize");
+        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnFinalize");
     }
 
     virtual int OnActivate()
     {
-        LOG_DEBUG(self_thread_->GetThreadName() << " OnActivate");
+        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnActivate");
         return 0;
     }
 
     virtual void OnFreeze()
     {
-        LOG_DEBUG(self_thread_->GetThreadName() << " OnFreeze");
+        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnFreeze");
     }
 
     /**
@@ -110,13 +109,12 @@ public:
      */
     virtual void OnThreadStartOk()
     {
-        LOG_DEBUG(self_thread_->GetThreadName() << " OnThreadStartOk. thread id: "
-                  << setiosflags(std::ios::showbase) << std::hex << self_thread_->GetThreadID());
+        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnThreadStartOk");
     }
 
     virtual void OnStop()
     {
-        LOG_DEBUG(self_thread_->GetThreadName() << " OnStop");
+        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnStop");
 
         ////////////////////////////////////////////////////////////////////////////////
         // stop routine here...
@@ -125,12 +123,12 @@ public:
 
     virtual void OnReload()
     {
-        LOG_DEBUG(self_thread_->GetThreadName() << " OnReload");
+        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnReload");
     }
 
     virtual void OnTask(const Task* task)
     {
-        LOG_DEBUG(self_thread_->GetThreadName() << " OnTask, task type: " << task->GetType());
+        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnTask, task type: " << task->GetType());
     }
 
     virtual bool CanExit() const = 0;
@@ -166,7 +164,7 @@ public:
 
     /**
      * @brief
-     * @param task
+     * @param task 目标线程处理完后会释放task
      * @param thread_idx 指定线程idx，=-1表示广播
      * @return
      */

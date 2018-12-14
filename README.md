@@ -44,9 +44,6 @@ tcp线程组，监听tcp连接并处理io，是第一级线程组，也是一种
 ## third_party
 公共cmake文件，定义的是第三方库的inc、link路径和lib名。
 
-## thread_center
-底层的线程组封装。
-
 ## trans_center
 通用的异步事务接口。一个线程使用一个trans_center管理异步事务。
 

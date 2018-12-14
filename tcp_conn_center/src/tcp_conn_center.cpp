@@ -210,7 +210,7 @@ ConnInterface* ConnCenter::CreateBufferEventConn(int io_thread_idx, int sock_fd,
     if (cur_online_conn_count > max_online_conn_count_)
     {
         max_online_conn_count_ = cur_online_conn_count;
-        LOG_INFO("tcp thread idx: " << conn->GetConnGUID().io_thread_idx << ", max online tcp conn count: "
+        LOG_WARN("tcp thread idx: " << conn->GetConnGUID().io_thread_idx << ", max online tcp conn count: "
                  << max_online_conn_count_);
     }
 
@@ -297,7 +297,7 @@ ConnInterface* ConnCenter::CreateNormalConn(int io_thread_idx, int sock_fd, stru
     if (cur_online_conn_count > max_online_conn_count_)
     {
         max_online_conn_count_ = cur_online_conn_count;
-        LOG_INFO("tcp thread idx: " << conn->GetConnGUID().io_thread_idx << ", max online tcp conn count: "
+        LOG_WARN("tcp thread idx: " << conn->GetConnGUID().io_thread_idx << ", max online tcp conn count: "
                  << max_online_conn_count_);
     }
 

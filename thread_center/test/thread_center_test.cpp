@@ -1,7 +1,10 @@
 #include "thread_center_test.h"
+#include "task_count.h"
 
 namespace thread_center_test
 {
+std::atomic<int> g_task_count(0);
+
 ThreadCenterTest::ThreadCenterTest() : loader_()
 {
     thread_center_ = NULL;
@@ -30,6 +33,7 @@ void ThreadCenterTest::SetUp()
 
 void ThreadCenterTest::TearDown()
 {
+    ASSERT_EQ(0, g_task_count);
     SAFE_DESTROY_MODULE(thread_center_, loader_);
 }
 
@@ -166,6 +170,7 @@ void ThreadCenterTest::Test003()
 
     Task* task = new Task();
     ASSERT_TRUE(task != NULL);
+    g_task_count++;
 
     thread_group->PushTaskToThread(task, 5);
     thread_group->NotifyStop();
@@ -217,8 +222,65 @@ void ThreadCenterTest::Test004()
 
     Task* task = new Task();
     ASSERT_TRUE(task != NULL);
+    g_task_count = 10;
 
     thread_group->PushTaskToThread(task, -1);
+    thread_group->NotifyStop();
+
+    if (thread_group->CanExit())
+    {
+        thread_group->NotifyExit();
+        thread_group->Join();
+    }
+
+    SAFE_DESTROY(thread_group);
+}
+
+/**
+ * @brief 新建一个线程组，通知线程组中指定线程处理task，无限循环
+ * @details
+ *  - Set Up:
+
+ *  - Expect:
+
+ *  - Tear Down:
+
+ * @attention
+
+ */
+void ThreadCenterTest::Test005()
+{
+    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(NULL);
+    ASSERT_TRUE(thread_group != NULL);
+
+    for (int i = 0; i < 10; ++i)
+    {
+        ThreadCtx thread_ctx;
+        thread_ctx.common_component_dir = "..";
+        thread_ctx.idx = i;
+        thread_ctx.name = "xx thread";
+        thread_ctx.sink = ThreadSink::Create();
+        ASSERT_TRUE(thread_ctx.sink != NULL);
+
+        ThreadInterface* thread = thread_group->CreateThread(&thread_ctx);
+        if (NULL == thread)
+        {
+            FAIL();
+        }
+    }
+
+    thread_group->Activate();
+    thread_group->Start();
+
+    for (int i = 0; i < 10000000; ++i)
+    {
+        Task* task = new Task();
+        ASSERT_TRUE(task != NULL);
+        g_task_count++;
+
+        thread_group->PushTaskToThread(task, 5);
+    }
+
     thread_group->NotifyStop();
 
     if (thread_group->CanExit())
@@ -234,4 +296,5 @@ ADD_TEST_F(ThreadCenterTest, Test001);
 ADD_TEST_F(ThreadCenterTest, Test002);
 ADD_TEST_F(ThreadCenterTest, Test003);
 ADD_TEST_F(ThreadCenterTest, Test004);
+ADD_TEST_F(ThreadCenterTest, Test005);
 }

@@ -17,9 +17,6 @@ public:
     virtual void TearDown();
 
     void Test001();
-    void Test002();
-    void Test003();
-    void Test004();
 
 private:
     ModuleLoader loader_;

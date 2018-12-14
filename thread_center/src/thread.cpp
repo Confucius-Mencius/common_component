@@ -85,6 +85,7 @@ int Thread::Initialize(const void* ctx)
     }
 
     thread_ctx_ = *((const ThreadCtx*) ctx);
+    tq_.SetThread(this);
 
     thread_ev_base_ = event_base_new();
     if (NULL == thread_ev_base_)
