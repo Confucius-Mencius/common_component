@@ -73,8 +73,7 @@ void ThreadCenterTestEx::Test001()
     for (int i = 0; i < thread_group->GetThreadCount(); ++i)
     {
         ThreadInterface* thread = thread_group->GetThread(i);
-        LOG_DEBUG(thread->GetThreadName() << ", " << thread->GetThreadIdx() << ", " << thread->GetThreadID()
-                  << ", " << thread->GetThreadEvBase() << ", " << thread->GetTimerAxis());
+        LOG_DEBUG(thread->GetThreadName() << ", " << thread->GetThreadIdx());
     }
 
     // 新建源线程组，只包含一个线程
@@ -103,6 +102,7 @@ void ThreadCenterTestEx::Test001()
 
     source_thread_group->Activate();
 
+    // 线程组都active好了才可以start
     thread_group->Start();
     source_thread_group->Start();
 

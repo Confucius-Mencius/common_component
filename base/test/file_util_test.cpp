@@ -3,10 +3,7 @@
 #include <utime.h>
 #include "data_type.h"
 #include "file_util.h"
-
-#define LOG_WITH_CONTEXT 0
 #include "simple_log.h"
-
 #include "str_util.h"
 
 #define DIR_1_NAME "hello"

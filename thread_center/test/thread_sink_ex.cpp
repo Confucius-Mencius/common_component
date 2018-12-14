@@ -45,9 +45,9 @@ void SourceThreadSink::OnFreeze()
     ThreadSinkInterface::OnFreeze();
 }
 
-void SourceThreadSink::OnThreadStartOk()
+void SourceThreadSink::OnThreadStartOK()
 {
-    ThreadSinkInterface::OnThreadStartOk();
+    ThreadSinkInterface::OnThreadStartOK();
 }
 
 void SourceThreadSink::OnStop()

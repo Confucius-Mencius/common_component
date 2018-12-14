@@ -107,9 +107,9 @@ public:
     /**
      * @brief 线程启动ok后回调，一般在其中处理线程同步
      */
-    virtual void OnThreadStartOk()
+    virtual void OnThreadStartOK()
     {
-        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnThreadStartOk");
+        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnThreadStartOK");
     }
 
     virtual void OnStop()

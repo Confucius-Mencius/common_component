@@ -1,7 +1,5 @@
 #include "hex_dump_test.h"
 #include "hex_dump.h"
-
-#define LOG_WITH_CONTEXT 0
 #include "simple_log.h"
 
 namespace hex_dump_test

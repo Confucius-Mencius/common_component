@@ -1,10 +1,7 @@
 #include "shell_util_test.h"
 #include "file_util.h"
 #include "shell_util.h"
-
-#define LOG_WITH_CONTEXT 0
 #include "simple_log.h"
-
 #include "str_util.h"
 
 namespace shell_util_test

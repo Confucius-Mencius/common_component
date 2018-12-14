@@ -1,7 +1,5 @@
 #include "misc_test.h"
 #include "misc_util.h"
-
-#define LOG_WITH_CONTEXT 0
 #include "simple_log.h"
 
 namespace misc_test

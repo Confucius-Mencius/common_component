@@ -1,4 +1,5 @@
 #include "thread_sink.h"
+#include <unistd.h>
 #include "task_count.h"
 
 namespace thread_center_test
@@ -46,9 +47,9 @@ void ThreadSink::OnFreeze()
     ThreadSinkInterface::OnFreeze();
 }
 
-void ThreadSink::OnThreadStartOk()
+void ThreadSink::OnThreadStartOK()
 {
-    ThreadSinkInterface::OnThreadStartOk();
+    ThreadSinkInterface::OnThreadStartOK();
 }
 
 void ThreadSink::OnStop()
@@ -68,6 +69,7 @@ void ThreadSink::OnReload()
 void ThreadSink::OnTask(const Task* task)
 {
     ThreadSinkInterface::OnTask(task);
+    usleep(rand() % 5000); // 微秒。模拟程序逻辑执行时间
     g_task_count--;
 }
 

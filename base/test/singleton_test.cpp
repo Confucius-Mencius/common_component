@@ -1,8 +1,5 @@
 #include<thread>
-
-#define LOG_WITH_CONTEXT 0
 #include "simple_log.h"
-
 #include "singleton.h"
 #include "test_util.h"
 

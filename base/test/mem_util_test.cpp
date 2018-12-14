@@ -1,7 +1,5 @@
 #include "mem_util.h"
 #include "test_util.h"
-
-#define LOG_WITH_CONTEXT 0
 #include "simple_log.h"
 
 //   operator new 和 operator delete 函数有两个重载版本，每个版本支持相关的new表达式和delete表达式：

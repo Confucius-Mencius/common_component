@@ -1,6 +1,4 @@
 #include "last_err_msg_test.h"
-
-#define LOG_WITH_CONTEXT 0
 #include "simple_log.h"
 
 namespace last_err_msg_test

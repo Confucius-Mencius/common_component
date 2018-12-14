@@ -65,6 +65,7 @@ Task* TaskQueue::PopFront()
     Task* task = task_list_.front();
     task_list_.pop_front();
     --cur_task_count_;
+    LOG_DEBUG(thread_->GetThreadName() << " " << thread_->GetThreadIdx() << " task count in queue: " << cur_task_count_);
 
     return task;
 }

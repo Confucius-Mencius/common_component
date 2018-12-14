@@ -1,7 +1,14 @@
 #include "thread.h"
+#include <fcntl.h>
 #include <unistd.h>
 #include "file_util.h"
 #include "str_util.h"
+
+//In Linux versions before 2.6.11, the capacity of a pipe was the same as the system page size (e.g., 4096 bytes on i386).
+//Since Linux 2.6.11, the pipe capacity is 65536 bytes.
+//Since Linux 2.6.35, the default pipe capacity is 65536 bytes,
+//but the capacity can be queried and set using the fcntl(2) F_GETPIPE_SZ and F_SETPIPE_SZ operations.
+//cat /proc/sys/fs/pipe-max-size可以查看当前的最大值，Linux上是1M
 
 namespace thread_center
 {
@@ -9,44 +16,56 @@ void Thread::OnEvent(int fd, short which, void* arg)
 {
     Thread* thread = (Thread*) arg;
 
-    char buf[1] = "";
-    if (read(fd, buf, 1) != 1)
+    while (true)
     {
-        const int err = errno;
-        LOG_ERROR("failed to read, errno: " << err << ", err msg: " << strerror(err));
-        return;
-    }
-
-    switch (buf[0])
-    {
-        case 's':
+        char buf[1] = "";
+        if (read(fd, buf, 1) != 1)
         {
-            thread->OnStop();
-        }
-        break;
+            const int err = errno;
+            if (err != EAGAIN)
+            {
+                LOG_ERROR("failed to read, errno: " << err << ", err msg: " << strerror(err));
+            }
+            else
+            {
+                LOG_DEBUG("pipe is empty");
+            }
 
-        case 'r':
-        {
-            thread->OnReload();
+            return;
         }
-        break;
 
-        case 'e':
+        switch (buf[0])
         {
-            thread->OnExit();
-        }
-        break;
+            case 's':
+            {
+                thread->OnStop();
+            }
+            break;
 
-        case 't':
-        {
-            thread->OnTask();
-        }
-        break;
+            case 'r':
+            {
+                thread->OnReload();
+            }
+            break;
 
-        default:
-        {
+            case 'e':
+            {
+                thread->OnExit();
+            }
+            break;
+
+            case 't':
+            {
+                thread->OnTask();
+            }
+            break;
+
+            default:
+            {
+                LOG_ERROR("invalid cmd: " << buf[0]);
+            }
+            break;
         }
-        break;
     }
 }
 
@@ -95,12 +114,30 @@ int Thread::Initialize(const void* ctx)
         return -1;
     }
 
-    if (pipe(pipe_) != 0)
+    //  pipefd[0] refers to the read end of the pipe.  pipefd[1] refers to the write end of the pipe.
+    if (pipe2(pipe_, O_CLOEXEC | O_NONBLOCK) != 0)
     {
         const int err = errno;
         LOG_ERROR("failed to create pipe, errno: " << err << ", err msg: " << strerror(err));
         return -1;
     }
+
+    // 默认是65536
+    int pipe0_size = fcntl(pipe_[0], F_GETPIPE_SZ);
+    int pipe1_size = fcntl(pipe_[1], F_GETPIPE_SZ);
+    LOG_DEBUG("before set, pipe0 size: " << pipe0_size << ", pipe1 size: " << pipe1_size);
+
+    // 修改为1048576。超过最大值时返回-1，设置失败
+    const int pipe_size = 1048576;
+    if (-1 == fcntl(pipe_[1], F_SETPIPE_SZ, pipe_size))
+    {
+        LOG_ERROR("failed to set pipe size to " << pipe_size);
+        return -1;
+    }
+
+    pipe0_size = fcntl(pipe_[0], F_GETPIPE_SZ);
+    pipe1_size = fcntl(pipe_[1], F_GETPIPE_SZ);
+    LOG_DEBUG("after set, pipe0 size: " << pipe0_size << ", pipe1 size: " << pipe1_size);
 
     event_ = event_new(thread_ev_base_, pipe_[0], EV_READ | EV_PERSIST, Thread::OnEvent, this);
     if (NULL == event_)
@@ -214,7 +251,7 @@ void Thread::Join()
 
 void* Thread::WorkLoop()
 {
-    thread_ctx_.sink->OnThreadStartOk();
+    thread_ctx_.sink->OnThreadStartOK();
     event_base_dispatch(thread_ev_base_);
     pthread_exit((void*) 0);
 }
@@ -306,11 +343,23 @@ int Thread::NotifyTask(int fd)
     static const char buf[1] = {'t'};
     std::lock_guard<std::mutex> lock(write_fd_mutex_);
 
+    // man 7 pipe:
+    // O_NONBLOCK disabled, n <= PIPE_BUF (PIPE_BUF可通过ulimit -p查看，Linux上是4096字节)
+    //     All n bytes are written atomically; write(2) may block if there is not room for n bytes to be written immediately
+    // O_NONBLOCK enabled, n <= PIPE_BUF
+    //     If there is room to write n bytes to the pipe, then write(2) succeeds immediately, writing all n bytes; otherwise write(2) fails, with errno set to EAGAIN.
     if (write(fd, buf, 1) != 1)
     {
         const int err = errno;
-        LOG_ERROR("failed to write task notify, errno: " << err << ", err msg: " << strerror(err));
-        return -1;
+        if (err != EAGAIN)
+        {
+            LOG_ERROR("failed to write task notify, errno: " << err << ", err msg: " << strerror(err));
+            return -1;
+        }
+        else
+        {
+            LOG_WARN("pipe full");
+        }
     }
 
     return 0;

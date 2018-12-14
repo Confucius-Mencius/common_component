@@ -253,7 +253,7 @@ void ThreadCenterTest::Test005()
     ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(NULL);
     ASSERT_TRUE(thread_group != NULL);
 
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < 1; ++i)
     {
         ThreadCtx thread_ctx;
         thread_ctx.common_component_dir = "..";
@@ -278,7 +278,7 @@ void ThreadCenterTest::Test005()
         ASSERT_TRUE(task != NULL);
         g_task_count++;
 
-        thread_group->PushTaskToThread(task, 5);
+        thread_group->PushTaskToThread(task, 0);
     }
 
     thread_group->NotifyStop();

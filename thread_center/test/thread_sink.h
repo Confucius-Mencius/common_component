@@ -20,7 +20,7 @@ public:
     void OnFinalize() override;
     int OnActivate() override;
     void OnFreeze() override;
-    void OnThreadStartOk() override;
+    void OnThreadStartOK() override;
     void OnStop() override;
     void OnReload() override;
     void OnTask(const Task* task) override;

@@ -1,8 +1,6 @@
 #include "time_compare.h"
 #include "data_type.h"
 #include "test_util.h"
-
-#define LOG_WITH_CONTEXT 0
 #include "simple_log.h"
 
 namespace time_compare_test
