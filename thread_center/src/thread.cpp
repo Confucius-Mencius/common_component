@@ -135,7 +135,8 @@ int Thread::Initialize(const void* ctx)
     const int pipe_size = 1048576;
     if (-1 == fcntl(pipe_[1], F_SETPIPE_SZ, pipe_size))
     {
-        LOG_ERROR("failed to set pipe size to " << pipe_size);
+        const int err = errno;
+        LOG_ERROR("failed to set pipe size to " << pipe_size << ", errno: " << err << ", err msg: " << strerror(err));
         return -1;
     }
 
@@ -427,6 +428,11 @@ int Thread::LoadTimerAxis()
 
 void Thread::StartPendingNotifyTimer()
 {
+    if (NULL == timer_axis_)
+    {
+        return;
+    }
+
     if (timer_axis_->TimerExist(this, PENDING_NOTIFY_TIMER_ID))
     {
         return;
@@ -438,6 +444,11 @@ void Thread::StartPendingNotifyTimer()
 
 void Thread::StopPendingNotifyTimer()
 {
+    if (NULL == timer_axis_)
+    {
+        return;
+    }
+
     timer_axis_->KillTimer(this, PENDING_NOTIFY_TIMER_ID);
 }
 } // namespace thread_center

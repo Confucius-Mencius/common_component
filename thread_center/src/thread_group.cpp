@@ -51,43 +51,6 @@ void ThreadGroup::Freeze()
     FREEZE_CONTAINER(thread_vec_);
 }
 
-ThreadInterface* ThreadGroup::CreateThread(const ThreadCtx* thread_ctx)
-{
-    Thread* thread = Thread::Create();
-    if (NULL == thread)
-    {
-        const int err = errno;
-        LOG_ERROR("failed to create thread, errno: " << err << ", err msg: " << strerror(err));
-        return NULL;
-    }
-
-    int ret = -1;
-
-    do
-    {
-        if (thread->Initialize(thread_ctx) != 0)
-        {
-            break;
-        }
-
-//        if (thread->Activate() != 0)
-//        {
-//            break;
-//        }
-
-        ret = 0;
-    } while (0);
-
-    if (ret != 0)
-    {
-        SAFE_DESTROY(thread);
-        return NULL;
-    }
-
-    thread_vec_.push_back(thread);
-    return thread;
-}
-
 ThreadInterface* ThreadGroup::GetThread(int thread_idx) const
 {
     if (INVALID_IDX(thread_idx, 0, thread_vec_.size()))
@@ -183,5 +146,42 @@ int ThreadGroup::PushTaskToThread(Task* task, int thread_idx)
 
     thread_vec_[thread_idx]->PushTask(task);
     return 0;
+}
+
+ThreadInterface* ThreadGroup::CreateThread(const ThreadCtx* thread_ctx)
+{
+    Thread* thread = Thread::Create();
+    if (NULL == thread)
+    {
+        const int err = errno;
+        LOG_ERROR("failed to create thread, errno: " << err << ", err msg: " << strerror(err));
+        return NULL;
+    }
+
+    int ret = -1;
+
+    do
+    {
+        if (thread->Initialize(thread_ctx) != 0)
+        {
+            break;
+        }
+
+//        if (thread->Activate() != 0)
+//        {
+//            break;
+//        }
+
+        ret = 0;
+    } while (0);
+
+    if (ret != 0)
+    {
+        SAFE_DESTROY(thread);
+        return NULL;
+    }
+
+    thread_vec_.push_back(thread);
+    return thread;
 }
 } // namespace thread_center

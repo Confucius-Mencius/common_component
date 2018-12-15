@@ -51,26 +51,15 @@ void ThreadCenterTest::TearDown()
  */
 void ThreadCenterTest::Test001()
 {
-    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(NULL);
+    ThreadGroupCtx thread_group_ctx;
+    thread_group_ctx.common_component_dir = "..";
+    thread_group_ctx.thread_name = "xx thread";
+    thread_group_ctx.thread_count = 10;
+    thread_group_ctx.thread_sink_creator = ThreadSink::Create;
+
+    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
     ASSERT_TRUE(thread_group != NULL);
 
-    for (int i = 0; i < 10; ++i)
-    {
-        ThreadCtx thread_ctx;
-        thread_ctx.common_component_dir = "..";
-        thread_ctx.idx = i;
-        thread_ctx.name = "xx thread";
-        thread_ctx.sink = ThreadSink::Create();
-        ASSERT_TRUE(thread_ctx.sink != NULL);
-
-        ThreadInterface* thread = thread_group->CreateThread(&thread_ctx);
-        if (NULL == thread)
-        {
-            FAIL();
-        }
-    }
-
-    thread_group->Activate();
     thread_group->Start();
 
     thread_group->NotifyStop();
@@ -98,26 +87,15 @@ void ThreadCenterTest::Test001()
  */
 void ThreadCenterTest::Test002()
 {
-    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(NULL);
+    ThreadGroupCtx thread_group_ctx;
+    thread_group_ctx.common_component_dir = "..";
+    thread_group_ctx.thread_name = "xx thread";
+    thread_group_ctx.thread_count = 10;
+    thread_group_ctx.thread_sink_creator = ThreadSink::Create;
+
+    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
     ASSERT_TRUE(thread_group != NULL);
 
-    for (int i = 0; i < 10; ++i)
-    {
-        ThreadCtx thread_ctx;
-        thread_ctx.common_component_dir = "..";
-        thread_ctx.idx = i;
-        thread_ctx.name = "xx thread";
-        thread_ctx.sink = ThreadSink::Create();
-        ASSERT_TRUE(thread_ctx.sink != NULL);
-
-        ThreadInterface* thread = thread_group->CreateThread(&thread_ctx);
-        if (NULL == thread)
-        {
-            FAIL();
-        }
-    }
-
-    thread_group->Activate();
     thread_group->Start();
 
     thread_group->NotifyReload();
@@ -146,26 +124,15 @@ void ThreadCenterTest::Test002()
  */
 void ThreadCenterTest::Test003()
 {
-    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(NULL);
+    ThreadGroupCtx thread_group_ctx;
+    thread_group_ctx.common_component_dir = "..";
+    thread_group_ctx.thread_name = "xx thread";
+    thread_group_ctx.thread_count = 10;
+    thread_group_ctx.thread_sink_creator = ThreadSink::Create;
+
+    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
     ASSERT_TRUE(thread_group != NULL);
 
-    for (int i = 0; i < 10; ++i)
-    {
-        ThreadCtx thread_ctx;
-        thread_ctx.common_component_dir = "..";
-        thread_ctx.idx = i;
-        thread_ctx.name = "xx thread";
-        thread_ctx.sink = ThreadSink::Create();
-        ASSERT_TRUE(thread_ctx.sink != NULL);
-
-        ThreadInterface* thread = thread_group->CreateThread(&thread_ctx);
-        if (NULL == thread)
-        {
-            FAIL();
-        }
-    }
-
-    thread_group->Activate();
     thread_group->Start();
 
     Task* task = new Task();
@@ -198,26 +165,15 @@ void ThreadCenterTest::Test003()
  */
 void ThreadCenterTest::Test004()
 {
-    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(NULL);
+    ThreadGroupCtx thread_group_ctx;
+    thread_group_ctx.common_component_dir = "..";
+    thread_group_ctx.thread_name = "xx thread";
+    thread_group_ctx.thread_count = 10;
+    thread_group_ctx.thread_sink_creator = ThreadSink::Create;
+
+    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
     ASSERT_TRUE(thread_group != NULL);
 
-    for (int i = 0; i < 10; ++i)
-    {
-        ThreadCtx thread_ctx;
-        thread_ctx.common_component_dir = "..";
-        thread_ctx.idx = i;
-        thread_ctx.name = "xx thread";
-        thread_ctx.sink = ThreadSink::Create();
-        ASSERT_TRUE(thread_ctx.sink != NULL);
-
-        ThreadInterface* thread = thread_group->CreateThread(&thread_ctx);
-        if (NULL == thread)
-        {
-            FAIL();
-        }
-    }
-
-    thread_group->Activate();
     thread_group->Start();
 
     Task* task = new Task();
@@ -250,26 +206,15 @@ void ThreadCenterTest::Test004()
  */
 void ThreadCenterTest::Test005()
 {
-    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(NULL);
+    ThreadGroupCtx thread_group_ctx;
+    thread_group_ctx.common_component_dir = "..";
+    thread_group_ctx.thread_name = "xx thread";
+    thread_group_ctx.thread_count = 100;
+    thread_group_ctx.thread_sink_creator = ThreadSink::Create;
+
+    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
     ASSERT_TRUE(thread_group != NULL);
 
-    for (int i = 0; i < 1; ++i)
-    {
-        ThreadCtx thread_ctx;
-        thread_ctx.common_component_dir = "..";
-        thread_ctx.idx = i;
-        thread_ctx.name = "xx thread";
-        thread_ctx.sink = ThreadSink::Create();
-        ASSERT_TRUE(thread_ctx.sink != NULL);
-
-        ThreadInterface* thread = thread_group->CreateThread(&thread_ctx);
-        if (NULL == thread)
-        {
-            FAIL();
-        }
-    }
-
-    thread_group->Activate();
     thread_group->Start();
 
     for (int i = 0; i < 10000000; ++i)
@@ -278,7 +223,7 @@ void ThreadCenterTest::Test005()
         ASSERT_TRUE(task != NULL);
         g_task_count++;
 
-        thread_group->PushTaskToThread(task, 0);
+        thread_group->PushTaskToThread(task, rand() % thread_group_ctx.thread_count);
     }
 
     thread_group->NotifyStop();

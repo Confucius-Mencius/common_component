@@ -48,7 +48,46 @@ void ThreadCenter::Freeze()
     FREEZE_CONTAINER(thread_group_set_);
 }
 
-ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const void* ctx)
+//ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const void* ctx)
+//{
+//    ThreadGroup* thread_group = ThreadGroup::Create();
+//    if (NULL == thread_group)
+//    {
+//        const int err = errno;
+//        LOG_ERROR("failed to create thread group, errno: " << err << ", err msg: " << strerror(err));
+//        return NULL;
+//    }
+
+//    thread_group->SetThreadCenter(this);
+
+//    int ret = -1;
+
+//    do
+//    {
+//        if (thread_group->Initialize(ctx) != 0)
+//        {
+//            break;
+//        }
+
+////        if (thread_group->Activate() != 0)
+////        {
+////            break;
+////        }
+
+//        ret = 0;
+//    } while (0);
+
+//    if (ret != 0)
+//    {
+//        SAFE_DESTROY(thread_group);
+//        return NULL;
+//    }
+
+//    thread_group_set_.insert(thread_group);
+//    return thread_group;
+//}
+
+ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
 {
     ThreadGroup* thread_group = ThreadGroup::Create();
     if (NULL == thread_group)
@@ -69,10 +108,27 @@ ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const void* ctx)
             break;
         }
 
-//        if (thread_group->Activate() != 0)
-//        {
-//            break;
-//        }
+        for (int i = 0; i < ctx->thread_count; ++i)
+        {
+            ThreadCtx thread_ctx;
+            thread_ctx.common_component_dir = ctx->common_component_dir;
+            thread_ctx.name = ctx->thread_name;
+            thread_ctx.idx = i;
+            thread_ctx.sink = ctx->thread_sink_creator();
+
+            ThreadInterface* thread = thread_group->CreateThread(&thread_ctx);
+            if (NULL == thread)
+            {
+                LOG_ERROR("failed to create thread");
+                SAFE_DESTROY(thread_group);
+                return NULL;
+            }
+        }
+
+        if (thread_group->Activate() != 0)
+        {
+            break;
+        }
 
         ret = 0;
     } while (0);

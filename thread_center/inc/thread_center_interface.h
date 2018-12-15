@@ -9,6 +9,7 @@
 #define THREAD_CENTER_INC_THREAD_CENTER_INTERFACE_H_
 
 #include <pthread.h>
+#include <functional>
 #include "module_interface.h"
 #include "task_define.h"
 
@@ -32,23 +33,12 @@ class ThreadSinkInterface;
 struct event_base;
 class TimerAxisInterface;
 
-typedef int ThreadType;
-
-struct ThreadCtx
+struct ThreadGroupCtx
 {
     const char* common_component_dir;
-
-    // thread的属性
-    std::string name;
-    int idx;
-    ThreadSinkInterface* sink;
-
-    ThreadCtx() : name("")
-    {
-        common_component_dir = NULL;
-        idx = -1;
-        sink = NULL;
-    }
+    std::string thread_name;
+    int thread_count;
+    std::function<ThreadSinkInterface* ()> thread_sink_creator;
 };
 
 class ThreadInterface
@@ -63,6 +53,7 @@ public:
     virtual pthread_t GetThreadID() const = 0;
     virtual struct event_base* GetThreadEvBase() const = 0;
     virtual TimerAxisInterface* GetTimerAxis() const = 0;
+    virtual ThreadSinkInterface* GetThreadSink() = 0;
     virtual bool IsStopping() const = 0;
     virtual void PushTask(Task* task) = 0;
 };
@@ -90,17 +81,32 @@ public:
 
     virtual void OnFinalize()
     {
+        if (NULL == self_thread_)
+        {
+            return;
+        }
+
         LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnFinalize");
     }
 
     virtual int OnActivate()
     {
+        if (NULL == self_thread_)
+        {
+            return 0;
+        }
+
         LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnActivate");
         return 0;
     }
 
     virtual void OnFreeze()
     {
+        if (NULL == self_thread_)
+        {
+            return;
+        }
+
         LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnFreeze");
     }
 
@@ -149,7 +155,6 @@ public:
     {
     }
 
-    virtual ThreadInterface* CreateThread(const ThreadCtx* thread_ctx) = 0;
     virtual int GetThreadCount() const = 0;
     virtual ThreadInterface* GetThread(int thread_idx) const = 0;
 
@@ -178,7 +183,7 @@ public:
     {
     }
 
-    virtual ThreadGroupInterface* CreateThreadGroup(const void* ctx) = 0;
+    virtual ThreadGroupInterface* CreateThreadGroup(const ThreadGroupCtx* ctx) = 0;
 };
 
 /** @} Module_ThreadCenter */

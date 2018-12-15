@@ -13,6 +13,21 @@ namespace thread_center
 {
 class ThreadGroup;
 
+struct ThreadCtx
+{
+    const char* common_component_dir;
+    std::string name;
+    int idx;
+    ThreadSinkInterface* sink;
+
+    ThreadCtx() : name("")
+    {
+        common_component_dir = NULL;
+        idx = -1;
+        sink = NULL;
+    }
+};
+
 class Thread : public ThreadInterface, public TimerSinkInterface
 {
     CREATE_FUNC(Thread)
@@ -56,6 +71,11 @@ public:
     TimerAxisInterface* GetTimerAxis() const override
     {
         return timer_axis_;
+    }
+
+    ThreadSinkInterface* GetThreadSink() override
+    {
+        return thread_ctx_.sink;
     }
 
     bool IsStopping() const override

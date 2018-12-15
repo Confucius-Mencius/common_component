@@ -49,26 +49,14 @@ void ThreadCenterTestEx::TearDown()
 void ThreadCenterTestEx::Test001()
 {
     // 新建一个包含10个线程的线程组，与源线程通信
-    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(NULL);
+    ThreadGroupCtx thread_group_ctx;
+    thread_group_ctx.common_component_dir = "..";
+    thread_group_ctx.thread_name = "xx thread";
+    thread_group_ctx.thread_count = 10;
+    thread_group_ctx.thread_sink_creator = ThreadSinkEx::Create;
+
+    ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
     ASSERT_TRUE(thread_group != NULL);
-
-    for (int i = 0; i < 10; ++i)
-    {
-        ThreadCtx thread_ctx;
-        thread_ctx.common_component_dir = "..";
-        thread_ctx.idx = i;
-        thread_ctx.name = "xx thread";
-        thread_ctx.sink = new ThreadSinkEx();
-        ASSERT_TRUE(thread_ctx.sink != NULL);
-
-        ThreadInterface* thread = thread_group->CreateThread(&thread_ctx);
-        if (NULL == thread)
-        {
-            FAIL();
-        }
-    }
-
-    thread_group->Activate();
 
     for (int i = 0; i < thread_group->GetThreadCount(); ++i)
     {
@@ -77,30 +65,17 @@ void ThreadCenterTestEx::Test001()
     }
 
     // 新建源线程组，只包含一个线程
-    ThreadGroupInterface* source_thread_group = thread_center_->CreateThreadGroup(NULL);
+    ThreadGroupCtx source_thread_group_ctx;
+    source_thread_group_ctx.common_component_dir = "..";
+    source_thread_group_ctx.thread_name = "yy thread";
+    source_thread_group_ctx.thread_count = 1;
+    source_thread_group_ctx.thread_sink_creator = SourceThreadSink::Create;
+
+    ThreadGroupInterface* source_thread_group = thread_center_->CreateThreadGroup(&source_thread_group_ctx);
     ASSERT_TRUE(source_thread_group != NULL);
 
-    for (int i = 0; i < 1; ++i)
-    {
-        ThreadCtx thread_ctx;
-        thread_ctx.common_component_dir = "..";
-        thread_ctx.idx = i;
-        thread_ctx.name = "yy thread";
-        thread_ctx.sink = SourceThreadSink::Create();
-        ASSERT_TRUE(thread_ctx.sink != NULL);
-
-        SourceThreadSinkCtx sink_ctx;
-        sink_ctx.thread_group = thread_group;
-        ((SourceThreadSink*) thread_ctx.sink)->SetSinkCtx(sink_ctx);
-
-        ThreadInterface* thread = source_thread_group->CreateThread(&thread_ctx);
-        if (NULL == thread)
-        {
-            FAIL();
-        }
-    }
-
-    source_thread_group->Activate();
+    SourceThreadSink* source_thread_sink = (SourceThreadSink*) source_thread_group->GetThread(0)->GetThreadSink();
+    source_thread_sink->SetReleatedThreadGroup(thread_group);
 
     // 线程组都active好了才可以start
     thread_group->Start();

@@ -781,6 +781,11 @@ void Test013()
 
     m = 3;
     EXPECT_EQ(ret, GE_X_MULTI_M(x, m));
+
+    // 已经是16的倍数
+    x = 768;
+    m = 16;
+    EXPECT_EQ(x, GE_X_MULTI_M(x, m));
 }
 
 void Test014()
@@ -800,8 +805,12 @@ void Test014()
 
     m = 3;
     ret = 9;
-
     EXPECT_EQ(ret, LE_X_MULTI_M(x, m));
+
+    // 已经是16的倍数
+    x = 768;
+    m = 16;
+    EXPECT_EQ(x, LE_X_MULTI_M(x, m));
 }
 
 ADD_TEST(NumUtilTest, Test001);

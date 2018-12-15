@@ -6,11 +6,6 @@
 
 namespace thread_center_test
 {
-struct SourceThreadSinkCtx
-{
-    ThreadGroupInterface* thread_group; // 需要交互的线程组
-};
-
 class SourceThreadSink : public ThreadSinkInterface
 {
     CREATE_FUNC(SourceThreadSink)
@@ -32,13 +27,13 @@ public:
     bool CanExit() const override;
 
 public:
-    void SetSinkCtx(const SourceThreadSinkCtx& ctx)
+    void SetReleatedThreadGroup(ThreadGroupInterface* thread_group)
     {
-        sink_ctx_ = ctx;
+        thread_group_ = thread_group;
     }
 
 private:
-    SourceThreadSinkCtx sink_ctx_;
+    ThreadGroupInterface* thread_group_; // 需要交互的线程组
 };
 
 class ThreadSinkEx : public ThreadSinkInterface

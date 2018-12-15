@@ -27,8 +27,6 @@ public:
     void Freeze() override;
 
     ///////////////////////// ThreadGroupInterface /////////////////////////
-    ThreadInterface* CreateThread(const ThreadCtx* thread_ctx) override;
-
     int GetThreadCount() const override
     {
         return (int) thread_vec_.size();
@@ -52,6 +50,8 @@ public:
     {
         thread_center_ = thread_center;
     }
+
+    ThreadInterface* CreateThread(const ThreadCtx* thread_ctx);
 
 private:
     ThreadCenter* thread_center_;

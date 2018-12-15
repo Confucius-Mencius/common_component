@@ -70,7 +70,7 @@ void SourceThreadSink::OnReload()
         return;
     }
 
-    sink_ctx_.thread_group->PushTaskToThread(task, 5);
+    thread_group_->PushTaskToThread(task, 5);
 }
 
 void SourceThreadSink::OnTask(const Task* task)
