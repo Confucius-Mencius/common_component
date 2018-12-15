@@ -6,10 +6,6 @@
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 ###############################################################################
-# 定义USE_BUFFEREVENT宏，使用buffer event方式。注释掉则不使用buffer event方式。
-add_definitions(-DUSE_BUFFEREVENT)
-
-###############################################################################
 # c++11
 if (CXX_LANGUAGE)
     include(CheckCXXCompilerFlag)
