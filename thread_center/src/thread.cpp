@@ -1,6 +1,11 @@
 #include "thread.h"
 #include <fcntl.h>
 #include <unistd.h>
+
+#if defined(NDEBUG)
+#include <gperftools/profiler.h>
+#endif
+
 #include "file_util.h"
 #include "str_util.h"
 
@@ -277,6 +282,14 @@ void Thread::Join()
 
 void* Thread::WorkLoop()
 {
+#if defined(NDEBUG)
+    if (thread_ctx_.enable_cpu_profiling)
+    {
+        LOG_INFO(thread_ctx_.name << " " << thread_ctx_.idx << " enable cpu profiling");
+        ProfilerRegisterThread();
+    }
+#endif
+
     thread_ctx_.sink->OnThreadStartOK();
     event_base_dispatch(thread_ev_base_);
     pthread_exit((void*) 0);

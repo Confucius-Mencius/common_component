@@ -270,7 +270,7 @@ int Scheduler::CloseClient(const ConnGuid* conn_guid)
     return 0;
 }
 
-int Scheduler::SendToTcpThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
+int Scheduler::SendToTCPThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
                                size_t msg_body_len, int tcp_thread_idx)
 {
     const int real_tcp_thread_idx = GetScheduleTcpThreadIdx(tcp_thread_idx);
@@ -307,14 +307,14 @@ int Scheduler::SendToTcpThread(const ConnGuid* conn_guid, const MsgHead& msg_hea
 int Scheduler::SendToWorkThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
                                 size_t msg_body_len, int work_thread_idx)
 {
-    if (NULL == related_thread_group_->work_thread_group)
+    if (NULL == related_thread_group_->work_threads)
     {
         LOG_ERROR("no work threads");
         return -1;
     }
 
     const int real_work_thread_idx = GetScheduleWorkThreadIdx(work_thread_idx);
-    ThreadInterface* work_thread = related_thread_group_->work_thread_group->GetThread(real_work_thread_idx);
+    ThreadInterface* work_thread = related_thread_group_->work_threads->GetThread(real_work_thread_idx);
 
     TaskCtx task_ctx;
     task_ctx.task_type = TASK_TYPE_NORMAL;
@@ -383,13 +383,13 @@ int Scheduler::SendToGlobalThread(const ConnGuid* conn_guid, const MsgHead& msg_
     return 0;
 }
 
-void Scheduler::SetRelatedThreadGroup(RelatedThreadGroup* related_thread_group)
+void Scheduler::SetRelatedThreadGroup(RelatedThreadGroups* related_thread_group)
 {
     related_thread_group_ = related_thread_group;
 
-    if (related_thread_group_->work_thread_group != NULL)
+    if (related_thread_group_->work_threads != NULL)
     {
-        const int work_thread_count = related_thread_group_->work_thread_group->GetThreadCount();
+        const int work_thread_count = related_thread_group_->work_threads->GetThreadCount();
         if (work_thread_count > 0)
         {
             last_work_thread_idx_ = rand() % work_thread_count;
@@ -412,7 +412,7 @@ int Scheduler::GetScheduleTcpThreadIdx(int tcp_thread_idx)
 
 int Scheduler::GetScheduleWorkThreadIdx(int work_thread_idx)
 {
-    const int work_thread_count = related_thread_group_->work_thread_group->GetThreadCount();
+    const int work_thread_count = related_thread_group_->work_threads->GetThreadCount();
 
     if (INVALID_IDX(work_thread_idx, 0, work_thread_count))
     {

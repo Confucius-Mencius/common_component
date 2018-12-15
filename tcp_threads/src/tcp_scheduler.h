@@ -33,7 +33,7 @@ public:
                      size_t msg_body_len) override;
     int SendRawToClient(const ConnGuid* conn_guid, const void* msg, size_t msg_len) override;
     int CloseClient(const ConnGuid* conn_guid) override;
-    int SendToTcpThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
+    int SendToTCPThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
                         size_t msg_body_len, int tcp_thread_idx) override;
     int SendToWorkThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
                          size_t msg_body_len, int work_thread_idx) override;
@@ -46,7 +46,7 @@ public:
         thread_sink_ = sink;
     }
 
-    void SetRelatedThreadGroup(RelatedThreadGroup* related_thread_group);
+    void SetRelatedThreadGroup(RelatedThreadGroups* related_thread_group);
 
 private:
     int GetScheduleTcpThreadIdx(int tcp_thread_idx);
@@ -54,7 +54,7 @@ private:
 
 private:
     ThreadSink* thread_sink_;
-    RelatedThreadGroup* related_thread_group_;
+    RelatedThreadGroups* related_thread_group_;
 
     int last_tcp_thread_idx_;
     int last_work_thread_idx_;

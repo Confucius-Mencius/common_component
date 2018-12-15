@@ -1,21 +1,17 @@
 #ifndef TCP_THREADS_INC_TCP_LOGIC_INTERFACE_H_
 #define TCP_THREADS_INC_TCP_LOGIC_INTERFACE_H_
 
-#include <stddef.h>
+#include "conn_define.h"
 #include "module_interface.h"
 
 class ConfCenterInterface;
 class TimerAxisInterface;
-class TimeServiceInterface;
-class RandomEngineInterface;
 struct event_base;
 
-namespace base
-{
-class MsgDispatcherInterface;
-}
-
-struct ConnGuid;
+//namespace base
+//{
+//class MsgDispatcherInterface;
+//}
 
 namespace global
 {
@@ -33,14 +29,11 @@ struct LogicCtx
     int argc;
     char** argv;
     const char* common_component_dir;
-    const char* cur_work_dir;
+    const char* cur_working_dir;
     const char* app_name;
     ConfCenterInterface* conf_center;
     TimerAxisInterface* timer_axis;
-    TimeServiceInterface* time_service;
-    RandomEngineInterface* random_engine;
     ConnCenterInterface* conn_center;
-    base::MsgDispatcherInterface* msg_dispatcher;
     SchedulerInterface* scheduler;
     LocalLogicInterface* local_logic;
     struct event_base* thread_ev_base;
@@ -50,14 +43,11 @@ struct LogicCtx
         argc = 0;
         argv = NULL;
         common_component_dir = NULL;
-        cur_work_dir = NULL;
+        cur_working_dir = NULL;
         app_name = NULL;
         conf_center = NULL;
         timer_axis = NULL;
-        time_service = NULL;
-        random_engine = NULL;
         conn_center = NULL;
-        msg_dispatcher = NULL;
         scheduler = NULL;
         local_logic = NULL;
         thread_ev_base = NULL;
@@ -115,7 +105,7 @@ public:
      * 连接管理接口，当有新的客户端连上来时会回调到这里
      * @param conn_guid
      */
-    virtual void OnClientConnected(const ConnGuid* conn_guid)
+    virtual void OnClientConnected(const ConnGUID* conn_guid)
     {
     }
 
@@ -123,16 +113,12 @@ public:
      * 连接管理接口，当有客户端连接断开时会回调到这里，包括服务器主动关闭该连接
      * @param conn_guid
      */
-    virtual void OnClientClosed(const ConnGuid* conn_guid)
+    virtual void OnClientClosed(const ConnGUID* conn_guid)
     {
     }
 
-    /**
-     * raw tcp数据接收接口
-     */
 #if defined(USE_BUFFEREVENT)
-
-    virtual void OnRecvClientRawData(const ConnGuid* conn_guid, const void* data, size_t data_len)
+    virtual void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
     {
     }
 
@@ -144,7 +130,7 @@ public:
      * @param sock_fd
      * @attention 需要循环读到出错为止
      */
-    virtual void OnClientRawData(bool& closed, const ConnGuid* conn_guid, int sock_fd)
+    virtual void OnRecvClientData(bool& closed, const ConnGUID* conn_guid, int sock_fd)
     {
     }
 #endif

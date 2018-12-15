@@ -7,8 +7,8 @@ set(EXE_NAME ${TEST_NAME})
 
 ###############################################################################
 # include/link dir
-include_directories(${PROJ_INC_DIR} ${LOG_ENGINE_INC_DIR} ${BASE_INC_DIR} ${LOG4CPLUS_INC_DIR}
-        ${GTEST_INC_DIR})
+include_directories(${PROJ_INC_DIR} ${APP_FRAME_INC_DIR} ${LOG_ENGINE_INC_DIR}
+        ${BASE_INC_DIR} ${LOG4CPLUS_INC_DIR} ${GTEST_INC_DIR})
 link_directories(${BASE_LIB_DIR} ${LOG4CPLUS_LIB_DIR} ${GTEST_LIB_DIR})
 
 ###############################################################################

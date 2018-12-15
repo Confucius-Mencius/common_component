@@ -206,9 +206,9 @@ void ListenThreadSink::OnFreeze()
     ThreadSinkInterface::OnFreeze();
 }
 
-void ListenThreadSink::OnThreadStartOk()
+void ListenThreadSink::OnThreadStartOK()
 {
-    ThreadSinkInterface::OnThreadStartOk();
+    ThreadSinkInterface::OnThreadStartOK();
 
 #if defined(NDEBUG)
     if (threads_ctx_->conf_mgr->EnableCpuProfiling())

@@ -52,7 +52,7 @@ public:
     void OnFinalize() override;
     int OnActivate() override;
     void OnFreeze() override;
-    void OnThreadStartOk() override;
+    void OnThreadStartOK() override;
     void OnStop() override;
     void OnReload() override;
     void OnTask(const Task* task) override;
@@ -110,7 +110,7 @@ public:
         return tcp_thread_group_;
     }
 
-    void SetRelatedThreadGroup(RelatedThreadGroup* related_thread_group);
+    void SetRelatedThreadGroup(RelatedThreadGroups* related_thread_group);
 
 private:
     int LoadLocalLogic();
@@ -151,7 +151,7 @@ private:
 
     LogicItemVec logic_item_vec_;
 
-    RelatedThreadGroup* related_thread_group_;
+    RelatedThreadGroups* related_thread_group_;
 
     typedef std::map<std::string, int> PreClientBlacklistMap;
     PreClientBlacklistMap pre_client_blacklist_map_;

@@ -16,6 +16,7 @@ class ThreadGroup;
 struct ThreadCtx
 {
     const char* common_component_dir;
+    bool enable_cpu_profiling;
     std::string name;
     int idx;
     ThreadSinkInterface* sink;
@@ -23,6 +24,7 @@ struct ThreadCtx
     ThreadCtx() : name("")
     {
         common_component_dir = NULL;
+        enable_cpu_profiling = false;
         idx = -1;
         sink = NULL;
     }

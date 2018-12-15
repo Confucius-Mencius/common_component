@@ -1,5 +1,5 @@
-#ifndef BASE_INC_CONN_DEFINE_H_
-#define BASE_INC_CONN_DEFINE_H_
+#ifndef APP_FRAME_INC_CONN_DEFINE_H_
+#define APP_FRAME_INC_CONN_DEFINE_H_
 
 #include <ostream>
 #include "seq_num.h"
@@ -92,4 +92,4 @@ struct ConnGUID
     }
 };
 
-#endif // BASE_INC_CONN_DEFINE_H_
+#endif // APP_FRAME_INC_CONN_DEFINE_H_

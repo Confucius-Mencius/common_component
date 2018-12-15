@@ -26,7 +26,7 @@ void ThreadSink::BufferEventEventCallback(struct bufferevent* buf_event, short e
     const int err = EVUTIL_SOCKET_ERROR();
     const evutil_socket_t sock_fd = bufferevent_getfd(buf_event);
     LOG_TRACE("events occured on socket, fd: " << sock_fd << ", events: "
-                  << setiosflags(std::ios::showbase) << std::hex << events);
+              << setiosflags(std::ios::showbase) << std::hex << events);
 
     ThreadSink* sink = (ThreadSink*) arg;
 
@@ -37,7 +37,7 @@ void ThreadSink::BufferEventEventCallback(struct bufferevent* buf_event, short e
             if (err != 0)
             {
                 LOG_TRACE("error occured on socket, fd: " << sock_fd << ", errno: " << err
-                             << ", err msg: " << evutil_socket_error_to_string(err));
+                          << ", err msg: " << evutil_socket_error_to_string(err));
             }
 
             break;
@@ -119,7 +119,7 @@ void ThreadSink::BufferEventReadCallback(struct bufferevent* buf_event, void* ar
 void ThreadSink::NormalReadCallback(evutil_socket_t fd, short events, void* arg)
 {
     LOG_TRACE("events occured on socket, fd: " << fd << ", events: " << setiosflags(std::ios::showbase) << std::hex
-                  << events);
+              << events);
 
     ThreadSink* sink = (ThreadSink*) arg;
 
@@ -238,15 +238,17 @@ int ThreadSink::OnInitialize(ThreadInterface* thread)
         tcp_conn_center_ctx.msg_codec = msg_codec_;
     }
 
-    tcp_conn_center_ctx.inactive_conn_check_interval = {
+    tcp_conn_center_ctx.inactive_conn_check_interval =
+    {
         threads_ctx_->raw ? threads_ctx_->conf_mgr->GetRawTcpInactiveConnCheckIntervalSec()
-                          : threads_ctx_->conf_mgr->GetTcpInactiveConnCheckIntervalSec(),
+        : threads_ctx_->conf_mgr->GetTcpInactiveConnCheckIntervalSec(),
         threads_ctx_->raw ? threads_ctx_->conf_mgr->GetRawTcpInactiveConnCheckIntervalUsec()
-                          : threads_ctx_->conf_mgr->GetTcpInactiveConnCheckIntervalUsec()};
+        : threads_ctx_->conf_mgr->GetTcpInactiveConnCheckIntervalUsec()
+    };
     tcp_conn_center_ctx.inactive_conn_life = threads_ctx_->raw ? threads_ctx_->conf_mgr->GetRawTcpInactiveConnLife()
-                                                               : threads_ctx_->conf_mgr->GetTcpInactiveConnLife();
+            : threads_ctx_->conf_mgr->GetTcpInactiveConnLife();
     tcp_conn_center_ctx.max_msg_body_len = threads_ctx_->raw ? 0
-                                                             : threads_ctx_->conf_mgr->GetTcpMaxMsgBodyLen();
+                                           : threads_ctx_->conf_mgr->GetTcpMaxMsgBodyLen();
 
     conn_center_ = thread_->GetConnCenterMgr()->CreateTcpConnCenter(&tcp_conn_center_ctx);
     if (NULL == conn_center_)
@@ -265,7 +267,8 @@ int ThreadSink::OnInitialize(ThreadInterface* thread)
     tcp_client_center_ctx.trans_center = thread_->GetTransCenter();
     tcp_client_center_ctx.max_msg_body_len = threads_ctx_->conf_mgr->GetTcpMaxMsgBodyLen();
     tcp_client_center_ctx.reconnect_interval = {threads_ctx_->conf_mgr->GetPeerTcpConnIntervalSec(),
-                                                threads_ctx_->conf_mgr->GetPeerTcpConnIntervalUsec()};
+                                                threads_ctx_->conf_mgr->GetPeerTcpConnIntervalUsec()
+                                               };
 
     tcp_client_center_ = thread_->GetClientCenterMgr()->CreateTcpClientCenter(&tcp_client_center_ctx);
     if (NULL == tcp_client_center_)
@@ -341,7 +344,7 @@ int ThreadSink::OnInitialize(ThreadInterface* thread)
     part_msg_mgr_.SetIOThreadSink(this);
 
     if (part_msg_mgr_.Initialize(thread_->GetTimerAxis(),
-                                 {threads_ctx_->conf_mgr->GetTcpPartMsgCheckInterval(), 0}) != 0)
+{threads_ctx_->conf_mgr->GetTcpPartMsgCheckInterval(), 0}) != 0)
     {
         return -1;
     }
@@ -379,7 +382,7 @@ void ThreadSink::OnFinalize()
 
 #if !defined(USE_BUFFEREVENT)
     for (ConnRecvCtxHashTable::iterator it = conn_recv_ctx_hash_table_.begin();
-         it != conn_recv_ctx_hash_table_.end(); ++it)
+            it != conn_recv_ctx_hash_table_.end(); ++it)
     {
         if (it->second.msg_recv_buf_ != NULL)
         {
@@ -435,9 +438,9 @@ void ThreadSink::OnFreeze()
     ThreadSinkInterface::OnFreeze();
 }
 
-void ThreadSink::OnThreadStartOk()
+void ThreadSink::OnThreadStartOK()
 {
-    ThreadSinkInterface::OnThreadStartOk();
+    ThreadSinkInterface::OnThreadStartOK();
 
 #if defined(NDEBUG)
     if (threads_ctx_->conf_mgr->EnableCpuProfiling())
@@ -495,49 +498,49 @@ void ThreadSink::OnTask(const Task* task)
             const NewConnCtx* new_conn_ctx = (const NewConnCtx*) task_ctx->msg_body;
             OnClientConnected(new_conn_ctx);
         }
-            break;
+        break;
 
         case TASK_TYPE_TCP_SEND_TO_CLIENT:
         {
             scheduler_.SendToClient(&task_ctx->conn_guid, task_ctx->msg_head, task_ctx->msg_body,
                                     task_ctx->msg_body_len);
         }
-            break;
+        break;
 
         case TASK_TYPE_TCP_SEND_RAW_TO_CLIENT:
         {
             scheduler_.SendRawToClient(&task_ctx->conn_guid, task_ctx->msg_body, task_ctx->msg_body_len);
         }
-            break;
+        break;
 
         case TASK_TYPE_TCP_CLOSE_CONN:
         {
             scheduler_.CloseClient(&task_ctx->conn_guid);
         }
-            break;
+        break;
 
         case TASK_TYPE_NORMAL:
         {
             if (logic_item_vec_.size() > 0)
             {
                 if (0 == thread_->GetMsgDispatcher()->DispatchMsg(&task_ctx->conn_guid, task_ctx->msg_head,
-                                                                  task_ctx->msg_body, task_ctx->msg_body_len))
+                        task_ctx->msg_body, task_ctx->msg_body_len))
                 {
                     LOG_TRACE("dispatch msg ok, " << task_ctx->conn_guid << ", msg id: "
-                                  << task_ctx->msg_head.msg_id);
+                              << task_ctx->msg_head.msg_id);
                     return;
                 }
             }
 
             LOG_ERROR("failed to dispatch msg, msg id: " << task_ctx->msg_head.msg_id);
         }
-            break;
+        break;
 
         default:
         {
             LOG_ERROR("invalid task type: " << task_ctx->task_type);
         }
-            break;
+        break;
     }
 }
 
@@ -659,8 +662,8 @@ void ThreadSink::OnRecvClientMsg(const ConnGuid* conn_guid, const MsgHead& msg_h
     }
 
     // 没有io logic或者io logic派发失败，把任务均匀分配给work线程
-    if (NULL == related_thread_group_->work_thread_group ||
-        0 == related_thread_group_->work_thread_group->GetThreadCount())
+    if (NULL == related_thread_group_->work_threads ||
+            0 == related_thread_group_->work_threads->GetThreadCount())
     {
         LOG_ERROR("no work threads, failed to dispatch msg, " << conn_guid << ", msg id: " << msg_head.msg_id);
 
@@ -683,7 +686,7 @@ void ThreadSink::OnRecvClientMsg(const ConnGuid* conn_guid, const MsgHead& msg_h
     }
 }
 
-void ThreadSink::SetRelatedThreadGroup(RelatedThreadGroup* related_thread_group)
+void ThreadSink::SetRelatedThreadGroup(RelatedThreadGroups* related_thread_group)
 {
     related_thread_group_ = related_thread_group;
 
@@ -707,20 +710,20 @@ void ThreadSink::SetRelatedThreadGroup(RelatedThreadGroup* related_thread_group)
 int ThreadSink::LoadLocalLogic()
 {
     const std::string& tcp_local_logic_so = threads_ctx_->raw ? threads_ctx_->conf_mgr->GetRawTcpLocalLogicSo()
-                                                              : threads_ctx_->conf_mgr->GetTcpLocalLogicSo();
+                                            : threads_ctx_->conf_mgr->GetTcpLocalLogicSo();
     if (0 == tcp_local_logic_so.length())
     {
         return 0;
     }
 
     const std::string local_logic_so_path = GetAbsolutePath(tcp_local_logic_so.c_str(),
-                                                            threads_ctx_->cur_work_dir);
+                                            threads_ctx_->cur_working_dir);
     LOG_INFO("load local logic so " << local_logic_so_path << " begin");
 
     if (local_logic_loader_.Load(local_logic_so_path.c_str()) != 0)
     {
         LOG_ERROR("failed to load local logic so " << local_logic_so_path
-                      << ", " << local_logic_loader_.GetLastErrMsg());
+                  << ", " << local_logic_loader_.GetLastErrMsg());
         return -1;
     }
 
@@ -737,7 +740,7 @@ int ThreadSink::LoadLocalLogic()
     logic_ctx.argc = threads_ctx_->argc;
     logic_ctx.argv = threads_ctx_->argv;
     logic_ctx.common_component_dir = threads_ctx_->common_component_dir;
-    logic_ctx.cur_work_dir = threads_ctx_->cur_work_dir;
+    logic_ctx.cur_working_dir = threads_ctx_->cur_working_dir;
     logic_ctx.app_name = threads_ctx_->app_name;
     logic_ctx.conf_center = threads_ctx_->conf_center;
     logic_ctx.timer_axis = thread_->GetTimerAxis();
@@ -765,12 +768,12 @@ int ThreadSink::LoadLogicGroup()
     logic_item.logic = NULL;
 
     const StrGroup logic_so_group = threads_ctx_->raw ? threads_ctx_->conf_mgr->GetRawTcpLogicSoGroup()
-                                                      : threads_ctx_->conf_mgr->GetTcpLogicSoGroup();
+                                    : threads_ctx_->conf_mgr->GetTcpLogicSoGroup();
 
     for (StrGroup::const_iterator it = logic_so_group.begin();
-         it != logic_so_group.end(); ++it)
+            it != logic_so_group.end(); ++it)
     {
-        logic_item.logic_so_path = GetAbsolutePath((*it).c_str(), threads_ctx_->cur_work_dir);
+        logic_item.logic_so_path = GetAbsolutePath((*it).c_str(), threads_ctx_->cur_working_dir);
         logic_item_vec_.push_back(logic_item);
     }
 
@@ -782,7 +785,7 @@ int ThreadSink::LoadLogicGroup()
         if (logic_item.logic_loader.Load(logic_item.logic_so_path.c_str()) != 0)
         {
             LOG_ERROR("failed to load logic so " << logic_item.logic_so_path << ", "
-                          << logic_item.logic_loader.GetLastErrMsg());
+                      << logic_item.logic_loader.GetLastErrMsg());
             return -1;
         }
 
@@ -799,7 +802,7 @@ int ThreadSink::LoadLogicGroup()
         logic_ctx.argc = threads_ctx_->argc;
         logic_ctx.argv = threads_ctx_->argv;
         logic_ctx.common_component_dir = threads_ctx_->common_component_dir;
-        logic_ctx.cur_work_dir = threads_ctx_->cur_work_dir;
+        logic_ctx.cur_working_dir = threads_ctx_->cur_working_dir;
         logic_ctx.app_name = threads_ctx_->app_name;
         logic_ctx.conf_center = threads_ctx_->conf_center;
         logic_ctx.timer_axis = thread_->GetTimerAxis();
@@ -833,12 +836,12 @@ void ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
     }
 
     struct bufferevent* buf_event = bufferevent_socket_new(thread_->GetThreadEvBase(), new_conn_ctx->client_sock_fd,
-                                                           BEV_OPT_CLOSE_ON_FREE);
+                                    BEV_OPT_CLOSE_ON_FREE);
     if (NULL == buf_event)
     {
         const int err = EVUTIL_SOCKET_ERROR();
         LOG_ERROR("failed to create buffer event, errno: " << err
-                      << ", err msg: " << evutil_socket_error_to_string(err));
+                  << ", err msg: " << evutil_socket_error_to_string(err));
         evutil_closesocket(new_conn_ctx->client_sock_fd);
         return;
     }
@@ -865,13 +868,13 @@ void ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
     {
         const int err = EVUTIL_SOCKET_ERROR();
         LOG_ERROR("failed to enable buffer event reading and writing, errno: " << err
-                      << ", err msg: " << evutil_socket_error_to_string(err));
+                  << ", err msg: " << evutil_socket_error_to_string(err));
         bufferevent_free(buf_event);
         return;
     }
 
     conn = conn_center_->CreateBufferEventConn(thread_->GetThreadIdx(), new_conn_ctx->client_sock_fd, buf_event,
-                                               new_conn_ctx->client_ip, new_conn_ctx->client_port);
+            new_conn_ctx->client_ip, new_conn_ctx->client_port);
     if (NULL == conn)
     {
         bufferevent_free(buf_event);
@@ -929,11 +932,11 @@ void ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
     }
 
     if (!conn_recv_ctx_hash_table_.insert(
-        ConnRecvCtxHashTable::value_type(new_conn_ctx->client_sock_fd, ConnRecvCtx())).second)
+                ConnRecvCtxHashTable::value_type(new_conn_ctx->client_sock_fd, ConnRecvCtx())).second)
     {
         const int err = errno;
         LOG_ERROR("failed to insert to hash table, socket fd: " << new_conn_ctx->client_sock_fd
-                      << ", errno: " << err << ", err msg: " << strerror(err));
+                  << ", errno: " << err << ", err msg: " << strerror(err));
 
         CloseConn(new_conn_ctx->client_sock_fd);
         return;
@@ -1009,7 +1012,7 @@ void ThreadSink::OnClientData(struct evbuffer* input_buf, const int sock_fd, Con
         {
             const int err = EVUTIL_SOCKET_ERROR();
             LOG_ERROR("failed to remove data from evbuffer, errno: " << err
-                          << ", err msg: " << evutil_socket_error_to_string(err));
+                      << ", err msg: " << evutil_socket_error_to_string(err));
 
             msg_head.Reset();
             msg_head.msg_id = MSG_ID_REMOVE_OUT_FAILED;
@@ -1071,7 +1074,7 @@ void ThreadSink::OnClientRawData(struct evbuffer* input_buf, const int sock_fd, 
     {
         const int err = EVUTIL_SOCKET_ERROR();
         LOG_ERROR("failed to remove data from evbuffer, errno: " << err
-                      << ", err msg: " << evutil_socket_error_to_string(err));
+                  << ", err msg: " << evutil_socket_error_to_string(err));
 
         if (need_free)
         {
@@ -1154,7 +1157,7 @@ void ThreadSink::OnClientData(bool& closed, int sock_fd, ConnInterface* conn)
                 else
                 {
                     LOG_ERROR("read error, n: " << n << ", socked fd: " << sock_fd << ", errno: " << err
-                                  << ", err msg: " << evutil_socket_error_to_string(err));
+                              << ", err msg: " << evutil_socket_error_to_string(err));
                     return;
                 }
             }
@@ -1164,7 +1167,7 @@ void ThreadSink::OnClientData(bool& closed, int sock_fd, ConnInterface* conn)
             if (conn_recv_ctx.total_msg_len_network_recved_len_ < (ssize_t) TOTAL_MSG_LEN_FIELD_LEN)
             {
                 LOG_TRACE("total msg len field not recv complete, wait for next time, recv len: "
-                              << conn_recv_ctx.total_msg_len_network_recved_len_);
+                          << conn_recv_ctx.total_msg_len_network_recved_len_);
 
                 // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
                 part_msg_mgr_.UpsertRecord(conn, sock_fd, threads_ctx_->conf_mgr->GetTcpPartMsgConnLife());
@@ -1181,7 +1184,7 @@ void ThreadSink::OnClientData(bool& closed, int sock_fd, ConnInterface* conn)
 
             conn_recv_ctx.total_msg_len_ = ntohl(n);
             if ((conn_recv_ctx.total_msg_len_ < (int32_t) MIN_TOTAL_MSG_LEN) ||
-                (conn_recv_ctx.total_msg_len_ > (int32_t) max_msg_recv_len_))
+                    (conn_recv_ctx.total_msg_len_ > (int32_t) max_msg_recv_len_))
             {
                 LOG_ERROR("invalid msg len: " << conn_recv_ctx.total_msg_len_ << ", throw away all bytes in the buf");
 
@@ -1226,7 +1229,7 @@ void ThreadSink::OnClientData(bool& closed, int sock_fd, ConnInterface* conn)
             else
             {
                 LOG_ERROR("read error, n: " << n << ", socked fd: " << sock_fd << ", errno: " << err << ", err msg: "
-                              << evutil_socket_error_to_string(err));
+                          << evutil_socket_error_to_string(err));
                 return;
             }
         }
@@ -1236,8 +1239,8 @@ void ThreadSink::OnClientData(bool& closed, int sock_fd, ConnInterface* conn)
         if (conn_recv_ctx.total_msg_recved_len_ < conn_recv_ctx.total_msg_len_)
         {
             LOG_TRACE("not a whole msg, socket fd: " << sock_fd << ", total msg recved len: "
-                          << conn_recv_ctx.total_msg_recved_len_ << ", total msg len: "
-                          << conn_recv_ctx.total_msg_len_);
+                      << conn_recv_ctx.total_msg_recved_len_ << ", total msg len: "
+                      << conn_recv_ctx.total_msg_len_);
 
             // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
             part_msg_mgr_.UpsertRecord(conn, sock_fd, threads_ctx_->conf_mgr->GetTcpPartMsgConnLife());
@@ -1317,7 +1320,7 @@ void ThreadSink::ExhaustSocketData(int sock_fd)
             else
             {
                 LOG_ERROR("read error, n: " << n << ", socked fd: " << sock_fd << ", errno: " << err << ", err msg: "
-                              << evutil_socket_error_to_string(err));
+                          << evutil_socket_error_to_string(err));
                 return;
             }
         }

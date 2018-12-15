@@ -20,7 +20,7 @@ Threads::~Threads()
 
 const char* Threads::GetVersion() const
 {
-    return TCP_THREADS_TCP_THREADS_VERSION;
+    return TCP_THREADS_VERSION;
 }
 
 const char* Threads::GetLastErrMsg() const
@@ -123,12 +123,12 @@ ThreadGroupInterface* Threads::GetListenThreadGroup() const
     return listen_thread_group_;
 }
 
-ThreadGroupInterface* Threads::GetTcpThreadGroup() const
+ThreadGroupInterface* Threads::GetTCPThreadGroup() const
 {
     return tcp_thread_group_;
 }
 
-void Threads::SetRelatedThreadGroup(const RelatedThreadGroup* related_thread_group)
+void Threads::SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_group)
 {
     if (NULL == related_thread_group)
     {

@@ -11,9 +11,9 @@ CreateVersionFile(${CMAKE_CURRENT_SOURCE_DIR} ${PROJ_NAME} ${LIB_NAME})
 
 ###############################################################################
 # include/link dir
-include_directories(${PROJ_INC_DIR} ${LOG_ENGINE_INC_DIR} ${MSG_CODEC_CENTER_INC_DIR} ${TIMER_AXIS_INC_DIR}
-        ${TIME_SERVICE_INC_DIR} ${RANDOM_ENGINE_INC_DIR} ${TRANS_CENTER_INC_DIR} ${CONN_CENTER_MGR_INC_DIR}
-        ${CLIENT_CENTER_MGR_INC_DIR} ${BASE_INC_DIR} ${LIBEVENT_INC_DIR} ${LOG4CPLUS_INC_DIR})
+include_directories(${PROJ_INC_DIR} ${APP_FRAME_INC_DIR} ${TIMER_AXIS_INC_DIR}
+        ${LOG_ENGINE_INC_DIR} ${BASE_INC_DIR} ${LIBEVENT_INC_DIR} ${LOG4CPLUS_INC_DIR}
+        ${GPERFTOOLS_INC_DIR})
 link_directories(${BASE_LIB_DIR} ${LIBEVENT_LIB_DIR} ${GPERFTOOLS_LIB_DIR})
 
 ###############################################################################

@@ -26,8 +26,8 @@ public:
     ///////////////////////// ThreadsInterface /////////////////////////
     int CreateThreadGroup() override;
     ThreadGroupInterface* GetListenThreadGroup() const override;
-    ThreadGroupInterface* GetTcpThreadGroup() const override;
-    void SetRelatedThreadGroup(const RelatedThreadGroup* related_thread_group) override;
+    ThreadGroupInterface* GetTCPThreadGroup() const override;
+    void SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_group) override;
 
 private:
     int CreateListenThread();
@@ -47,7 +47,7 @@ private:
     typedef std::vector<ThreadSink*> TcpThreadSinkVec;
     TcpThreadSinkVec tcp_thread_sink_vec_;
 
-    RelatedThreadGroup related_thread_group_;
+    RelatedThreadGroups related_thread_group_;
 };
 }
 
