@@ -39,11 +39,11 @@ public:
     int Start() override;
     void Join() override;
 
-    int NotifyStop() override;
-    int NotifyReload() override;
+    void NotifyStop() override;
+    void NotifyReload() override;
 
     bool CanExit() const override;
-    int NotifyExit() override;
+    void NotifyExit() override;
 
     int PushTaskToThread(Task* task, int thread_idx) override;
 

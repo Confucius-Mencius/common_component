@@ -13,7 +13,7 @@ namespace thread_center
 {
 class ThreadGroup;
 
-class Thread : public ThreadInterface
+class Thread : public ThreadInterface, public TimerSinkInterface
 {
     CREATE_FUNC(Thread)
 
@@ -63,18 +63,21 @@ public:
         return stopping_;
     }
 
-    int PushTask(Task* task) override;
+    void PushTask(Task* task) override;
+
+    ///////////////////////// TimerSinkInterface /////////////////////////
+    void OnTimer(TimerID timer_id, void* data, size_t len, int times) override;
 
 public:
     // start在activate之后调用，join在freeze之前调用
     int Start();
     void Join();
 
-    int NotifyStop();
-    int NotifyReload();
+    void NotifyStop();
+    void NotifyReload();
 
     bool CanExit() const;
-    int NotifyExit();
+    void NotifyExit();
 
 private:
     void* WorkLoop(); // 线程工作循环
@@ -83,7 +86,7 @@ private:
     void OnReload();
     void OnExit();
 
-    int NotifyTask(int fd);
+    void NotifyTask(int fd);
     void OnTask();
 
     TaskQueue* GetTaskQueue(ThreadInterface* source_thread)
@@ -97,6 +100,9 @@ private:
     }
 
     int LoadTimerAxis();
+
+    void StartPendingNotifyTimer();
+    void StopPendingNotifyTimer();
 
 private:
     ThreadCtx thread_ctx_;
@@ -113,6 +119,9 @@ private:
 
     ModuleLoader timer_axis_loader_;
     TimerAxisInterface* timer_axis_;
+
+    typedef std::list<char> PendingNotifyList;
+    PendingNotifyList pending_notify_list_;
 };
 } // namespace thread_center
 

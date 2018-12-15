@@ -12,25 +12,29 @@
 
 namespace thread_center
 {
+enum
+{
+    PENDING_NOTIFY_TIMER_ID = 1,
+};
+
 void Thread::OnEvent(int fd, short which, void* arg)
 {
     Thread* thread = (Thread*) arg;
 
-    while (true)
+    do
     {
         char buf[1] = "";
         if (read(fd, buf, 1) != 1)
         {
             const int err = errno;
-            if (err != EAGAIN)
+            if (EINTR == err)
             {
-                LOG_ERROR("failed to read, errno: " << err << ", err msg: " << strerror(err));
-            }
-            else
-            {
-                LOG_DEBUG("pipe is empty");
+                continue;
             }
 
+            // write了才会触发read，且每次只read一次，所以不会有EAGAIN
+            // 真正出错了
+            LOG_ERROR("failed to read pipe, errno: " << err << ", err msg: " << strerror(err));
             return;
         }
 
@@ -66,7 +70,7 @@ void Thread::OnEvent(int fd, short which, void* arg)
             }
             break;
         }
-    }
+    } while (0);
 }
 
 void* Thread::ThreadRoutine(void* arg)
@@ -75,7 +79,7 @@ void* Thread::ThreadRoutine(void* arg)
     return thread->WorkLoop();
 }
 
-Thread::Thread() : thread_ctx_(), write_fd_mutex_(), tq_(), timer_axis_loader_()
+Thread::Thread() : thread_ctx_(), write_fd_mutex_(), tq_(), timer_axis_loader_(), pending_notify_list_()
 {
     thread_id_ = (pthread_t) -1;
     thread_ev_base_ = NULL;
@@ -194,6 +198,8 @@ void Thread::Finalize()
         event_base_free(thread_ev_base_);
         thread_ev_base_ = NULL;
     }
+
+    pending_notify_list_.clear();
 }
 
 int Thread::Activate()
@@ -213,11 +219,12 @@ int Thread::Activate()
 
 void Thread::Freeze()
 {
+    StopPendingNotifyTimer();
     thread_ctx_.sink->OnFreeze();
     SAFE_FREEZE(timer_axis_);
 }
 
-int Thread::PushTask(Task* task)
+void Thread::PushTask(Task* task)
 {
     ThreadInterface* source_thread = task->GetSourceThread();
 
@@ -227,6 +234,24 @@ int Thread::PushTask(Task* task)
 
     tq->PushBack(task);
     return NotifyTask(fd);
+}
+
+void Thread::OnTimer(TimerID timer_id, void* data, size_t len, int times)
+{
+    std::lock_guard<std::mutex> lock(write_fd_mutex_);
+
+    if (pending_notify_list_.empty())
+    {
+        StopPendingNotifyTimer();
+        return;
+    }
+
+    const char buf[1] = { pending_notify_list_.front() };
+
+    if (1 == write(pipe_[1], buf, 1))
+    {
+        pending_notify_list_.pop_front();
+    }
 }
 
 int Thread::Start()
@@ -256,19 +281,19 @@ void* Thread::WorkLoop()
     pthread_exit((void*) 0);
 }
 
-int Thread::NotifyStop()
+void Thread::NotifyStop()
 {
-    static const char buf[1] = {'s'};
+    static const char buf[1] = { 's' };
     std::lock_guard<std::mutex> lock(write_fd_mutex_);
 
     if (write(pipe_[1], buf, 1) != 1)
     {
         const int err = errno;
-        LOG_ERROR("failed to write stop notify, errno: " << err << ", err msg: " << strerror(err));
-        return -1;
-    }
+        LOG_WARN("failed to write pipe, errno: " << err << ", err msg: " << strerror(err));
 
-    return 0;
+        pending_notify_list_.push_back('s');
+        StartPendingNotifyTimer();
+    }
 }
 
 void Thread::OnStop()
@@ -293,19 +318,19 @@ void Thread::OnStop()
     thread_ctx_.sink->OnStop();
 }
 
-int Thread::NotifyReload()
+void Thread::NotifyReload()
 {
-    static const char buf[1] = {'r'};
+    static const char buf[1] = { 'r' };
     std::lock_guard<std::mutex> lock(write_fd_mutex_);
 
     if (write(pipe_[1], buf, 1) != 1)
     {
         const int err = errno;
-        LOG_ERROR("failed to write reload notify, errno: " << err << ", err msg: " << strerror(err));
-        return -1;
-    }
+        LOG_WARN("failed to write pipe, errno: " << err << ", err msg: " << strerror(err));
 
-    return 0;
+        pending_notify_list_.push_back('r');
+        StartPendingNotifyTimer();
+    }
 }
 
 void Thread::OnReload()
@@ -318,19 +343,19 @@ bool Thread::CanExit() const
     return thread_ctx_.sink->CanExit();
 }
 
-int Thread::NotifyExit()
+void Thread::NotifyExit()
 {
-    static const char buf[1] = {'e'};
+    static const char buf[1] = { 'e' };
     std::lock_guard<std::mutex> lock(write_fd_mutex_);
 
     if (write(pipe_[1], buf, 1) != 1)
     {
         const int err = errno;
-        LOG_ERROR("failed to write exit notify, errno: " << err << ", err msg: " << strerror(err));
-        return -1;
-    }
+        LOG_WARN("failed to write pipe, errno: " << err << ", err msg: " << strerror(err));
 
-    return 0;
+        pending_notify_list_.push_back('e');
+        StartPendingNotifyTimer();
+    }
 }
 
 void Thread::OnExit()
@@ -338,9 +363,9 @@ void Thread::OnExit()
     event_base_loopbreak(thread_ev_base_);
 }
 
-int Thread::NotifyTask(int fd)
+void Thread::NotifyTask(int fd)
 {
-    static const char buf[1] = {'t'};
+    static const char buf[1] = { 't' };
     std::lock_guard<std::mutex> lock(write_fd_mutex_);
 
     // man 7 pipe:
@@ -350,19 +375,13 @@ int Thread::NotifyTask(int fd)
     //     If there is room to write n bytes to the pipe, then write(2) succeeds immediately, writing all n bytes; otherwise write(2) fails, with errno set to EAGAIN.
     if (write(fd, buf, 1) != 1)
     {
+        // 被信号中断或者pipe满了
         const int err = errno;
-        if (err != EAGAIN)
-        {
-            LOG_ERROR("failed to write task notify, errno: " << err << ", err msg: " << strerror(err));
-            return -1;
-        }
-        else
-        {
-            LOG_WARN("pipe full");
-        }
-    }
+        LOG_WARN("failed to write pipe, errno: " << err << ", err msg: " << strerror(err));
 
-    return 0;
+        pending_notify_list_.push_back('t');
+        StartPendingNotifyTimer();
+    }
 }
 
 void Thread::OnTask()
@@ -404,5 +423,21 @@ int Thread::LoadTimerAxis()
     }
 
     return 0;
+}
+
+void Thread::StartPendingNotifyTimer()
+{
+    if (timer_axis_->TimerExist(this, PENDING_NOTIFY_TIMER_ID))
+    {
+        return;
+    }
+
+    struct timeval interval = {0, 1};
+    timer_axis_->SetTimer(this, PENDING_NOTIFY_TIMER_ID, interval);
+}
+
+void Thread::StopPendingNotifyTimer()
+{
+    timer_axis_->KillTimer(this, PENDING_NOTIFY_TIMER_ID);
 }
 } // namespace thread_center

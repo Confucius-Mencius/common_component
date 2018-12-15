@@ -64,7 +64,7 @@ public:
     virtual struct event_base* GetThreadEvBase() const = 0;
     virtual TimerAxisInterface* GetTimerAxis() const = 0;
     virtual bool IsStopping() const = 0;
-    virtual int PushTask(Task* task) = 0;
+    virtual void PushTask(Task* task) = 0;
 };
 
 class ThreadSinkInterface
@@ -156,11 +156,11 @@ public:
     virtual int Start() = 0;
     virtual void Join() = 0;
 
-    virtual int NotifyStop() = 0;
-    virtual int NotifyReload() = 0;
+    virtual void NotifyStop() = 0;
+    virtual void NotifyReload() = 0;
 
     virtual bool CanExit() const = 0;
-    virtual int NotifyExit() = 0;
+    virtual void NotifyExit() = 0;
 
     /**
      * @brief

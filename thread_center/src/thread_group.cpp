@@ -120,30 +120,20 @@ void ThreadGroup::Join()
     }
 }
 
-int ThreadGroup::NotifyStop()
+void ThreadGroup::NotifyStop()
 {
     for (ThreadVec::iterator it = thread_vec_.begin(); it != thread_vec_.end(); ++it)
     {
-        if ((*it)->NotifyStop() != 0)
-        {
-            return -1;
-        }
+        (*it)->NotifyStop();
     }
-
-    return 0;
 }
 
-int ThreadGroup::NotifyReload()
+void ThreadGroup::NotifyReload()
 {
     for (ThreadVec::iterator it = thread_vec_.begin(); it != thread_vec_.end(); ++it)
     {
-        if ((*it)->NotifyReload() != 0)
-        {
-            return -1;
-        }
+        (*it)->NotifyReload();
     }
-
-    return 0;
 }
 
 bool ThreadGroup::CanExit() const
@@ -158,17 +148,12 @@ bool ThreadGroup::CanExit() const
     return (can_exit != 0);
 }
 
-int ThreadGroup::NotifyExit()
+void ThreadGroup::NotifyExit()
 {
     for (ThreadVec::iterator it = thread_vec_.begin(); it != thread_vec_.end(); ++it)
     {
-        if ((*it)->NotifyExit() != 0)
-        {
-            return -1;
-        }
+        (*it)->NotifyExit();
     }
-
-    return 0;
 }
 
 int ThreadGroup::PushTaskToThread(Task* task, int thread_idx)
@@ -196,6 +181,7 @@ int ThreadGroup::PushTaskToThread(Task* task, int thread_idx)
         return -1;
     }
 
-    return thread_vec_[thread_idx]->PushTask(task);
+    thread_vec_[thread_idx]->PushTask(task);
+    return 0;
 }
 } // namespace thread_center
