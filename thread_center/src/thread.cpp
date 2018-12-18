@@ -100,6 +100,7 @@ Thread::~Thread()
 
 void Thread::Release()
 {
+    SAFE_RELEASE(thread_ctx_.sink);
     SAFE_RELEASE_MODULE(timer_axis_, timer_axis_loader_);
     tq_.Release();
     delete this;
@@ -136,12 +137,12 @@ int Thread::Initialize(const void* ctx)
     int pipe1_size = fcntl(pipe_[1], F_GETPIPE_SZ);
     LOG_DEBUG("before set, pipe0 size: " << pipe0_size << ", pipe1 size: " << pipe1_size);
 
-    // 修改为1048576。超过最大值时返回-1，设置失败
-    const int pipe_size = 1048576;
-    if (-1 == fcntl(pipe_[1], F_SETPIPE_SZ, pipe_size))
+    // 修改为1048576。超过最大值时非root用户返回-1，设置失败，root用户可以超过最大值
+    const int PIPE_SIZE = 1048576;
+    if (-1 == fcntl(pipe_[1], F_SETPIPE_SZ, PIPE_SIZE))
     {
         const int err = errno;
-        LOG_ERROR("failed to set pipe size to " << pipe_size << ", errno: " << err << ", err msg: " << strerror(err));
+        LOG_ERROR("failed to set pipe size to " << PIPE_SIZE << ", errno: " << err << ", err msg: " << strerror(err));
         return -1;
     }
 

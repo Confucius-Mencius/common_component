@@ -38,7 +38,7 @@ struct ThreadGroupCtx
     const char* common_component_dir;
     std::string thread_name;
     int thread_count;
-    std::function<ThreadSinkInterface* ()> thread_sink_creator;
+    std::function<ThreadSinkInterface* ()> thread_sink_creator; // thread_sink必须是动态分配的，框架会自动释放
 };
 
 class ThreadInterface
