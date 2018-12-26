@@ -10,7 +10,7 @@ set(EXE_NAME ${TEST_NAME})
 
 ###############################################################################
 # include/link dir
-include_directories(${PROJ_INC_DIR} ${LIBUUID_INC_DIR} ${GTEST_INC_DIR})
+include_directories(${PROJ_INC_DIR} ${LIBUUID_INC_DIR} ${SPDLOG_INC_DIR} ${GTEST_INC_DIR})
 link_directories(${BASE_LIB_DIR} ${LIBUUID_LIB_DIR} ${GTEST_LIB_DIR} ${GPERFTOOLS_LIB_DIR})
 
 ###############################################################################

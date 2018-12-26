@@ -21,6 +21,7 @@ extern LogEngineInterface* g_log_engine;
  *  LOG_TRACE(1 << "hello");
  * @endcode
  * @hideinitializer
+ * @attention 一般不使用
  */
 #define LOG_TRACE(msg) LOG4CPLUS_TRACE(g_log_engine->GetLogger(), msg)
 #endif // LOG_TRACE
@@ -32,7 +33,6 @@ extern LogEngineInterface* g_log_engine;
  * @param msg 要打印的信息
  * @see LOG_TRACE
  * @hideinitializer
- * @attention 为避免与debug/release版本混淆，不推荐使用
  */
 #define LOG_DEBUG(msg) LOG4CPLUS_DEBUG(g_log_engine->GetLogger(), msg)
 #endif // LOG_DEBUG
