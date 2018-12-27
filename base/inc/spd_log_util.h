@@ -1,9 +1,9 @@
 #ifndef BASE_INC_SPD_LOG_UTIL_H_
 #define BASE_INC_SPD_LOG_UTIL_H_
 
-#include <spdlog/spdlog.h>
+// TODO 修改spdlog源码，日志级别字符串要大写，线程id获取也不对
 
-#define SPD_LOGGER_NAME "spdlog"
+#include <spdlog/spdlog.h>
 
 struct SpdLogCtx
 {
