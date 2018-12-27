@@ -144,6 +144,7 @@ void RecordTimeoutMgrTest::Test002()
 
 #if !defined(NDEBUG)
     EXPECT_EQ(0, record_timeout_mgr_.GetRecordCount());
+#endif
 
     timer_axis_test::Key k1;
     k1.s = "i love you.";
@@ -154,8 +155,10 @@ void RecordTimeoutMgrTest::Test002()
     const int timeout_sec1 = 1;
 
     record_timeout_mgr_.UpsertRecord(k1, v1, timeout_sec1);
+#if !defined(NDEBUG)
     EXPECT_EQ(1, record_timeout_mgr_.GetRecordCount());
     record_timeout_mgr_.Display();
+#endif
 
     int timeout_sec;
     EXPECT_EQ(0, record_timeout_mgr_.GetRecord(v1, timeout_sec, k1));
@@ -164,8 +167,10 @@ void RecordTimeoutMgrTest::Test002()
 
     const int timeout_sec2 = 2;
     record_timeout_mgr_.UpsertRecord(k1, v1, timeout_sec2);
+#if !defined(NDEBUG)
     EXPECT_EQ(1, record_timeout_mgr_.GetRecordCount());
     record_timeout_mgr_.Display();
+#endif
 
     const int timeout_sec3 = 3;
     timer_axis_test::Key k3;
@@ -174,6 +179,7 @@ void RecordTimeoutMgrTest::Test002()
     v3.i = 3;
 
     record_timeout_mgr_.UpsertRecord(k3, v3, timeout_sec3);
+#if !defined(NDEBUG)
     EXPECT_EQ(2, record_timeout_mgr_.GetRecordCount());
     record_timeout_mgr_.Display();
 #endif

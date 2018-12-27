@@ -69,7 +69,8 @@ void ThreadSink::OnReload()
 void ThreadSink::OnTask(const ThreadTask* task)
 {
     ThreadSinkInterface::OnTask(task);
-    usleep(rand() % 5000); // 微秒。模拟程序逻辑执行时间
+    // TODO
+    // usleep(rand() % 5000); // 微秒。模拟程序逻辑执行时间
     g_thread_task_count--;
 }
 
