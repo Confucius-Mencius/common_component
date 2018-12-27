@@ -85,23 +85,21 @@ void LogEngineTest::Test002()
 
     // ... 手动修改日志配置文件
 
-    while (true)
-    {
-        LOG_TRACE("hello");
-        LOG_DEBUG("hello");
-        LOG_INFO("hello");
-        LOG_WARN("hello");
-        LOG_ERROR("hello");
-        LOG_FATAL("hello");
-        LOG_ALWAYS("hello");
+//    while (true)
+//    {
+    LOG_TRACE("hello");
+    LOG_DEBUG("hello");
+    LOG_INFO("hello");
+    LOG_WARN("hello");
+    LOG_ERROR("hello");
+    LOG_FATAL("hello");
+    LOG_ALWAYS("hello");
 
-        sleep(1);
-    }
+//        sleep(1);
+//    }
 
     // 修改日志级别
-#if !defined(NDEBUG)
     g_log_engine->SetLogLevel(log4cplus::INFO_LOG_LEVEL);
-#endif
 
     LOG_TRACE("hello");
     LOG_DEBUG("hello");
@@ -126,9 +124,7 @@ void LogEngineTest::ConsoleLogEngineTest()
     LOG_ALWAYS("console log engine");
 
     // 修改日志级别
-#if !defined(NDEBUG)
     g_log_engine->SetLogLevel(log4cplus::INFO_LOG_LEVEL);
-#endif
 
     LOG_TRACE("console log engine");
     LOG_DEBUG("hello");
