@@ -36,10 +36,7 @@ public:
     }
 
     virtual const log4cplus::Logger& GetLogger() const = 0;
-
-#if !defined(NDEBUG)
     virtual void SetLogLevel(int level) = 0;
-#endif
 };
 
 #endif // LOG_ENGINE_INC_LOG_ENGINE_INTERFACE_H_

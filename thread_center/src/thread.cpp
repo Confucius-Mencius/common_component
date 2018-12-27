@@ -22,7 +22,7 @@ enum
     PENDING_NOTIFY_TIMER_ID = 1,
 };
 
-void Thread::OnEvent(int fd, short which, void* arg)
+void Thread::OnRead(int fd, short which, void* arg)
 {
     Thread* thread = (Thread*) arg;
 
@@ -84,12 +84,12 @@ void* Thread::ThreadRoutine(void* arg)
     return thread->WorkLoop();
 }
 
-Thread::Thread() : thread_ctx_(), write_fd_mutex_(), tq_(), timer_axis_loader_(), pending_notify_list_()
+Thread::Thread() : thread_ctx_(), write_fd_mutex_(), tq_(), pending_notify_list_(), timer_axis_loader_()
 {
     thread_id_ = (pthread_t) -1;
-    thread_ev_base_ = NULL;
     pipe_[0] = pipe_[1] = -1;
-    event_ = NULL;
+    thread_ev_base_ = NULL;
+    read_event_ = NULL;
     stopping_ = false;
     timer_axis_ = NULL;
 }
@@ -114,15 +114,8 @@ int Thread::Initialize(const void* ctx)
     }
 
     thread_ctx_ = *((const ThreadCtx*) ctx);
-    tq_.SetThread(this);
 
-    thread_ev_base_ = event_base_new();
-    if (NULL == thread_ev_base_)
-    {
-        const int err = errno;
-        LOG_ERROR("failed to create thread event base, errno: " << err << ", err msg: " << strerror(err));
-        return -1;
-    }
+    tq_.SetThread(this);
 
     //  pipefd[0] refers to the read end of the pipe.  pipefd[1] refers to the write end of the pipe.
     if (pipe2(pipe_, O_CLOEXEC | O_NONBLOCK) != 0)
@@ -150,15 +143,23 @@ int Thread::Initialize(const void* ctx)
     pipe1_size = fcntl(pipe_[1], F_GETPIPE_SZ);
     LOG_DEBUG("after set, pipe0 size: " << pipe0_size << ", pipe1 size: " << pipe1_size);
 
-    event_ = event_new(thread_ev_base_, pipe_[0], EV_READ | EV_PERSIST, Thread::OnEvent, this);
-    if (NULL == event_)
+    thread_ev_base_ = event_base_new();
+    if (NULL == thread_ev_base_)
+    {
+        const int err = errno;
+        LOG_ERROR("failed to create thread event base, errno: " << err << ", err msg: " << strerror(err));
+        return -1;
+    }
+
+    read_event_ = event_new(thread_ev_base_, pipe_[0], EV_READ | EV_PERSIST, Thread::OnRead, this);
+    if (NULL == read_event_)
     {
         const int err = errno;
         LOG_ERROR("failed to create event, errno: " << err << ", err msg: " << strerror(err));
         return -1;
     }
 
-    if (event_add(event_, 0) != 0)
+    if (event_add(read_event_, 0) != 0)
     {
         const int err = errno;
         LOG_ERROR("failed to add event, errno: " << err << ", err msg: " << strerror(err));
@@ -183,11 +184,11 @@ void Thread::Finalize()
     thread_ctx_.sink->OnFinalize();
     SAFE_FINALIZE(timer_axis_);
 
-    if (event_ != NULL)
+    if (read_event_ != NULL)
     {
-        event_del(event_);
-        event_free(event_);
-        event_ = NULL;
+        event_del(read_event_);
+        event_free(read_event_);
+        read_event_ = NULL;
     }
 
     if (pipe_[0] != -1)
@@ -231,16 +232,29 @@ void Thread::Freeze()
     SAFE_FREEZE(timer_axis_);
 }
 
-void Thread::PushTask(Task* task)
+void Thread::PushTask(ThreadTask* task)
 {
-    ThreadInterface* source_thread = task->GetSourceThread();
+    // 当有多个生产者时，共用一个tq、pipe、event
+    static const char buf[1] = { 't' };
 
-    // TODO 这里暂时共用一个tq、pipe、event
-    TaskQueue* tq = GetTaskQueue(source_thread);
-    const int fd = GetPipeWriteFD(source_thread);
+    std::lock_guard<std::mutex> lock(write_fd_mutex_);
 
-    tq->PushBack(task);
-    return NotifyTask(fd);
+    tq_.PushBack(task);
+
+    // man 7 pipe:
+    // O_NONBLOCK disabled, n <= PIPE_BUF (PIPE_BUF可通过ulimit -p查看，Linux上是4096字节)
+    //     All n bytes are written atomically; write(2) may block if there is not room for n bytes to be written immediately
+    // O_NONBLOCK enabled, n <= PIPE_BUF
+    //     If there is room to write n bytes to the pipe, then write(2) succeeds immediately, writing all n bytes; otherwise write(2) fails, with errno set to EAGAIN.
+    if (write(pipe_[1], buf, 1) != 1)
+    {
+        // 被信号中断或者pipe满了
+        const int err = errno;
+        LOG_WARN("failed to write pipe, errno: " << err << ", err msg: " << strerror(err));
+
+        pending_notify_list_.push_back('t');
+        StartPendingNotifyTimer();
+    }
 }
 
 void Thread::OnTimer(TimerID timer_id, void* data, size_t len, int times)
@@ -299,6 +313,7 @@ void* Thread::WorkLoop()
 void Thread::NotifyStop()
 {
     static const char buf[1] = { 's' };
+
     std::lock_guard<std::mutex> lock(write_fd_mutex_);
 
     if (write(pipe_[1], buf, 1) != 1)
@@ -320,9 +335,11 @@ void Thread::OnStop()
 
     stopping_ = true;
 
+    std::lock_guard<std::mutex> lock(write_fd_mutex_);
+
     while (!tq_.IsEmpty())
     {
-        Task* task = tq_.PopFront();
+        ThreadTask* task = tq_.PopFront();
         if (task != NULL)
         {
             thread_ctx_.sink->OnTask(task);
@@ -336,6 +353,7 @@ void Thread::OnStop()
 void Thread::NotifyReload()
 {
     static const char buf[1] = { 'r' };
+
     std::lock_guard<std::mutex> lock(write_fd_mutex_);
 
     if (write(pipe_[1], buf, 1) != 1)
@@ -361,6 +379,7 @@ bool Thread::CanExit() const
 void Thread::NotifyExit()
 {
     static const char buf[1] = { 'e' };
+
     std::lock_guard<std::mutex> lock(write_fd_mutex_);
 
     if (write(pipe_[1], buf, 1) != 1)
@@ -378,30 +397,12 @@ void Thread::OnExit()
     event_base_loopbreak(thread_ev_base_);
 }
 
-void Thread::NotifyTask(int fd)
-{
-    static const char buf[1] = { 't' };
-    std::lock_guard<std::mutex> lock(write_fd_mutex_);
-
-    // man 7 pipe:
-    // O_NONBLOCK disabled, n <= PIPE_BUF (PIPE_BUF可通过ulimit -p查看，Linux上是4096字节)
-    //     All n bytes are written atomically; write(2) may block if there is not room for n bytes to be written immediately
-    // O_NONBLOCK enabled, n <= PIPE_BUF
-    //     If there is room to write n bytes to the pipe, then write(2) succeeds immediately, writing all n bytes; otherwise write(2) fails, with errno set to EAGAIN.
-    if (write(fd, buf, 1) != 1)
-    {
-        // 被信号中断或者pipe满了
-        const int err = errno;
-        LOG_WARN("failed to write pipe, errno: " << err << ", err msg: " << strerror(err));
-
-        pending_notify_list_.push_back('t');
-        StartPendingNotifyTimer();
-    }
-}
-
 void Thread::OnTask()
 {
-    Task* task = tq_.PopFront();
+    write_fd_mutex_.lock();
+    ThreadTask* task = tq_.PopFront();
+    write_fd_mutex_.unlock();
+
     if (task != NULL)
     {
         thread_ctx_.sink->OnTask(task);

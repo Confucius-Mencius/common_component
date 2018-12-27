@@ -11,7 +11,7 @@
 #include <pthread.h>
 #include <functional>
 #include "module_interface.h"
-#include "task_define.h"
+#include "thread_task.h"
 
 /**
  * @defgroup Module_CommonComponent common component
@@ -55,7 +55,7 @@ public:
     virtual TimerAxisInterface* GetTimerAxis() const = 0;
     virtual ThreadSinkInterface* GetThreadSink() = 0;
     virtual bool IsStopping() const = 0;
-    virtual void PushTask(Task* task) = 0;
+    virtual void PushTask(ThreadTask* task) = 0;
 };
 
 class ThreadSinkInterface
@@ -132,7 +132,7 @@ public:
         LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnReload");
     }
 
-    virtual void OnTask(const Task* task)
+    virtual void OnTask(const ThreadTask* task)
     {
         LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnTask, task type: " << task->GetType());
     }
@@ -173,7 +173,7 @@ public:
      * @param thread_idx 指定线程idx，=-1表示广播
      * @return
      */
-    virtual int PushTaskToThread(Task* task, int thread_idx) = 0;
+    virtual int PushTaskToThread(ThreadTask* task, int thread_idx) = 0;
 };
 
 class ThreadCenterInterface : public ModuleInterface

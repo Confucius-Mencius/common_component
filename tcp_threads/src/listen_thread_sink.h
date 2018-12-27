@@ -13,7 +13,9 @@ namespace tcp
 {
 class ListenThreadSink : public ThreadSinkInterface
 {
-    CREATE_FUNC(ListenThreadSink);
+    CREATE_FUNC(ListenThreadSink)
+
+private:
     static void ErrorCallback(struct evconnlistener* listener, void* arg);
     static void OnAccept(struct evconnlistener* listener, evutil_socket_t sock_fd,
                          struct sockaddr* sock_addr, int sock_addr_len, void* arg);
@@ -40,7 +42,7 @@ public:
         threads_ctx_ = threads_ctx;
     }
 
-    void SetTcpThreadGroup(ThreadGroupInterface* tcp_thread_group)
+    void SetTCPThreadGroup(ThreadGroupInterface* tcp_thread_group)
     {
         tcp_thread_group_ = tcp_thread_group;
     }

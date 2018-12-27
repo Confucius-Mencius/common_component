@@ -119,7 +119,7 @@ void ThreadGroup::NotifyExit()
     }
 }
 
-int ThreadGroup::PushTaskToThread(Task* task, int thread_idx)
+int ThreadGroup::PushTaskToThread(ThreadTask* task, int thread_idx)
 {
     if (NULL == task)
     {

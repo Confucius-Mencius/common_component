@@ -23,7 +23,7 @@ public:
     void OnThreadStartOK() override;
     void OnStop() override;
     void OnReload() override;
-    void OnTask(const Task* task) override;
+    void OnTask(const ThreadTask* task) override;
     bool CanExit() const override;
 
 public:
@@ -52,7 +52,7 @@ public:
     void OnFreeze() override;
     virtual void OnStop();
     virtual void OnReload();
-    virtual void OnTask(const Task* task);
+    virtual void OnTask(const ThreadTask* task);
     bool CanExit() const override;
 };
 }

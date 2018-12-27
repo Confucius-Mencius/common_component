@@ -25,10 +25,7 @@ public:
 
     ///////////////////////// LogEngineInterface /////////////////////////
     const log4cplus::Logger& GetLogger() const override;
-
-#if !defined(NDEBUG)
     void SetLogLevel(int level) override;
-#endif
 
 private:
     int LoadLogConf(const char* log_conf_file_path, const char* logger_name);

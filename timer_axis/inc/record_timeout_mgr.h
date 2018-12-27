@@ -207,7 +207,7 @@ private:
     typedef __hash_map<Key, ValueCtx, KeyHash> RecordHashMap;
     RecordHashMap record_hash_map_;
 
-    typedef std::multimap<time_t, Key> TimeoutMultimap; // 根据过期时间升序管理。过期时间=最近upsert的时间+timeout_sec
+    typedef std::multimap<time_t, Key> TimeoutMultimap; // 根据过期时间升序管理。过期时间=最近upsert的时间+timeout_sec。 TODO time wheel
     TimeoutMultimap timeout_multimap_;
 };
 

@@ -1,14 +1,12 @@
 #ifndef TCP_THREADS_SRC_INNER_DEFINE_H_
 #define TCP_THREADS_SRC_INNER_DEFINE_H_
 
-#include "common_define.h"
-
 namespace tcp
 {
 struct NewConnCtx
 {
     int client_sock_fd;
-    char client_ip[MAX_IPV4_ADDRESS_LEN + 1];
+    char client_ip[INET_ADDRSTRLEN];
     unsigned short client_port;
 
     NewConnCtx()

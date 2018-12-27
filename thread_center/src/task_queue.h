@@ -3,7 +3,7 @@
 
 #include <list>
 #include <mutex>
-#include "task_define.h"
+#include "thread_task.h"
 
 class ThreadInterface;
 
@@ -22,17 +22,15 @@ public:
 
     void Release();
 
-    int PushBack(Task* task);
-    Task* PopBack();
-    Task* PopFront();
+    int PushBack(ThreadTask* task);
+    ThreadTask* PopBack();
+    ThreadTask* PopFront();
     bool IsEmpty();
     int Size();
     int MaxTaskCount();
 
 private:
-    std::mutex mutex_;
-
-    typedef std::list<Task*> TaskList;
+    typedef std::list<ThreadTask*> TaskList;
     TaskList task_list_;
 
     int cur_task_count_;

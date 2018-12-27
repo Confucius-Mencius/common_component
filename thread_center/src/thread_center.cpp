@@ -119,7 +119,7 @@ ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
             ThreadInterface* thread = thread_group->CreateThread(&thread_ctx);
             if (NULL == thread)
             {
-                LOG_ERROR("failed to create thread");
+                LOG_ERROR("failed to create thread, i: " << i);
                 SAFE_DESTROY(thread_group);
                 return NULL;
             }

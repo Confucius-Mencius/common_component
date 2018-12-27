@@ -100,10 +100,8 @@ const log4cplus::Logger& LogEngine::GetLogger() const
     return logger_;
 }
 
-#if !defined(NDEBUG)
 void LogEngine::SetLogLevel(int level)
 {
     logger_.setLogLevel(level);
 }
-#endif
 }

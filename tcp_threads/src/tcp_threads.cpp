@@ -160,7 +160,7 @@ int Threads::CreateListenThread()
     }
 
     sink->SetThreadsCtx(&threads_ctx_);
-    sink->SetTcpThreadGroup(tcp_thread_group_);
+    sink->SetTCPThreadGroup(tcp_thread_group_);
     thread_ctx.sink = sink;
 
     ThreadInterface* thread = listen_thread_group_->CreateThread(&thread_ctx);

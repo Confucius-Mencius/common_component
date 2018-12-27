@@ -1,9 +1,11 @@
 #include "thread_center_test.h"
-#include "task_count.h"
+#include <sys/sysinfo.h>
+#include <thread>
+#include "thread_task_count.h"
 
 namespace thread_center_test
 {
-std::atomic<int> g_task_count(0);
+std::atomic<int> g_thread_task_count(0);
 
 ThreadCenterTest::ThreadCenterTest() : loader_()
 {
@@ -33,7 +35,7 @@ void ThreadCenterTest::SetUp()
 
 void ThreadCenterTest::TearDown()
 {
-    ASSERT_EQ(0, g_task_count);
+    ASSERT_EQ(0, g_thread_task_count);
     SAFE_DESTROY_MODULE(thread_center_, loader_);
 }
 
@@ -54,7 +56,7 @@ void ThreadCenterTest::Test001()
     ThreadGroupCtx thread_group_ctx;
     thread_group_ctx.common_component_dir = "..";
     thread_group_ctx.thread_name = "xx thread";
-    thread_group_ctx.thread_count = 10;
+    thread_group_ctx.thread_count = 50;
     thread_group_ctx.thread_sink_creator = ThreadSink::Create;
 
     ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
@@ -90,7 +92,7 @@ void ThreadCenterTest::Test002()
     ThreadGroupCtx thread_group_ctx;
     thread_group_ctx.common_component_dir = "..";
     thread_group_ctx.thread_name = "xx thread";
-    thread_group_ctx.thread_count = 10;
+    thread_group_ctx.thread_count = 50;
     thread_group_ctx.thread_sink_creator = ThreadSink::Create;
 
     ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
@@ -127,7 +129,7 @@ void ThreadCenterTest::Test003()
     ThreadGroupCtx thread_group_ctx;
     thread_group_ctx.common_component_dir = "..";
     thread_group_ctx.thread_name = "xx thread";
-    thread_group_ctx.thread_count = 10;
+    thread_group_ctx.thread_count = 50;
     thread_group_ctx.thread_sink_creator = ThreadSink::Create;
 
     ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
@@ -135,9 +137,9 @@ void ThreadCenterTest::Test003()
 
     thread_group->Start();
 
-    Task* task = new Task();
+    ThreadTask* task = new ThreadTask();
     ASSERT_TRUE(task != NULL);
-    g_task_count++;
+    g_thread_task_count++;
 
     thread_group->PushTaskToThread(task, 5);
     thread_group->NotifyStop();
@@ -168,7 +170,7 @@ void ThreadCenterTest::Test004()
     ThreadGroupCtx thread_group_ctx;
     thread_group_ctx.common_component_dir = "..";
     thread_group_ctx.thread_name = "xx thread";
-    thread_group_ctx.thread_count = 10;
+    thread_group_ctx.thread_count = 50;
     thread_group_ctx.thread_sink_creator = ThreadSink::Create;
 
     ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
@@ -176,9 +178,9 @@ void ThreadCenterTest::Test004()
 
     thread_group->Start();
 
-    Task* task = new Task();
+    ThreadTask* task = new ThreadTask();
     ASSERT_TRUE(task != NULL);
-    g_task_count = 10;
+    g_thread_task_count = thread_group_ctx.thread_count; // 广播接口推往每个线程的task都会new一个新的出来
 
     thread_group->PushTaskToThread(task, -1);
     thread_group->NotifyStop();
@@ -190,6 +192,18 @@ void ThreadCenterTest::Test004()
     }
 
     SAFE_DESTROY(thread_group);
+}
+
+void ProducerThreadProcess(ThreadGroupInterface* thread_group, int thread_count)
+{
+    for (int i = 0; i < 10000000; ++i)
+    {
+        ThreadTask* task = new ThreadTask();
+        ASSERT_TRUE(task != NULL);
+        g_thread_task_count++;
+
+        thread_group->PushTaskToThread(task, rand() % thread_count);
+    }
 }
 
 /**
@@ -206,10 +220,18 @@ void ThreadCenterTest::Test004()
  */
 void ThreadCenterTest::Test005()
 {
+    int n1 = get_nprocs_conf();
+    (void) n1;
+
+    int n2 = get_nprocs(); // 可用的cpu核數
+    (void) n2;
+
+    g_log_engine->SetLogLevel(log4cplus::ERROR_LOG_LEVEL);
+
     ThreadGroupCtx thread_group_ctx;
     thread_group_ctx.common_component_dir = "..";
     thread_group_ctx.thread_name = "xx thread";
-    thread_group_ctx.thread_count = 100;
+    thread_group_ctx.thread_count = 2;
     thread_group_ctx.thread_sink_creator = ThreadSink::Create;
 
     ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
@@ -217,13 +239,16 @@ void ThreadCenterTest::Test005()
 
     thread_group->Start();
 
-    for (int i = 0; i < 10000000; ++i)
-    {
-        Task* task = new Task();
-        ASSERT_TRUE(task != NULL);
-        g_task_count++;
+    std::vector<std::thread*> threads;
 
-        thread_group->PushTaskToThread(task, rand() % thread_group_ctx.thread_count);
+    for (int i = 0; i < 2; ++i)
+    {
+        threads.push_back(new std::thread(ProducerThreadProcess, thread_group, thread_group_ctx.thread_count));
+    }
+
+    for (int i = 0; i < (int) threads.size(); ++i)
+    {
+        threads[i]->join();
     }
 
     thread_group->NotifyStop();

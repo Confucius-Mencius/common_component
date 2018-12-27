@@ -43,7 +43,7 @@ public:
     bool CanExit() const override;
     void NotifyExit() override;
 
-    int PushTaskToThread(Task* task, int thread_idx) override;
+    int PushTaskToThread(ThreadTask* task, int thread_idx) override;
 
 public:
     void SetThreadCenter(ThreadCenter* thread_center)

@@ -35,7 +35,7 @@ class Thread : public ThreadInterface, public TimerSinkInterface
     CREATE_FUNC(Thread)
 
 private:
-    static void OnEvent(int fd, short which, void* arg);
+    static void OnRead(int fd, short which, void* arg);
     static void* ThreadRoutine(void* arg);
 
 public:
@@ -85,7 +85,7 @@ public:
         return stopping_;
     }
 
-    void PushTask(Task* task) override;
+    void PushTask(ThreadTask* task) override;
 
     ///////////////////////// TimerSinkInterface /////////////////////////
     void OnTimer(TimerID timer_id, void* data, size_t len, int times) override;
@@ -108,18 +108,7 @@ private:
     void OnReload();
     void OnExit();
 
-    void NotifyTask(int fd);
     void OnTask();
-
-    TaskQueue* GetTaskQueue(ThreadInterface* source_thread)
-    {
-        return &tq_;
-    }
-
-    int GetPipeWriteFD(ThreadInterface* source_thread)
-    {
-        return pipe_[1];
-    }
 
     int LoadTimerAxis();
 
@@ -128,22 +117,22 @@ private:
 
 private:
     ThreadCtx thread_ctx_;
-
     pthread_t thread_id_;
-    struct event_base* thread_ev_base_;
 
     std::mutex write_fd_mutex_;
     int pipe_[2];
-    struct event* event_;
     TaskQueue tq_;
+
+    typedef std::list<char> PendingNotifyList;
+    PendingNotifyList pending_notify_list_;
+
+    struct event_base* thread_ev_base_;
+    struct event* read_event_;
 
     bool stopping_;
 
     ModuleLoader timer_axis_loader_;
     TimerAxisInterface* timer_axis_;
-
-    typedef std::list<char> PendingNotifyList;
-    PendingNotifyList pending_notify_list_;
 };
 } // namespace thread_center
 

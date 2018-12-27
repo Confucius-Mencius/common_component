@@ -1,11 +1,6 @@
 #include "listen_thread_sink.h"
 #include <arpa/inet.h>
 #include <unistd.h>
-
-#if defined(NDEBUG)
-#include <gperftools/profiler.h>
-#endif
-
 #include "app_frame_conf_mgr_interface.h"
 
 namespace tcp
@@ -16,7 +11,7 @@ void ListenThreadSink::ErrorCallback(struct evconnlistener* listener, void* arg)
     evutil_socket_t sock_fd = evconnlistener_get_fd(listener);
 
     LOG_ERROR("failed to listen on socket, fd: " << sock_fd << ", errno: " << err
-                  << ", err msg: " << evutil_socket_error_to_string(err));
+              << ", err msg: " << evutil_socket_error_to_string(err));
 }
 
 void ListenThreadSink::OnAccept(struct evconnlistener* listener, evutil_socket_t sock_fd,
@@ -37,7 +32,7 @@ void ListenThreadSink::OnAccept(struct evconnlistener* listener, evutil_socket_t
     if (tcp_connection_count_limit > 0 && sink->online_tcp_conn_count_ >= tcp_connection_count_limit)
     {
         LOG_ERROR("refuse new connection, online tcp conn count: " << sink->online_tcp_conn_count_
-                      << ", has already reached the limit");
+                  << ", has already reached the limit");
         evutil_closesocket(sock_fd);
         return;
     }
@@ -56,7 +51,7 @@ void ListenThreadSink::OnAccept(struct evconnlistener* listener, evutil_socket_t
     {
         new_conn_ctx.client_port = ntohs(client_addr->sin_port);
         LOG_INFO("client connected, ip: " << new_conn_ctx.client_ip << ", port: " << new_conn_ctx.client_port
-                      << ", socket fd: " << sock_fd);
+                 << ", socket fd: " << sock_fd);
     }
 
     sink->OnClientConnected(&new_conn_ctx);
@@ -90,7 +85,7 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread)
     }
 
     const std::string& tcp_addr_port = threads_ctx_->raw ? threads_ctx_->conf_mgr->GetRawTcpAddrPort()
-                                                         : threads_ctx_->conf_mgr->GetTcpAddrPort();
+                                       : threads_ctx_->conf_mgr->GetTcpAddrPort();
     LOG_INFO("tcp listen addr port: " << tcp_addr_port);
 
     listen_sock_fd_ = socket(AF_INET, SOCK_STREAM, 0);
@@ -109,7 +104,7 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread)
         {
             const int err = EVUTIL_SOCKET_ERROR();
             LOG_ERROR("failed to set tcp listen socket non-blocking, errno: " << err
-                          << ", err msg: " << evutil_socket_error_to_string(err));
+                      << ", err msg: " << evutil_socket_error_to_string(err));
             break;
         }
 
@@ -117,7 +112,7 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread)
         {
             const int err = EVUTIL_SOCKET_ERROR();
             LOG_ERROR("failed to set tcp listen socket reusable, errno: " << err
-                          << ", err msg: " << evutil_socket_error_to_string(err));
+                      << ", err msg: " << evutil_socket_error_to_string(err));
             break;
         }
 
@@ -125,7 +120,7 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread)
         {
             const int err = EVUTIL_SOCKET_ERROR();
             LOG_ERROR("failed to set tcp listen socket reusable port, errno: " << err
-                          << ", err msg: " << evutil_socket_error_to_string(err));
+                      << ", err msg: " << evutil_socket_error_to_string(err));
             break;
         }
 
@@ -137,7 +132,7 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread)
         {
             const int err = EVUTIL_SOCKET_ERROR();
             LOG_ERROR("failed to parse tcp listen socket addr port: " << tcp_addr_port
-                          << ", errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
+                      << ", errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
             break;
         }
 
@@ -145,8 +140,8 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread)
         {
             const int err = errno;
             LOG_ERROR("failed to bind tcp listen socket, errno: " << err
-                          << ", err msg: " << evutil_socket_error_to_string(err)
-                          << "tcp listen addr port: " << tcp_addr_port);
+                      << ", err msg: " << evutil_socket_error_to_string(err)
+                      << "tcp listen addr port: " << tcp_addr_port);
             break;
         }
 
@@ -180,14 +175,6 @@ int ListenThreadSink::OnActivate()
         return -1;
     }
 
-#if defined(NDEBUG)
-    if (threads_ctx_->conf_mgr->EnableCpuProfiling())
-    {
-        LOG_INFO("enable cpu profiling");
-        ProfilerRegisterThread();
-    }
-#endif
-
     listener_ = evconnlistener_new(thread_->GetThreadEvBase(), ListenThreadSink::OnAccept, this,
                                    LEV_OPT_REUSEABLE | LEV_OPT_CLOSE_ON_FREE | LEV_OPT_THREADSAFE, -1, listen_sock_fd_);
     if (NULL == listener_)
@@ -209,14 +196,6 @@ void ListenThreadSink::OnFreeze()
 void ListenThreadSink::OnThreadStartOK()
 {
     ThreadSinkInterface::OnThreadStartOK();
-
-#if defined(NDEBUG)
-    if (threads_ctx_->conf_mgr->EnableCpuProfiling())
-    {
-        LOG_INFO("enable cpu profiling");
-        ProfilerRegisterThread();
-    }
-#endif
 
     pthread_mutex_lock(threads_ctx_->frame_threads_mutex);
     ++(*threads_ctx_->frame_threads_count);
@@ -246,12 +225,12 @@ void ListenThreadSink::OnTask(const Task* task)
             LOG_INFO("conn closed: " << task->GetCtx()->msg_body); // close by client self or server
             --online_tcp_conn_count_;
         }
-            break;
+        break;
 
         default:
         {
         }
-            break;
+        break;
     }
 }
 
@@ -275,7 +254,7 @@ void ListenThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
     }
 
     const int tcp_thread_count = threads_ctx_->raw ? threads_ctx_->conf_mgr->GetRawTcpThreadCount()
-                                                   : threads_ctx_->conf_mgr->GetTcpThreadCount();
+                                 : threads_ctx_->conf_mgr->GetTcpThreadCount();
     const int tcp_thread_idx = last_tcp_thread_idx_;
 
     last_tcp_thread_idx_ = (last_tcp_thread_idx_ + 1) % tcp_thread_count;

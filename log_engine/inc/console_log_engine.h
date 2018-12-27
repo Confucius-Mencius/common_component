@@ -74,12 +74,10 @@ public:
         return logger_;
     }
 
-#if !defined(NDEBUG)
     void SetLogLevel(int level) override
     {
         logger_.setLogLevel(level);
     }
-#endif
 
 private:
     LogEngineCtx log_engine_ctx_;
