@@ -69,7 +69,7 @@ set(JSONCPP_LIB_NAME jsoncpp)
 
 set(LIBEVENT_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libevent/include)
 set(LIBEVENT_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libevent/lib)
-set(LIBEVENT_LIB_NAME event_core event_extra event_pthreads event_openssl)
+set(LIBEVENT_LIB_NAME event_core event_extra event_pthreads)
 
 set(LIBEVHTP_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libevhtp/include)
 set(LIBEVHTP_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libevhtp/lib)
