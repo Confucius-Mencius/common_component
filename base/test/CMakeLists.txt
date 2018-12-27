@@ -27,6 +27,7 @@ target_link_libraries(${EXE_NAME} ${BASE_LIB_NAME} ${LIBUUID_LIB_NAME} ${GTEST_L
 # output dir
 set(TEST_OUTPUT_DIR ${OUTPUT_DIR}/test)
 MakeDir(${TEST_OUTPUT_DIR})
+MakeDir(${TEST_OUTPUT_DIR}/logs)
 
 set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${TEST_OUTPUT_DIR})
 
