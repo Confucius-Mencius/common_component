@@ -11,7 +11,7 @@ set(PROJ_SRC_DIR ${PROJECT_SOURCE_DIR}/src)
 # include/link dir
 include_directories(${PROJ_SRC_DIR} ${PROJ_INC_DIR} ${APP_FRAME_INC_DIR} ${LOG_ENGINE_INC_DIR}
         ${BASE_INC_DIR} ${LOG4CPLUS_INC_DIR} ${GTEST_INC_DIR})
-link_directories(${BASE_LIB_DIR} ${LOG4CPLUS_LIB_DIR} ${GTEST_LIB_DIR})
+link_directories(${BASE_LIB_DIR} ${OPENSSL_LIB_DIR} ${LOG4CPLUS_LIB_DIR} ${GTEST_LIB_DIR})
 
 ###############################################################################
 # target
@@ -21,7 +21,8 @@ add_executable(${EXE_NAME} ${HEADERS} ${CUR_DIR_SRCS})
 
 ###############################################################################
 # library dependence
-target_link_libraries(${EXE_NAME} ${BASE_LIB_NAME} ${LOG4CPLUS_LIB_NAME} ${GTEST_LIB_NAME} pthread)
+target_link_libraries(${EXE_NAME} ${BASE_LIB_NAME} ${OPENSSL_LIB_NAME} ${LOG4CPLUS_LIB_NAME}
+        ${GTEST_LIB_NAME} pthread)
 
 ###############################################################################
 # output dir
