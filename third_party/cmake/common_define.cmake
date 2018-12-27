@@ -209,11 +209,11 @@ set(FFMPEG_BIN_NAME ffmpeg ffprobe)
 
 set(SPDLOG_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/spdlog/include)
 
-set(LIBRTMP_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/librtmp/include)
-set(LIBRTMP_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/librtmp/lib)
-set(LIBRTMP_BIN_DIR ${THIRD_PARTY_INSTALL_PREFIX}/librtmp/bin)
-set(LIBRTMP_LIB_NAME rtmp)
-set(LIBRTMP_BIN_NAME rtmpdump rtmpgw rtmpsrv rtmpsuck)
+set(RTMPDUMP_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/rtmpdump/include)
+set(RTMPDUMP_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/rtmpdump/lib)
+set(RTMPDUMP_BIN_DIR ${THIRD_PARTY_INSTALL_PREFIX}/rtmpdump/bin)
+set(RTMPDUMP_LIB_NAME rtmp)
+set(RTMPDUMP_BIN_NAME rtmpdump rtmpgw rtmpsrv rtmpsuck)
 
 set(FDK_AAC_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/fdk_aac/include)
 set(FDK_AAC_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/fdk_aac/lib)
