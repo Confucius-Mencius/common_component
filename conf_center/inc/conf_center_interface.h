@@ -1,7 +1,7 @@
 #ifndef CONF_CENTER_INC_CONF_CENTER_INTERFACE_H_
 #define CONF_CENTER_INC_CONF_CENTER_INTERFACE_H_
 
-#include "data_type.h"
+#include "data_types.h"
 #include "module_interface.h"
 
 /**

@@ -8,7 +8,7 @@
 #ifndef BASE_INC_MISC_UTIL_H_
 #define BASE_INC_MISC_UTIL_H_
 
-#include "data_type.h"
+#include "data_types.h"
 
 /**
  * @defgroup Module_Base 基础库

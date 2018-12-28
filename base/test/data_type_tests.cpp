@@ -1,8 +1,8 @@
-#include "data_type.h"
+#include "data_types.h"
 #include "simple_log.h"
 #include "test_util.h"
 
-namespace data_type_test
+namespace data_types_test
 {
 /**
  * @brief 各种基础数据类型的最大、小值测试。
@@ -122,6 +122,6 @@ void IntMinTest()
     EXPECT_TRUE(FLT_MIN > 0);
 }
 
-ADD_TEST(DataTypeTest, Test001);
-ADD_TEST(DataTypeTest, IntMinTest);
+ADD_TEST(DataTypesTest, Test001);
+ADD_TEST(DataTypesTest, IntMinTest);
 } /* namespace data_type_test */

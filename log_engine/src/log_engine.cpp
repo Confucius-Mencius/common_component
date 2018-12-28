@@ -12,7 +12,7 @@ namespace log_engine
 {
 LogEngine::LogEngine() : last_err_msg_(), log_engine_ctx_(), logger_()
 {
-    log_conf_file_watch_thread = NULL;
+    log_conf_file_watch_thread_ = NULL;
 }
 
 LogEngine::~LogEngine()
@@ -60,9 +60,9 @@ int LogEngine::Initialize(const void* ctx)
         logger_ = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT(log_engine_ctx_.logger_name));
 
         // 对配置脚本进行监控，一旦发现配置脚本被更新则立刻重新加载配置
-        log_conf_file_watch_thread = new log4cplus::ConfigureAndWatchThread(
+        log_conf_file_watch_thread_ = new log4cplus::ConfigureAndWatchThread(
             LOG4CPLUS_TEXT(log_engine_ctx_.log_conf_file_path), log_engine_ctx_.log_conf_file_check_interval * 1000);
-        if (NULL == log_conf_file_watch_thread)
+        if (NULL == log_conf_file_watch_thread_)
         {
             SET_LAST_ERR_MSG(&last_err_msg_, "failed to create log conf file watch thread");
             return -1;
@@ -79,10 +79,10 @@ int LogEngine::Initialize(const void* ctx)
 
 void LogEngine::Finalize()
 {
-    if (log_conf_file_watch_thread != NULL)
+    if (log_conf_file_watch_thread_ != NULL)
     {
-        delete log_conf_file_watch_thread;
-        log_conf_file_watch_thread = NULL;
+        delete log_conf_file_watch_thread_;
+        log_conf_file_watch_thread_ = NULL;
     }
 }
 

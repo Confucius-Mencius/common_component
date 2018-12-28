@@ -5,8 +5,8 @@
  * @copyright Copyright (C) 2008-2016, MOON Corporation. All rights reserved.
  */
 
-#ifndef BASE_INC_DATA_TYPE_H_
-#define BASE_INC_DATA_TYPE_H_
+#ifndef BASE_INC_DATA_TYPES_H_
+#define BASE_INC_DATA_TYPES_H_
 
 #include <float.h>
 #include <limits.h>
@@ -265,4 +265,4 @@ typedef long double f96;
 /** @} Module_DataType */
 /** @} Module_Base */
 
-#endif // BASE_INC_DATA_TYPE_H_
+#endif // BASE_INC_DATA_TYPES_H_

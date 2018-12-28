@@ -18,7 +18,7 @@
  */
 
 #include <stdlib.h>
-#include "data_type.h"
+#include "data_types.h"
 #include "misc_util.h"
 #include "str_util.h"
 #include "type2type.h"

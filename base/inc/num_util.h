@@ -19,7 +19,7 @@
  */
 
 #include <math.h>
-#include "data_type.h"
+#include "data_types.h"
 #include "float_compare.h"
 
 /**

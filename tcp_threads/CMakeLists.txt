@@ -37,7 +37,7 @@ set(BASE_LIB_NAME base)
 set(LOG_ENGINE_INC_DIR ${PROJECT_SOURCE_DIR}/../log_engine/inc)
 set(TIMER_AXIS_INC_DIR ${PROJECT_SOURCE_DIR}/../timer_axis/inc)
 set(THREAD_CENTER_INC_DIR ${PROJECT_SOURCE_DIR}/../thread_center/inc)
-set(CONN_CENTER_MGR_INC_DIR ${PROJECT_SOURCE_DIR}/../tcp_conn_center/inc)
+set(APP_FRAME_INC_DIR ${PROJECT_SOURCE_DIR}/../app_frame/inc)
 
 ###############################################################################
 # project inc dir

@@ -1,7 +1,7 @@
 #include "file_util_test.h"
 #include <fcntl.h>
 #include <utime.h>
-#include "data_type.h"
+#include "data_types.h"
 #include "file_util.h"
 #include "simple_log.h"
 #include "str_util.h"
