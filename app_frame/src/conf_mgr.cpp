@@ -17,27 +17,14 @@ int ConfMgr::Load()
     enable_cpu_profiling_ = false;
     enable_mem_profiling_ = false;
     release_free_mem_ = false;
-    global_logic_so_ = "";
     tcp_addr_port_ = "";
     tcp_conn_count_limit_ = 0;
     tcp_inactive_conn_check_interval_sec_ = 0;
     tcp_inactive_conn_check_interval_usec_ = 0;
     tcp_inactive_conn_life_ = 0;
-    tcp_do_checksum_ = false;
-    tcp_max_msg_body_len_ = 0;
-    tcp_part_msg_check_interval_ = 0;
-    tcp_part_msg_conn_life_ = 0;
     tcp_thread_count_ = 0;
     tcp_local_logic_so_ = "";
     tcp_logic_so_group_.clear();
-    raw_tcp_addr_port_ = "";
-    raw_tcp_conn_count_limit_ = 0;
-    raw_tcp_inactive_conn_check_interval_sec_ = 0;
-    raw_tcp_inactive_conn_check_interval_usec_ = 0;
-    raw_tcp_inactive_conn_life_ = 0;
-    raw_tcp_thread_count_ = 0;
-    raw_tcp_local_logic_so_ = "";
-    raw_tcp_logic_so_group_.clear();
     http_addr_port_ = "";
     https_addr_port_ = "";
     https_certificate_chain_file_path_ = "";
@@ -62,16 +49,10 @@ int ConfMgr::Load()
     udp_inactive_conn_check_interval_sec_ = 0;
     udp_inactive_conn_check_interval_usec_ = 0;
     udp_inactive_conn_life_ = 0;
-    udp_do_checksum_ = false;
-    udp_max_msg_body_len_ = 0;
     udp_thread_count_ = 0;
     udp_local_logic_so_ = "";
     udp_logic_so_group_.clear();
-    peer_need_reply_msg_check_interval_ = 0;
-    peer_tcp_conn_interval_sec_ = 0;
-    peer_tcp_conn_interval_usec_ = 0;
-    peer_http_conn_timeout_ = 0;
-    peer_http_conn_max_retry_ = 0;
+    global_logic_so_ = "";
     work_thread_count_ = 0;
     work_local_logic_so_ = "";
     work_logic_so_group_.clear();
@@ -79,8 +60,13 @@ int ConfMgr::Load()
     burden_thread_count_ = 0;
     burden_local_logic_so_ = "";
     burden_logic_so_group_.clear();
+    peer_need_reply_msg_check_interval_ = 0;
+    peer_tcp_conn_interval_sec_ = 0;
+    peer_tcp_conn_interval_usec_ = 0;
+    peer_http_conn_timeout_ = 0;
+    peer_http_conn_max_retry_ = 0;
 
-    if (LoadEnableCpuProfiling() != 0)
+    if (LoadEnableCPUProfiling() != 0)
     {
         return -1;
     }
@@ -95,277 +81,182 @@ int ConfMgr::Load()
         return -1;
     }
 
+    if (LoadTCPAddrPort() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadTCPConnCountLimit() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadTCPInactiveConnCheckIntervalSec() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadTCPInactiveConnCheckIntervalUsec() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadTCPInactiveConnLife() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadTCPThreadCount() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadTCPLocalLogicSo() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadTCPLogicSoGroup() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPAddrPort() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPsAddrPort() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPsCertificateChainFilePath() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPsPrivateKeyFilePath() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPConnCountLimit() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPMaxHeaderSize() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPMaxBodySize() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPConnTimeoutSec() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPConnTimeoutUsec() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPThreadCount() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPLocalLogicSo() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPLogicSoGroup() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPPrintParsedInfo() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPDecodeUri() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPContentType() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPNoCache() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPFlashCrossDomainPath() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPFileUploadPath() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPFileDownloadPath() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPFileStorageDir() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadUDPAddrPort() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadUDPInactiveConnCheckIntervalSec() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadUDPInactiveConnCheckIntervalUsec() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadUDPInactiveConnLife() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadUDPThreadCount() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadUDPLocalLogicSo() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadUDPLogicSoGroup() != 0)
+    {
+        return -1;
+    }
+
     if (LoadGlobalLogicSo() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadTcpAddrPort() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadTcpConnCountLimit() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadTcpInactiveConnCheckIntervalSec() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadTcpInactiveConnCheckIntervalUsec() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadTcpInactiveConnLife() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadTcpDoChecksum() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadTcpMaxMsgBodyLen() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadTcpPartMsgCheckInterval() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadTcpPartMsgConnLife() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadTcpThreadCount() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadTcpLocalLogicSo() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadTcpLogicSoGroup() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadRawTcpAddrPort() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadRawTcpConnCountLimit() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadRawTcpInactiveConnCheckIntervalSec() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadRawTcpInactiveConnCheckIntervalUsec() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadRawTcpInactiveConnLife() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadRawTcpThreadCount() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadRawTcpLocalLogicSo() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadRawTcpLogicSoGroup() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpAddrPort() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpsAddrPort() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpsCertificateChainFilePath() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpsPrivateKeyFilePath() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpConnCountLimit() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpMaxHeaderSize() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpMaxBodySize() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpConnTimeoutSec() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpConnTimeoutUsec() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpThreadCount() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpLocalLogicSo() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpLogicSoGroup() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpPrintParsedInfo() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpDecodeUri() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpContentType() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpNoCache() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpFlashCrossDomainPath() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpFileUploadPath() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpFileDownloadPath() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHttpFileStorageDir() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadUdpAddrPort() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadUdpInactiveConnCheckIntervalSec() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadUdpInactiveConnCheckIntervalUsec() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadUdpInactiveConnLife() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadUdpDoChecksum() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadUdpMaxMsgBodyLen() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadUdpThreadCount() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadUdpLocalLogicSo() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadUdpLogicSoGroup() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadPeerNeedReplyMsgCheckInterval() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadPeerTcpConnIntervalSec() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadPeerTcpConnIntervalUsec() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadPeerHttpConnTimeout() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadPeerHttpConnMaxRetry() != 0)
     {
         return -1;
     }
@@ -385,7 +276,7 @@ int ConfMgr::Load()
         return -1;
     }
 
-    if (LoadIoToWorkTqSizeLimit() != 0)
+    if (LoadIOToWorkTQSizeLimit() != 0)
     {
         return -1;
     }
@@ -401,6 +292,31 @@ int ConfMgr::Load()
     }
 
     if (LoadBurdenLogicSoGroup() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadPeerNeedReplyMsgCheckInterval() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadPeerTCPConnIntervalSec() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadPeerTCPConnIntervalUsec() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadPeerHTTPConnTimeout() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadPeerHTTPConnMaxRetry() != 0)
     {
         return -1;
     }

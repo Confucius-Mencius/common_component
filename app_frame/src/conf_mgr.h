@@ -27,7 +27,7 @@ private:
 
 public:
     ///////////////////////// ConfMgrInterface /////////////////////////
-    bool EnableCpuProfiling() override
+    bool EnableCPUProfiling() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return enable_cpu_profiling_;
@@ -45,334 +45,220 @@ public:
         return release_free_mem_;
     }
 
-    std::string GetGlobalLogicSo() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return global_logic_so_;
-    }
-
-    std::string GetTcpAddrPort() override
+    std::string GetTCPAddrPort() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return tcp_addr_port_;
     }
 
-    int GetTcpConnCountLimit() override
+    int GetTCPConnCountLimit() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return tcp_conn_count_limit_;
     }
 
-    int GetTcpInactiveConnCheckIntervalSec() override
+    int GetTCPInactiveConnCheckIntervalSec() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return tcp_inactive_conn_check_interval_sec_;
     }
 
-    int GetTcpInactiveConnCheckIntervalUsec() override
+    int GetTCPInactiveConnCheckIntervalUsec() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return tcp_inactive_conn_check_interval_usec_;
     }
 
-    int GetTcpInactiveConnLife() override
+    int GetTCPInactiveConnLife() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return tcp_inactive_conn_life_;
     }
 
-    bool TcpDoChecksum() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return tcp_do_checksum_;
-    }
-
-    int GetTcpMaxMsgBodyLen() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return tcp_max_msg_body_len_;
-    }
-
-    int GetTcpPartMsgCheckInterval() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return tcp_part_msg_check_interval_;
-    }
-
-    int GetTcpPartMsgConnLife() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return tcp_part_msg_conn_life_;
-    }
-
-    int GetTcpThreadCount() override
+    int GetTCPThreadCount() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return tcp_thread_count_;
     }
 
-    std::string GetTcpLocalLogicSo() override
+    std::string GetTCPLocalLogicSo() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return tcp_local_logic_so_;
     }
 
-    StrGroup GetTcpLogicSoGroup() override
+    StrGroup GetTCPLogicSoGroup() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return tcp_logic_so_group_;
     }
 
-    std::string GetRawTcpAddrPort() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return raw_tcp_addr_port_;
-    }
-
-    int GetRawTcpConnCountLimit() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return raw_tcp_conn_count_limit_;
-    }
-
-    int GetRawTcpInactiveConnCheckIntervalSec() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return raw_tcp_inactive_conn_check_interval_sec_;
-    }
-
-    int GetRawTcpInactiveConnCheckIntervalUsec() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return raw_tcp_inactive_conn_check_interval_usec_;
-    }
-
-    int GetRawTcpInactiveConnLife() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return raw_tcp_inactive_conn_life_;
-    }
-
-    int GetRawTcpThreadCount() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return raw_tcp_thread_count_;
-    }
-
-    std::string GetRawTcpLocalLogicSo() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return raw_tcp_local_logic_so_;
-    }
-
-    StrGroup GetRawTcpLogicSoGroup() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return raw_tcp_logic_so_group_;
-    }
-
-    std::string GetHttpAddrPort() override
+    std::string GetHTTPAddrPort() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return http_addr_port_;
     }
 
-    std::string GetHttpsAddrPort() override
+    std::string GetHTTPsAddrPort() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return https_addr_port_;
     }
 
-    std::string GetHttpsCertificateChainFilePath() override
+    std::string GetHTTPsCertificateChainFilePath() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return https_certificate_chain_file_path_;
     }
 
-    std::string GetHttpsPrivateKeyFilePath() override
+    std::string GetHTTPsPrivateKeyFilePath() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return https_private_key_file_path_;
     }
 
-    int GetHttpConnCountLimit() override
+    int GetHTTPConnCountLimit() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return http_conn_count_limit_;
     }
 
-    int GetHttpMaxHeaderSize() override
+    int GetHTTPMaxHeaderSize() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return http_max_header_size_;
     }
 
-    int GetHttpMaxBodySize() override
+    int GetHTTPMaxBodySize() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return http_max_body_size_;
     }
 
-    int GetHttpConnTimeoutSec() override
+    int GetHTTPConnTimeoutSec() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return http_conn_timeout_sec_;
     }
 
-    int GetHttpConnTimeoutUsec() override
+    int GetHTTPConnTimeoutUsec() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return http_conn_timeout_usec_;
     }
 
-    int GetHttpThreadCount() override
+    int GetHTTPThreadCount() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return http_thread_count_;
     }
 
-    std::string GetHttpLocalLogicSo() override
+    std::string GetHTTPLocalLogicSo() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return http_local_logic_so_;
     }
 
-    StrGroup GetHttpLogicSoGroup() override
+    StrGroup GetHTTPLogicSoGroup() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return http_logic_so_group_;
     }
 
-    bool HttpPrintParsedInfo() override
+    bool HTTPPrintParsedInfo() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return http_print_parsed_info_;
     }
 
-    bool HttpDecodeUri() override
+    bool HTTPDecodeUri() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return http_decode_uri_;
     }
 
-    std::string GetHttpContentType() override
+    std::string GetHTTPContentType() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return http_content_type_;
     }
 
-    bool HttpNoCache() override
+    bool HTTPNoCache() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return http_no_cache_;
     }
 
-    std::string GetHttpFlashCrossDomainPath() override
+    std::string GetHTTPFlashCrossDomainPath() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return http_flash_cross_domain_path_;
     }
 
-    std::string GetHttpFileUploadPath() override
+    std::string GetHTTPFileUploadPath() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return http_file_upload_path_;
     }
 
-    std::string GetHttpFileDownloadPath() override
+    std::string GetHTTPFileDownloadPath() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return http_file_download_path_;
     }
 
-    std::string GetHttpFileStorageDir() override
+    std::string GetHTTPFileStorageDir() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return http_file_storage_dir_;
     }
 
-    std::string GetUdpAddrPort() override
+    std::string GetUDPAddrPort() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return udp_addr_port_;
     }
 
-    int GetUdpInactiveConnCheckIntervalSec() override
+    int GetUDPInactiveConnCheckIntervalSec() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return udp_inactive_conn_check_interval_sec_;
     }
 
-    int GetUdpInactiveConnCheckIntervalUsec() override
+    int GetUDPInactiveConnCheckIntervalUsec() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return udp_inactive_conn_check_interval_usec_;
     }
 
-    int GetUdpInactiveConnLife() override
+    int GetUDPInactiveConnLife() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return udp_inactive_conn_life_;
     }
 
-    bool UdpDoChecksum() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return udp_do_checksum_;
-    }
-
-    int GetUdpMaxMsgBodyLen() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return udp_max_msg_body_len_;
-    }
-
-    int GetUdpThreadCount() override
+    int GetUDPThreadCount() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return udp_thread_count_;
     }
 
-    std::string GetUdpLocalLogicSo() override
+    std::string GetUDPLocalLogicSo() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return udp_local_logic_so_;
     }
 
-    StrGroup GetUdpLogicSoGroup() override
+    StrGroup GetUDPLogicSoGroup() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return udp_logic_so_group_;
     }
 
-    int GetPeerNeedReplyMsgCheckInterval() override
+    std::string GetGlobalLogicSo() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return peer_need_reply_msg_check_interval_;
-    }
-
-    int GetPeerTcpConnIntervalSec() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return peer_tcp_conn_interval_sec_;
-    }
-
-    int GetPeerTcpConnIntervalUsec() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return peer_tcp_conn_interval_usec_;
-    }
-
-    int GetPeerHttpConnTimeout() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return peer_http_conn_timeout_;
-    }
-
-    int GetPeerHttpConnMaxRetry() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return peer_http_conn_max_retry_;
+        return global_logic_so_;
     }
 
     int GetWorkThreadCount() override
@@ -393,7 +279,7 @@ public:
         return work_logic_so_group_;
     }
 
-    int GetIoToWorkTqSizeLimit() override
+    int GetIOToWorkTQSizeLimit() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return io_to_work_tq_size_limit_;
@@ -417,8 +303,38 @@ public:
         return burden_logic_so_group_;
     }
 
+    int GetPeerNeedReplyMsgCheckInterval() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return peer_need_reply_msg_check_interval_;
+    }
+
+    int GetPeerTCPConnIntervalSec() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return peer_tcp_conn_interval_sec_;
+    }
+
+    int GetPeerTCPConnIntervalUsec() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return peer_tcp_conn_interval_usec_;
+    }
+
+    int GetPeerHTTPConnTimeout() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return peer_http_conn_timeout_;
+    }
+
+    int GetPeerHTTPConnMaxRetry() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return peer_http_conn_max_retry_;
+    }
+
 private:
-    int LoadEnableCpuProfiling()
+    int LoadEnableCPUProfiling()
     {
         int enable_cpu_profiling = 0;
         if (conf_center_->GetConf(enable_cpu_profiling, ENABLE_CPU_PROFILING_XPATH, true, 0) != 0)
@@ -454,21 +370,7 @@ private:
         return 0;
     }
 
-    int LoadGlobalLogicSo()
-    {
-        char* global_logic_so = NULL;
-        if (conf_center_->GetConf(&global_logic_so, GLOBAL_LOGIC_SO_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << GLOBAL_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&global_logic_so);
-            return -1;
-        }
-        global_logic_so_ = global_logic_so;
-        conf_center_->ReleaseConf(&global_logic_so);
-        return 0;
-    }
-
-    int LoadTcpAddrPort()
+    int LoadTCPAddrPort()
     {
         char* tcp_addr_port = NULL;
         if (conf_center_->GetConf(&tcp_addr_port, TCP_ADDR_PORT_XPATH, true, "") != 0)
@@ -482,7 +384,7 @@ private:
         return 0;
     }
 
-    int LoadTcpConnCountLimit()
+    int LoadTCPConnCountLimit()
     {
         if (conf_center_->GetConf(tcp_conn_count_limit_, TCP_CONN_COUNT_LIMIT_XPATH, true, 0) != 0)
         {
@@ -492,7 +394,7 @@ private:
         return 0;
     }
 
-    int LoadTcpInactiveConnCheckIntervalSec()
+    int LoadTCPInactiveConnCheckIntervalSec()
     {
         if (conf_center_->GetConf(tcp_inactive_conn_check_interval_sec_, TCP_INACTIVE_CONN_CHECK_INTERVAL_SEC_XPATH, true, 60) != 0)
         {
@@ -502,7 +404,7 @@ private:
         return 0;
     }
 
-    int LoadTcpInactiveConnCheckIntervalUsec()
+    int LoadTCPInactiveConnCheckIntervalUsec()
     {
         if (conf_center_->GetConf(tcp_inactive_conn_check_interval_usec_, TCP_INACTIVE_CONN_CHECK_INTERVAL_USEC_XPATH, true, 0) != 0)
         {
@@ -512,7 +414,7 @@ private:
         return 0;
     }
 
-    int LoadTcpInactiveConnLife()
+    int LoadTCPInactiveConnLife()
     {
         if (conf_center_->GetConf(tcp_inactive_conn_life_, TCP_INACTIVE_CONN_LIFE_XPATH, true, 1800) != 0)
         {
@@ -522,49 +424,7 @@ private:
         return 0;
     }
 
-    int LoadTcpDoChecksum()
-    {
-        int tcp_do_checksum = 0;
-        if (conf_center_->GetConf(tcp_do_checksum, TCP_DO_CHECKSUM_XPATH, true, 1) != 0)
-        {
-            LOG_ERROR("failed to get " << TCP_DO_CHECKSUM_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        tcp_do_checksum_ = (tcp_do_checksum != 0);
-        return 0;
-    }
-
-    int LoadTcpMaxMsgBodyLen()
-    {
-        if (conf_center_->GetConf(tcp_max_msg_body_len_, TCP_MAX_MSG_BODY_LEN_XPATH, true, 1048576) != 0)
-        {
-            LOG_ERROR("failed to get " << TCP_MAX_MSG_BODY_LEN_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadTcpPartMsgCheckInterval()
-    {
-        if (conf_center_->GetConf(tcp_part_msg_check_interval_, TCP_PART_MSG_CHECK_INTERVAL_XPATH, true, 5) != 0)
-        {
-            LOG_ERROR("failed to get " << TCP_PART_MSG_CHECK_INTERVAL_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadTcpPartMsgConnLife()
-    {
-        if (conf_center_->GetConf(tcp_part_msg_conn_life_, TCP_PART_MSG_CONN_LIFE_XPATH, true, 60) != 0)
-        {
-            LOG_ERROR("failed to get " << TCP_PART_MSG_CONN_LIFE_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadTcpThreadCount()
+    int LoadTCPThreadCount()
     {
         if (conf_center_->GetConf(tcp_thread_count_, TCP_THREAD_COUNT_XPATH, true, 0) != 0)
         {
@@ -574,7 +434,7 @@ private:
         return 0;
     }
 
-    int LoadTcpLocalLogicSo()
+    int LoadTCPLocalLogicSo()
     {
         char* tcp_local_logic_so = NULL;
         if (conf_center_->GetConf(&tcp_local_logic_so, TCP_LOCAL_LOGIC_SO_XPATH, true, "") != 0)
@@ -588,7 +448,7 @@ private:
         return 0;
     }
 
-    int LoadTcpLogicSoGroup()
+    int LoadTCPLogicSoGroup()
     {
         char** tcp_logic_so = NULL;
         int n = 0;
@@ -609,106 +469,7 @@ private:
         return 0;
     }
 
-    int LoadRawTcpAddrPort()
-    {
-        char* raw_tcp_addr_port = NULL;
-        if (conf_center_->GetConf(&raw_tcp_addr_port, RAW_TCP_ADDR_PORT_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << RAW_TCP_ADDR_PORT_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&raw_tcp_addr_port);
-            return -1;
-        }
-        raw_tcp_addr_port_ = raw_tcp_addr_port;
-        conf_center_->ReleaseConf(&raw_tcp_addr_port);
-        return 0;
-    }
-
-    int LoadRawTcpConnCountLimit()
-    {
-        if (conf_center_->GetConf(raw_tcp_conn_count_limit_, RAW_TCP_CONN_COUNT_LIMIT_XPATH, true, 0) != 0)
-        {
-            LOG_ERROR("failed to get " << RAW_TCP_CONN_COUNT_LIMIT_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadRawTcpInactiveConnCheckIntervalSec()
-    {
-        if (conf_center_->GetConf(raw_tcp_inactive_conn_check_interval_sec_, RAW_TCP_INACTIVE_CONN_CHECK_INTERVAL_SEC_XPATH, true, 60) != 0)
-        {
-            LOG_ERROR("failed to get " << RAW_TCP_INACTIVE_CONN_CHECK_INTERVAL_SEC_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadRawTcpInactiveConnCheckIntervalUsec()
-    {
-        if (conf_center_->GetConf(raw_tcp_inactive_conn_check_interval_usec_, RAW_TCP_INACTIVE_CONN_CHECK_INTERVAL_USEC_XPATH, true, 0) != 0)
-        {
-            LOG_ERROR("failed to get " << RAW_TCP_INACTIVE_CONN_CHECK_INTERVAL_USEC_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadRawTcpInactiveConnLife()
-    {
-        if (conf_center_->GetConf(raw_tcp_inactive_conn_life_, RAW_TCP_INACTIVE_CONN_LIFE_XPATH, true, 1800) != 0)
-        {
-            LOG_ERROR("failed to get " << RAW_TCP_INACTIVE_CONN_LIFE_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadRawTcpThreadCount()
-    {
-        if (conf_center_->GetConf(raw_tcp_thread_count_, RAW_TCP_THREAD_COUNT_XPATH, true, 0) != 0)
-        {
-            LOG_ERROR("failed to get " << RAW_TCP_THREAD_COUNT_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadRawTcpLocalLogicSo()
-    {
-        char* raw_tcp_local_logic_so = NULL;
-        if (conf_center_->GetConf(&raw_tcp_local_logic_so, RAW_TCP_LOCAL_LOGIC_SO_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << RAW_TCP_LOCAL_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&raw_tcp_local_logic_so);
-            return -1;
-        }
-        raw_tcp_local_logic_so_ = raw_tcp_local_logic_so;
-        conf_center_->ReleaseConf(&raw_tcp_local_logic_so);
-        return 0;
-    }
-
-    int LoadRawTcpLogicSoGroup()
-    {
-        char** raw_tcp_logic_so = NULL;
-        int n = 0;
-        if (conf_center_->GetConf(&raw_tcp_logic_so, n, RAW_TCP_LOGIC_SO_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << RAW_TCP_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&raw_tcp_logic_so, n);
-            return -1;
-        }
-        for (int i = 0; i < n; ++i)
-        {
-            if (strlen(raw_tcp_logic_so[i]) > 0)
-            {
-                raw_tcp_logic_so_group_.push_back(raw_tcp_logic_so[i]);
-            }
-        }
-        conf_center_->ReleaseConf(&raw_tcp_logic_so, n);
-        return 0;
-    }
-
-    int LoadHttpAddrPort()
+    int LoadHTTPAddrPort()
     {
         char* http_addr_port = NULL;
         if (conf_center_->GetConf(&http_addr_port, HTTP_ADDR_PORT_XPATH, true, "") != 0)
@@ -722,7 +483,7 @@ private:
         return 0;
     }
 
-    int LoadHttpsAddrPort()
+    int LoadHTTPsAddrPort()
     {
         char* https_addr_port = NULL;
         if (conf_center_->GetConf(&https_addr_port, HTTPS_ADDR_PORT_XPATH, true, "") != 0)
@@ -736,7 +497,7 @@ private:
         return 0;
     }
 
-    int LoadHttpsCertificateChainFilePath()
+    int LoadHTTPsCertificateChainFilePath()
     {
         char* https_certificate_chain_file_path = NULL;
         if (conf_center_->GetConf(&https_certificate_chain_file_path, HTTPS_CERTIFICATE_CHAIN_FILE_PATH_XPATH, true, "") != 0)
@@ -750,7 +511,7 @@ private:
         return 0;
     }
 
-    int LoadHttpsPrivateKeyFilePath()
+    int LoadHTTPsPrivateKeyFilePath()
     {
         char* https_private_key_file_path = NULL;
         if (conf_center_->GetConf(&https_private_key_file_path, HTTPS_PRIVATE_KEY_FILE_PATH_XPATH, true, "") != 0)
@@ -764,7 +525,7 @@ private:
         return 0;
     }
 
-    int LoadHttpConnCountLimit()
+    int LoadHTTPConnCountLimit()
     {
         if (conf_center_->GetConf(http_conn_count_limit_, HTTP_CONN_COUNT_LIMIT_XPATH, true, 0) != 0)
         {
@@ -774,7 +535,7 @@ private:
         return 0;
     }
 
-    int LoadHttpMaxHeaderSize()
+    int LoadHTTPMaxHeaderSize()
     {
         if (conf_center_->GetConf(http_max_header_size_, HTTP_MAX_HEADER_SIZE_XPATH, true, 0) != 0)
         {
@@ -784,7 +545,7 @@ private:
         return 0;
     }
 
-    int LoadHttpMaxBodySize()
+    int LoadHTTPMaxBodySize()
     {
         if (conf_center_->GetConf(http_max_body_size_, HTTP_MAX_BODY_SIZE_XPATH, true, 0) != 0)
         {
@@ -794,7 +555,7 @@ private:
         return 0;
     }
 
-    int LoadHttpConnTimeoutSec()
+    int LoadHTTPConnTimeoutSec()
     {
         if (conf_center_->GetConf(http_conn_timeout_sec_, HTTP_CONN_TIMEOUT_SEC_XPATH, true, 0) != 0)
         {
@@ -804,7 +565,7 @@ private:
         return 0;
     }
 
-    int LoadHttpConnTimeoutUsec()
+    int LoadHTTPConnTimeoutUsec()
     {
         if (conf_center_->GetConf(http_conn_timeout_usec_, HTTP_CONN_TIMEOUT_USEC_XPATH, true, 0) != 0)
         {
@@ -814,7 +575,7 @@ private:
         return 0;
     }
 
-    int LoadHttpThreadCount()
+    int LoadHTTPThreadCount()
     {
         if (conf_center_->GetConf(http_thread_count_, HTTP_THREAD_COUNT_XPATH, true, 0) != 0)
         {
@@ -824,7 +585,7 @@ private:
         return 0;
     }
 
-    int LoadHttpLocalLogicSo()
+    int LoadHTTPLocalLogicSo()
     {
         char* http_local_logic_so = NULL;
         if (conf_center_->GetConf(&http_local_logic_so, HTTP_LOCAL_LOGIC_SO_XPATH, true, "") != 0)
@@ -838,7 +599,7 @@ private:
         return 0;
     }
 
-    int LoadHttpLogicSoGroup()
+    int LoadHTTPLogicSoGroup()
     {
         char** http_logic_so = NULL;
         int n = 0;
@@ -859,7 +620,7 @@ private:
         return 0;
     }
 
-    int LoadHttpPrintParsedInfo()
+    int LoadHTTPPrintParsedInfo()
     {
         int http_print_parsed_info = 0;
         if (conf_center_->GetConf(http_print_parsed_info, HTTP_PRINT_PARSED_INFO_XPATH, true, 1) != 0)
@@ -871,7 +632,7 @@ private:
         return 0;
     }
 
-    int LoadHttpDecodeUri()
+    int LoadHTTPDecodeUri()
     {
         int http_decode_uri = 0;
         if (conf_center_->GetConf(http_decode_uri, HTTP_DECODE_URI_XPATH, true, 0) != 0)
@@ -883,7 +644,7 @@ private:
         return 0;
     }
 
-    int LoadHttpContentType()
+    int LoadHTTPContentType()
     {
         char* http_content_type = NULL;
         if (conf_center_->GetConf(&http_content_type, HTTP_CONTENT_TYPE_XPATH, true, "") != 0)
@@ -897,7 +658,7 @@ private:
         return 0;
     }
 
-    int LoadHttpNoCache()
+    int LoadHTTPNoCache()
     {
         int http_no_cache = 0;
         if (conf_center_->GetConf(http_no_cache, HTTP_NO_CACHE_XPATH, true, 1) != 0)
@@ -909,7 +670,7 @@ private:
         return 0;
     }
 
-    int LoadHttpFlashCrossDomainPath()
+    int LoadHTTPFlashCrossDomainPath()
     {
         char* http_flash_cross_domain_path = NULL;
         if (conf_center_->GetConf(&http_flash_cross_domain_path, HTTP_FLASH_CROSS_DOMAIN_PATH_XPATH, true, "") != 0)
@@ -923,7 +684,7 @@ private:
         return 0;
     }
 
-    int LoadHttpFileUploadPath()
+    int LoadHTTPFileUploadPath()
     {
         char* http_file_upload_path = NULL;
         if (conf_center_->GetConf(&http_file_upload_path, HTTP_FILE_UPLOAD_PATH_XPATH, true, "") != 0)
@@ -937,7 +698,7 @@ private:
         return 0;
     }
 
-    int LoadHttpFileDownloadPath()
+    int LoadHTTPFileDownloadPath()
     {
         char* http_file_download_path = NULL;
         if (conf_center_->GetConf(&http_file_download_path, HTTP_FILE_DOWNLOAD_PATH_XPATH, true, "") != 0)
@@ -951,7 +712,7 @@ private:
         return 0;
     }
 
-    int LoadHttpFileStorageDir()
+    int LoadHTTPFileStorageDir()
     {
         char* http_file_storage_dir = NULL;
         if (conf_center_->GetConf(&http_file_storage_dir, HTTP_FILE_STORAGE_DIR_XPATH, true, "") != 0)
@@ -965,7 +726,7 @@ private:
         return 0;
     }
 
-    int LoadUdpAddrPort()
+    int LoadUDPAddrPort()
     {
         char* udp_addr_port = NULL;
         if (conf_center_->GetConf(&udp_addr_port, UDP_ADDR_PORT_XPATH, true, "") != 0)
@@ -979,7 +740,7 @@ private:
         return 0;
     }
 
-    int LoadUdpInactiveConnCheckIntervalSec()
+    int LoadUDPInactiveConnCheckIntervalSec()
     {
         if (conf_center_->GetConf(udp_inactive_conn_check_interval_sec_, UDP_INACTIVE_CONN_CHECK_INTERVAL_SEC_XPATH, true, 60) != 0)
         {
@@ -989,7 +750,7 @@ private:
         return 0;
     }
 
-    int LoadUdpInactiveConnCheckIntervalUsec()
+    int LoadUDPInactiveConnCheckIntervalUsec()
     {
         if (conf_center_->GetConf(udp_inactive_conn_check_interval_usec_, UDP_INACTIVE_CONN_CHECK_INTERVAL_USEC_XPATH, true, 0) != 0)
         {
@@ -999,7 +760,7 @@ private:
         return 0;
     }
 
-    int LoadUdpInactiveConnLife()
+    int LoadUDPInactiveConnLife()
     {
         if (conf_center_->GetConf(udp_inactive_conn_life_, UDP_INACTIVE_CONN_LIFE_XPATH, true, 1800) != 0)
         {
@@ -1009,29 +770,7 @@ private:
         return 0;
     }
 
-    int LoadUdpDoChecksum()
-    {
-        int udp_do_checksum = 0;
-        if (conf_center_->GetConf(udp_do_checksum, UDP_DO_CHECKSUM_XPATH, true, 1) != 0)
-        {
-            LOG_ERROR("failed to get " << UDP_DO_CHECKSUM_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        udp_do_checksum_ = (udp_do_checksum != 0);
-        return 0;
-    }
-
-    int LoadUdpMaxMsgBodyLen()
-    {
-        if (conf_center_->GetConf(udp_max_msg_body_len_, UDP_MAX_MSG_BODY_LEN_XPATH, true, 65408) != 0)
-        {
-            LOG_ERROR("failed to get " << UDP_MAX_MSG_BODY_LEN_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadUdpThreadCount()
+    int LoadUDPThreadCount()
     {
         if (conf_center_->GetConf(udp_thread_count_, UDP_THREAD_COUNT_XPATH, true, 0) != 0)
         {
@@ -1041,7 +780,7 @@ private:
         return 0;
     }
 
-    int LoadUdpLocalLogicSo()
+    int LoadUDPLocalLogicSo()
     {
         char* udp_local_logic_so = NULL;
         if (conf_center_->GetConf(&udp_local_logic_so, UDP_LOCAL_LOGIC_SO_XPATH, true, "") != 0)
@@ -1055,7 +794,7 @@ private:
         return 0;
     }
 
-    int LoadUdpLogicSoGroup()
+    int LoadUDPLogicSoGroup()
     {
         char** udp_logic_so = NULL;
         int n = 0;
@@ -1076,53 +815,17 @@ private:
         return 0;
     }
 
-    int LoadPeerNeedReplyMsgCheckInterval()
+    int LoadGlobalLogicSo()
     {
-        if (conf_center_->GetConf(peer_need_reply_msg_check_interval_, PEER_NEED_REPLY_MSG_CHECK_INTERVAL_XPATH, true, 1) != 0)
+        char* global_logic_so = NULL;
+        if (conf_center_->GetConf(&global_logic_so, GLOBAL_LOGIC_SO_XPATH, true, "") != 0)
         {
-            LOG_ERROR("failed to get " << PEER_NEED_REPLY_MSG_CHECK_INTERVAL_XPATH << ": " << conf_center_->GetLastErrMsg());
+            LOG_ERROR("failed to get " << GLOBAL_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&global_logic_so);
             return -1;
         }
-        return 0;
-    }
-
-    int LoadPeerTcpConnIntervalSec()
-    {
-        if (conf_center_->GetConf(peer_tcp_conn_interval_sec_, PEER_TCP_CONN_INTERVAL_SEC_XPATH, true, 1) != 0)
-        {
-            LOG_ERROR("failed to get " << PEER_TCP_CONN_INTERVAL_SEC_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadPeerTcpConnIntervalUsec()
-    {
-        if (conf_center_->GetConf(peer_tcp_conn_interval_usec_, PEER_TCP_CONN_INTERVAL_USEC_XPATH, true, 0) != 0)
-        {
-            LOG_ERROR("failed to get " << PEER_TCP_CONN_INTERVAL_USEC_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadPeerHttpConnTimeout()
-    {
-        if (conf_center_->GetConf(peer_http_conn_timeout_, PEER_HTTP_CONN_TIMEOUT_XPATH, true, 0) != 0)
-        {
-            LOG_ERROR("failed to get " << PEER_HTTP_CONN_TIMEOUT_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadPeerHttpConnMaxRetry()
-    {
-        if (conf_center_->GetConf(peer_http_conn_max_retry_, PEER_HTTP_CONN_MAX_RETRY_XPATH, true, 0) != 0)
-        {
-            LOG_ERROR("failed to get " << PEER_HTTP_CONN_MAX_RETRY_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
+        global_logic_so_ = global_logic_so;
+        conf_center_->ReleaseConf(&global_logic_so);
         return 0;
     }
 
@@ -1171,7 +874,7 @@ private:
         return 0;
     }
 
-    int LoadIoToWorkTqSizeLimit()
+    int LoadIOToWorkTQSizeLimit()
     {
         if (conf_center_->GetConf(io_to_work_tq_size_limit_, IO_TO_WORK_TQ_SIZE_LIMIT_XPATH, true, 50000) != 0)
         {
@@ -1226,32 +929,69 @@ private:
         return 0;
     }
 
+    int LoadPeerNeedReplyMsgCheckInterval()
+    {
+        if (conf_center_->GetConf(peer_need_reply_msg_check_interval_, PEER_NEED_REPLY_MSG_CHECK_INTERVAL_XPATH, true, 1) != 0)
+        {
+            LOG_ERROR("failed to get " << PEER_NEED_REPLY_MSG_CHECK_INTERVAL_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadPeerTCPConnIntervalSec()
+    {
+        if (conf_center_->GetConf(peer_tcp_conn_interval_sec_, PEER_TCP_CONN_INTERVAL_SEC_XPATH, true, 1) != 0)
+        {
+            LOG_ERROR("failed to get " << PEER_TCP_CONN_INTERVAL_SEC_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadPeerTCPConnIntervalUsec()
+    {
+        if (conf_center_->GetConf(peer_tcp_conn_interval_usec_, PEER_TCP_CONN_INTERVAL_USEC_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << PEER_TCP_CONN_INTERVAL_USEC_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadPeerHTTPConnTimeout()
+    {
+        if (conf_center_->GetConf(peer_http_conn_timeout_, PEER_HTTP_CONN_TIMEOUT_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << PEER_HTTP_CONN_TIMEOUT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadPeerHTTPConnMaxRetry()
+    {
+        if (conf_center_->GetConf(peer_http_conn_max_retry_, PEER_HTTP_CONN_MAX_RETRY_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << PEER_HTTP_CONN_MAX_RETRY_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
 private:
     ThreadRWLock rwlock_;
     bool enable_cpu_profiling_;
     bool enable_mem_profiling_;
     bool release_free_mem_;
-    std::string global_logic_so_;
     std::string tcp_addr_port_;
     int tcp_conn_count_limit_;
     int tcp_inactive_conn_check_interval_sec_;
     int tcp_inactive_conn_check_interval_usec_;
     int tcp_inactive_conn_life_;
-    bool tcp_do_checksum_;
-    int tcp_max_msg_body_len_;
-    int tcp_part_msg_check_interval_;
-    int tcp_part_msg_conn_life_;
     int tcp_thread_count_;
     std::string tcp_local_logic_so_;
     StrGroup tcp_logic_so_group_;
-    std::string raw_tcp_addr_port_;
-    int raw_tcp_conn_count_limit_;
-    int raw_tcp_inactive_conn_check_interval_sec_;
-    int raw_tcp_inactive_conn_check_interval_usec_;
-    int raw_tcp_inactive_conn_life_;
-    int raw_tcp_thread_count_;
-    std::string raw_tcp_local_logic_so_;
-    StrGroup raw_tcp_logic_so_group_;
     std::string http_addr_port_;
     std::string https_addr_port_;
     std::string https_certificate_chain_file_path_;
@@ -1276,16 +1016,10 @@ private:
     int udp_inactive_conn_check_interval_sec_;
     int udp_inactive_conn_check_interval_usec_;
     int udp_inactive_conn_life_;
-    bool udp_do_checksum_;
-    int udp_max_msg_body_len_;
     int udp_thread_count_;
     std::string udp_local_logic_so_;
     StrGroup udp_logic_so_group_;
-    int peer_need_reply_msg_check_interval_;
-    int peer_tcp_conn_interval_sec_;
-    int peer_tcp_conn_interval_usec_;
-    int peer_http_conn_timeout_;
-    int peer_http_conn_max_retry_;
+    std::string global_logic_so_;
     int work_thread_count_;
     std::string work_local_logic_so_;
     StrGroup work_logic_so_group_;
@@ -1293,6 +1027,11 @@ private:
     int burden_thread_count_;
     std::string burden_local_logic_so_;
     StrGroup burden_logic_so_group_;
+    int peer_need_reply_msg_check_interval_;
+    int peer_tcp_conn_interval_sec_;
+    int peer_tcp_conn_interval_usec_;
+    int peer_http_conn_timeout_;
+    int peer_http_conn_max_retry_;
 };
 }
 
