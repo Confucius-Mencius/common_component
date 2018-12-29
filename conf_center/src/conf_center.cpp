@@ -67,8 +67,8 @@ int ConfCenter::GetConf(i32& conf, const char* xpath, bool with_default, i32 val
         return -1;
     }
 
-    I64ValueGroup result;
-    GetConf<I64ValueGroup, I64ValueGroupMap, i64>(result, i64_value_group_map_, xpath, with_default,
+    Int64Group result;
+    GetConf<Int64Group, Int64ValueGroupMap, i64>(result, i64_value_group_map_, xpath, with_default,
             Variant(value), Variant::TYPE_I64);
 
     if (!with_default && 0 == result.size())
@@ -87,8 +87,8 @@ int ConfCenter::GetConf(i64& conf, const char* xpath, bool with_default, i64 val
         return -1;
     }
 
-    I64ValueGroup result;
-    GetConf<I64ValueGroup, I64ValueGroupMap, i64>(result, i64_value_group_map_, xpath, with_default,
+    Int64Group result;
+    GetConf<Int64Group, Int64ValueGroupMap, i64>(result, i64_value_group_map_, xpath, with_default,
             Variant(value), Variant::TYPE_I64);
 
     if (!with_default && 0 == result.size())
@@ -107,8 +107,8 @@ int ConfCenter::GetConf(f32& conf, const char* xpath, bool with_default, f32 val
         return -1;
     }
 
-    F64ValueGroup result;
-    GetConf<F64ValueGroup, F64ValueGroupMap, f64>(result, f64_value_group_map_, xpath, with_default,
+    Float64Group result;
+    GetConf<Float64Group, Float64ValueGroupMap, f64>(result, f64_value_group_map_, xpath, with_default,
             Variant(value), Variant::TYPE_F64);
 
     if (!with_default && 0 == result.size())
@@ -127,8 +127,8 @@ int ConfCenter::GetConf(f64& conf, const char* xpath, bool with_default, f64 val
         return -1;
     }
 
-    F64ValueGroup result;
-    GetConf<F64ValueGroup, F64ValueGroupMap, f64>(result, f64_value_group_map_, xpath, with_default,
+    Float64Group result;
+    GetConf<Float64Group, Float64ValueGroupMap, f64>(result, f64_value_group_map_, xpath, with_default,
             Variant(value), Variant::TYPE_F64);
 
     if (!with_default && 0 == result.size())
@@ -152,7 +152,7 @@ int ConfCenter::GetConf(char** conf, const char* xpath, bool with_default, const
         return -1;
     }
 
-    StrValueGroup result;
+    StrGroup result;
     GetConf(result, str_value_group_map_, xpath, with_default, Variant(Variant::TYPE_STR, value, strlen(value)));
 
     if (!with_default && 0 == result.size())
@@ -197,8 +197,8 @@ int ConfCenter::GetConf(i32** conf_array, int& n, const char* xpath, bool with_d
         return -1;
     }
 
-    I64ValueGroup result;
-    GetConf<I64ValueGroup, I64ValueGroupMap, i64>(result, i64_value_group_map_, xpath, with_default,
+    Int64Group result;
+    GetConf<Int64Group, Int64ValueGroupMap, i64>(result, i64_value_group_map_, xpath, with_default,
             Variant(value), Variant::TYPE_I64);
 
     n = (int) result.size();
@@ -245,8 +245,8 @@ int ConfCenter::GetConf(i64** conf_array, int& n, const char* xpath, bool with_d
         return -1;
     }
 
-    I64ValueGroup result;
-    GetConf<I64ValueGroup, I64ValueGroupMap, i64>(result, i64_value_group_map_, xpath, with_default,
+    Int64Group result;
+    GetConf<Int64Group, Int64ValueGroupMap, i64>(result, i64_value_group_map_, xpath, with_default,
             Variant(value), Variant::TYPE_I64);
 
     n = (int) result.size();
@@ -293,8 +293,8 @@ int ConfCenter::GetConf(f32** conf_array, int& n, const char* xpath, bool with_d
         return -1;
     }
 
-    F64ValueGroup result;
-    GetConf<F64ValueGroup, F64ValueGroupMap, f64>(result, f64_value_group_map_, xpath, with_default,
+    Float64Group result;
+    GetConf<Float64Group, Float64ValueGroupMap, f64>(result, f64_value_group_map_, xpath, with_default,
             Variant(value), Variant::TYPE_F64);
 
     n = (int) result.size();
@@ -341,8 +341,8 @@ int ConfCenter::GetConf(f64** conf_array, int& n, const char* xpath, bool with_d
         return -1;
     }
 
-    F64ValueGroup result;
-    GetConf<F64ValueGroup, F64ValueGroupMap, f64>(result, f64_value_group_map_, xpath, with_default,
+    Float64Group result;
+    GetConf<Float64Group, Float64ValueGroupMap, f64>(result, f64_value_group_map_, xpath, with_default,
             Variant(value), Variant::TYPE_F64);
 
     n = (int) result.size();
@@ -394,7 +394,7 @@ int ConfCenter::GetConf(char*** conf_array, int& n, const char* xpath, bool with
         return -1;
     }
 
-    StrValueGroup result;
+    StrGroup result;
     GetConf(result, str_value_group_map_, xpath, with_default, Variant(Variant::TYPE_STR, value, strlen(value)));
 
     if (!with_default && 0 == result.size())
@@ -709,7 +709,7 @@ void ConfCenter::GetConf(ValueGroupType& result, ValueGroupMapType& value_group_
     result = value_group;
 }
 
-void ConfCenter::GetConf(ConfCenter::StrValueGroup& result, ConfCenter::StrValueGroupMap& value_group_map,
+void ConfCenter::GetConf(StrGroup& result, ConfCenter::StrValueGroupMap& value_group_map,
                          const char* xpath, bool with_default, Variant value)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -718,7 +718,7 @@ void ConfCenter::GetConf(ConfCenter::StrValueGroup& result, ConfCenter::StrValue
     if (it != value_group_map.end())
     {
         // 内存中有则从内存中读
-        const StrValueGroup& value_group = it->second;
+        const StrGroup& value_group = it->second;
         result = value_group;
         return;
     }
@@ -738,7 +738,7 @@ void ConfCenter::GetConf(ConfCenter::StrValueGroup& result, ConfCenter::StrValue
     }
 
     // 从xml中读到了，放入内存中以便下次使用
-    StrValueGroup& value_group = value_group_map[xpath];
+    StrGroup& value_group = value_group_map[xpath];
     for (VariantVec::const_iterator it_entry = entries.begin(); it_entry != entries.end(); ++it_entry)
     {
         value_group.push_back(it_entry->GetValue(Type2Type<const char*>()).data);

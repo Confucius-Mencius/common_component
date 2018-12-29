@@ -3,12 +3,12 @@
 
 #include <map>
 #include <mutex>
-#include <vector>
 #include <libxml/xpath.h>
 #include "conf_center_interface.h"
 #include "file_util.h"
 #include "last_err_msg.h"
 #include "variant.h"
+#include "vector_types.h"
 
 namespace conf_center
 {
@@ -55,13 +55,9 @@ public:
 
 private:
     // 内部只用i64 f64 string三种类型存储
-    typedef std::vector<i64> I64ValueGroup;
-    typedef std::vector<f64> F64ValueGroup;
-    typedef std::vector<std::string> StrValueGroup;
-
-    typedef std::map<std::string, I64ValueGroup> I64ValueGroupMap; // key -> values
-    typedef std::map<std::string, F64ValueGroup> F64ValueGroupMap;
-    typedef std::map<std::string, StrValueGroup> StrValueGroupMap;
+    typedef std::map<std::string, Int64Group> Int64ValueGroupMap; // key -> values
+    typedef std::map<std::string, Float64Group> Float64ValueGroupMap;
+    typedef std::map<std::string, StrGroup> StrValueGroupMap;
 
     typedef std::vector<xmlChar*> XmlCharVec;
     typedef std::vector<Variant> VariantVec;
@@ -80,7 +76,7 @@ private:
                  bool with_default, Variant value, Variant::Type data_type);
 
     // str
-    void GetConf(StrValueGroup& result, StrValueGroupMap& value_group_map, const char* xpath,
+    void GetConf(StrGroup& result, StrValueGroupMap& value_group_map, const char* xpath,
                  bool with_default, Variant value);
 
 private:
@@ -92,8 +88,8 @@ private:
     xmlDocPtr xml_doc_ptr_;
     FileStat app_conf_file_stat_;
 
-    I64ValueGroupMap i64_value_group_map_;
-    F64ValueGroupMap f64_value_group_map_;
+    Int64ValueGroupMap i64_value_group_map_;
+    Float64ValueGroupMap f64_value_group_map_;
     StrValueGroupMap str_value_group_map_;
 };
 }
