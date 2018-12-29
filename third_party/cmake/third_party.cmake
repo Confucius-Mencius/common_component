@@ -56,7 +56,7 @@ endfunction()
 ###############################################################################
 # test and gtest
 include(CTest)
-set(GTEST_EXE_OPTS --gtest_shuffle --gtest_color=yes --gtest_output=xml:Report/)
+set(GTEST_EXE_OPTS --gtest_shuffle --gtest_color=yes --gtest_output=xml:report/)
 
 ###############################################################################
 # function: SetOutputDir
