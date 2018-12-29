@@ -1,9 +1,8 @@
 #ifndef APP_LAUNCHER_SRC_APP_LAUNCHER_H_
 #define APP_LAUNCHER_SRC_APP_LAUNCHER_H_
 
-#include <string.h>
 #include "app_frame_interface.h"
-#include "common_define.h"
+#include "file_util.h"
 #include "mem_util.h"
 #include "service_mgr.h"
 #include "signal_wrapper.h"
@@ -14,12 +13,12 @@ struct AppLauncherCtx
 {
     int argc;
     char** argv;
-    char common_component_dir[MAX_PATH_LEN + 1];
-    char log_conf_file_path[MAX_PATH_LEN + 1];
+    char common_component_dir[MAX_PATH_LEN];
+    char log_conf_file_path[MAX_PATH_LEN];
     char logger_name[MAX_LOGGER_NAME_LEN + 1];
-    char app_conf_file_path[MAX_PATH_LEN + 1];
-    char cur_working_dir[MAX_PATH_LEN + 1];
-    char app_name[MAX_PATH_LEN + 1];
+    char app_conf_file_path[MAX_PATH_LEN];
+    char cur_working_dir[MAX_PATH_LEN];
+    char app_name[MAX_PATH_LEN];
 
     AppLauncherCtx()
     {
@@ -36,9 +35,9 @@ struct AppLauncherCtx
 
 class AppLauncher
 {
-    CREATE_FUNC(AppLauncher);
+    CREATE_FUNC(AppLauncher)
 
-public:
+private:
     static void OnConfCheckTimer(evutil_socket_t fd, short event, void* arg);
     static void OnExitCheckTimer(evutil_socket_t fd, short event, void* arg);
 
@@ -80,7 +79,7 @@ private:
     // 根据配置定时检查配置文件的修改时间和size,如果有变化则重新加载
     struct event* conf_check_timer_event_;
 
-    // 收到退出信号后，定时检查各个线程是否都成功退出
+    // 收到退出信号后，定时检查各个线程是否都成功退出，然后主线程才退出
     bool stopping_;
     struct event* exit_check_timer_event_;
 };

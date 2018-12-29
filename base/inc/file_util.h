@@ -22,12 +22,16 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#ifndef MAX_PATH_LEN
 /**
  * @brief max path len
  */
-#define MAX_PATH_LEN 255
-#endif // MAX_PATH_LEN
+#if (defined(__linux__))
+#include <linux/limits.h>
+#define MAX_PATH_LEN PATH_MAX
+#elif (defined(_WIN32) || defined(_WIN64))
+#include <windef.h>
+#define MAX_PATH_LEN MAX_PATH
+#endif
 
 /**
  * @brief 文件属性结构体

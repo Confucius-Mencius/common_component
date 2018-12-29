@@ -8,18 +8,6 @@ verified in CentOS7/LinuxMint18/Ubuntu16.04 and above
 ## app_frame
 app框架，根据配置启动tcp、udp、http、work、burden线程组。
 
-## app_launcher
-统一的app框架启动器，通过dlopen的方式加载app_frame，启动进程。监听reload和stop信号，并通知app_frame。只要实现了app_frame的接口，都可以通过app_launcher来启动。
-
-## build
-编译脚本。可以编译debug和release两种版本。编译完成会安装到/opt目录下，也可以mount使用。
-
-build.sh -h
-                 -h show this help info.
-                 -b debug|release build projects.
-                 -r debug|release rebuild projects.
-                 -c debug|release clear tmp files.
-
 ## burden_threads
 burden线程组，是第三级线程组。app_frame通过dlopen的方式加载burden_threads。burden_theads对thread_center进行了包装，是一种类型的thread_center，其他线程组也是这样。可以调度任务给所有的线程组，包括burden_threads。
 

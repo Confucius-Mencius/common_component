@@ -20,7 +20,6 @@ private:
     virtual int Load();
 
 public:
-    ///////////////////////// ConfMgrInterface /////////////////////////
     int GetConfCheckInterval()
     {
         AUTO_THREAD_RLOCK(rwlock_);

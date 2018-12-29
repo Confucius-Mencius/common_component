@@ -1,11 +1,10 @@
 #ifndef APP_FRAME_INC_APP_FRAME_INTERFACE_H_
 #define APP_FRAME_INC_APP_FRAME_INTERFACE_H_
 
-#include "common_define.h"
+#include <stddef.h>
 #include "module_interface.h"
 
 class ConfCenterInterface;
-class MsgCodecCenterInterface;
 class ThreadCenterInterface;
 
 struct AppFrameCtx
@@ -16,7 +15,6 @@ struct AppFrameCtx
     const char* cur_working_dir;
     const char* app_name;
     ConfCenterInterface* conf_center;
-    MsgCodecCenterInterface* msg_codec_center;
     ThreadCenterInterface* thread_center;
 
     AppFrameCtx()
@@ -27,7 +25,6 @@ struct AppFrameCtx
         cur_working_dir = NULL;
         app_name = NULL;
         conf_center = NULL;
-        msg_codec_center = NULL;
         thread_center = NULL;
     }
 };

@@ -114,7 +114,7 @@ void FileUtilTest::Test003()
         EXPECT_TRUE(FileExist(file_path1));
     }
 
-    char file_name1[MAX_PATH_LEN + 1] = "";
+    char file_name1[MAX_PATH_LEN] = "";
     EXPECT_EQ(0, GetFileName(file_name1, sizeof(file_name1), file_path1));
     EXPECT_STREQ(FILE_NAME, file_name1);
 
@@ -129,7 +129,7 @@ void FileUtilTest::Test003()
         EXPECT_TRUE(FileExist(file_path2));
     }
 
-    char file_name2[MAX_PATH_LEN + 1] = "";
+    char file_name2[MAX_PATH_LEN] = "";
     EXPECT_EQ(0, GetFileName(file_name2, sizeof(file_name2), file_path2));
     EXPECT_STREQ(DIR_1_NAME, file_name2);
 
@@ -141,7 +141,7 @@ void FileUtilTest::Test003()
         EXPECT_TRUE(FileExist(file_path3));
     }
 
-    char file_name3[MAX_PATH_LEN + 1] = "";
+    char file_name3[MAX_PATH_LEN] = "";
     EXPECT_EQ(0, GetFileName(file_name3, sizeof(file_name3), file_path3));
     EXPECT_STREQ(DIR_2_NAME, file_name3);
 
@@ -153,7 +153,7 @@ void FileUtilTest::Test003()
         EXPECT_TRUE(FileExist(file_path4));
     }
 
-    char file_name4[MAX_PATH_LEN + 1] = "";
+    char file_name4[MAX_PATH_LEN] = "";
     EXPECT_EQ(0, GetFileName(file_name4, sizeof(file_name4), file_path4));
     EXPECT_STREQ(FILE_NAME, file_name4);
 
@@ -194,7 +194,7 @@ void FileUtilTest::Test004()
         EXPECT_TRUE(FileExist(file_path1));
     }
 
-    char file_dir1[MAX_PATH_LEN + 1] = "";
+    char file_dir1[MAX_PATH_LEN] = "";
     EXPECT_EQ(0, GetFileDir(file_dir1, sizeof(file_dir1), file_path1));
     EXPECT_STREQ("./data", file_dir1);
 
@@ -209,7 +209,7 @@ void FileUtilTest::Test004()
         EXPECT_TRUE(FileExist(file_path2));
     }
 
-    char file_dir2[MAX_PATH_LEN + 1] = "";
+    char file_dir2[MAX_PATH_LEN] = "";
     EXPECT_EQ(0, GetFileDir(file_dir2, sizeof(file_dir2), file_path2));
     EXPECT_STREQ("./data", file_dir2);
 
@@ -221,7 +221,7 @@ void FileUtilTest::Test004()
         EXPECT_TRUE(FileExist(file_path3));
     }
 
-    char file_dir3[MAX_PATH_LEN + 1] = "";
+    char file_dir3[MAX_PATH_LEN] = "";
     EXPECT_EQ(0, GetFileDir(file_dir3, sizeof(file_dir3), file_path3));
     EXPECT_STREQ(file_path2, file_dir3);
 
@@ -233,7 +233,7 @@ void FileUtilTest::Test004()
         EXPECT_TRUE(FileExist(file_path4));
     }
 
-    char file_dir4[MAX_PATH_LEN + 1] = "";
+    char file_dir4[MAX_PATH_LEN] = "";
     EXPECT_EQ(0, GetFileDir(file_dir4, sizeof(file_dir4), file_path4));
     EXPECT_STREQ(file_path3, file_dir4);
 
@@ -367,13 +367,13 @@ void FileUtilTest::Test008()
         EXPECT_TRUE(FileExist(file_path));
     }
 
-    char file_dir2[MAX_PATH_LEN + 1] = "";
+    char file_dir2[MAX_PATH_LEN] = "";
     EXPECT_EQ(0, GetFileDir(file_dir2, sizeof(file_dir2), file_path));
     EXPECT_TRUE(FileExist(file_dir2));
     EXPECT_EQ(0, DelFile(file_dir2));
     EXPECT_FALSE(FileExist(file_dir2));
 
-    char file_dir1[MAX_PATH_LEN + 1] = "";
+    char file_dir1[MAX_PATH_LEN] = "";
     EXPECT_EQ(0, GetFileDir(file_dir1, sizeof(file_dir1), file_dir2));
     EXPECT_TRUE(FileExist(file_dir1));
     EXPECT_EQ(0, DelFile(file_dir1));
@@ -382,7 +382,7 @@ void FileUtilTest::Test008()
 
 void FileUtilTest::Test009()
 {
-    char buf[MAX_PATH_LEN + 1] = "";
+    char buf[MAX_PATH_LEN] = "";
     ASSERT_EQ(0, GetAbsolutePath(buf, sizeof(buf), ".", "/"));
     LOG_CPP(buf);
 

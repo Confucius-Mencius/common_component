@@ -119,7 +119,7 @@ int CreateFile(const char* file_path, mode_t mode)
         return 0;
     }
 
-    char file_dir[MAX_PATH_LEN + 1] = "";
+    char file_dir[MAX_PATH_LEN] = "";
     if (GetFileDir(file_dir, sizeof(file_dir), file_path) != 0)
     {
         return -1;

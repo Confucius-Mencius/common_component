@@ -412,7 +412,7 @@ void Thread::OnTask()
 
 int Thread::LoadTimerAxis()
 {
-    char TIMER_AXIS_SO_PATH[MAX_PATH_LEN + 1] = "";
+    char TIMER_AXIS_SO_PATH[MAX_PATH_LEN] = "";
     StrPrintf(TIMER_AXIS_SO_PATH, sizeof(TIMER_AXIS_SO_PATH), "%s/libtimer_axis.so",
               thread_ctx_.common_component_dir);
 

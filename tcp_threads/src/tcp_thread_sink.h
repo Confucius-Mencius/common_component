@@ -6,7 +6,7 @@
 #include <event2/util.h>
 #include "client_center_mgr_interface.h"
 #include "conn_center_mgr_interface.h"
-#include "inner_define.h"
+#include "new_conn.h"
 #include "mem_util.h"
 #include "module_loader.h"
 #include "part_msg_mgr.h"

@@ -58,6 +58,7 @@ int SignalWrapper::Initialize(AppLauncher* app_launcher)
     sigset_t set;
 
     sigemptyset(&set);
+    // 要屏蔽的信号
 //    sigaddset(&set, SIGINT); // 如果屏蔽了该信号，gdb中按CTRL+C不能中断程序打断点。
     sigaddset(&set, SIGTERM);
     sigaddset(&set, SIGPIPE);
@@ -120,7 +121,7 @@ int SignalWrapper::SetStopSignal(int signo)
     {
         const int err = errno;
         SET_LAST_ERR_MSG(&last_err_msg_, "failed to create stop signal event, errno: "
-            << err << ", err msg: " << strerror(err));
+                         << err << ", err msg: " << strerror(err));
         return -1;
     }
 
@@ -128,7 +129,7 @@ int SignalWrapper::SetStopSignal(int signo)
     {
         const int err = errno;
         SET_LAST_ERR_MSG(&last_err_msg_, "failed to add stop signal event, errno: "
-            << err << ", err msg: " << strerror(err));
+                         << err << ", err msg: " << strerror(err));
         return -1;
     }
 
@@ -143,7 +144,7 @@ int SignalWrapper::SetReloadSignal(int signo)
     {
         const int err = errno;
         SET_LAST_ERR_MSG(&last_err_msg_, "failed to create reload signal event, errno: "
-            << err << ", err msg: " << strerror(err));
+                         << err << ", err msg: " << strerror(err));
         return -1;
     }
 
@@ -151,7 +152,7 @@ int SignalWrapper::SetReloadSignal(int signo)
     {
         const int err = errno;
         SET_LAST_ERR_MSG(&last_err_msg_, "failed to add reload conf signal event, errno: "
-            << err << ", err msg: " << strerror(err));
+                         << err << ", err msg: " << strerror(err));
         return -1;
     }
 

@@ -1,5 +1,7 @@
-#ifndef TCP_THREADS_SRC_INNER_DEFINE_H_
-#define TCP_THREADS_SRC_INNER_DEFINE_H_
+#ifndef TCP_THREADS_SRC_NEW_CONN_H_
+#define TCP_THREADS_SRC_NEW_CONN_H_
+
+#include <netinet/in.h>
 
 namespace tcp
 {
@@ -18,4 +20,4 @@ struct NewConnCtx
 };
 }
 
-#endif // TCP_THREADS_SRC_INNER_DEFINE_H_
+#endif // TCP_THREADS_SRC_NEW_CONN_H_

@@ -1,6 +1,6 @@
 #include "app_launcher.h"
 #include "daemonize.h"
-#include "res_limit_util.h"
+#include "res_limits_util.h"
 #include "version.h"
 
 namespace app_launcher
@@ -13,7 +13,7 @@ void AppLauncher::OnConfCheckTimer(evutil_socket_t fd, short event, void* arg)
 
 void AppLauncher::OnExitCheckTimer(evutil_socket_t fd, short event, void* arg)
 {
-    LOG_TRACE("in exit check timer");
+    LOG_DEBUG("in exit check timer");
     AppLauncher* app_launcher = static_cast<AppLauncher*>(arg);
 
     if (!app_launcher->app_frame_->CanExit())
@@ -87,7 +87,7 @@ int AppLauncher::Initialize(const AppLauncherCtx* app_launcher_ctx)
     // !!!此后就可以用LOG_XXX打印日志了!!!
     ////////////////////////////////////////////////////////////////////////////////
 
-    LOG_INFO("app launcher version: " << APP_LAUNCHER_APP_LAUNCHER_VERSION);
+    LOG_INFO("app launcher version: " << APP_LAUNCHER_VERSION);
     LOG_INFO("argc: " << app_launcher_ctx_->argc);
 
     for (int i = 0; i < app_launcher_ctx_->argc; ++i)
@@ -259,7 +259,7 @@ void AppLauncher::OnReload()
 
 int AppLauncher::SingleRunCheck()
 {
-    char lock_file_path[MAX_PATH_LEN + 1] = "";
+    char lock_file_path[MAX_PATH_LEN] = "";
 
     if (StrPrintf(lock_file_path, sizeof(lock_file_path), "%s/.%s.lock", app_launcher_ctx_->cur_working_dir,
                   app_launcher_ctx_->app_name) <= 0)
@@ -279,7 +279,7 @@ int AppLauncher::SingleRunCheck()
 
 int AppLauncher::RecordPID()
 {
-    char pid_file_path[MAX_PATH_LEN + 1] = "";
+    char pid_file_path[MAX_PATH_LEN] = "";
 
     if (StrPrintf(pid_file_path, sizeof(pid_file_path), "%s/%s.pid", app_launcher_ctx_->cur_working_dir,
                   app_launcher_ctx_->app_name) <= 0)
@@ -299,7 +299,7 @@ int AppLauncher::RecordPID()
 
 int AppLauncher::LoadAppFrame(const char* common_component_dir)
 {
-    char APP_FRAME_SO_PATH[MAX_PATH_LEN + 1] = "";
+    char APP_FRAME_SO_PATH[MAX_PATH_LEN] = "";
     StrPrintf(APP_FRAME_SO_PATH, sizeof(APP_FRAME_SO_PATH), "%s/libapp_frame.so", common_component_dir);
 
     if (app_frame_loader_.Load(APP_FRAME_SO_PATH) != 0)
@@ -322,7 +322,6 @@ int AppLauncher::LoadAppFrame(const char* common_component_dir)
     app_frame_ctx.cur_working_dir = app_launcher_ctx_->cur_working_dir;
     app_frame_ctx.app_name = app_launcher_ctx_->app_name;
     app_frame_ctx.conf_center = service_mgr_.GetConfCenter();
-    app_frame_ctx.msg_codec_center = service_mgr_.GetMsgCodecCenter();
     app_frame_ctx.thread_center = service_mgr_.GetThreadCenter();
 
     if (app_frame_->Initialize(&app_frame_ctx) != 0)

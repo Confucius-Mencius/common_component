@@ -14,7 +14,7 @@
 
 namespace app_launcher
 {
-static const int MAX_LINE = 4096; /* max line length */
+static const int MAX_LINE = 1024; /* max line length */
 
 /*
  * Print a message and return to caller.

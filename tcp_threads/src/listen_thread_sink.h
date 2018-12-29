@@ -4,7 +4,7 @@
 // 单独的监听线程是有必要的，如果放在io线程中，如果io处理逻辑慢了就会影响建立连接。
 
 #include <event2/listener.h>
-#include "inner_define.h"
+#include "new_conn.h"
 #include "mem_util.h"
 #include "tcp_threads_interface.h"
 #include "thread_center_interface.h"

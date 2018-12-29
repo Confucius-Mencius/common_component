@@ -71,20 +71,17 @@ int main(int argc, char* argv[])
     }
 
     // 可能传入的是相对路径，转为绝对路径
-    const std::string common_component_dir = GetAbsolutePath(app_launcher_ctx.common_component_dir,
-                                                             app_launcher_ctx.cur_working_dir);
-    StrCpy(app_launcher_ctx.common_component_dir, sizeof(app_launcher_ctx.common_component_dir),
-           common_component_dir.c_str());
+    char common_component_dir[MAX_PATH_LEN] = "";
+    GetAbsolutePath(common_component_dir, sizeof(common_component_dir), app_launcher_ctx.common_component_dir, app_launcher_ctx.cur_working_dir);
+    StrCpy(app_launcher_ctx.common_component_dir, sizeof(app_launcher_ctx.common_component_dir), common_component_dir);
 
-    const std::string log_conf_file_path = GetAbsolutePath(app_launcher_ctx.log_conf_file_path,
-                                                           app_launcher_ctx.cur_working_dir);
-    StrCpy(app_launcher_ctx.log_conf_file_path, sizeof(app_launcher_ctx.log_conf_file_path),
-           log_conf_file_path.c_str());
+    char log_conf_file_path[MAX_PATH_LEN] = "";
+    GetAbsolutePath(log_conf_file_path, sizeof(log_conf_file_path), app_launcher_ctx.log_conf_file_path, app_launcher_ctx.cur_working_dir);
+    StrCpy(app_launcher_ctx.log_conf_file_path, sizeof(app_launcher_ctx.log_conf_file_path), log_conf_file_path);
 
-    const std::string app_conf_file_path = GetAbsolutePath(app_launcher_ctx.app_conf_file_path,
-                                                           app_launcher_ctx.cur_working_dir);
-    StrCpy(app_launcher_ctx.app_conf_file_path, sizeof(app_launcher_ctx.app_conf_file_path),
-           app_conf_file_path.c_str());
+    char app_conf_file_path[MAX_PATH_LEN] = "";
+    GetAbsolutePath(app_conf_file_path, sizeof(app_conf_file_path), app_launcher_ctx.app_conf_file_path, app_launcher_ctx.cur_working_dir);
+    StrCpy(app_launcher_ctx.app_conf_file_path, sizeof(app_launcher_ctx.app_conf_file_path), app_conf_file_path);
 
     app_launcher::AppLauncher* app_launcher = app_launcher::AppLauncher::Create();
     if (NULL == app_launcher)
