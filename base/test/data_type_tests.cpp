@@ -118,7 +118,7 @@ void IntMinTest()
 {
     EXPECT_FALSE(-2147483648 > 0);
     EXPECT_TRUE(-2147483647 - 1 < 0);
-    EXPECT_TRUE(INT_MIN == -INT_MIN);
+//    EXPECT_TRUE(INT_MIN == -INT_MIN); // gcc7.3.0: overflow
     EXPECT_TRUE(FLT_MIN > 0);
 }
 
