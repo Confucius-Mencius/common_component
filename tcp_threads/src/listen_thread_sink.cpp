@@ -2,6 +2,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include "app_frame_conf_mgr_interface.h"
+#include "task_type.h"
 
 namespace tcp
 {
@@ -10,29 +11,27 @@ void ListenThreadSink::ErrorCallback(struct evconnlistener* listener, void* arg)
     const int err = EVUTIL_SOCKET_ERROR();
     evutil_socket_t sock_fd = evconnlistener_get_fd(listener);
 
-    LOG_ERROR("failed to listen on socket, fd: " << sock_fd << ", errno: " << err
+    LOG_ERROR("err occured, socket fd: " << sock_fd << ", errno: " << err
               << ", err msg: " << evutil_socket_error_to_string(err));
 }
 
 void ListenThreadSink::OnAccept(struct evconnlistener* listener, evutil_socket_t sock_fd,
                                 struct sockaddr* sock_addr, int sock_addr_len, void* arg)
 {
-    ListenThreadSink* sink = (ListenThreadSink*) arg;
+    ListenThreadSink* sink = static_cast<ListenThreadSink*>(arg);
 
     if (sink->thread_->IsStopping())
     {
-        LOG_WARN("in stopping status, refuse new connection");
+        LOG_WARN("in stopping status, refuse all new connections");
         evutil_closesocket(sock_fd);
         return;
     }
 
-    const int tcp_connection_count_limit = sink->threads_ctx_->raw
-                                           ? sink->threads_ctx_->conf_mgr->GetRawTcpConnCountLimit()
-                                           : sink->threads_ctx_->conf_mgr->GetTcpConnCountLimit();
-    if (tcp_connection_count_limit > 0 && sink->online_tcp_conn_count_ >= tcp_connection_count_limit)
+    const int tcp_conn_count_limit = sink->threads_ctx_->conf_mgr->GetTCPConnCountLimit();
+    if (tcp_conn_count_limit > 0 && sink->online_tcp_conn_count_ >= tcp_conn_count_limit)
     {
         LOG_ERROR("refuse new connection, online tcp conn count: " << sink->online_tcp_conn_count_
-                  << ", has already reached the limit");
+                  << ", the limit is: " << tcp_conn_count_limit);
         evutil_closesocket(sock_fd);
         return;
     }
@@ -50,7 +49,7 @@ void ListenThreadSink::OnAccept(struct evconnlistener* listener, evutil_socket_t
     else
     {
         new_conn_ctx.client_port = ntohs(client_addr->sin_port);
-        LOG_INFO("client connected, ip: " << new_conn_ctx.client_ip << ", port: " << new_conn_ctx.client_port
+        LOG_INFO("conn connected, client ip: " << new_conn_ctx.client_ip << ", port: " << new_conn_ctx.client_port
                  << ", socket fd: " << sock_fd);
     }
 
@@ -63,9 +62,9 @@ ListenThreadSink::ListenThreadSink()
     tcp_thread_group_ = NULL;
     listen_sock_fd_ = -1;
     listener_ = NULL;
-    last_tcp_thread_idx_ = 0;
     online_tcp_conn_count_ = 0;
     max_online_tcp_conn_count_ = 0;
+    last_tcp_thread_idx_ = 0;
 }
 
 ListenThreadSink::~ListenThreadSink()
@@ -84,8 +83,7 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread)
         return -1;
     }
 
-    const std::string& tcp_addr_port = threads_ctx_->raw ? threads_ctx_->conf_mgr->GetRawTcpAddrPort()
-                                       : threads_ctx_->conf_mgr->GetTcpAddrPort();
+    const std::string& tcp_addr_port = threads_ctx_->conf_mgr->GetTCPAddrPort();
     LOG_INFO("tcp listen addr port: " << tcp_addr_port);
 
     listen_sock_fd_ = socket(AF_INET, SOCK_STREAM, 0);
@@ -103,7 +101,7 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread)
         if (evutil_make_socket_nonblocking(listen_sock_fd_) != 0)
         {
             const int err = EVUTIL_SOCKET_ERROR();
-            LOG_ERROR("failed to set tcp listen socket non-blocking, errno: " << err
+            LOG_ERROR("failed to set tcp listen socket non blocking, errno: " << err
                       << ", err msg: " << evutil_socket_error_to_string(err));
             break;
         }
@@ -127,6 +125,7 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread)
         struct sockaddr_in listen_sock_addr;
         int listen_sock_addr_len = sizeof(listen_sock_addr);
 
+        // todo 测试 ip:port 域名:port
         if (evutil_parse_sockaddr_port(tcp_addr_port.c_str(),
                                        (struct sockaddr*) &listen_sock_addr, &listen_sock_addr_len) != 0)
         {
@@ -139,11 +138,21 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread)
         if (bind(listen_sock_fd_, (struct sockaddr*) &listen_sock_addr, listen_sock_addr_len) != 0)
         {
             const int err = errno;
-            LOG_ERROR("failed to bind tcp listen socket, errno: " << err
-                      << ", err msg: " << evutil_socket_error_to_string(err)
-                      << "tcp listen addr port: " << tcp_addr_port);
+            LOG_ERROR("failed to bind tcp listen socket addr port: " << tcp_addr_port << ", errno: " << err
+                      << ", err msg: " << evutil_socket_error_to_string(err));
             break;
         }
+
+        listener_ = evconnlistener_new(thread_->GetThreadEvBase(), ListenThreadSink::OnAccept, this,
+                                       LEV_OPT_REUSEABLE | LEV_OPT_CLOSE_ON_FREE | LEV_OPT_THREADSAFE, -1, listen_sock_fd_);
+        if (NULL == listener_)
+        {
+            const int err = EVUTIL_SOCKET_ERROR();
+            LOG_ERROR("failed to create listener, errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
+            return -1;
+        }
+
+        evconnlistener_set_error_cb(listener_, ListenThreadSink::ErrorCallback);
 
         ret = 0;
     } while (0);
@@ -175,16 +184,6 @@ int ListenThreadSink::OnActivate()
         return -1;
     }
 
-    listener_ = evconnlistener_new(thread_->GetThreadEvBase(), ListenThreadSink::OnAccept, this,
-                                   LEV_OPT_REUSEABLE | LEV_OPT_CLOSE_ON_FREE | LEV_OPT_THREADSAFE, -1, listen_sock_fd_);
-    if (NULL == listener_)
-    {
-        const int err = EVUTIL_SOCKET_ERROR();
-        LOG_ERROR("failed to create listener, errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
-        return -1;
-    }
-
-    evconnlistener_set_error_cb(listener_, ListenThreadSink::ErrorCallback);
     return 0;
 }
 
@@ -213,16 +212,15 @@ void ListenThreadSink::OnReload()
     ThreadSinkInterface::OnReload();
 }
 
-void ListenThreadSink::OnTask(const Task* task)
+void ListenThreadSink::OnTask(const ThreadTask* task)
 {
     ThreadSinkInterface::OnTask(task);
 
-    switch (task->GetCtx()->task_type)
+    switch (task->GetType())
     {
         case TASK_TYPE_TCP_CONN_CLOSED:
         {
-
-            LOG_INFO("conn closed: " << task->GetCtx()->msg_body); // close by client self or server
+            LOG_DEBUG("conn closed: " << task->GetData()); // close by client self or server
             --online_tcp_conn_count_;
         }
         break;
@@ -241,20 +239,15 @@ bool ListenThreadSink::CanExit() const
 
 void ListenThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
 {
-    TaskCtx task_ctx;
-    task_ctx.task_type = TASK_TYPE_TCP_CONN_CONNECTED;
-    task_ctx.source_thread = thread_;
-    task_ctx.msg_body = (char*) new_conn_ctx;
-    task_ctx.msg_body_len = sizeof(NewConnCtx);
-
-    Task* task = Task::Create(&task_ctx);
+    ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_CONN_CONNECTED, thread_, NULL, new_conn_ctx, sizeof(NewConnCtx));
     if (NULL == task)
     {
+        LOG_ERROR("failed to create new conn task");
+        evutil_closesocket(new_conn_ctx->client_sock_fd);
         return;
     }
 
-    const int tcp_thread_count = threads_ctx_->raw ? threads_ctx_->conf_mgr->GetRawTcpThreadCount()
-                                 : threads_ctx_->conf_mgr->GetTcpThreadCount();
+    const int tcp_thread_count = threads_ctx_->conf_mgr->GetTCPThreadCount();
     const int tcp_thread_idx = last_tcp_thread_idx_;
 
     last_tcp_thread_idx_ = (last_tcp_thread_idx_ + 1) % tcp_thread_count;
@@ -270,7 +263,7 @@ void ListenThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
     if (online_tcp_conn_count_ > max_online_tcp_conn_count_)
     {
         max_online_tcp_conn_count_ = online_tcp_conn_count_;
-        LOG_INFO("max online tcp conn count: " << max_online_tcp_conn_count_);
+        LOG_WARN("max online tcp conn count: " << max_online_tcp_conn_count_);
     }
 }
 }

@@ -337,14 +337,6 @@ int ThreadSink::OnInitialize(ThreadInterface* thread)
         return -1;
     }
 
-    part_msg_mgr_.SetIOThreadSink(this);
-
-    if (part_msg_mgr_.Initialize(thread_->GetTimerAxis(),
-{threads_ctx_->conf_mgr->GetTcpPartMsgCheckInterval(), 0}) != 0)
-    {
-        return -1;
-    }
-
     if (LoadLocalLogic() != 0)
     {
         return -1;

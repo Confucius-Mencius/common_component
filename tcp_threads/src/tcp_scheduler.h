@@ -3,7 +3,6 @@
 
 #include "tcp_scheduler_interface.h"
 #include "tcp_threads_interface.h"
-#include "thread_center_interface.h"
 
 namespace tcp
 {
@@ -18,27 +17,12 @@ public:
     int Initialize(const void* ctx);
     void Finalize();
 
-    ///////////////////////// base::SchedulerInterface /////////////////////////
-    struct event_base* GetThreadEvBase() const override;
-    int GetThreadIdx() const override;
-    TransId SendToServer(const Peer& peer, const MsgHead& msg_head, const void* msg_body, size_t msg_body_len,
-                         const base::AsyncCtx* async_ctx) override;
-    TransId HttpGet(const Peer& peer, const http::GetParams& params, const base::AsyncCtx* async_ctx) override;
-    TransId HttpPost(const Peer& peer, const http::PostParams& params, const base::AsyncCtx* async_ctx) override;
-    TransId HttpHead(const Peer& peer, const http::HeadParams& params, const base::AsyncCtx* async_ctx) override;
-    void CancelTrans(TransId trans_id) override;
-
     ///////////////////////// SchedulerInterface /////////////////////////
-    int SendToClient(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
-                     size_t msg_body_len) override;
-    int SendRawToClient(const ConnGuid* conn_guid, const void* msg, size_t msg_len) override;
-    int CloseClient(const ConnGuid* conn_guid) override;
-    int SendToTCPThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
-                        size_t msg_body_len, int tcp_thread_idx) override;
-    int SendToWorkThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
-                         size_t msg_body_len, int work_thread_idx) override;
-    int SendToGlobalThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
-                           size_t msg_body_len) override;
+    int SendToClient(const ConnGUID* conn_guid, const void* data, size_t len) override;
+    int CloseClient(const ConnGUID* conn_guid) override;
+    int SendToTCPThread(const ConnGUID* conn_guid, const void* data, size_t len, int tcp_thread_idx) override;
+    int SendToWorkThread(const ConnGUID* conn_guid, const void* data, size_t len, int work_thread_idx) override;
+    int SendToGlobalThread(const ConnGUID* conn_guid, const void* data, size_t len) override;
 
 public:
     void SetThreadSink(ThreadSink* sink)
@@ -46,15 +30,15 @@ public:
         thread_sink_ = sink;
     }
 
-    void SetRelatedThreadGroup(RelatedThreadGroups* related_thread_group);
+    void SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups);
 
 private:
-    int GetScheduleTcpThreadIdx(int tcp_thread_idx);
+    int GetScheduleTCPThreadIdx(int tcp_thread_idx);
     int GetScheduleWorkThreadIdx(int work_thread_idx);
 
 private:
     ThreadSink* thread_sink_;
-    RelatedThreadGroups* related_thread_group_;
+    RelatedThreadGroups* related_thread_groups_;
 
     int last_tcp_thread_idx_;
     int last_work_thread_idx_;

@@ -1,5 +1,5 @@
 #ifndef TCP_THREADS_SRC_LISTEN_THREAD_SINK_H_
-#define Tcp_THREADS_SRC_LISTEN_THREAD_SINK_H_
+#define TCP_THREADS_SRC_LISTEN_THREAD_SINK_H_
 
 // 单独的监听线程是有必要的，如果放在io线程中，如果io处理逻辑慢了就会影响建立连接。
 
@@ -7,7 +7,6 @@
 #include "new_conn.h"
 #include "mem_util.h"
 #include "tcp_threads_interface.h"
-#include "thread_center_interface.h"
 
 namespace tcp
 {
@@ -33,7 +32,7 @@ public:
     void OnThreadStartOK() override;
     void OnStop() override;
     void OnReload() override;
-    void OnTask(const Task* task) override;
+    void OnTask(const ThreadTask* task) override;
     bool CanExit() const override;
 
 public:
@@ -54,9 +53,9 @@ private:
     ThreadGroupInterface* tcp_thread_group_;
     evutil_socket_t listen_sock_fd_;
     struct evconnlistener* listener_;
-    int last_tcp_thread_idx_;
     int online_tcp_conn_count_;
     int max_online_tcp_conn_count_;
+    int last_tcp_thread_idx_;
 };
 }
 

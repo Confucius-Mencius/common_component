@@ -4,16 +4,12 @@
 #include <set>
 #include <event2/buffer.h>
 #include <event2/util.h>
-#include "client_center_mgr_interface.h"
-#include "conn_center_mgr_interface.h"
 #include "new_conn.h"
 #include "mem_util.h"
 #include "module_loader.h"
-#include "part_msg_mgr.h"
 #include "tcp_logic_interface.h"
 #include "tcp_scheduler.h"
 #include "tcp_threads_interface.h"
-#include "thread_center_interface.h"
 
 namespace tcp
 {
@@ -31,9 +27,9 @@ struct LogicItem
 
 typedef std::vector<LogicItem> LogicItemVec;
 
-class ThreadSink : public ThreadSinkInterface, public NfySinkInterface, public ConnTimeoutSinkInterface
+class ThreadSink : public ThreadSinkInterface
 {
-    CREATE_FUNC(ThreadSink);
+    CREATE_FUNC(ThreadSink)
 
 #if defined(USE_BUFFEREVENT)
     static void BufferEventEventCallback(struct bufferevent* buf_event, short events, void* arg);
@@ -55,14 +51,8 @@ public:
     void OnThreadStartOK() override;
     void OnStop() override;
     void OnReload() override;
-    void OnTask(const Task* task) override;
+    void OnTask(const ThreadTask* task) override;
     bool CanExit() const override;
-
-    ///////////////////////// NfySinkInterface /////////////////////////
-    void OnRecvNfy(const Peer& peer, const MsgHead& msg_head, const void* msg_body, size_t msg_body_len) override;
-
-    ///////////////////////// ConnTimeoutSinkInterface /////////////////////////
-    void OnConnTimeout(ConnInterface* conn) override;
 
 public:
     void SetThreadsCtx(const ThreadsCtx* threads_ctx)
@@ -75,42 +65,22 @@ public:
         listen_thread_ = listen_thread;
     }
 
-    void SetTcpThreadGroup(ThreadGroupInterface* tcp_thread_group)
+    void SetTCPThreadGroup(ThreadGroupInterface* tcp_thread_group)
     {
         tcp_thread_group_ = tcp_thread_group;
     }
 
-    void CloseConn(evutil_socket_t sock_fd);
-    void OnClientClosed(ConnInterface* conn);
-    void OnRecvClientMsg(const ConnGuid* conn_guid, const MsgHead& msg_head,
-                         const void* msg_body, size_t msg_body_len);
-
-    ConnCenterInterface* GetConnCenter()
-    {
-        return conn_center_;
-    }
-
-    tcp::ClientCenterInterface* GetTcpClientCenter()
-    {
-        return tcp_client_center_;
-    }
-
-    http::ClientCenterInterface* GetHttpClientCenter()
-    {
-        return http_client_center_;
-    }
-
-    udp::ClientCenterInterface* GetUdpClientCenter()
-    {
-        return udp_client_center_;
-    }
-
-    ThreadGroupInterface* GetTcpThreadGroup()
+    ThreadGroupInterface* GetTCPThreadGroup()
     {
         return tcp_thread_group_;
     }
 
-    void SetRelatedThreadGroup(RelatedThreadGroups* related_thread_group);
+    void SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups);
+
+    void CloseConn(evutil_socket_t sock_fd);
+    void OnClientClosed(ConnInterface* conn);
+    void OnRecvClientMsg(const ConnGUID* conn_guid, const MsgHead& msg_head,
+                         const void* msg_body, size_t msg_body_len);
 
 private:
     int LoadLocalLogic();
@@ -129,15 +99,14 @@ private:
 
 private:
     const ThreadsCtx* threads_ctx_;
+
+    ModuleLoader local_logic_loader_;
+    LocalLogicInterface* local_logic_;
+    LogicItemVec logic_item_vec_;
+
     ThreadInterface* listen_thread_;
     ThreadGroupInterface* tcp_thread_group_;
-
-    ConnCenterInterface* conn_center_;
-    MsgCodecInterface* tcp_msg_codec_;
-
-    tcp::ClientCenterInterface* tcp_client_center_;
-    http::ClientCenterInterface* http_client_center_;
-    udp::ClientCenterInterface* udp_client_center_;
+    RelatedThreadGroups* related_thread_group_;
 
     Scheduler scheduler_;
 
@@ -145,13 +114,6 @@ private:
     size_t max_msg_recv_len_;
 
     PartMsgMgr part_msg_mgr_;
-
-    ModuleLoader local_logic_loader_;
-    LocalLogicInterface* local_logic_;
-
-    LogicItemVec logic_item_vec_;
-
-    RelatedThreadGroups* related_thread_group_;
 
     typedef std::map<std::string, int> PreClientBlacklistMap;
     PreClientBlacklistMap pre_client_blacklist_map_;

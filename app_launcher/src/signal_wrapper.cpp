@@ -61,7 +61,7 @@ int SignalWrapper::Initialize(AppLauncher* app_launcher)
     // 要屏蔽的信号
 //    sigaddset(&set, SIGINT); // 如果屏蔽了该信号，gdb中按CTRL+C不能中断程序打断点。
     sigaddset(&set, SIGTERM);
-    sigaddset(&set, SIGPIPE);
+    sigaddset(&set, SIGPIPE); // 忽略SIGPIPE，write时若对端关闭，返回值为-1，errno为EPIPE
 
     pthread_sigmask(SIG_BLOCK, &set, NULL);
 

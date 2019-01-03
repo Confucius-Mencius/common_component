@@ -1,5 +1,6 @@
 #include "thread_center.h"
 #include "container_util.h"
+#include "str_util.h"
 #include "version.h"
 
 namespace thread_center
@@ -73,7 +74,11 @@ ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
         {
             ThreadCtx thread_ctx;
             thread_ctx.common_component_dir = ctx->common_component_dir;
-            thread_ctx.name = ctx->thread_name;
+
+            char thread_name[64] = "";
+            StrPrintf(thread_name, sizeof(thread_name), "%s #%d", ctx->thread_name.c_str(), i);
+            thread_ctx.name.assign(thread_name);
+
             thread_ctx.idx = i;
             thread_ctx.sink = ctx->thread_sink_creator();
 

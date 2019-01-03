@@ -1,14 +1,13 @@
 #include "tcp_scheduler.h"
 #include "num_util.h"
 #include "tcp_thread_sink.h"
-#include "trans_center_interface.h"
 
 namespace tcp
 {
 Scheduler::Scheduler()
 {
     thread_sink_ = NULL;
-    related_thread_group_ = NULL;
+    related_thread_groups_ = NULL;
     last_tcp_thread_idx_ = 0;
     last_work_thread_idx_ = 0;
 }
@@ -19,7 +18,7 @@ Scheduler::~Scheduler()
 
 int Scheduler::Initialize(const void* ctx)
 {
-    const int tcp_thread_count = thread_sink_->GetTcpThreadGroup()->GetThreadCount();
+    const int tcp_thread_count = thread_sink_->GetTCPThreadGroup()->GetThreadCount();
     if (tcp_thread_count > 0)
     {
         last_tcp_thread_idx_ = rand() % tcp_thread_count;
@@ -32,122 +31,13 @@ void Scheduler::Finalize()
 {
 }
 
-struct event_base* Scheduler::GetThreadEvBase() const
+int Scheduler::SendToClient(const ConnGUID* conn_guid, const void* data, size_t len)
 {
-    return thread_sink_->GetThread()->GetThreadEvBase();
-}
-
-int Scheduler::GetThreadIdx() const
-{
-    return thread_sink_->GetThread()->GetThreadIdx();
-}
-
-TransId Scheduler::SendToServer(const Peer& peer, const MsgHead& msg_head, const void* msg_body, size_t msg_body_len,
-                                const base::AsyncCtx* async_ctx)
-{
-    switch (peer.type)
-    {
-        case PEER_TYPE_TCP:
-        {
-            tcp::ClientInterface* tcp_client = thread_sink_->GetTcpClientCenter()->GetClient(peer);
-            if (NULL == tcp_client)
-            {
-                tcp_client = thread_sink_->GetTcpClientCenter()->CreateClient(peer);
-                if (NULL == tcp_client)
-                {
-                    return INVALID_TRANS_ID;
-                }
-
-                tcp_client->AddNfySink(thread_sink_);
-            }
-
-            return tcp_client->Send(msg_head, msg_body, msg_body_len, async_ctx);
-        }
-        break;
-
-        case PEER_TYPE_UDP:
-        {
-            udp::ClientInterface* udp_client = thread_sink_->GetUdpClientCenter()->GetClient(peer);
-            if (NULL == udp_client)
-            {
-                udp_client = thread_sink_->GetUdpClientCenter()->CreateClient(peer);
-                if (NULL == udp_client)
-                {
-                    return INVALID_TRANS_ID;
-                }
-            }
-
-            return udp_client->Send(msg_head, msg_body, msg_body_len, async_ctx);
-        }
-        break;
-
-        default:
-        {
-            return INVALID_TRANS_ID;
-        }
-        break;
-    }
-}
-
-TransId Scheduler::HttpGet(const Peer& peer, const http::GetParams& params, const base::AsyncCtx* async_ctx)
-{
-    http::ClientInterface* http_client = thread_sink_->GetHttpClientCenter()->GetClient(peer);
-    if (NULL == http_client)
-    {
-        http_client = thread_sink_->GetHttpClientCenter()->CreateClient(peer);
-        if (NULL == http_client)
-        {
-            return INVALID_TRANS_ID;
-        }
-    }
-
-    return http_client->Get(params, async_ctx);
-}
-
-TransId Scheduler::HttpPost(const Peer& peer, const http::PostParams& params, const base::AsyncCtx* async_ctx)
-{
-    http::ClientInterface* http_client = thread_sink_->GetHttpClientCenter()->GetClient(peer);
-    if (NULL == http_client)
-    {
-        http_client = thread_sink_->GetHttpClientCenter()->CreateClient(peer);
-        if (NULL == http_client)
-        {
-            return INVALID_TRANS_ID;
-        }
-    }
-
-    return http_client->Post(params, async_ctx);
-}
-
-TransId Scheduler::HttpHead(const Peer& peer, const http::HeadParams& params, const base::AsyncCtx* async_ctx)
-{
-    http::ClientInterface* http_client = thread_sink_->GetHttpClientCenter()->GetClient(peer);
-    if (NULL == http_client)
-    {
-        http_client = thread_sink_->GetHttpClientCenter()->CreateClient(peer);
-        if (NULL == http_client)
-        {
-            return INVALID_TRANS_ID;
-        }
-    }
-
-    return http_client->Head(params, async_ctx);
-}
-
-void Scheduler::CancelTrans(TransId trans_id)
-{
-    // 一个线程里面只有一个trans center
-    thread_sink_->GetThread()->GetTransCenter()->CancelTrans(trans_id);
-}
-
-int Scheduler::SendToClient(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
-                            size_t msg_body_len)
-{
-    ThreadInterface* tcp_thread = thread_sink_->GetTcpThreadGroup()->GetThread(conn_guid->io_thread_idx);
+    ThreadInterface* tcp_thread = thread_sink_->GetTCPThreadGroup()->GetThread(conn_guid->io_thread_idx);
     if (tcp_thread == thread_sink_->GetThread())
     {
         // 是自己
-        ConnInterface* conn = thread_sink_->GetConnCenter()->GetConnByConnId(conn_guid->conn_id);
+        ConnInterface* conn = thread_sink_->GetConnMgr()->GetConnByConnId(conn_guid->conn_id);
         if (NULL == conn)
         {
             LOG_ERROR("failed to get tcp conn by id: " << conn_guid->conn_id);
@@ -186,7 +76,7 @@ int Scheduler::SendToClient(const ConnGuid* conn_guid, const MsgHead& msg_head, 
     return 0;
 }
 
-int Scheduler::SendRawToClient(const ConnGuid* conn_guid, const void* msg, size_t msg_len)
+int Scheduler::SendRawToClient(const ConnGUID* conn_guid, const void* msg, size_t msg_len)
 {
     ThreadInterface* tcp_thread = thread_sink_->GetTcpThreadGroup()->GetThread(conn_guid->io_thread_idx);
     if (tcp_thread == thread_sink_->GetThread())
@@ -230,7 +120,7 @@ int Scheduler::SendRawToClient(const ConnGuid* conn_guid, const void* msg, size_
     return 0;
 }
 
-int Scheduler::CloseClient(const ConnGuid* conn_guid)
+int Scheduler::CloseClient(const ConnGUID* conn_guid)
 {
     ThreadInterface* tcp_thread = thread_sink_->GetTcpThreadGroup()->GetThread(conn_guid->io_thread_idx);
     if (tcp_thread == thread_sink_->GetThread())
@@ -270,10 +160,10 @@ int Scheduler::CloseClient(const ConnGuid* conn_guid)
     return 0;
 }
 
-int Scheduler::SendToTCPThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
+int Scheduler::SendToTCPThread(const ConnGUID* conn_guid, const MsgHead& msg_head, const void* msg_body,
                                size_t msg_body_len, int tcp_thread_idx)
 {
-    const int real_tcp_thread_idx = GetScheduleTcpThreadIdx(tcp_thread_idx);
+    const int real_tcp_thread_idx = GetScheduleTCPThreadIdx(tcp_thread_idx);
     ThreadInterface* tcp_thread = thread_sink_->GetTcpThreadGroup()->GetThread(real_tcp_thread_idx);
 
     TaskCtx task_ctx;
@@ -304,17 +194,17 @@ int Scheduler::SendToTCPThread(const ConnGuid* conn_guid, const MsgHead& msg_hea
     return 0;
 }
 
-int Scheduler::SendToWorkThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
+int Scheduler::SendToWorkThread(const ConnGUID* conn_guid, const MsgHead& msg_head, const void* msg_body,
                                 size_t msg_body_len, int work_thread_idx)
 {
-    if (NULL == related_thread_group_->work_threads)
+    if (NULL == related_thread_groups_->work_threads)
     {
         LOG_ERROR("no work threads");
         return -1;
     }
 
     const int real_work_thread_idx = GetScheduleWorkThreadIdx(work_thread_idx);
-    ThreadInterface* work_thread = related_thread_group_->work_threads->GetThread(real_work_thread_idx);
+    ThreadInterface* work_thread = related_thread_groups_->work_threads->GetThread(real_work_thread_idx);
 
     TaskCtx task_ctx;
     task_ctx.task_type = TASK_TYPE_NORMAL;
@@ -344,16 +234,16 @@ int Scheduler::SendToWorkThread(const ConnGuid* conn_guid, const MsgHead& msg_he
     return 0;
 }
 
-int Scheduler::SendToGlobalThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
+int Scheduler::SendToGlobalThread(const ConnGUID* conn_guid, const MsgHead& msg_head, const void* msg_body,
                                   size_t msg_body_len)
 {
-    if (NULL == related_thread_group_->global_thread)
+    if (NULL == related_thread_groups_->global_thread)
     {
         LOG_ERROR("no global thread");
         return -1;
     }
 
-    ThreadInterface* global_thread = related_thread_group_->global_thread;
+    ThreadInterface* global_thread = related_thread_groups_->global_thread;
 
     TaskCtx task_ctx;
     task_ctx.task_type = TASK_TYPE_NORMAL;
@@ -385,11 +275,11 @@ int Scheduler::SendToGlobalThread(const ConnGuid* conn_guid, const MsgHead& msg_
 
 void Scheduler::SetRelatedThreadGroup(RelatedThreadGroups* related_thread_group)
 {
-    related_thread_group_ = related_thread_group;
+    related_thread_groups_ = related_thread_group;
 
-    if (related_thread_group_->work_threads != NULL)
+    if (related_thread_groups_->work_threads != NULL)
     {
-        const int work_thread_count = related_thread_group_->work_threads->GetThreadCount();
+        const int work_thread_count = related_thread_groups_->work_threads->GetThreadCount();
         if (work_thread_count > 0)
         {
             last_work_thread_idx_ = rand() % work_thread_count;
@@ -397,7 +287,7 @@ void Scheduler::SetRelatedThreadGroup(RelatedThreadGroups* related_thread_group)
     }
 }
 
-int Scheduler::GetScheduleTcpThreadIdx(int tcp_thread_idx)
+int Scheduler::GetScheduleTCPThreadIdx(int tcp_thread_idx)
 {
     const int tcp_thread_count = thread_sink_->GetTcpThreadGroup()->GetThreadCount();
 
@@ -412,7 +302,7 @@ int Scheduler::GetScheduleTcpThreadIdx(int tcp_thread_idx)
 
 int Scheduler::GetScheduleWorkThreadIdx(int work_thread_idx)
 {
-    const int work_thread_count = related_thread_group_->work_threads->GetThreadCount();
+    const int work_thread_count = related_thread_groups_->work_threads->GetThreadCount();
 
     if (INVALID_IDX(work_thread_idx, 0, work_thread_count))
     {

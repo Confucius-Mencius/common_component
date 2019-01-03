@@ -4,7 +4,6 @@
 #include "conn_define.h"
 #include "module_interface.h"
 
-class ConfCenterInterface;
 class TimerAxisInterface;
 struct event_base;
 
@@ -20,7 +19,6 @@ class LogicInterface;
 
 namespace tcp
 {
-class ConnCenterInterface;
 class SchedulerInterface;
 class LocalLogicInterface;
 
@@ -33,7 +31,6 @@ struct LogicCtx
     const char* app_name;
     ConfCenterInterface* conf_center;
     TimerAxisInterface* timer_axis;
-    ConnCenterInterface* conn_center;
     SchedulerInterface* scheduler;
     LocalLogicInterface* local_logic;
     struct event_base* thread_ev_base;
@@ -47,7 +44,6 @@ struct LogicCtx
         app_name = NULL;
         conf_center = NULL;
         timer_axis = NULL;
-        conn_center = NULL;
         scheduler = NULL;
         local_logic = NULL;
         thread_ev_base = NULL;
