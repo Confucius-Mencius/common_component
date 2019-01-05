@@ -100,7 +100,7 @@ class AutoThreadMutex
     DISALLOW_COPY_AND_ASSIGN(AutoThreadMutex);
 
 public:
-    AutoThreadMutex(MutexType* mutex)
+    explicit AutoThreadMutex(MutexType* mutex)
     {
         mutex_ = mutex;
 
@@ -182,7 +182,7 @@ class AutoThreadWLock
     DISALLOW_COPY_AND_ASSIGN(AutoThreadWLock);
 
 public:
-    AutoThreadWLock(RWLockType* rwlock)
+    explicit AutoThreadWLock(RWLockType* rwlock)
     {
         rwlock_ = rwlock;
 
@@ -211,7 +211,7 @@ class AutoThreadRLock
     DISALLOW_COPY_AND_ASSIGN(AutoThreadRLock);
 
 public:
-    AutoThreadRLock(RWLockType* rwlock)
+    explicit AutoThreadRLock(RWLockType* rwlock)
     {
         rwlock_ = rwlock;
 

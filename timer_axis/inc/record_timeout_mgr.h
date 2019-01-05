@@ -68,6 +68,11 @@ public:
     ///////////////////////// TimerSinkInterface /////////////////////////
     void OnTimer(TimerID timer_id, void* data, size_t len, int times) override
     {
+        (void) timer_id;
+        (void) data;
+        (void) len;
+        (void) times;
+
         const time_t now = time(NULL);
 
 #if !defined(NDEBUG) && RECORD_TIMEOUT_DEBUG

@@ -31,6 +31,7 @@ void ThreadCenter::Release()
 
 int ThreadCenter::Initialize(const void* ctx)
 {
+    (void) ctx;
     return 0;
 }
 

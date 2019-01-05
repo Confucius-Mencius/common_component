@@ -42,7 +42,7 @@ int LogEngine::Initialize(const void* ctx)
         return -1;
     }
 
-    log_engine_ctx_ = *((LogEngineCtx*) ctx);
+    log_engine_ctx_ = *(static_cast<const LogEngineCtx*>(ctx));
     log4cplus::initialize();
 
     try

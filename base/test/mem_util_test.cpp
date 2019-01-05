@@ -44,7 +44,7 @@ void Test001()
 class T
 {
 public:
-    T(char c = 'x')
+    explicit T(char c = 'x')
     {
         c_ = c;
         u_ = 0xffffffff;

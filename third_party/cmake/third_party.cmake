@@ -17,10 +17,10 @@ endif ()
 # treat_warn_as_error: TRUR/FALSE
 function(SetCompileFlags treat_warn_as_error)
     if (${treat_warn_as_error})
-        set(COMPILE_FLAGS "-g -Wall -Werror -Wno-deprecated-declarations -Wno-unused-function -Wno-unused-result -Wno-unused-variable -Wno-unused-but-set-variable")
-        # set(COMPILE_FLAGS "-g -Wall -Werror")
+        # set(COMPILE_FLAGS "-g -Wall -Wextra -Werror -Wno-deprecated-declarations -Wno-unused-function -Wno-unused-result -Wno-unused-variable -Wno-unused-but-set-variable")
+        set(COMPILE_FLAGS "-g -Wall -Wextra -Werror -Wno-deprecated-declarations")
     else (${treat_warn_as_error})
-        set(COMPILE_FLAGS "-g -Wall")
+        set(COMPILE_FLAGS "-g -Wall -Wextra")
     endif ()
 
     # set(CPP11_FLAG "-std=c++11")

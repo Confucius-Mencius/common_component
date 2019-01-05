@@ -36,7 +36,7 @@ int ConfCenter::Initialize(const void* ctx)
         return -1;
     }
 
-    conf_center_ctx_ = *((ConfCenterCtx*) ctx);
+    conf_center_ctx_ = *(static_cast<const ConfCenterCtx*>(ctx));
     return Load(conf_center_ctx_.app_conf_file_path);
 }
 

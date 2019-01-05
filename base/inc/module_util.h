@@ -51,12 +51,14 @@ typedef void* (* GetModuleInterfaceFunc)(int type);
 #define MODULE_EXPORTER_IMPL(ImplType)\
     extern "C" void* GET_MODULE_INTERFACE(int type)\
     {\
+        (void) type;\
         return (void*) new ImplType();\
     }
 #elif (defined(_WIN32) || defined(_WIN64))
 #define MODULE_EXPORTER_IMPL(ImplType)\
     void* GET_MODULE_INTERFACE(int type)\
     {\
+        (void) type;\
         return (void*) new ImplType();\
     }
 #endif

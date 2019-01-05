@@ -134,6 +134,7 @@ public:
 
     virtual void OnTask(const ThreadTask* task)
     {
+        (void) task;
 //        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnTask, task type: " << task->GetType());
     }
 

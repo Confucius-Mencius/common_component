@@ -171,7 +171,7 @@ int ServiceMgr::LoadLogEngine()
         return -1;
     }
 
-    log_engine_ = (LogEngineInterface*) log_engine_loader_.GetModuleInterface(0);
+    log_engine_ = static_cast<LogEngineInterface*>(log_engine_loader_.GetModuleInterface(0));
     if (NULL == log_engine_)
     {
         SET_LAST_ERR_MSG(&last_err_msg_, log_engine_loader_.GetLastErrMsg());
@@ -206,7 +206,7 @@ int ServiceMgr::LoadConfCenter()
         return -1;
     }
 
-    conf_center_ = (ConfCenterInterface*) conf_center_loader_.GetModuleInterface(0);
+    conf_center_ = static_cast<ConfCenterInterface*>(conf_center_loader_.GetModuleInterface(0));
     if (NULL == conf_center_)
     {
         SET_LAST_ERR_MSG(&last_err_msg_, conf_center_loader_.GetLastErrMsg());
@@ -237,7 +237,7 @@ int ServiceMgr::LoadThreadCenter()
         return -1;
     }
 
-    thread_center_ = (ThreadCenterInterface*) thread_center_loader_.GetModuleInterface();
+    thread_center_ = static_cast<ThreadCenterInterface*>(thread_center_loader_.GetModuleInterface());
     if (NULL == thread_center_)
     {
         LOG_ERROR(thread_center_loader_.GetLastErrMsg());

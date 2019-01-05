@@ -29,6 +29,9 @@ public:
 
     virtual void OnTimer(TimerID timer_id, void* data, size_t len, int times)
     {
+        (void) data;
+        (void) len;
+
         LOG_DEBUG("on timer, times: " << times);
         timer_axis_->KillTimer(sink_, timer_id);
         event_base_loopbreak(thread_event_base_);
@@ -68,11 +71,14 @@ public:
         interval_ = interval;
     }
 
-    virtual void OnTimer(TimerID id, void* data, size_t len, int times)
+    virtual void OnTimer(TimerID timer_id, void* data, size_t len, int times)
     {
+        (void) data;
+        (void) len;
+
         LOG_DEBUG("on timer, times: " << times);
-        timer_axis_->KillTimer(sink_, id);
-        timer_axis_->SetTimer(sink_, id, interval_, NULL, 0);
+        timer_axis_->KillTimer(sink_, timer_id);
+        timer_axis_->SetTimer(sink_, timer_id, interval_, NULL, 0);
 
         static int n = 0;
 
@@ -118,8 +124,12 @@ public:
         other_id_ = other_id;
     }
 
-    virtual void OnTimer(TimerID id, void* data, size_t len, int times)
+    virtual void OnTimer(TimerID timer_id, void* data, size_t len, int times)
     {
+        (void) timer_id;
+        (void) data;
+        (void) len;
+
         LOG_DEBUG("on timer, times: " << times);
         timer_axis_->KillTimer(other_sink_, other_id_);
 
@@ -169,8 +179,12 @@ public:
         other_interval_ = other_interval;
     }
 
-    virtual void OnTimer(TimerID id, void* data, size_t len, int times)
+    virtual void OnTimer(TimerID timer_id, void* data, size_t len, int times)
     {
+        (void) timer_id;
+        (void) data;
+        (void) len;
+
         LOG_DEBUG("on timer, times: " << times);
         timer_axis_->SetTimer(other_sink_, other_id_, other_interval_, NULL, 0);
 
@@ -222,6 +236,10 @@ public:
 
     virtual void OnTimer(TimerID timer_id, void* data, size_t len, int times)
     {
+        (void) timer_id;
+        (void) data;
+        (void) len;
+
         LOG_DEBUG("on timer, times: " << times);
 
         if (times >= ntimes_)

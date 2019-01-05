@@ -24,7 +24,9 @@ enum
 
 void Thread::OnRead(int fd, short which, void* arg)
 {
-    Thread* thread = (Thread*) arg;
+    (void) which;
+
+    Thread* thread = static_cast<Thread*>(arg);
 
     do
     {
@@ -80,7 +82,7 @@ void Thread::OnRead(int fd, short which, void* arg)
 
 void* Thread::ThreadRoutine(void* arg)
 {
-    Thread* thread = (Thread*) arg;
+    Thread* thread = static_cast<Thread*>(arg);
     return thread->WorkLoop();
 }
 
@@ -113,7 +115,7 @@ int Thread::Initialize(const void* ctx)
         return -1;
     }
 
-    thread_ctx_ = *((const ThreadCtx*) ctx);
+    thread_ctx_ = *(static_cast<const ThreadCtx*>(ctx));
 
     tq_.SetThread(this);
 
@@ -259,6 +261,11 @@ void Thread::PushTask(ThreadTask* task)
 
 void Thread::OnTimer(TimerID timer_id, void* data, size_t len, int times)
 {
+    (void) timer_id;
+    (void) data;
+    (void) len;
+    (void) times;
+
     std::lock_guard<std::mutex> lock(write_fd_mutex_);
 
     if (pending_notify_list_.empty())
@@ -422,7 +429,7 @@ int Thread::LoadTimerAxis()
         return -1;
     }
 
-    timer_axis_ = (TimerAxisInterface*) timer_axis_loader_.GetModuleInterface();
+    timer_axis_ = static_cast<TimerAxisInterface*>(timer_axis_loader_.GetModuleInterface());
     if (NULL == timer_axis_)
     {
         LOG_ERROR(timer_axis_loader_.GetLastErrMsg());

@@ -16,6 +16,9 @@ MyRecordTimeoutMgr::~MyRecordTimeoutMgr()
 
 void MyRecordTimeoutMgr::OnTimeout(const Key& k, const Value& v, int timeout_sec)
 {
+    (void) v;
+    (void) timeout_sec;
+
 #if !defined(NDEBUG)
     LOG_DEBUG("OnTimeout, key: " << k);
 

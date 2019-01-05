@@ -27,9 +27,8 @@
 class Exception : public std::exception
 {
 public:
-    explicit Exception(const std::string& msg = "") throw()
+    explicit Exception(const std::string& msg = "") throw() : msg_(msg)
     {
-        msg_ = msg;
     }
 
     virtual ~Exception() throw()

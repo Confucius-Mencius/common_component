@@ -40,7 +40,10 @@ struct CallbackArg
 
 void TimerAxis::OnTimer(evutil_socket_t fd, short event, void* arg)
 {
-    CallbackArg* callback_arg = (CallbackArg*) arg;
+    (void) fd;
+    (void) event;
+
+    CallbackArg* callback_arg = static_cast<CallbackArg*>(arg);
     Timer* timer = callback_arg->timer;
     const int times = ++(timer->times);
 
@@ -84,7 +87,7 @@ int TimerAxis::Initialize(const void* ctx)
         return -1;
     }
 
-    timer_axis_ctx_ = *((TimerAxisCtx*) ctx);
+    timer_axis_ctx_ = *(static_cast<const TimerAxisCtx*>(ctx));
     return 0;
 }
 
@@ -93,7 +96,7 @@ void TimerAxis::Finalize()
     for (TimerHashMap::iterator it = timer_hash_map_.begin(); it != timer_hash_map_.end(); ++it)
     {
         Timer& timer = it->second;
-        CallbackArg* callback_arg = (CallbackArg*) event_get_callback_arg(timer.event);
+        CallbackArg* callback_arg = static_cast<CallbackArg*>(event_get_callback_arg(timer.event));
 
         callback_arg->Release();
         ReleaseAsyncData(&timer);
@@ -275,7 +278,7 @@ void TimerAxis::KillTimer(TimerSinkInterface* sink, TimerID timer_id)
 
 int TimerAxis::FillAsyncData(Timer* timer, void* data, size_t len)
 {
-    if (NULL == data || len < 0)
+    if (NULL == data || len < 1)
     {
         return 0; // 没有异步数据需要暂存
     }

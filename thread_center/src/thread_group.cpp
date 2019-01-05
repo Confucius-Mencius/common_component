@@ -33,6 +33,7 @@ void ThreadGroup::Release()
 
 int ThreadGroup::Initialize(const void* ctx)
 {
+    (void) ctx;
     return 0;
 }
 

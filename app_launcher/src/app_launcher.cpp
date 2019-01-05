@@ -7,12 +7,18 @@ namespace app_launcher
 {
 void AppLauncher::OnConfCheckTimer(evutil_socket_t fd, short event, void* arg)
 {
+    (void) fd;
+    (void) event;
+
     AppLauncher* app_launcher = static_cast<AppLauncher*>(arg);
     app_launcher->OnReload();
 }
 
 void AppLauncher::OnExitCheckTimer(evutil_socket_t fd, short event, void* arg)
 {
+    (void) fd;
+    (void) event;
+
     LOG_DEBUG("in exit check timer");
     AppLauncher* app_launcher = static_cast<AppLauncher*>(arg);
 
@@ -308,7 +314,7 @@ int AppLauncher::LoadAppFrame(const char* common_component_dir)
         return -1;
     }
 
-    app_frame_ = (AppFrameInterface*) app_frame_loader_.GetModuleInterface();
+    app_frame_ = static_cast<AppFrameInterface*>(app_frame_loader_.GetModuleInterface());
     if (NULL == app_frame_)
     {
         LOG_ERROR(app_frame_loader_.GetLastErrMsg());

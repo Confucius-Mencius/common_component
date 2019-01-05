@@ -4,6 +4,7 @@ namespace thread_center_test
 {
 SourceThreadSink::SourceThreadSink()
 {
+    thread_group_ = NULL;
 }
 
 SourceThreadSink::~SourceThreadSink()
