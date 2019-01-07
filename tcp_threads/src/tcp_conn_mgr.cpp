@@ -160,7 +160,7 @@ ConnInterface* ConnMgr::CreateBufferEventConn(int io_thread_idx, int sock_fd, st
     conn->SetCreatedTime(time(NULL));
     conn->SetConnGUID(io_thread_idx, conn_id);
     conn->SetSockFD(sock_fd);
-    conn->SetBufEvent(buf_event);
+    conn->SetBufferEvent(buf_event);
     conn->SetClientIP(ip);
     conn->SetClientPort(port);
 
