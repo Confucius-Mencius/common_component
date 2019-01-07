@@ -33,7 +33,6 @@ void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
             {
                 // 出错了
                 const int err = errno;
-
                 LOG_ERROR("write error, ret: " << n << ", socked fd: " << fd << ", errno: "
                           << err << ", err msg: " << evutil_socket_error_to_string(err));
 
@@ -97,13 +96,10 @@ void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
     }
 }
 
-NormalConn::NormalConn() : send_list_(), client_ip_(""), conn_guid_()
+NormalConn::NormalConn() : send_list_()
 {
-    created_time_ = 0;
-    sock_fd_ = -1;
     read_event_ = NULL;
     write_event_ = NULL;
-    client_port_ = 0;
 }
 
 NormalConn::~NormalConn()
@@ -117,11 +113,6 @@ void NormalConn::Release()
 
 int NormalConn::Initialize(const void* ctx)
 {
-    if (NULL == ctx)
-    {
-        return -1;
-    }
-
     return 0;
 }
 

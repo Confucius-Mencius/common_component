@@ -1,4 +1,5 @@
 #include "tcp_scheduler.h"
+#include "app_frame_conf_mgr_interface.h"
 #include "num_util.h"
 #include "tcp_thread_sink.h"
 
@@ -18,7 +19,14 @@ Scheduler::~Scheduler()
 
 int Scheduler::Initialize(const void* ctx)
 {
-    const int tcp_thread_count = thread_sink_->GetTCPThreadGroup()->GetThreadCount();
+    if (NULL == ctx)
+    {
+        return -1;
+    }
+
+    threads_ctx_ = static_cast<const ThreadsCtx* threads_ctx_>(ctx);
+
+    const int tcp_thread_count = threads_ctx_->conf_mgr->GetTCPThreadCount();
     if (tcp_thread_count > 0)
     {
         last_tcp_thread_idx_ = rand() % tcp_thread_count;

@@ -5,12 +5,9 @@
 
 namespace tcp
 {
-BufferEventConn::BufferEventConn() : client_ip_(""), conn_guid_()
+BufferEventConn::BufferEventConn()
 {
-    created_time_ = 0;
-    sock_fd_ = -1;
     buffer_event_ = NULL;
-    client_port_ = 0;
 }
 
 BufferEventConn::~BufferEventConn()
@@ -24,14 +21,8 @@ void BufferEventConn::Release()
 
 int BufferEventConn::Initialize(const void* ctx)
 {
-    if (NULL == ctx)
-    {
-        return -1;
-    }
-
     LOG_DEBUG("single read size limit: " << bufferevent_get_max_single_read(buffer_event_)
               << ", single write size limit: " << bufferevent_get_max_single_write(buffer_event_));
-
     return 0;
 }
 

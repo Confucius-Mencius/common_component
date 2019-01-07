@@ -37,6 +37,7 @@ private:
     int GetScheduleWorkThreadIdx(int work_thread_idx);
 
 private:
+    const ThreadsCtx* threads_ctx_;
     ThreadSink* thread_sink_;
     RelatedThreadGroups* related_thread_groups_;
 

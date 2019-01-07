@@ -1,20 +1,19 @@
-#include "tcp_conn_center.h"
+#include "tcp_conn_mgr.h"
 #include <string.h>
-#include "buffer_event_conn.h"
 #include "log_util.h"
 #include "mem_util.h"
+#include "buffer_event_conn.h"
 #include "normal_conn.h"
-#include "version.h"
 
 namespace tcp
 {
-ConnMgr::ConnCenter() : conn_center_ctx_(), conn_hash_map_(), conn_id_seq_(),
+ConnMgr::ConnMgr() : conn_center_ctx_(), conn_hash_map_(), conn_id_seq_(),
     conn_id_hash_map_(), conn_inactive_sink_set_()
 {
     max_online_conn_count_ = 0;
 }
 
-ConnMgr::~ConnCenter()
+ConnMgr::~ConnMgr()
 {
 }
 

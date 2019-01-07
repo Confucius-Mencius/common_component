@@ -1,6 +1,8 @@
 #ifndef TCP_THREADS_INC_TCP_SCHEDULER_INTERFACE_H_
 #define TCP_THREADS_INC_TCP_SCHEDULER_INTERFACE_H_
 
+#include "conn_define.h"
+
 namespace tcp
 {
 class SchedulerInterface

@@ -3,6 +3,8 @@
 #include <event2/bufferevent.h>
 #include <event2/event.h>
 #include <event2/event_struct.h>
+#include "task_type.h"
+#include "file_util.h"
 
 #if defined(NDEBUG)
 #include <gperftools/profiler.h>
@@ -474,16 +476,15 @@ void ThreadSink::OnReload()
     }
 }
 
-void ThreadSink::OnTask(const Task* task)
+void ThreadSink::OnTask(const ThreadTask* task)
 {
     ThreadSinkInterface::OnTask(task);
-    const TaskCtx* task_ctx = task->GetCtx();
 
-    switch (task_ctx->task_type)
+    switch (task->GetType())
     {
         case TASK_TYPE_TCP_CONN_CONNECTED:
         {
-            const NewConnCtx* new_conn_ctx = (const NewConnCtx*) task_ctx->msg_body;
+            const NewConnCtx* new_conn_ctx = static_cast<const NewConnCtx*>(task->GetData().data());
             OnClientConnected(new_conn_ctx);
         }
         break;
@@ -674,9 +675,9 @@ void ThreadSink::OnRecvClientMsg(const ConnGuid* conn_guid, const MsgHead& msg_h
     }
 }
 
-void ThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_group)
+void ThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups)
 {
-    related_thread_group_ = related_thread_group;
+    related_thread_group_ = related_thread_groups;
 
     if (related_thread_group_->global_logic != NULL)
     {
@@ -692,21 +693,20 @@ void ThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_grou
         }
     }
 
-    scheduler_.SetRelatedThreadGroup(related_thread_group);
+    scheduler_.SetRelatedThreadGroups(related_thread_groups);
 }
 
 int ThreadSink::LoadLocalLogic()
 {
-    const std::string& tcp_local_logic_so = threads_ctx_->raw ? threads_ctx_->conf_mgr->GetRawTcpLocalLogicSo()
-                                            : threads_ctx_->conf_mgr->GetTcpLocalLogicSo();
+    const std::string tcp_local_logic_so = threads_ctx_->conf_mgr->GetTCPLocalLogicSo();
     if (0 == tcp_local_logic_so.length())
     {
         return 0;
     }
 
-    const std::string local_logic_so_path = GetAbsolutePath(tcp_local_logic_so.c_str(),
-                                            threads_ctx_->cur_working_dir);
-    LOG_INFO("load local logic so " << local_logic_so_path << " begin");
+    char local_logic_so_path[MAX_PATH_LEN] = "";
+    GetAbsolutePath(local_logic_so_path, sizeof(local_logic_so_path), tcp_local_logic_so.c_str(), threads_ctx_->cur_working_dir);
+    LOG_DEBUG("load local logic so " << local_logic_so_path << " begin");
 
     if (local_logic_loader_.Load(local_logic_so_path.c_str()) != 0)
     {
@@ -715,14 +715,12 @@ int ThreadSink::LoadLocalLogic()
         return -1;
     }
 
-    local_logic_ = (LocalLogicInterface*) local_logic_loader_.GetModuleInterface();
+    local_logic_ = static_cast<LocalLogicInterface*>(local_logic_loader_.GetModuleInterface());
     if (NULL == local_logic_)
     {
-        LOG_ERROR("failed to get local logic interface, " << local_logic_loader_.GetLastErrMsg());
+        LOG_ERROR("failed to get local logic, " << local_logic_loader_.GetLastErrMsg());
         return -1;
     }
-
-    LOG_INFO("load local logic so " << local_logic_so_path << " ...");
 
     LogicCtx logic_ctx;
     logic_ctx.argc = threads_ctx_->argc;
@@ -732,9 +730,6 @@ int ThreadSink::LoadLocalLogic()
     logic_ctx.app_name = threads_ctx_->app_name;
     logic_ctx.conf_center = threads_ctx_->conf_center;
     logic_ctx.timer_axis = thread_->GetTimerAxis();
-    logic_ctx.time_service = thread_->GetTimeService();
-    logic_ctx.random_engine = thread_->GetRandomEngine();
-    logic_ctx.conn_center = conn_center_;
     logic_ctx.msg_dispatcher = NULL;
     logic_ctx.scheduler = &scheduler_;
     logic_ctx.local_logic = local_logic_;
@@ -751,24 +746,25 @@ int ThreadSink::LoadLocalLogic()
 
 int ThreadSink::LoadLogicGroup()
 {
-    // logic group
+    // logic so group
     LogicItem logic_item;
     logic_item.logic = NULL;
 
-    const StrGroup logic_so_group = threads_ctx_->raw ? threads_ctx_->conf_mgr->GetRawTcpLogicSoGroup()
-                                    : threads_ctx_->conf_mgr->GetTcpLogicSoGroup();
+    const StrGroup logic_so_group = threads_ctx_->conf_mgr->GetTCPLogicSoGroup();
 
     for (StrGroup::const_iterator it = logic_so_group.begin();
             it != logic_so_group.end(); ++it)
     {
-        logic_item.logic_so_path = GetAbsolutePath((*it).c_str(), threads_ctx_->cur_working_dir);
+        char logic_so_path[MAX_PATH_LEN] = "";
+        GetAbsolutePath(logic_so_path, sizeof(logic_so_path), (*it).c_str(), threads_ctx_->cur_working_dir);
+        logic_item.logic_so_path = logic_so_path;
         logic_item_vec_.push_back(logic_item);
     }
 
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
         LogicItem& logic_item = *it;
-        LOG_INFO("load logic so " << logic_item.logic_so_path << " begin");
+        LOG_DEBUG("load logic so " << logic_item.logic_so_path << " begin");
 
         if (logic_item.logic_loader.Load(logic_item.logic_so_path.c_str()) != 0)
         {
@@ -777,14 +773,12 @@ int ThreadSink::LoadLogicGroup()
             return -1;
         }
 
-        logic_item.logic = (LogicInterface*) logic_item.logic_loader.GetModuleInterface();
+        logic_item.logic = static_cast<LogicInterface*>(logic_item.logic_loader.GetModuleInterface());
         if (NULL == logic_item.logic)
         {
-            LOG_ERROR("failed to get logic interface, " << logic_item.logic_loader.GetLastErrMsg());
+            LOG_ERROR("failed to get logic, " << logic_item.logic_loader.GetLastErrMsg());
             return -1;
         }
-
-        LOG_INFO("load logic so " << logic_item.logic_so_path << " ...");
 
         LogicCtx logic_ctx;
         logic_ctx.argc = threads_ctx_->argc;
@@ -794,10 +788,6 @@ int ThreadSink::LoadLogicGroup()
         logic_ctx.app_name = threads_ctx_->app_name;
         logic_ctx.conf_center = threads_ctx_->conf_center;
         logic_ctx.timer_axis = thread_->GetTimerAxis();
-        logic_ctx.time_service = thread_->GetTimeService();
-        logic_ctx.random_engine = thread_->GetRandomEngine();
-        logic_ctx.conn_center = conn_center_;
-        logic_ctx.msg_dispatcher = thread_->GetMsgDispatcher();
         logic_ctx.scheduler = &scheduler_;
         logic_ctx.local_logic = local_logic_;
         logic_ctx.thread_ev_base = thread_->GetThreadEvBase();
@@ -807,7 +797,7 @@ int ThreadSink::LoadLogicGroup()
             return -1;
         }
 
-        LOG_INFO("load logic so " << logic_item.logic_so_path << " end");
+        LOG_DEBUG("load logic so " << logic_item.logic_so_path << " end");
     }
 
     return 0;

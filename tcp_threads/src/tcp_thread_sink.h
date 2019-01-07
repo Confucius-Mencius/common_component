@@ -113,8 +113,6 @@ private:
     char* msg_recv_buf_;
     size_t max_msg_recv_len_;
 
-    PartMsgMgr part_msg_mgr_;
-
     typedef std::map<std::string, int> PreClientBlacklistMap;
     PreClientBlacklistMap pre_client_blacklist_map_;
 

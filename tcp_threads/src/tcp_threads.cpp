@@ -40,7 +40,7 @@ int Threads::Initialize(const void* ctx)
         return -1;
     }
 
-    threads_ctx_ = *((ThreadsCtx*) ctx);
+    threads_ctx_ = *(static_cast<const ThreadsCtx*>(ctx));
     return 0;
 }
 
@@ -81,7 +81,7 @@ int Threads::CreateThreadGroup()
 
         ThreadGroupCtx tcp_thread_group_ctx;
         tcp_thread_group_ctx.common_component_dir = threads_ctx_.common_component_dir;
-        tcp_thread_group_ctx.thread_name = "tcp thread";
+        tcp_thread_group_ctx.thread_name = "tcp io thread";
         tcp_thread_group_ctx.thread_count = threads_ctx_.conf_mgr->GetTCPThreadCount();
         tcp_thread_group_ctx.thread_sink_creator =  ThreadSink::Create;
 

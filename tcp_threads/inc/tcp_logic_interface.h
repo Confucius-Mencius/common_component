@@ -4,6 +4,7 @@
 #include "conn_define.h"
 #include "module_interface.h"
 
+class ConfCenterInterface;
 class TimerAxisInterface;
 struct event_base;
 
