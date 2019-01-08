@@ -4,56 +4,18 @@
 #include "mem_util.h"
 #include "buffer_event_conn.h"
 #include "normal_conn.h"
+#include "tcp_thread_sink.h"
 
 namespace tcp
 {
-ConnMgr::ConnMgr() : conn_center_ctx_(), conn_hash_map_(), conn_id_seq_(),
-    conn_id_hash_map_(), conn_inactive_sink_set_()
+ConnMgr::ConnMgr() : conn_mgr_ctx_(), conn_hash_map_(), conn_id_seq_(), conn_id_hash_map_()
 {
+    thread_sink_ = NULL;
     max_online_conn_count_ = 0;
 }
 
 ConnMgr::~ConnMgr()
 {
-}
-
-void ConnMgr::Clear(ConnInterface* conn)
-{
-#if defined(USE_BUFFEREVENT)
-    BufferEventConn* tcp_conn = (BufferEventConn*) conn;
-    LOG_DEBUG("ConnCenter::RemoveLogic, " << tcp_conn->GetClientIP() << ":" << tcp_conn->GetClientPort()
-              << ", socket fd: " << tcp_conn->GetSockFD());
-
-    conn_hash_map_.erase(tcp_conn->GetSockFD());
-
-    const ConnID conn_id = tcp_conn->GetConnID();
-    SAFE_DESTROY(tcp_conn);
-
-    conn_id_seq_.Free(conn_id);
-    conn_id_hash_map_.erase(conn_id);
-#else
-    NormalConn* tcp_conn = (NormalConn*) conn;
-    LOG_DEBUG("ConnCenter::RemoveLogic, " << tcp_conn->GetClientIP() << ":" << tcp_conn->GetClientPort()
-              << ", socket fd: " << tcp_conn->GetSockFD());
-
-    conn_hash_map_.erase(tcp_conn->GetSockFD());
-
-    const ConnID conn_id = tcp_conn->GetConnID();
-    SAFE_DESTROY(tcp_conn);
-
-    conn_id_seq_.Free(conn_id);
-    conn_id_hash_map_.erase(conn_id);
-#endif
-}
-
-const char* ConnMgr::GetVersion() const
-{
-    return TCP_CONN_CENTER_VERSION;
-}
-
-const char* ConnMgr::GetLastErrMsg() const
-{
-    return NULL;
 }
 
 void ConnMgr::Release()
@@ -62,11 +24,11 @@ void ConnMgr::Release()
 
     for (ConnIDHashMap::iterator it = tmp_conn_id_hash_map.begin(); it != tmp_conn_id_hash_map.end(); ++it)
     {
-        ConnInterface* conn = it->second;
-        conn_id_seq_.Free(conn->GetConnGUID().conn_id);
+        BaseConn* conn = it->second;
+        conn_id_seq_.Free(conn->GetConnGUID()->conn_id);
 
 #if defined(USE_BUFFEREVENT)
-        ((BufferEventConn*) conn)->Release();
+        (static_cast<BufferEventConn*>(conn))->Release();
 #else
         ((NormalConn*) conn)->Release();
 #endif
@@ -74,22 +36,20 @@ void ConnMgr::Release()
 
     conn_id_hash_map_.clear();
     conn_hash_map_.clear();
-    conn_inactive_sink_set_.clear();
-
     delete this;
 }
 
-int ConnMgr::Initialize(const void* ctx)
+int ConnMgr::Initialize(const ConnMgrCtx* ctx)
 {
     if (NULL == ctx)
     {
         return -1;
     }
 
-    conn_center_ctx_ = *((ConnCenterCtx*) ctx);
+    conn_mgr_ctx_ = *(static_cast<const ConnMgrCtx*>(ctx));
 
-    if (RecordTimeoutMgr<ConnID, std::hash<ConnID>, ConnInterface*>::Initialize(
-                conn_center_ctx_.timer_axis, conn_center_ctx_.inactive_conn_check_interval) != 0)
+    if (RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*>::Initialize(conn_mgr_ctx_.timer_axis,
+            conn_mgr_ctx_.inactive_conn_check_interval) != 0)
     {
         return -1;
     }
@@ -99,12 +59,12 @@ int ConnMgr::Initialize(const void* ctx)
 
 void ConnMgr::Finalize()
 {
-    RecordTimeoutMgr<ConnID, std::hash<ConnID>, ConnInterface*>::Finalize();
+    RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*>::Finalize();
 
     for (ConnIDHashMap::iterator it = conn_id_hash_map_.begin(); it != conn_id_hash_map_.end(); ++it)
     {
 #if defined(USE_BUFFEREVENT)
-        ((BufferEventConn*) it->second)->Finalize();
+        (static_cast<BufferEventConn*>(it->second))->Finalize();
 #else
         ((NormalConn*) it->second)->Finalize();
 #endif
@@ -113,17 +73,17 @@ void ConnMgr::Finalize()
 
 int ConnMgr::Activate()
 {
-    return RecordTimeoutMgr<ConnID, std::hash<ConnID>, ConnInterface*>::Activate();
+    return RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*>::Activate();
 }
 
 void ConnMgr::Freeze()
 {
-    RecordTimeoutMgr<ConnID, std::hash<ConnID>, ConnInterface*>::Freeze();
+    RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*>::Freeze();
 
     for (ConnIDHashMap::iterator it = conn_id_hash_map_.begin(); it != conn_id_hash_map_.end(); ++it)
     {
 #if defined(USE_BUFFEREVENT)
-        ((BufferEventConn*) it->second)->Freeze();
+        (static_cast<BufferEventConn*>(it->second))->Freeze();
 #else
         ((NormalConn*) it->second)->Freeze();
 #endif
@@ -131,10 +91,10 @@ void ConnMgr::Freeze()
 }
 
 #if defined(USE_BUFFEREVENT)
-ConnInterface* ConnMgr::CreateBufferEventConn(int io_thread_idx, int sock_fd, struct bufferevent* buf_event,
+BaseConn* ConnMgr::CreateBufferEventConn(int io_thread_idx, int sock_fd, struct bufferevent* buffer_event,
         const char* ip, unsigned short port)
 {
-    if (sock_fd < 0 || NULL == buf_event)
+    if (sock_fd < 0 || NULL == buffer_event)
     {
         return NULL;
     }
@@ -159,15 +119,15 @@ ConnInterface* ConnMgr::CreateBufferEventConn(int io_thread_idx, int sock_fd, st
     conn->SetCreatedTime(time(NULL));
     conn->SetConnGUID(io_thread_idx, conn_id);
     conn->SetSockFD(sock_fd);
-    conn->SetBufferEvent(buf_event);
     conn->SetClientIP(ip);
     conn->SetClientPort(port);
+    conn->SetBufferEvent(buffer_event);
 
     int ret = -1;
 
     do
     {
-        if (conn->Initialize(&conn_center_ctx_) != 0)
+        if (conn->Initialize(NULL) != 0)
         {
             break;
         }
@@ -189,7 +149,7 @@ ConnInterface* ConnMgr::CreateBufferEventConn(int io_thread_idx, int sock_fd, st
             break;
         }
 
-        UpsertRecord(conn_id, conn, conn_center_ctx_.inactive_conn_life);
+        UpsertRecord(conn_id, conn, conn_mgr_ctx_.inactive_conn_life);
 
         ret = 0;
     } while (0);
@@ -209,11 +169,11 @@ ConnInterface* ConnMgr::CreateBufferEventConn(int io_thread_idx, int sock_fd, st
     if (cur_online_conn_count > max_online_conn_count_)
     {
         max_online_conn_count_ = cur_online_conn_count;
-        LOG_WARN("tcp thread idx: " << conn->GetConnGUID().io_thread_idx << ", max online tcp conn count: "
+        LOG_WARN("tcp thread idx: " << conn->GetConnGUID()->io_thread_idx << ", max online tcp conn count: "
                  << max_online_conn_count_);
     }
 
-    LOG_DEBUG("tcp thread idx: " << conn->GetConnGUID().io_thread_idx
+    LOG_DEBUG("tcp thread idx: " << conn->GetConnGUID()->io_thread_idx
               << ", create conn ok, socket fd: " << sock_fd << ", conn id: " << conn_id);
     return conn;
 }
@@ -311,7 +271,7 @@ void ConnMgr::DestroyConn(int sock_fd)
     ConnHashMap::iterator it = conn_hash_map_.find(sock_fd);
     if (it != conn_hash_map_.end())
     {
-        const ConnID conn_id = it->second->GetConnGUID().conn_id;
+        const ConnID conn_id = it->second->GetConnGUID()->conn_id;
         if (RecordExist(conn_id))
         {
             RemoveRecord(conn_id);
@@ -322,11 +282,11 @@ void ConnMgr::DestroyConn(int sock_fd)
     }
     else
     {
-        LOG_WARN("failed to get tcp conn, socket fd: " << sock_fd);
+        LOG_WARN("failed to get tcp conn by socket fd: " << sock_fd);
     }
 }
 
-ConnInterface* ConnMgr::GetConn(int sock_fd) const
+BaseConn* ConnMgr::GetConn(int sock_fd) const
 {
     ConnHashMap::const_iterator it = conn_hash_map_.find(sock_fd);
     if (it != conn_hash_map_.end())
@@ -337,7 +297,7 @@ ConnInterface* ConnMgr::GetConn(int sock_fd) const
     return NULL;
 }
 
-ConnInterface* ConnMgr::GetConnByID(ConnID conn_id) const
+BaseConn* ConnMgr::GetConnByID(ConnID conn_id) const
 {
     ConnIDHashMap::const_iterator it = conn_id_hash_map_.find(conn_id);
     if (it != conn_id_hash_map_.end())
@@ -353,49 +313,37 @@ void ConnMgr::UpdateConnStatus(ConnID conn_id)
     ConnIDHashMap::const_iterator it = conn_id_hash_map_.find(conn_id);
     if (it != conn_id_hash_map_.end())
     {
-        UpsertRecord(conn_id, it->second, conn_center_ctx_.inactive_conn_life);
+        UpsertRecord(conn_id, it->second, conn_mgr_ctx_.inactive_conn_life);
     }
 }
 
-int ConnMgr::AddConnInactiveSink(ConnInactiveSinkInterface* sink)
+void ConnMgr::Clear(BaseConn* conn)
 {
-    if (NULL == sink)
-    {
-        return -1;
-    }
+#if defined(USE_BUFFEREVENT)
+    BufferEventConn* tcp_conn = (BufferEventConn*) conn;
+    conn_hash_map_.erase(tcp_conn->GetSockFD());
 
-    ConnInactiveSinkSet::const_iterator it = conn_inactive_sink_set_.find(sink);
-    if (it != conn_inactive_sink_set_.end())
-    {
-        LOG_ERROR("sink already exist: " << sink);
-        return -1;
-    }
+    const ConnID conn_id = tcp_conn->GetConnGUID()->conn_id;
+    SAFE_DESTROY(tcp_conn);
 
-    conn_inactive_sink_set_.insert(sink);
-    return 0;
+    conn_id_seq_.Free(conn_id);
+    conn_id_hash_map_.erase(conn_id);
+#else
+    NormalConn* tcp_conn = (NormalConn*) conn;
+    conn_hash_map_.erase(tcp_conn->GetSockFD());
+
+    const ConnID conn_id = tcp_conn->GetConnID();
+    SAFE_DESTROY(tcp_conn);
+
+    conn_id_seq_.Free(conn_id);
+    conn_id_hash_map_.erase(conn_id);
+#endif
 }
 
-void ConnMgr::RemoveConnInactiveSink(ConnInactiveSinkInterface* conn_timeout_sink)
+void ConnMgr::OnTimeout(const ConnID& k, BaseConn* const& v, int timeout_sec)
 {
-    ConnInactiveSinkSet::const_iterator it = conn_inactive_sink_set_.find(conn_timeout_sink);
-    if (it == conn_inactive_sink_set_.end())
-    {
-        LOG_ERROR("sink not exist: " << conn_timeout_sink);
-        return;
-    }
-
-    conn_inactive_sink_set_.erase(it);
-}
-
-void ConnMgr::OnTimeout(const ConnID& k, ConnInterface* const& v, int timeout_sec)
-{
-    LOG_DEBUG("ConnCenter::OnTimeout, key: " << k << ", val: " << v << ", timeout: " << timeout_sec);
-
-    for (ConnInactiveSinkSet::iterator it = conn_inactive_sink_set_.begin(); it != conn_inactive_sink_set_.end(); ++it)
-    {
-        (*it)->OnConnInactive(v);
-    }
-
+    LOG_DEBUG("ConnMgr::OnTimeout, key: " << k << ", val: " << v << ", timeout: " << timeout_sec);
+    thread_sink_->OnConnTimeout(v);
     Clear(v);
 }
 }

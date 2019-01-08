@@ -19,7 +19,7 @@ void ThreadCenterTestEx::SetUp()
         FAIL() << loader_.GetLastErrMsg();
     }
 
-    thread_center_ = (ThreadCenterInterface*) loader_.GetModuleInterface();
+    thread_center_ = static_cast<ThreadCenterInterface*>(loader_.GetModuleInterface());
     if (NULL == thread_center_)
     {
         FAIL() << loader_.GetLastErrMsg();

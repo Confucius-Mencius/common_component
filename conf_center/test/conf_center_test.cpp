@@ -22,7 +22,7 @@ void ConfCenterTest::SetUp()
         FAIL() << loader_.GetLastErrMsg();
     }
 
-    conf_center_ = (ConfCenterInterface*) loader_.GetModuleInterface(0);
+    conf_center_ = static_cast<ConfCenterInterface*>(loader_.GetModuleInterface(0));
     if (NULL == conf_center_)
     {
         FAIL() << loader_.GetLastErrMsg();

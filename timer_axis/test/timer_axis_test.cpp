@@ -74,7 +74,7 @@ void TimerAxisTest::SetUp()
         FAIL() << loader_.GetLastErrMsg();
     }
 
-    timer_axis_ = (TimerAxisInterface*) loader_.GetModuleInterface();
+    timer_axis_ = static_cast<TimerAxisInterface*>(loader_.GetModuleInterface());
     if (NULL == timer_axis_)
     {
         FAIL() << loader_.GetLastErrMsg();

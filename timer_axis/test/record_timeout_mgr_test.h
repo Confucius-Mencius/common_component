@@ -61,9 +61,9 @@ public:
     MyRecordTimeoutMgr();
     virtual ~MyRecordTimeoutMgr();
 
-    void SetEventBase(struct event_base* thread_event_base)
+    void SetEventBase(struct event_base* thread_ev_base)
     {
-        thread_event_base_ = thread_event_base;
+        thread_ev_base_ = thread_ev_base;
     }
 
 protected:
@@ -72,7 +72,7 @@ protected:
 
 private:
     int i_;
-    struct event_base* thread_event_base_;
+    struct event_base* thread_ev_base_;
 };
 
 class RecordTimeoutMgrTest : public GTest
@@ -88,7 +88,7 @@ public:
     void Test002();
 
 private:
-    struct event_base* thread_event_base_;
+    struct event_base* thread_ev_base_;
     ModuleLoader loader_;
     TimerAxisInterface* timer_axis_;
     MyRecordTimeoutMgr record_timeout_mgr_;

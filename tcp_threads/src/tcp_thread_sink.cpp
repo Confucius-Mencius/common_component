@@ -1,17 +1,12 @@
 #include "tcp_thread_sink.h"
 #include <unistd.h>
-#include <event2/bufferevent.h>
+#include <iomanip>
 #include <event2/event.h>
 #include <event2/event_struct.h>
-#include "task_type.h"
-#include "file_util.h"
-
-#if defined(NDEBUG)
-#include <gperftools/profiler.h>
-#endif
-
 #include "app_frame_conf_mgr_interface.h"
+#include "file_util.h"
 #include "str_util.h"
+#include "task_type.h"
 
 namespace tcp
 {
@@ -19,14 +14,14 @@ const static size_t BUFFER_EVENT_MAX_SINGLE_READ = 524288; // 512k
 const static size_t BUFFER_EVENT_MAX_SINGLE_WRITE = 524288;
 
 #if defined(USE_BUFFEREVENT)
-void ThreadSink::BufferEventEventCallback(struct bufferevent* buf_event, short events, void* arg)
+void ThreadSink::BufferEventEventCallback(struct bufferevent* buffer_event, short events, void* arg)
 {
     const int err = EVUTIL_SOCKET_ERROR();
-    const evutil_socket_t sock_fd = bufferevent_getfd(buf_event);
-    LOG_TRACE("events occured on socket, fd: " << sock_fd << ", events: "
+    const evutil_socket_t sock_fd = bufferevent_getfd(buffer_event);
+    LOG_DEBUG("events occured on socket, fd: " << sock_fd << ", events: "
               << setiosflags(std::ios::showbase) << std::hex << events);
 
-    ThreadSink* sink = (ThreadSink*) arg;
+    ThreadSink* sink = static_cast<ThreadSink*>(arg);
 
     do
     {
@@ -34,7 +29,7 @@ void ThreadSink::BufferEventEventCallback(struct bufferevent* buf_event, short e
         {
             if (err != 0)
             {
-                LOG_TRACE("error occured on socket, fd: " << sock_fd << ", errno: " << err
+                LOG_DEBUG("error occured on socket, fd: " << sock_fd << ", errno: " << err
                           << ", err msg: " << evutil_socket_error_to_string(err));
             }
 
@@ -43,34 +38,34 @@ void ThreadSink::BufferEventEventCallback(struct bufferevent* buf_event, short e
 
         if (events & BEV_EVENT_EOF)
         {
-            LOG_TRACE("tcp conn closed, fd: " << sock_fd);
+            LOG_DEBUG("tcp conn closed, fd: " << sock_fd);
             break;
         }
 
         if (events & BEV_EVENT_READING)
         {
-            LOG_TRACE("reading event occurred on socket, fd: " << sock_fd);
+            LOG_DEBUG("reading event occurred on socket, fd: " << sock_fd);
 
-            struct evbuffer* input_buf = bufferevent_get_input(buf_event);
+            struct evbuffer* input_buf = bufferevent_get_input(buffer_event);
             const size_t input_buf_len = evbuffer_get_length(input_buf);
-            LOG_TRACE("input buf len: " << input_buf_len);
+            LOG_DEBUG("input buf len: " << input_buf_len);
 
             if (0 == input_buf_len)
             {
                 // 这个事件等价于上面的EOF事件,都表示对端关闭了
-                LOG_TRACE("tcp conn closed, socket fd: " << sock_fd);
+                LOG_DEBUG("tcp conn closed, socket fd: " << sock_fd);
                 break;
             }
         }
 
         if (events & BEV_EVENT_WRITING)
         {
-            LOG_TRACE("writing event occurred on socket, fd:" << sock_fd);
+            LOG_DEBUG("writing event occurred on socket, fd:" << sock_fd);
         }
 
         if (events & BEV_EVENT_TIMEOUT)
         {
-            LOG_ERROR("timeout event occurred on socket, fd: " << sock_fd);  // TODO 什么时候会出现timeout？
+            LOG_ERROR("timeout event occurred on socket, fd: " << sock_fd);  // TODO 什么时候会出现timeout？逻辑如何处理？
         }
 
         return;
@@ -79,41 +74,31 @@ void ThreadSink::BufferEventEventCallback(struct bufferevent* buf_event, short e
     sink->CloseConn(sock_fd);
 }
 
-void ThreadSink::BufferEventReadCallback(struct bufferevent* buf_event, void* arg)
+void ThreadSink::BufferEventReadCallback(struct bufferevent* buffer_event, void* arg)
 {
-    struct evbuffer* input_buf = bufferevent_get_input(buf_event);
-    const evutil_socket_t sock_fd = bufferevent_getfd(buf_event);
-    LOG_TRACE("recv data, socket fd: " << sock_fd << ", input buf len: " << evbuffer_get_length(input_buf));
+    struct evbuffer* input_buf = bufferevent_get_input(buffer_event);
+    const evutil_socket_t sock_fd = bufferevent_getfd(buffer_event);
+    LOG_DEBUG("recv data, socket fd: " << sock_fd << ", input buf len: " << evbuffer_get_length(input_buf));
 
-    ThreadSink* sink = (ThreadSink*) arg;
+    ThreadSink* sink = static_cast<ThreadSink*>(arg);
 
-    if (sink->thread_->IsStopping())
+    if (sink->self_thread_->IsStopping())
     {
-        LOG_WARN("in stopping status, refuse tcp client data");
+        LOG_WARN("in stopping status, refuse all client data");
         return;
     }
 
-    ConnInterface* conn = sink->conn_center_->GetConn(sock_fd);
+    BaseConn* conn = sink->conn_mgr_.GetConn(sock_fd);
     if (NULL == conn)
     {
         LOG_ERROR("failed to get tcp conn by socket fd: " << sock_fd);
         return;
     }
 
-    sink->conn_center_->UpdateConnStatus(conn->GetConnGuid().conn_id);
-
-    if (sink->threads_ctx_->raw)
-    {
-        sink->OnClientRawData(input_buf, sock_fd, conn);
-    }
-    else
-    {
-        sink->OnClientData(input_buf, sock_fd, conn);
-    }
+    sink->conn_mgr_.UpdateConnStatus(conn->GetConnGUID()->conn_id);
+    sink->OnRecvClientData(input_buf, sock_fd, conn);
 }
-
 #else
-
 void ThreadSink::NormalReadCallback(evutil_socket_t fd, short events, void* arg)
 {
     LOG_TRACE("events occured on socket, fd: " << fd << ", events: " << setiosflags(std::ios::showbase) << std::hex
@@ -173,26 +158,29 @@ void ThreadSink::NormalReadCallback(evutil_socket_t fd, short events, void* arg)
 
     sink->CloseConn(fd);
 }
-
 #endif
 
+#if defined(USE_BUFFEREVENT)
 ThreadSink::ThreadSink()
-    : scheduler_(), part_msg_mgr_(), local_logic_loader_(), logic_item_vec_(), pre_client_blacklist_map_(),
-      conn_recv_ctx_hash_table_()
+    : local_logic_loader_(), logic_item_vec_(), conn_mgr_(), scheduler_()
 {
     threads_ctx_ = NULL;
     listen_thread_ = NULL;
     tcp_thread_group_ = NULL;
-    conn_center_ = NULL;
-    tcp_msg_codec_ = NULL;
-    tcp_client_center_ = NULL;
-    http_client_center_ = NULL;
-    udp_client_center_ = NULL;
-    msg_recv_buf_ = NULL;
-    max_msg_recv_len_ = 0;
-    local_logic_ = NULL;
     related_thread_group_ = NULL;
+    local_logic_ = NULL;
 }
+#else
+ThreadSink::ThreadSink()
+    : local_logic_loader_(), logic_item_vec_(), conn_mgr_(), scheduler_()
+{
+    threads_ctx_ = NULL;
+    listen_thread_ = NULL;
+    tcp_thread_group_ = NULL;
+    related_thread_group_ = NULL;
+    local_logic_ = NULL;
+}
+#endif
 
 ThreadSink::~ThreadSink()
 {
@@ -218,117 +206,21 @@ int ThreadSink::OnInitialize(ThreadInterface* thread)
         return -1;
     }
 
-    ConnCenterCtx tcp_conn_center_ctx;
-    tcp_conn_center_ctx.timer_axis = thread_->GetTimerAxis();
+    conn_mgr_.SetThreadSink(this);
 
+    ConnMgrCtx conn_mgr_ctx;
+    conn_mgr_ctx.timer_axis = self_thread_->GetTimerAxis();
+
+    conn_mgr_ctx.inactive_conn_check_interval =
     {
-        MsgCodecCtx msg_codec_ctx;
-        msg_codec_ctx.max_msg_body_len = threads_ctx_->conf_mgr->GetTcpMaxMsgBodyLen();
-        msg_codec_ctx.do_checksum = threads_ctx_->conf_mgr->TcpDoChecksum();
-
-        MsgCodecInterface* msg_codec_ = threads_ctx_->msg_codec_center->CreateMsgCodec(&msg_codec_ctx);
-        if (NULL == msg_codec_)
-        {
-            LOG_ERROR("failed to create tcp msg codec");
-            return -1;
-        }
-
-        tcp_conn_center_ctx.msg_codec = msg_codec_;
-    }
-
-    tcp_conn_center_ctx.inactive_conn_check_interval =
-    {
-        threads_ctx_->raw ? threads_ctx_->conf_mgr->GetRawTcpInactiveConnCheckIntervalSec()
-        : threads_ctx_->conf_mgr->GetTcpInactiveConnCheckIntervalSec(),
-        threads_ctx_->raw ? threads_ctx_->conf_mgr->GetRawTcpInactiveConnCheckIntervalUsec()
-        : threads_ctx_->conf_mgr->GetTcpInactiveConnCheckIntervalUsec()
+        threads_ctx_->conf_mgr->GetTCPInactiveConnCheckIntervalSec(),
+        threads_ctx_->conf_mgr->GetTCPInactiveConnCheckIntervalUsec()
     };
-    tcp_conn_center_ctx.inactive_conn_life = threads_ctx_->raw ? threads_ctx_->conf_mgr->GetRawTcpInactiveConnLife()
-            : threads_ctx_->conf_mgr->GetTcpInactiveConnLife();
-    tcp_conn_center_ctx.max_msg_body_len = threads_ctx_->raw ? 0
-                                           : threads_ctx_->conf_mgr->GetTcpMaxMsgBodyLen();
 
-    conn_center_ = thread_->GetConnCenterMgr()->CreateTcpConnCenter(&tcp_conn_center_ctx);
-    if (NULL == conn_center_)
+    conn_mgr_ctx.inactive_conn_life = threads_ctx_->conf_mgr->GetTCPInactiveConnLife();
+
+    if (conn_mgr_.Initialize(&conn_mgr_ctx) != 0)
     {
-        return -1;
-    }
-
-    conn_center_->AddConnTimeoutSink(this);
-
-    tcp_msg_codec_ = tcp_conn_center_ctx.msg_codec;
-
-    ClientCenterCtx tcp_client_center_ctx;
-    tcp_client_center_ctx.thread_ev_base = thread_->GetThreadEvBase();
-    tcp_client_center_ctx.msg_codec = tcp_msg_codec_;
-    tcp_client_center_ctx.timer_axis = thread_->GetTimerAxis();
-    tcp_client_center_ctx.trans_center = thread_->GetTransCenter();
-    tcp_client_center_ctx.max_msg_body_len = threads_ctx_->conf_mgr->GetTcpMaxMsgBodyLen();
-    tcp_client_center_ctx.reconnect_interval = {threads_ctx_->conf_mgr->GetPeerTcpConnIntervalSec(),
-                                                threads_ctx_->conf_mgr->GetPeerTcpConnIntervalUsec()
-                                               };
-
-    tcp_client_center_ = thread_->GetClientCenterMgr()->CreateTcpClientCenter(&tcp_client_center_ctx);
-    if (NULL == tcp_client_center_)
-    {
-        return -1;
-    }
-
-    http::ClientCenterCtx http_client_center_ctx;
-    http_client_center_ctx.thread_ev_base = thread_->GetThreadEvBase();
-    http_client_center_ctx.timer_axis = thread_->GetTimerAxis();
-    http_client_center_ctx.trans_center = thread_->GetTransCenter();
-    http_client_center_ctx.http_conn_timeout = threads_ctx_->conf_mgr->GetPeerHttpConnTimeout();
-    http_client_center_ctx.http_conn_max_retry = threads_ctx_->conf_mgr->GetPeerHttpConnMaxRetry();
-
-    http_client_center_ = thread_->GetClientCenterMgr()->CreateHttpClientCenter(&http_client_center_ctx);
-    if (NULL == http_client_center_)
-    {
-        return -1;
-    }
-
-    udp::ClientCenterCtx udp_client_center_ctx;
-    udp_client_center_ctx.thread_ev_base = thread_->GetThreadEvBase();
-
-    {
-        MsgCodecCtx msg_codec_ctx;
-        msg_codec_ctx.max_msg_body_len = threads_ctx_->conf_mgr->GetUdpMaxMsgBodyLen();
-        msg_codec_ctx.do_checksum = threads_ctx_->conf_mgr->UdpDoChecksum();
-
-        MsgCodecInterface* msg_codec_ = threads_ctx_->msg_codec_center->CreateMsgCodec(&msg_codec_ctx);
-        if (NULL == msg_codec_)
-        {
-            LOG_ERROR("failed to create tcp msg codec");
-            return -1;
-        }
-
-        udp_client_center_ctx.msg_codec = msg_codec_;
-    }
-
-    udp_client_center_ctx.timer_axis = thread_->GetTimerAxis();
-    udp_client_center_ctx.trans_center = thread_->GetTransCenter();
-    udp_client_center_ctx.max_msg_body_len = threads_ctx_->conf_mgr->GetUdpMaxMsgBodyLen();
-
-    udp_client_center_ = thread_->GetClientCenterMgr()->CreateUdpClientCenter(&udp_client_center_ctx);
-    if (NULL == udp_client_center_)
-    {
-        return -1;
-    }
-
-    if (threads_ctx_->raw)
-    {
-        max_msg_recv_len_ = BUFFER_EVENT_MAX_SINGLE_READ;
-    }
-    else
-    {
-        max_msg_recv_len_ = MIN_TOTAL_MSG_LEN + threads_ctx_->conf_mgr->GetTcpMaxMsgBodyLen();
-    }
-
-    msg_recv_buf_ = (char*) malloc(max_msg_recv_len_ + 1);
-    if (NULL == msg_recv_buf_)
-    {
-        const int err = errno;
-        LOG_ERROR("failed to alloc recv buf, errno: " << err << ", err msg: " << strerror(err));
         return -1;
     }
 
@@ -354,8 +246,6 @@ int ThreadSink::OnInitialize(ThreadInterface* thread)
 
 void ThreadSink::OnFinalize()
 {
-    conn_center_->RemoveConnTimeoutSink(this);
-
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
         SAFE_FINALIZE(it->logic);
@@ -363,12 +253,7 @@ void ThreadSink::OnFinalize()
 
     SAFE_FINALIZE(local_logic_);
     scheduler_.Finalize();
-
-    if (msg_recv_buf_ != NULL)
-    {
-        free(msg_recv_buf_);
-        msg_recv_buf_ = NULL;
-    }
+    conn_mgr_.Finalize();
 
 #if !defined(USE_BUFFEREVENT)
     for (ConnRecvCtxHashTable::iterator it = conn_recv_ctx_hash_table_.begin();
@@ -394,7 +279,7 @@ int ThreadSink::OnActivate()
         return -1;
     }
 
-    if (part_msg_mgr_.Activate() != 0)
+    if (conn_mgr_.Activate() != 0)
     {
         return -1;
     }
@@ -424,7 +309,7 @@ void ThreadSink::OnFreeze()
 
     SAFE_FREEZE(local_logic_);
 
-    part_msg_mgr_.Freeze();
+    conn_mgr_.Freeze();
     ThreadSinkInterface::OnFreeze();
 }
 
@@ -432,14 +317,7 @@ void ThreadSink::OnThreadStartOK()
 {
     ThreadSinkInterface::OnThreadStartOK();
 
-#if defined(NDEBUG)
-    if (threads_ctx_->conf_mgr->EnableCpuProfiling())
-    {
-        LOG_INFO("enable cpu profiling");
-        ProfilerRegisterThread();
-    }
-#endif
-
+    // TODO 这块怎么优化？
     pthread_mutex_lock(threads_ctx_->frame_threads_mutex);
     ++(*threads_ctx_->frame_threads_count);
     pthread_cond_signal(threads_ctx_->frame_threads_cond);
@@ -484,50 +362,36 @@ void ThreadSink::OnTask(const ThreadTask* task)
     {
         case TASK_TYPE_TCP_CONN_CONNECTED:
         {
-            const NewConnCtx* new_conn_ctx = static_cast<const NewConnCtx*>(task->GetData().data());
-            OnClientConnected(new_conn_ctx);
+            NewConnCtx new_conn_ctx;
+            memcpy(&new_conn_ctx, task->GetData().data(), task->GetData().size());
+            OnClientConnected(&new_conn_ctx);
         }
         break;
 
         case TASK_TYPE_TCP_SEND_TO_CLIENT:
         {
-            scheduler_.SendToClient(&task_ctx->conn_guid, task_ctx->msg_head, task_ctx->msg_body,
-                                    task_ctx->msg_body_len);
-        }
-        break;
-
-        case TASK_TYPE_TCP_SEND_RAW_TO_CLIENT:
-        {
-            scheduler_.SendRawToClient(&task_ctx->conn_guid, task_ctx->msg_body, task_ctx->msg_body_len);
+            scheduler_.SendToClient(task->GetConnGUID(), task->GetData().data(), task->GetData().size());
         }
         break;
 
         case TASK_TYPE_TCP_CLOSE_CONN:
         {
-            scheduler_.CloseClient(&task_ctx->conn_guid);
+            scheduler_.CloseClient(task->GetConnGUID());
         }
         break;
 
         case TASK_TYPE_NORMAL:
         {
-            if (logic_item_vec_.size() > 0)
+            for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
             {
-                if (0 == thread_->GetMsgDispatcher()->DispatchMsg(&task_ctx->conn_guid, task_ctx->msg_head,
-                        task_ctx->msg_body, task_ctx->msg_body_len))
-                {
-                    LOG_TRACE("dispatch msg ok, " << task_ctx->conn_guid << ", msg id: "
-                              << task_ctx->msg_head.msg_id);
-                    return;
-                }
+                it->logic->OnTask(task->GetConnGUID(), task->GetSourceThread(), task->GetData().data(), task->GetData().size());
             }
-
-            LOG_ERROR("failed to dispatch msg, msg id: " << task_ctx->msg_head.msg_id);
         }
         break;
 
         default:
         {
-            LOG_ERROR("invalid task type: " << task_ctx->task_type);
+            LOG_ERROR("invalid task type: " << task->GetType());
         }
         break;
     }
@@ -550,66 +414,43 @@ bool ThreadSink::CanExit() const
     return (can_exit != 0);
 }
 
-void ThreadSink::OnRecvNfy(const Peer& peer, const MsgHead& msg_head, const void* msg_body, size_t msg_body_len)
+void ThreadSink::OnConnTimeout(BaseConn* conn)
 {
-    if (logic_item_vec_.size() > 0)
-    {
-        if (0 == thread_->GetMsgDispatcher()->DispatchMsg(NULL, msg_head, msg_body, msg_body_len))
-        {
-            LOG_TRACE("dispatch msg ok, msg id: " << msg_head.msg_id);
-            return;
-        }
-    }
-
-    LOG_ERROR("failed to dispatch msg, msg id: " << msg_head.msg_id);
-}
-
-void ThreadSink::OnConnTimeout(ConnInterface* conn)
-{
-    CloseConn(conn->GetSockFd());
+    CloseConn(conn->GetSockFD());
 }
 
 void ThreadSink::CloseConn(evutil_socket_t sock_fd)
 {
-    ConnInterface* conn = conn_center_->GetConn(sock_fd);
+    BaseConn* conn = conn_mgr_.GetConn(sock_fd);
     if (conn != NULL)
     {
         OnClientClosed(conn);
     }
 }
 
-void ThreadSink::OnClientClosed(ConnInterface* conn)
+void ThreadSink::OnClientClosed(BaseConn* conn)
 {
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
-        (*it).logic->OnClientClosed(&conn->GetConnGuid());
+        (*it).logic->OnClientClosed(conn->GetConnGUID());
     }
 
     if (local_logic_ != NULL)
     {
-        local_logic_->OnClientClosed(&conn->GetConnGuid());
+        local_logic_->OnClientClosed(conn->GetConnGUID());
     }
-
-    TaskCtx task_ctx;
-    task_ctx.task_type = TASK_TYPE_TCP_CONN_CLOSED;
-    task_ctx.source_thread = thread_;
 
     char client_ctx_buf[128] = "";
-    StrPrintf(client_ctx_buf, sizeof(client_ctx_buf), "%s:%u, socket fd: %d", conn->GetClientIp(), conn->GetClientPort(), conn->GetSockFd());
-    task_ctx.msg_body = client_ctx_buf;
-    task_ctx.msg_body_len = (size_t) StrLen(client_ctx_buf, sizeof(client_ctx_buf));
+    const int n = StrPrintf(client_ctx_buf, sizeof(client_ctx_buf), "%s:%u, socket fd: %d", conn->GetClientIP(), conn->GetClientPort(), conn->GetSockFD());
 
-    Task* task = Task::Create(&task_ctx);
+    ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_CONN_CLOSED, self_thread_, NULL, client_ctx_buf, n);
     if (NULL == task)
     {
+        LOG_ERROR("failed to create tcp conn closed task");
         return;
     }
 
-    if (listen_thread_->PushTask(task) != 0)
-    {
-        task->Release();
-        return;
-    }
+    listen_thread_->PushTask(task);
 
 #if !defined(USE_BUFFEREVENT)
     ConnRecvCtxHashTable::iterator it = conn_recv_ctx_hash_table_.find(conn->GetSockFd());
@@ -625,54 +466,7 @@ void ThreadSink::OnClientClosed(ConnInterface* conn)
     }
 #endif
 
-    conn_center_->RemoveConn(conn->GetSockFd());
-}
-
-void ThreadSink::OnRecvClientMsg(const ConnGuid* conn_guid, const MsgHead& msg_head,
-                                 const void* msg_body, size_t msg_body_len)
-{
-    if (logic_item_vec_.size() > 0)
-    {
-        // 内置心跳消息处理
-        if (MSG_ID_HEARTBEAT_REQ == msg_head.msg_id)
-        {
-            MsgHead rsp_msg_head = msg_head;
-            rsp_msg_head.msg_id = MSG_ID_HEARTBEAT_RSP;
-
-            scheduler_.SendToClient(conn_guid, rsp_msg_head, NULL, 0);
-            return;
-        }
-
-        if (0 == thread_->GetMsgDispatcher()->DispatchMsg(conn_guid, msg_head, msg_body, msg_body_len))
-        {
-            LOG_TRACE("dispatch msg ok, " << conn_guid << ", msg id: " << msg_head.msg_id);
-            return;
-        }
-    }
-
-    // 没有io logic或者io logic派发失败，把任务均匀分配给work线程
-    if (NULL == related_thread_group_->work_threads ||
-            0 == related_thread_group_->work_threads->GetThreadCount())
-    {
-        LOG_ERROR("no work threads, failed to dispatch msg, " << conn_guid << ", msg id: " << msg_head.msg_id);
-
-        MsgHead rsp_msg_head = msg_head;
-        rsp_msg_head.msg_id = MSG_ID_NONE_HANDLER_FOUND;
-
-        scheduler_.SendToClient(conn_guid, rsp_msg_head, NULL, 0);
-        return;
-    }
-
-    if (scheduler_.SendToWorkThread(conn_guid, msg_head, msg_body, msg_body_len, -1) != 0)
-    {
-        LOG_ERROR("failed to send to work thread");
-
-        MsgHead rsp_msg_head = msg_head;
-        rsp_msg_head.msg_id = MSG_ID_SCHEDULE_FAILED;
-
-        scheduler_.SendToClient(conn_guid, rsp_msg_head, NULL, 0);
-        return;
-    }
+    conn_mgr_.DestroyConn(conn->GetSockFD());
 }
 
 void ThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups)
@@ -708,7 +502,7 @@ int ThreadSink::LoadLocalLogic()
     GetAbsolutePath(local_logic_so_path, sizeof(local_logic_so_path), tcp_local_logic_so.c_str(), threads_ctx_->cur_working_dir);
     LOG_DEBUG("load local logic so " << local_logic_so_path << " begin");
 
-    if (local_logic_loader_.Load(local_logic_so_path.c_str()) != 0)
+    if (local_logic_loader_.Load(local_logic_so_path) != 0)
     {
         LOG_ERROR("failed to load local logic so " << local_logic_so_path
                   << ", " << local_logic_loader_.GetLastErrMsg());
@@ -729,11 +523,10 @@ int ThreadSink::LoadLocalLogic()
     logic_ctx.cur_working_dir = threads_ctx_->cur_working_dir;
     logic_ctx.app_name = threads_ctx_->app_name;
     logic_ctx.conf_center = threads_ctx_->conf_center;
-    logic_ctx.timer_axis = thread_->GetTimerAxis();
-    logic_ctx.msg_dispatcher = NULL;
+    logic_ctx.timer_axis = self_thread_->GetTimerAxis();
     logic_ctx.scheduler = &scheduler_;
     logic_ctx.local_logic = local_logic_;
-    logic_ctx.thread_ev_base = thread_->GetThreadEvBase();
+    logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
 
     if (local_logic_->Initialize(&logic_ctx) != 0)
     {
@@ -787,10 +580,10 @@ int ThreadSink::LoadLogicGroup()
         logic_ctx.cur_working_dir = threads_ctx_->cur_working_dir;
         logic_ctx.app_name = threads_ctx_->app_name;
         logic_ctx.conf_center = threads_ctx_->conf_center;
-        logic_ctx.timer_axis = thread_->GetTimerAxis();
+        logic_ctx.timer_axis = self_thread_->GetTimerAxis();
         logic_ctx.scheduler = &scheduler_;
         logic_ctx.local_logic = local_logic_;
-        logic_ctx.thread_ev_base = thread_->GetThreadEvBase();
+        logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
 
         if (logic_item.logic->Initialize(&logic_ctx) != 0)
         {
@@ -806,16 +599,16 @@ int ThreadSink::LoadLogicGroup()
 void ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
 {
 #if defined(USE_BUFFEREVENT)
-    ConnInterface* conn = conn_center_->GetConn(new_conn_ctx->client_sock_fd);
+    BaseConn* conn = conn_mgr_.GetConn(new_conn_ctx->client_sock_fd);
     if (conn != NULL)
     {
         LOG_WARN("tcp conn already exist, socket fd: " << new_conn_ctx->client_sock_fd << ", destroy it first");
-        conn_center_->RemoveConn(conn->GetSockFd());
+        conn_mgr_.DestroyConn(conn->GetSockFD());
     }
 
-    struct bufferevent* buf_event = bufferevent_socket_new(thread_->GetThreadEvBase(), new_conn_ctx->client_sock_fd,
-                                    BEV_OPT_CLOSE_ON_FREE);
-    if (NULL == buf_event)
+    struct bufferevent* buffer_event = bufferevent_socket_new(self_thread_->GetThreadEvBase(), new_conn_ctx->client_sock_fd,
+                                       BEV_OPT_CLOSE_ON_FREE);
+    if (NULL == buffer_event)
     {
         const int err = EVUTIL_SOCKET_ERROR();
         LOG_ERROR("failed to create buffer event, errno: " << err
@@ -837,36 +630,42 @@ void ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
     // LOG_TRACE("after set, send buf size: " << send_buf_size << ", recv buf size: " << recv_buf_size
     //           << ", sock_fd: " << client_sock_fd);
 
-    bufferevent_set_max_single_read(buf_event, BUFFER_EVENT_MAX_SINGLE_READ);
-    bufferevent_set_max_single_write(buf_event, BUFFER_EVENT_MAX_SINGLE_WRITE);
+    LOG_DEBUG("before set, single read size limit: " << bufferevent_get_max_single_read(buffer_event)
+              << ", single write size limit: " << bufferevent_get_max_single_write(buffer_event));
 
-    bufferevent_setcb(buf_event, ThreadSink::BufferEventReadCallback, NULL, ThreadSink::BufferEventEventCallback, this);
+    bufferevent_set_max_single_read(buffer_event, BUFFER_EVENT_MAX_SINGLE_READ); // TODO 看一下libevent源码改动还有没有必要
+    bufferevent_set_max_single_write(buffer_event, BUFFER_EVENT_MAX_SINGLE_WRITE);
 
-    if (bufferevent_enable(buf_event, EV_READ | EV_WRITE | EV_PERSIST) != 0)
+    LOG_DEBUG("after set, single read size limit: " << bufferevent_get_max_single_read(buffer_event)
+              << ", single write size limit: " << bufferevent_get_max_single_write(buffer_event));
+
+    bufferevent_setcb(buffer_event, ThreadSink::BufferEventReadCallback, NULL, ThreadSink::BufferEventEventCallback, this);
+
+    if (bufferevent_enable(buffer_event, EV_READ | EV_WRITE | EV_PERSIST) != 0)
     {
         const int err = EVUTIL_SOCKET_ERROR();
         LOG_ERROR("failed to enable buffer event reading and writing, errno: " << err
                   << ", err msg: " << evutil_socket_error_to_string(err));
-        bufferevent_free(buf_event);
+        bufferevent_free(buffer_event);
         return;
     }
 
-    conn = conn_center_->CreateBufferEventConn(thread_->GetThreadIdx(), new_conn_ctx->client_sock_fd, buf_event,
-            new_conn_ctx->client_ip, new_conn_ctx->client_port);
+    conn = conn_mgr_.CreateBufferEventConn(self_thread_->GetThreadIdx(), new_conn_ctx->client_sock_fd, buffer_event,
+                                           new_conn_ctx->client_ip, new_conn_ctx->client_port);
     if (NULL == conn)
     {
-        bufferevent_free(buf_event);
+        bufferevent_free(buffer_event);
         return;
     }
 
     if (local_logic_ != NULL)
     {
-        local_logic_->OnClientConnected(&conn->GetConnGuid());
+        local_logic_->OnClientConnected(conn->GetConnGUID());
     }
 
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
-        (*it).logic->OnClientConnected(&conn->GetConnGuid());
+        (*it).logic->OnClientConnected(conn->GetConnGUID());
     }
 #else
     ConnInterface* conn = conn_center_->GetConn(new_conn_ctx->client_sock_fd);
@@ -943,148 +742,37 @@ void ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
 }
 
 #if defined(USE_BUFFEREVENT)
-
-void ThreadSink::OnClientData(struct evbuffer* input_buf, const int sock_fd, ConnInterface* conn)
-{
-    MsgCodecInterface* msg_codec = tcp_msg_codec_;
-
-    while (true)
-    {
-        MsgHead msg_head;
-        MsgId err_msg_id = MSG_ID_OK;
-        size_t total_msg_len = 0;
-
-        if (!msg_codec->IsWholeMsg(err_msg_id, total_msg_len, input_buf))
-        {
-            if (err_msg_id != MSG_ID_NOT_A_WHOLE_MSG)
-            {
-                msg_head.Reset();
-                msg_head.msg_id = err_msg_id;
-                conn->Send(msg_head, NULL, 0, -1);
-
-                LOG_INFO("close tcp conn, socket fd: " << sock_fd << ", err msg id: " << err_msg_id);
-                CloseConn(sock_fd); // 服务器主动关闭连接
-
-                return;
-            }
-
-            const size_t input_buf_len = evbuffer_get_length(input_buf);
-
-            if (input_buf_len > 0)
-            {
-                LOG_TRACE("socket fd: " << sock_fd << ", input buf len: " << input_buf_len);
-
-                // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
-                part_msg_mgr_.UpsertRecord(conn, sock_fd, threads_ctx_->conf_mgr->GetTcpPartMsgConnLife());
-            }
-
-            return;
-        }
-
-        part_msg_mgr_.RemoveRecord(conn);
-
-        evbuffer_drain(input_buf, TOTAL_MSG_LEN_FIELD_LEN);
-
-        char* total_msg_buf = msg_recv_buf_;
-        if (evbuffer_remove(input_buf, total_msg_buf, total_msg_len) != (int) total_msg_len)
-        {
-            const int err = EVUTIL_SOCKET_ERROR();
-            LOG_ERROR("failed to remove data from evbuffer, errno: " << err
-                      << ", err msg: " << evutil_socket_error_to_string(err));
-
-            msg_head.Reset();
-            msg_head.msg_id = MSG_ID_REMOVE_OUT_FAILED;
-            conn->Send(msg_head, NULL, 0, -1);
-
-            return;
-        }
-
-        total_msg_buf[total_msg_len] = '\0';
-
-        char* msg_body = NULL;
-        size_t msg_body_len = 0;
-
-        msg_head.Reset();
-
-        if (msg_codec->DecodeMsg(err_msg_id, &msg_head, &msg_body, msg_body_len, total_msg_buf, total_msg_len) != 0)
-        {
-            msg_head.Reset();
-            msg_head.msg_id = err_msg_id;
-            conn->Send(msg_head, NULL, 0, -1);
-
-            return;
-        }
-
-        OnRecvClientMsg(&conn->GetConnGuid(), msg_head, msg_body, msg_body_len);
-    }
-}
-
-void ThreadSink::OnClientRawData(struct evbuffer* input_buf, const int sock_fd, const ConnInterface* conn)
+void ThreadSink::OnRecvClientData(struct evbuffer* input_buf, int sock_fd, BaseConn* conn)
 {
     const size_t input_buf_len = evbuffer_get_length(input_buf);
-    LOG_TRACE("socket fd: " << sock_fd << ", input buf len: " << input_buf_len);
+    LOG_DEBUG("socket fd: " << sock_fd << ", input buf len: " << input_buf_len);
 
     if (input_buf_len <= 0)
     {
         return;
     }
 
-    char* data_buf = NULL;
-    bool need_free = false;
-
-    if (input_buf_len <= (size_t) BUFFER_EVENT_MAX_SINGLE_READ)
-    {
-        data_buf = msg_recv_buf_;
-    }
-    else
-    {
-        data_buf = new char[input_buf_len + 1];
-        if (NULL == data_buf)
-        {
-            LOG_ERROR("failed to create data buf");
-            return;
-        }
-
-        need_free = true;
-    }
-
-    if (-1 == evbuffer_remove(input_buf, data_buf, input_buf_len))
-    {
-        const int err = EVUTIL_SOCKET_ERROR();
-        LOG_ERROR("failed to remove data from evbuffer, errno: " << err
-                  << ", err msg: " << evutil_socket_error_to_string(err));
-
-        if (need_free)
-        {
-            delete[] data_buf;
-            data_buf = NULL;
-        }
-
-        return;
-    }
-
-    data_buf[input_buf_len] = '\0';
+    unsigned char* data_buf = evbuffer_pullup(input_buf, input_buf_len);
 
     // logic处理
     if (local_logic_ != NULL)
     {
-        local_logic_->OnRecvClientRawData(&conn->GetConnGuid(), data_buf, input_buf_len);
+        local_logic_->OnRecvClientData(conn->GetConnGUID(), data_buf, input_buf_len);
     }
 
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
-        (*it).logic->OnRecvClientRawData(&conn->GetConnGuid(), data_buf, input_buf_len);
+        (*it).logic->OnRecvClientData(conn->GetConnGUID(), data_buf, input_buf_len);
     }
 
-    if (need_free)
+    if (evbuffer_drain(input_buf, input_buf_len) != 0)
     {
-        delete[] data_buf;
-        data_buf = NULL;
+        const int err = EVUTIL_SOCKET_ERROR();
+        LOG_ERROR("failed to remove data from input buffer, errno: " << err
+                  << ", err msg: " << evutil_socket_error_to_string(err));
     }
 }
-
 #else
-
 void ThreadSink::OnClientData(bool& closed, int sock_fd, ConnInterface* conn)
 {
     ConnRecvCtxHashTable::iterator it = conn_recv_ctx_hash_table_.find(sock_fd);
@@ -1274,34 +962,33 @@ void ThreadSink::OnClientRawData(bool& closed, int sock_fd, const ConnInterface*
         (*it).logic->OnClientRawData(closed, &conn->GetConnGuid(), sock_fd);
     }
 }
-
 #endif
 
-void ThreadSink::ExhaustSocketData(int sock_fd)
-{
-    while (true)
-    {
-        ssize_t n = read(sock_fd, msg_recv_buf_, max_msg_recv_len_);
-        if (n < 0)
-        {
-            const int err = errno;
-            if (EINTR == err)
-            {
-                // 被中断了，可以继续读
-                continue;
-            }
-            else if (EAGAIN == err)
-            {
-                // 没有数据可读了
-                return;
-            }
-            else
-            {
-                LOG_ERROR("read error, n: " << n << ", socked fd: " << sock_fd << ", errno: " << err << ", err msg: "
-                          << evutil_socket_error_to_string(err));
-                return;
-            }
-        }
-    }
-}
+//void ThreadSink::ExhaustSocketData(int sock_fd)
+//{
+//    while (true)
+//    {
+//        ssize_t n = read(sock_fd, msg_recv_buf_, max_msg_recv_len_);
+//        if (n < 0)
+//        {
+//            const int err = errno;
+//            if (EINTR == err)
+//            {
+//                // 被中断了，可以继续读
+//                continue;
+//            }
+//            else if (EAGAIN == err)
+//            {
+//                // 没有数据可读了
+//                return;
+//            }
+//            else
+//            {
+//                LOG_ERROR("read error, n: " << n << ", socked fd: " << sock_fd << ", errno: " << err << ", err msg: "
+//                          << evutil_socket_error_to_string(err));
+//                return;
+//            }
+//        }
+//    }
+//}
 }

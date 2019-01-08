@@ -6,12 +6,8 @@
 
 class ConfCenterInterface;
 class TimerAxisInterface;
+class ThreadInterface;
 struct event_base;
-
-//namespace base
-//{
-//class MsgDispatcherInterface;
-//}
 
 namespace global
 {
@@ -104,6 +100,7 @@ public:
      */
     virtual void OnClientConnected(const ConnGUID* conn_guid)
     {
+        (void) conn_guid;
     }
 
     /**
@@ -112,13 +109,24 @@ public:
      */
     virtual void OnClientClosed(const ConnGUID* conn_guid)
     {
+        (void) conn_guid;
+    }
+
+    virtual void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
+    {
+        (void) conn_guid;
+        (void) data;
+        (void) len;
     }
 
 #if defined(USE_BUFFEREVENT)
-    virtual void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
+    virtual void OnTask(const ConnGUID* conn_guid, ThreadInterface* source_thread, const void* data, size_t len)
     {
+        (void) conn_guid;
+        (void) source_thread;
+        (void) data;
+        (void) len;
     }
-
 #else
     /**
      *

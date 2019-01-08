@@ -1,7 +1,7 @@
 #ifndef APP_FRAME_INC_TASK_TYPE_H_
 #define APP_FRAME_INC_TASK_TYPE_H_
 
-enum TaskType
+enum
 {
     TASK_TYPE_MIN = 0,
     TASK_TYPE_TCP_CONN_CONNECTED = TASK_TYPE_MIN,

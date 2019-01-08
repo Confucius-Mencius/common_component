@@ -28,7 +28,7 @@ void MyRecordTimeoutMgr::OnTimeout(const Key& k, const Value& v, int timeout_sec
         event_base_loopbreak(thread_event_base_);
     }
 #else
-    event_base_loopbreak(thread_event_base_);
+    event_base_loopbreak(thread_ev_base_);
 #endif
 }
 
@@ -42,8 +42,8 @@ RecordTimeoutMgrTest::~RecordTimeoutMgrTest()
 
 void RecordTimeoutMgrTest::SetUp()
 {
-    thread_event_base_ = event_base_new();
-    if (NULL == thread_event_base_)
+    thread_ev_base_ = event_base_new();
+    if (NULL == thread_ev_base_)
     {
         FAIL() << "failed to create event base";
     }
@@ -53,14 +53,14 @@ void RecordTimeoutMgrTest::SetUp()
         FAIL() << loader_.GetLastErrMsg();
     }
 
-    timer_axis_ = (TimerAxisInterface*) loader_.GetModuleInterface();
+    timer_axis_ = static_cast<TimerAxisInterface*>(loader_.GetModuleInterface());
     if (NULL == timer_axis_)
     {
         FAIL() << loader_.GetLastErrMsg();
     }
 
     TimerAxisCtx timer_axis_ctx;
-    timer_axis_ctx.thread_ev_base = thread_event_base_;
+    timer_axis_ctx.thread_ev_base = thread_ev_base_;
 
     if (timer_axis_->Initialize(&timer_axis_ctx) != 0)
     {
@@ -87,10 +87,10 @@ void RecordTimeoutMgrTest::TearDown()
 
     SAFE_DESTROY_MODULE(timer_axis_, loader_);
 
-    if (thread_event_base_ != NULL)
+    if (thread_ev_base_ != NULL)
     {
-        event_base_free(thread_event_base_);
-        thread_event_base_ = NULL;
+        event_base_free(thread_ev_base_);
+        thread_ev_base_ = NULL;
     }
 }
 
@@ -144,7 +144,7 @@ void RecordTimeoutMgrTest::Test001()
 
 void RecordTimeoutMgrTest::Test002()
 {
-    record_timeout_mgr_.SetEventBase(thread_event_base_);
+    record_timeout_mgr_.SetEventBase(thread_ev_base_);
 
 #if !defined(NDEBUG)
     EXPECT_EQ(0, record_timeout_mgr_.GetRecordCount());
@@ -188,7 +188,7 @@ void RecordTimeoutMgrTest::Test002()
     record_timeout_mgr_.Display();
 #endif
 
-    event_base_dispatch(thread_event_base_);
+    event_base_dispatch(thread_ev_base_);
 }
 
 ADD_TEST_F(RecordTimeoutMgrTest, Test001);

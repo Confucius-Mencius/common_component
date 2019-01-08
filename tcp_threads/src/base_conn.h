@@ -61,9 +61,9 @@ public:
         conn_guid_.conn_id = conn_id;
     }
 
-    const ConnGUID& GetConnGUID() const
+    const ConnGUID* GetConnGUID()
     {
-        return conn_guid_;
+        return &conn_guid_;
     }
 
 protected:

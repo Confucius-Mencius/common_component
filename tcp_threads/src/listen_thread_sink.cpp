@@ -8,6 +8,8 @@ namespace tcp
 {
 void ListenThreadSink::ErrorCallback(struct evconnlistener* listener, void* arg)
 {
+    (void) arg;
+
     const int err = EVUTIL_SOCKET_ERROR();
     evutil_socket_t sock_fd = evconnlistener_get_fd(listener);
 
@@ -18,9 +20,12 @@ void ListenThreadSink::ErrorCallback(struct evconnlistener* listener, void* arg)
 void ListenThreadSink::OnAccept(struct evconnlistener* listener, evutil_socket_t sock_fd,
                                 struct sockaddr* sock_addr, int sock_addr_len, void* arg)
 {
+    (void) listener;
+    (void) sock_addr_len;
+
     ListenThreadSink* sink = static_cast<ListenThreadSink*>(arg);
 
-    if (sink->thread_->IsStopping())
+    if (sink->GetThread()->IsStopping())
     {
         LOG_WARN("in stopping status, refuse all new connections");
         evutil_closesocket(sock_fd);
@@ -143,7 +148,7 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread)
             break;
         }
 
-        listener_ = evconnlistener_new(thread_->GetThreadEvBase(), ListenThreadSink::OnAccept, this,
+        listener_ = evconnlistener_new(self_thread_->GetThreadEvBase(), ListenThreadSink::OnAccept, this,
                                        LEV_OPT_REUSEABLE | LEV_OPT_CLOSE_ON_FREE | LEV_OPT_THREADSAFE, -1, listen_sock_fd_);
         if (NULL == listener_)
         {
@@ -239,7 +244,7 @@ bool ListenThreadSink::CanExit() const
 
 void ListenThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
 {
-    ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_CONN_CONNECTED, thread_, NULL, new_conn_ctx, sizeof(NewConnCtx));
+    ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_CONN_CONNECTED, self_thread_, NULL, new_conn_ctx, sizeof(NewConnCtx));
     if (NULL == task)
     {
         LOG_ERROR("failed to create new conn task");

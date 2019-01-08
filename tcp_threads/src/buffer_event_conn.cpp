@@ -21,8 +21,7 @@ void BufferEventConn::Release()
 
 int BufferEventConn::Initialize(const void* ctx)
 {
-    LOG_DEBUG("single read size limit: " << bufferevent_get_max_single_read(buffer_event_)
-              << ", single write size limit: " << bufferevent_get_max_single_write(buffer_event_));
+    (void) ctx;
     return 0;
 }
 

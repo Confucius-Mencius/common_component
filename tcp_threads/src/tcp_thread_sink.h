@@ -3,13 +3,14 @@
 
 #include <set>
 #include <event2/buffer.h>
+#include <event2/bufferevent.h>
 #include <event2/util.h>
 #include "new_conn.h"
 #include "mem_util.h"
 #include "module_loader.h"
+#include "tcp_conn_mgr.h"
 #include "tcp_logic_interface.h"
 #include "tcp_scheduler.h"
-#include "tcp_threads_interface.h"
 
 namespace tcp
 {
@@ -31,9 +32,10 @@ class ThreadSink : public ThreadSinkInterface
 {
     CREATE_FUNC(ThreadSink)
 
+private:
 #if defined(USE_BUFFEREVENT)
-    static void BufferEventEventCallback(struct bufferevent* buf_event, short events, void* arg);
-    static void BufferEventReadCallback(struct bufferevent* buf_event, void* arg);
+    static void BufferEventEventCallback(struct bufferevent* buffer_event, short events, void* arg);
+    static void BufferEventReadCallback(struct bufferevent* buffer_event, void* arg);
 #else
     static void NormalReadCallback(evutil_socket_t fd, short events, void* arg);
 #endif
@@ -77,10 +79,14 @@ public:
 
     void SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups);
 
+    ConnMgr* GetConnMgr()
+    {
+        return &conn_mgr_;
+    }
+
     void CloseConn(evutil_socket_t sock_fd);
-    void OnClientClosed(ConnInterface* conn);
-    void OnRecvClientMsg(const ConnGUID* conn_guid, const MsgHead& msg_head,
-                         const void* msg_body, size_t msg_body_len);
+    void OnClientClosed(BaseConn* conn);
+    void OnConnTimeout(BaseConn* conn);
 
 private:
     int LoadLocalLogic();
@@ -88,37 +94,28 @@ private:
     void OnClientConnected(const NewConnCtx* new_conn_ctx);
 
 #if defined(USE_BUFFEREVENT)
-    void OnClientData(struct evbuffer* input_buf, const int sock_fd, ConnInterface* conn);
-    void OnClientRawData(struct evbuffer* input_buf, const int sock_fd, const ConnInterface* conn);
+    void OnRecvClientData(struct evbuffer* input_buf, int sock_fd, BaseConn* conn);
 #else
     void OnClientData(bool& closed, int sock_fd, ConnInterface* conn);
     void OnClientRawData(bool& closed, int sock_fd, const ConnInterface* conn);
 #endif
 
-    void ExhaustSocketData(int sock_fd);
+//    void ExhaustSocketData(int sock_fd);
 
 private:
     const ThreadsCtx* threads_ctx_;
+    ThreadInterface* listen_thread_;
+    ThreadGroupInterface* tcp_thread_group_;
+    RelatedThreadGroups* related_thread_group_;
 
     ModuleLoader local_logic_loader_;
     LocalLogicInterface* local_logic_;
     LogicItemVec logic_item_vec_;
 
-    ThreadInterface* listen_thread_;
-    ThreadGroupInterface* tcp_thread_group_;
-    RelatedThreadGroups* related_thread_group_;
-
+    ConnMgr conn_mgr_;
     Scheduler scheduler_;
 
-    char* msg_recv_buf_;
-    size_t max_msg_recv_len_;
-
-    typedef std::map<std::string, int> PreClientBlacklistMap;
-    PreClientBlacklistMap pre_client_blacklist_map_;
-
-//    typedef std::set<std::string> ClientBlacklistSet;
-//    ClientBlacklistSet client_blacklist_set_;
-
+#if !defined(USE_BUFFEREVENT)
     struct ConnRecvCtx
     {
         char total_msg_len_network_[TOTAL_MSG_LEN_FIELD_LEN];
@@ -138,6 +135,7 @@ private:
 
     typedef __hash_map<int, ConnRecvCtx> ConnRecvCtxHashTable;
     ConnRecvCtxHashTable conn_recv_ctx_hash_table_;
+#endif
 };
 }
 

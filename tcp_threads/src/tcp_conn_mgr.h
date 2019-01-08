@@ -7,22 +7,41 @@
 
 namespace tcp
 {
+class ThreadSink;
+
+struct ConnMgrCtx
+{
+    TimerAxisInterface* timer_axis;
+    struct timeval inactive_conn_check_interval;
+    int inactive_conn_life;
+
+    ConnMgrCtx()
+    {
+        timer_axis = NULL;
+        inactive_conn_check_interval.tv_sec = inactive_conn_check_interval.tv_usec = 0;
+        inactive_conn_life = 0;
+    }
+};
+
 class ConnMgr : public RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*>
 {
 public:
     ConnMgr();
     virtual ~ConnMgr();
 
-    void Clear(ConnInterface* conn);
-
     void Release();
-    int Initialize(const void* ctx);
+    int Initialize(const ConnMgrCtx* ctx);
     void Finalize();
     int Activate();
     void Freeze();
 
+    void SetThreadSink(ThreadSink* sink)
+    {
+        thread_sink_ = sink;
+    }
+
 #if defined(USE_BUFFEREVENT)
-    ConnInterface* CreateBufferEventConn(int io_thread_idx, int sock_fd, struct bufferevent* buf_event, const char* ip, unsigned short port);
+    BaseConn* CreateBufferEventConn(int io_thread_idx, int sock_fd, struct bufferevent* buffer_event, const char* ip, unsigned short port);
 #else
     ConnInterface* CreateNormalConn(int io_thread_idx, int sock_fd, struct event* read_event, const char* ip, unsigned short port);
 #endif
@@ -31,15 +50,15 @@ public:
     BaseConn* GetConn(int sock_fd) const;
     BaseConn* GetConnByID(ConnID conn_id) const;
     void UpdateConnStatus(ConnID conn_id);
-    int AddConnInactiveSink(ConnInactiveSinkInterface* sink);
-    void RemoveConnInactiveSink(ConnInactiveSinkInterface* sink);
+    void Clear(BaseConn* conn);
 
 protected:
-    ///////////////////////// RecordTimeoutMgr<ConnID, std::hash<ConnID>, ConnInterface*> /////////////////////////
-    void OnTimeout(const ConnID& k, ConnInterface* const& v, int timeout_sec) override;
+    ///////////////////////// RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*> /////////////////////////
+    void OnTimeout(const ConnID& k, BaseConn* const& v, int timeout_sec) override;
 
 private:
-    ConnCenterCtx conn_center_ctx_;
+    ConnMgrCtx conn_mgr_ctx_;
+    ThreadSink* thread_sink_;
 
     typedef __hash_map<int, BaseConn*> ConnHashMap; // socket fd ->
     ConnHashMap conn_hash_map_;
@@ -49,9 +68,6 @@ private:
     ConnIDHashMap conn_id_hash_map_;
 
     int max_online_conn_count_; // 每个负责IO的线程中同时在线的conn最大值，统计用
-
-    typedef std::set<ConnInactiveSinkInterface*> ConnInactiveSinkSet;
-    ConnInactiveSinkSet conn_inactive_sink_set_;
 };
 }
 

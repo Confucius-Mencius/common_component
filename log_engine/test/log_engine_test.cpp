@@ -26,7 +26,7 @@ void LogEngineTest::SetUp()
         FAIL() << loader_.GetLastErrMsg();
     }
 
-    log_engine_ = (LogEngineInterface*) loader_.GetModuleInterface(0);
+    log_engine_ = static_cast<LogEngineInterface*>(loader_.GetModuleInterface(0));
     if (NULL == log_engine_)
     {
         FAIL() << loader_.GetLastErrMsg();

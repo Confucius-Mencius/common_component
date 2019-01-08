@@ -113,6 +113,7 @@ void NormalConn::Release()
 
 int NormalConn::Initialize(const void* ctx)
 {
+    (void) ctx;
     return 0;
 }
 

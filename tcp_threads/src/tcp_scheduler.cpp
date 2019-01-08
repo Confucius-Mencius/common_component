@@ -1,6 +1,7 @@
 #include "tcp_scheduler.h"
 #include "app_frame_conf_mgr_interface.h"
 #include "num_util.h"
+#include "task_type.h"
 #include "tcp_thread_sink.h"
 
 namespace tcp
@@ -24,7 +25,7 @@ int Scheduler::Initialize(const void* ctx)
         return -1;
     }
 
-    threads_ctx_ = static_cast<const ThreadsCtx* threads_ctx_>(ctx);
+    threads_ctx_ = static_cast<const ThreadsCtx*>(ctx);
 
     const int tcp_thread_count = threads_ctx_->conf_mgr->GetTCPThreadCount();
     if (tcp_thread_count > 0)
@@ -45,95 +46,35 @@ int Scheduler::SendToClient(const ConnGUID* conn_guid, const void* data, size_t 
     if (tcp_thread == thread_sink_->GetThread())
     {
         // 是自己
-        ConnInterface* conn = thread_sink_->GetConnMgr()->GetConnByConnId(conn_guid->conn_id);
+        BaseConn* conn = thread_sink_->GetConnMgr()->GetConnByID(conn_guid->conn_id);
         if (NULL == conn)
         {
             LOG_ERROR("failed to get tcp conn by id: " << conn_guid->conn_id);
             return -1;
         }
 
-        return conn->Send(msg_head, msg_body, msg_body_len, -1);
+        return conn->Send(data, len);
     }
 
     // 是其它的tcp线程
-    TaskCtx task_ctx;
-    task_ctx.task_type = TASK_TYPE_TCP_SEND_TO_CLIENT;
-    task_ctx.source_thread = thread_sink_->GetThread();
-
-    if (conn_guid != NULL)
-    {
-        task_ctx.conn_guid = *conn_guid;
-    }
-
-    task_ctx.msg_head = msg_head;
-    task_ctx.msg_body = (char*) msg_body;
-    task_ctx.msg_body_len = msg_body_len;
-
-    Task* task = Task::Create(&task_ctx);
+    ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_SEND_TO_CLIENT, thread_sink_->GetThread(), conn_guid, data, len);
     if (NULL == task)
     {
+        const int err = errno;
+        LOG_ERROR("failed to create task, errno: " << err << ", err msg: " << strerror(err));
         return -1;
     }
 
-    if (tcp_thread->PushTask(task) != 0)
-    {
-        task->Release();
-        return -1;
-    }
-
-    return 0;
-}
-
-int Scheduler::SendRawToClient(const ConnGUID* conn_guid, const void* msg, size_t msg_len)
-{
-    ThreadInterface* tcp_thread = thread_sink_->GetTcpThreadGroup()->GetThread(conn_guid->io_thread_idx);
-    if (tcp_thread == thread_sink_->GetThread())
-    {
-        // 是自己
-        ConnInterface* conn = thread_sink_->GetConnCenter()->GetConnByConnId(conn_guid->conn_id);
-        if (NULL == conn)
-        {
-            LOG_ERROR("failed to get tcp conn by id: " << conn_guid->conn_id);
-            return -1;
-        }
-
-        return conn->Send(msg, msg_len, -1);
-    }
-
-    // 是其它的tcp线程
-    TaskCtx task_ctx;
-    task_ctx.task_type = TASK_TYPE_TCP_SEND_RAW_TO_CLIENT;
-    task_ctx.source_thread = thread_sink_->GetThread();
-
-    if (conn_guid != NULL)
-    {
-        task_ctx.conn_guid = *conn_guid;
-    }
-
-    task_ctx.msg_body = (char*) msg;
-    task_ctx.msg_body_len = msg_len;
-
-    Task* task = Task::Create(&task_ctx);
-    if (NULL == task)
-    {
-        return -1;
-    }
-
-    if (tcp_thread->PushTask(task) != 0)
-    {
-        task->Release();
-        return -1;
-    }
-
+    tcp_thread->PushTask(task);
     return 0;
 }
 
 int Scheduler::CloseClient(const ConnGUID* conn_guid)
 {
-    ThreadInterface* tcp_thread = thread_sink_->GetTcpThreadGroup()->GetThread(conn_guid->io_thread_idx);
+    ThreadInterface* tcp_thread = thread_sink_->GetTCPThreadGroup()->GetThread(conn_guid->io_thread_idx);
     if (tcp_thread == thread_sink_->GetThread())
     {
-        ConnInterface* conn = thread_sink_->GetConnCenter()->GetConnByConnId(conn_guid->conn_id);
+        BaseConn* conn = thread_sink_->GetConnMgr()->GetConnByID(conn_guid->conn_id);
         if (NULL == conn)
         {
             LOG_ERROR("failed to get tcp conn by id: " << conn_guid->conn_id);
@@ -144,66 +85,36 @@ int Scheduler::CloseClient(const ConnGUID* conn_guid)
         return 0;
     }
 
-    TaskCtx task_ctx;
-    task_ctx.task_type = TASK_TYPE_TCP_CLOSE_CONN;
-    task_ctx.source_thread = thread_sink_->GetThread();
-
-    if (conn_guid != NULL)
-    {
-        task_ctx.conn_guid = *conn_guid;
-    }
-
-    Task* task = Task::Create(&task_ctx);
+    ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_CLOSE_CONN, thread_sink_->GetThread(), conn_guid, NULL, 0);
     if (NULL == task)
     {
+        const int err = errno;
+        LOG_ERROR("failed to create task, errno: " << err << ", err msg: " << strerror(err));
         return -1;
     }
 
-    if (tcp_thread->PushTask(task) != 0)
-    {
-        task->Release();
-        return -1;
-    }
-
+    tcp_thread->PushTask(task);
     return 0;
 }
 
-int Scheduler::SendToTCPThread(const ConnGUID* conn_guid, const MsgHead& msg_head, const void* msg_body,
-                               size_t msg_body_len, int tcp_thread_idx)
+int Scheduler::SendToTCPThread(const ConnGUID* conn_guid, const void* data, size_t len, int tcp_thread_idx)
 {
     const int real_tcp_thread_idx = GetScheduleTCPThreadIdx(tcp_thread_idx);
-    ThreadInterface* tcp_thread = thread_sink_->GetTcpThreadGroup()->GetThread(real_tcp_thread_idx);
+    ThreadInterface* tcp_thread = thread_sink_->GetTCPThreadGroup()->GetThread(real_tcp_thread_idx);
 
-    TaskCtx task_ctx;
-    task_ctx.task_type = TASK_TYPE_NORMAL;
-    task_ctx.source_thread = thread_sink_->GetThread();
-
-    if (conn_guid != NULL)
-    {
-        task_ctx.conn_guid = *conn_guid;
-    }
-
-    task_ctx.msg_head = msg_head;
-    task_ctx.msg_body = (char*) msg_body;
-    task_ctx.msg_body_len = msg_body_len;
-
-    Task* task = Task::Create(&task_ctx);
+    ThreadTask* task = new ThreadTask(TASK_TYPE_NORMAL, thread_sink_->GetThread(), conn_guid, data, len);
     if (NULL == task)
     {
+        const int err = errno;
+        LOG_ERROR("failed to create task, errno: " << err << ", err msg: " << strerror(err));
         return -1;
     }
 
-    if (tcp_thread->PushTask(task) != 0)
-    {
-        task->Release();
-        return -1;
-    }
-
+    tcp_thread->PushTask(task);
     return 0;
 }
 
-int Scheduler::SendToWorkThread(const ConnGUID* conn_guid, const MsgHead& msg_head, const void* msg_body,
-                                size_t msg_body_len, int work_thread_idx)
+int Scheduler::SendToWorkThread(const ConnGUID* conn_guid, const void* data, size_t len, int work_thread_idx)
 {
     if (NULL == related_thread_groups_->work_threads)
     {
@@ -214,36 +125,19 @@ int Scheduler::SendToWorkThread(const ConnGUID* conn_guid, const MsgHead& msg_he
     const int real_work_thread_idx = GetScheduleWorkThreadIdx(work_thread_idx);
     ThreadInterface* work_thread = related_thread_groups_->work_threads->GetThread(real_work_thread_idx);
 
-    TaskCtx task_ctx;
-    task_ctx.task_type = TASK_TYPE_NORMAL;
-    task_ctx.source_thread = thread_sink_->GetThread();
-
-    if (conn_guid != NULL)
-    {
-        task_ctx.conn_guid = *conn_guid;
-    }
-
-    task_ctx.msg_head = msg_head;
-    task_ctx.msg_body = (char*) msg_body;
-    task_ctx.msg_body_len = msg_body_len;
-
-    Task* task = Task::Create(&task_ctx);
+    ThreadTask* task = new ThreadTask(TASK_TYPE_NORMAL, thread_sink_->GetThread(), conn_guid, data, len);
     if (NULL == task)
     {
+        const int err = errno;
+        LOG_ERROR("failed to create task, errno: " << err << ", err msg: " << strerror(err));
         return -1;
     }
 
-    if (work_thread->PushTask(task) != 0)
-    {
-        task->Release();
-        return -1;
-    }
-
+    work_thread->PushTask(task);
     return 0;
 }
 
-int Scheduler::SendToGlobalThread(const ConnGUID* conn_guid, const MsgHead& msg_head, const void* msg_body,
-                                  size_t msg_body_len)
+int Scheduler::SendToGlobalThread(const ConnGUID* conn_guid, const void* data, size_t len)
 {
     if (NULL == related_thread_groups_->global_thread)
     {
@@ -253,37 +147,21 @@ int Scheduler::SendToGlobalThread(const ConnGUID* conn_guid, const MsgHead& msg_
 
     ThreadInterface* global_thread = related_thread_groups_->global_thread;
 
-    TaskCtx task_ctx;
-    task_ctx.task_type = TASK_TYPE_NORMAL;
-    task_ctx.source_thread = thread_sink_->GetThread();
-
-    if (conn_guid != NULL)
-    {
-        task_ctx.conn_guid = *conn_guid;
-    }
-
-    task_ctx.msg_head = msg_head;
-    task_ctx.msg_body = (char*) msg_body;
-    task_ctx.msg_body_len = msg_body_len;
-
-    Task* task = Task::Create(&task_ctx);
+    ThreadTask* task = new ThreadTask(TASK_TYPE_NORMAL, thread_sink_->GetThread(), conn_guid, data, len);
     if (NULL == task)
     {
+        const int err = errno;
+        LOG_ERROR("failed to create task, errno: " << err << ", err msg: " << strerror(err));
         return -1;
     }
 
-    if (global_thread->PushTask(task) != 0)
-    {
-        task->Release();
-        return -1;
-    }
-
+    global_thread->PushTask(task);
     return 0;
 }
 
-void Scheduler::SetRelatedThreadGroup(RelatedThreadGroups* related_thread_group)
+void Scheduler::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups)
 {
-    related_thread_groups_ = related_thread_group;
+    related_thread_groups_ = related_thread_groups;
 
     if (related_thread_groups_->work_threads != NULL)
     {
@@ -297,7 +175,7 @@ void Scheduler::SetRelatedThreadGroup(RelatedThreadGroups* related_thread_group)
 
 int Scheduler::GetScheduleTCPThreadIdx(int tcp_thread_idx)
 {
-    const int tcp_thread_count = thread_sink_->GetTcpThreadGroup()->GetThreadCount();
+    const int tcp_thread_count = thread_sink_->GetTCPThreadGroup()->GetThreadCount();
 
     if (INVALID_IDX(tcp_thread_idx, 0, tcp_thread_count))
     {
