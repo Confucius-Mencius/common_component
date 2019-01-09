@@ -250,7 +250,7 @@ void Thread::PushTask(ThreadTask* task)
     //     If there is room to write n bytes to the pipe, then write(2) succeeds immediately, writing all n bytes; otherwise write(2) fails, with errno set to EAGAIN.
     if (write(pipe_[1], buf, 1) != 1)
     {
-        // 被信号中断或者pipe满了
+        // 被信号中断或者pipe满了 TODO 将定时器改为监听pipe[1]的可写时间
         const int err = errno;
         LOG_WARN("failed to write pipe, errno: " << err << ", err msg: " << strerror(err));
 
