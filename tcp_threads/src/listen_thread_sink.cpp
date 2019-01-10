@@ -149,7 +149,7 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread)
 //        }
 
     listener_ = evconnlistener_new_bind(self_thread_->GetThreadEvBase(), ListenThreadSink::OnAccept, this,
-                                        LEV_OPT_REUSEABLE | LEV_OPT_REUSEABLE | LEV_OPT_CLOSE_ON_EXEC |
+                                        LEV_OPT_REUSEABLE | LEV_OPT_REUSEABLE_PORT | LEV_OPT_CLOSE_ON_EXEC |
                                         LEV_OPT_CLOSE_ON_FREE | LEV_OPT_DEFERRED_ACCEPT, -1,
                                         (struct sockaddr*) &listen_sock_addr, listen_sock_addr_len);
     if (NULL == listener_)
