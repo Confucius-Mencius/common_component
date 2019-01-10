@@ -24,7 +24,6 @@ public:
     int SendToWorkThread(const ConnGUID* conn_guid, const void* data, size_t len, int work_thread_idx) override;
     int SendToGlobalThread(const ConnGUID* conn_guid, const void* data, size_t len) override;
 
-public:
     void SetThreadSink(ThreadSink* sink)
     {
         thread_sink_ = sink;

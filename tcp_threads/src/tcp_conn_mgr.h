@@ -1,7 +1,6 @@
 #ifndef TCP_THREADS_SRC_TCP_CONN_MGR_H_
 #define TCP_THREADS_SRC_TCP_CONN_MGR_H_
 
-#include <set>
 #include "base_conn.h"
 #include "record_timeout_mgr.h"
 
@@ -41,20 +40,26 @@ public:
     }
 
 #if defined(USE_BUFFEREVENT)
-    BaseConn* CreateBufferEventConn(int io_thread_idx, int sock_fd, struct bufferevent* buffer_event, const char* ip, unsigned short port);
+    BaseConn* CreateBufferEventConn(int io_thread_idx, int sock_fd, struct bufferevent* buffer_event,
+                                    const char* ip, unsigned short port);
 #else
-    ConnInterface* CreateNormalConn(int io_thread_idx, int sock_fd, struct event* read_event, const char* ip, unsigned short port);
+    ConnInterface* CreateNormalConn(int io_thread_idx, int sock_fd, struct event* read_event,
+                                    const char* ip, unsigned short port);
 #endif
 
     void DestroyConn(int sock_fd);
+
     BaseConn* GetConn(int sock_fd) const;
     BaseConn* GetConnByID(ConnID conn_id) const;
-    void UpdateConnStatus(ConnID conn_id);
-    void Clear(BaseConn* conn);
 
-protected:
+    void UpdateConnStatus(ConnID conn_id);
+
+private:
     ///////////////////////// RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*> /////////////////////////
     void OnTimeout(const ConnID& k, BaseConn* const& v, int timeout_sec) override;
+
+    // 清理相关数据结构
+    void Clear(BaseConn* conn);
 
 private:
     ConnMgrCtx conn_mgr_ctx_;

@@ -7,8 +7,6 @@
 
 namespace tcp
 {
-class ConnMgr;
-
 class BufferEventConn : public BaseConn
 {
     CREATE_FUNC(BufferEventConn)

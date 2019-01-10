@@ -73,7 +73,7 @@ int Threads::CreateThreadGroup()
         listen_thread_group_ctx.common_component_dir = threads_ctx_.common_component_dir;
         listen_thread_group_ctx.thread_name = "tcp listen thread";
         listen_thread_group_ctx.thread_count = 1;
-        listen_thread_group_ctx.thread_sink_creator =  ListenThreadSink::Create;
+        listen_thread_group_ctx.thread_sink_creator = ListenThreadSink::Create;
 
         listen_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup(&listen_thread_group_ctx);
         if (NULL == listen_thread_group_)
@@ -83,9 +83,9 @@ int Threads::CreateThreadGroup()
 
         ThreadGroupCtx tcp_thread_group_ctx;
         tcp_thread_group_ctx.common_component_dir = threads_ctx_.common_component_dir;
-        tcp_thread_group_ctx.thread_name = "tcp io thread";
+        tcp_thread_group_ctx.thread_name = "tcp thread";
         tcp_thread_group_ctx.thread_count = threads_ctx_.conf_mgr->GetTCPThreadCount();
-        tcp_thread_group_ctx.thread_sink_creator =  ThreadSink::Create;
+        tcp_thread_group_ctx.thread_sink_creator = ThreadSink::Create;
 
         tcp_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup(&tcp_thread_group_ctx);
         if (NULL == tcp_thread_group_)

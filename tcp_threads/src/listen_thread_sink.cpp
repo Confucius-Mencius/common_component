@@ -13,8 +13,10 @@ void ListenThreadSink::ErrorCallback(struct evconnlistener* listener, void* arg)
     const int err = EVUTIL_SOCKET_ERROR();
     evutil_socket_t sock_fd = evconnlistener_get_fd(listener);
 
-    LOG_ERROR("err occured, socket fd: " << sock_fd << ", errno: " << err
+    LOG_ERROR("err occured on socket, fd: " << sock_fd << ", errno: " << err
               << ", err msg: " << evutil_socket_error_to_string(err));
+
+    // TODO 这里应该怎么办？重新监听？
 }
 
 void ListenThreadSink::OnAccept(struct evconnlistener* listener, evutil_socket_t sock_fd,
@@ -65,10 +67,10 @@ ListenThreadSink::ListenThreadSink()
 {
     threads_ctx_ = NULL;
     tcp_thread_group_ = NULL;
-    listen_sock_fd_ = -1;
     listener_ = NULL;
     online_tcp_conn_count_ = 0;
     max_online_tcp_conn_count_ = 0;
+    tcp_thread_count_ = 0;
     last_tcp_thread_idx_ = 0;
 }
 
@@ -88,86 +90,78 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread)
         return -1;
     }
 
-    const std::string& tcp_addr_port = threads_ctx_->conf_mgr->GetTCPAddrPort();
+    const std::string tcp_addr_port = threads_ctx_->conf_mgr->GetTCPAddrPort();
     LOG_INFO("tcp listen addr port: " << tcp_addr_port);
 
-    listen_sock_fd_ = socket(AF_INET, SOCK_STREAM, 0);
-    if (listen_sock_fd_ < 0)
+//    listen_sock_fd_ = socket(AF_INET, SOCK_STREAM, 0);
+//    if (listen_sock_fd_ < 0)
+//    {
+//        const int err = errno;
+//        LOG_ERROR("failed to create tcp listen socket, errno: " << err << ", err msg: " << strerror(errno));
+//        return -1;
+//    }
+
+
+//        if (evutil_make_socket_nonblocking(listen_sock_fd_) != 0)
+//        {
+//            const int err = EVUTIL_SOCKET_ERROR();
+//            LOG_ERROR("failed to set tcp listen socket non blocking, errno: " << err
+//                      << ", err msg: " << evutil_socket_error_to_string(err));
+//            break;
+//        }
+
+    // 在evconnlistener_new时使用LEV_OPT_REUSEABLE等选项替换
+//        if (evutil_make_listen_socket_reuseable(listen_sock_fd_) != 0)
+//        {
+//            const int err = EVUTIL_SOCKET_ERROR();
+//            LOG_ERROR("failed to set tcp listen socket reusable, errno: " << err
+//                      << ", err msg: " << evutil_socket_error_to_string(err));
+//            break;
+//        }
+
+//        if (evutil_make_listen_socket_reuseable_port(listen_sock_fd_) != 0)
+//        {
+//            const int err = EVUTIL_SOCKET_ERROR();
+//            LOG_ERROR("failed to set tcp listen socket reusable port, errno: " << err
+//                      << ", err msg: " << evutil_socket_error_to_string(err));
+//            break;
+//        }
+
+    struct sockaddr_in listen_sock_addr;
+    int listen_sock_addr_len = sizeof(listen_sock_addr);
+
+    // TODO 测试 ip:port, 域名:port
+    if (evutil_parse_sockaddr_port(tcp_addr_port.c_str(),
+                                   (struct sockaddr*) &listen_sock_addr, &listen_sock_addr_len) != 0)
     {
-        const int err = errno;
-        LOG_ERROR("failed to create tcp listen socket, errno: " << err << ", err msg: " << strerror(errno));
+        const int err = EVUTIL_SOCKET_ERROR();
+        LOG_ERROR("failed to parse tcp listen socket addr port: " << tcp_addr_port
+                  << ", errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
         return -1;
     }
 
-    int ret = -1;
+//        if (bind(listen_sock_fd_, (struct sockaddr*) &listen_sock_addr, listen_sock_addr_len) != 0)
+//        {
+//            const int err = errno;
+//            LOG_ERROR("failed to bind tcp listen socket addr port: " << tcp_addr_port << ", errno: " << err
+//                      << ", err msg: " << evutil_socket_error_to_string(err));
+//            break;
+//        }
 
-    do
+    listener_ = evconnlistener_new_bind(self_thread_->GetThreadEvBase(), ListenThreadSink::OnAccept, this,
+                                        LEV_OPT_REUSEABLE | LEV_OPT_REUSEABLE | LEV_OPT_CLOSE_ON_EXEC |
+                                        LEV_OPT_CLOSE_ON_FREE | LEV_OPT_DEFERRED_ACCEPT, -1,
+                                        (struct sockaddr*) &listen_sock_addr, listen_sock_addr_len);
+    if (NULL == listener_)
     {
-        if (evutil_make_socket_nonblocking(listen_sock_fd_) != 0)
-        {
-            const int err = EVUTIL_SOCKET_ERROR();
-            LOG_ERROR("failed to set tcp listen socket non blocking, errno: " << err
-                      << ", err msg: " << evutil_socket_error_to_string(err));
-            break;
-        }
-
-        if (evutil_make_listen_socket_reuseable(listen_sock_fd_) != 0)
-        {
-            const int err = EVUTIL_SOCKET_ERROR();
-            LOG_ERROR("failed to set tcp listen socket reusable, errno: " << err
-                      << ", err msg: " << evutil_socket_error_to_string(err));
-            break;
-        }
-
-        if (evutil_make_listen_socket_reuseable_port(listen_sock_fd_) != 0)
-        {
-            const int err = EVUTIL_SOCKET_ERROR();
-            LOG_ERROR("failed to set tcp listen socket reusable port, errno: " << err
-                      << ", err msg: " << evutil_socket_error_to_string(err));
-            break;
-        }
-
-        struct sockaddr_in listen_sock_addr;
-        int listen_sock_addr_len = sizeof(listen_sock_addr);
-
-        // todo 测试 ip:port 域名:port
-        if (evutil_parse_sockaddr_port(tcp_addr_port.c_str(),
-                                       (struct sockaddr*) &listen_sock_addr, &listen_sock_addr_len) != 0)
-        {
-            const int err = EVUTIL_SOCKET_ERROR();
-            LOG_ERROR("failed to parse tcp listen socket addr port: " << tcp_addr_port
-                      << ", errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
-            break;
-        }
-
-        if (bind(listen_sock_fd_, (struct sockaddr*) &listen_sock_addr, listen_sock_addr_len) != 0)
-        {
-            const int err = errno;
-            LOG_ERROR("failed to bind tcp listen socket addr port: " << tcp_addr_port << ", errno: " << err
-                      << ", err msg: " << evutil_socket_error_to_string(err));
-            break;
-        }
-
-        listener_ = evconnlistener_new(self_thread_->GetThreadEvBase(), ListenThreadSink::OnAccept, this,
-                                       LEV_OPT_REUSEABLE | LEV_OPT_CLOSE_ON_FREE | LEV_OPT_THREADSAFE, -1, listen_sock_fd_);
-        if (NULL == listener_)
-        {
-            const int err = EVUTIL_SOCKET_ERROR();
-            LOG_ERROR("failed to create listener, errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
-            return -1;
-        }
-
-        evconnlistener_set_error_cb(listener_, ListenThreadSink::ErrorCallback);
-
-        ret = 0;
-    } while (0);
-
-    if (ret != 0)
-    {
-        close(listen_sock_fd_);
-        listen_sock_fd_ = -1;
+        const int err = EVUTIL_SOCKET_ERROR();
+        LOG_ERROR("failed to create listener, errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
+        return -1;
     }
 
+    evconnlistener_set_error_cb(listener_, ListenThreadSink::ErrorCallback);
+
+    tcp_thread_count_ = threads_ctx_->conf_mgr->GetTCPThreadCount();
     return 0;
 }
 
@@ -201,6 +195,7 @@ void ListenThreadSink::OnThreadStartOK()
 {
     ThreadSinkInterface::OnThreadStartOK();
 
+//    TODO refactor下面的重复逻辑
     pthread_mutex_lock(threads_ctx_->frame_threads_mutex);
     ++(*threads_ctx_->frame_threads_count);
     pthread_cond_signal(threads_ctx_->frame_threads_cond);
@@ -225,7 +220,7 @@ void ListenThreadSink::OnTask(const ThreadTask* task)
     {
         case TASK_TYPE_TCP_CONN_CLOSED:
         {
-            LOG_DEBUG("conn closed: " << task->GetData()); // close by client self or server
+            LOG_DEBUG("tcp conn closed: " << task->GetData()); // close by client self or server
             --online_tcp_conn_count_;
         }
         break;
@@ -252,10 +247,8 @@ void ListenThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
         return;
     }
 
-    const int tcp_thread_count = threads_ctx_->conf_mgr->GetTCPThreadCount();
     const int tcp_thread_idx = last_tcp_thread_idx_;
-
-    last_tcp_thread_idx_ = (last_tcp_thread_idx_ + 1) % tcp_thread_count;
+    last_tcp_thread_idx_ = (last_tcp_thread_idx_ + 1) % tcp_thread_count_;
 
     if (tcp_thread_group_->PushTaskToThread(task, tcp_thread_idx) != 0)
     {

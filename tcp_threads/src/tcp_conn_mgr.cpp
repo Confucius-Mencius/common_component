@@ -30,13 +30,12 @@ void ConnMgr::Release()
 #if defined(USE_BUFFEREVENT)
         (static_cast<BufferEventConn*>(conn))->Release();
 #else
-        ((NormalConn*) conn)->Release();
+        (static_cast<NormalConn*>(conn))->Release();
 #endif
     }
 
     conn_id_hash_map_.clear();
     conn_hash_map_.clear();
-    delete this;
 }
 
 int ConnMgr::Initialize(const ConnMgrCtx* ctx)
@@ -66,7 +65,7 @@ void ConnMgr::Finalize()
 #if defined(USE_BUFFEREVENT)
         (static_cast<BufferEventConn*>(it->second))->Finalize();
 #else
-        ((NormalConn*) it->second)->Finalize();
+        (static_cast<NormalConn*>(it->second))->Finalize();
 #endif
     }
 }
@@ -85,7 +84,7 @@ void ConnMgr::Freeze()
 #if defined(USE_BUFFEREVENT)
         (static_cast<BufferEventConn*>(it->second))->Freeze();
 #else
-        ((NormalConn*) it->second)->Freeze();
+        (static_cast<NormalConn*>(it->second))->Freeze();
 #endif
     }
 }
@@ -117,10 +116,10 @@ BaseConn* ConnMgr::CreateBufferEventConn(int io_thread_idx, int sock_fd, struct 
     }
 
     conn->SetCreatedTime(time(NULL));
-    conn->SetConnGUID(io_thread_idx, conn_id);
     conn->SetSockFD(sock_fd);
     conn->SetClientIP(ip);
     conn->SetClientPort(port);
+    conn->SetConnGUID(io_thread_idx, conn_id);
     conn->SetBufferEvent(buffer_event);
 
     int ret = -1;
@@ -272,13 +271,14 @@ void ConnMgr::DestroyConn(int sock_fd)
     if (it != conn_hash_map_.end())
     {
         const ConnID conn_id = it->second->GetConnGUID()->conn_id;
+
         if (RecordExist(conn_id))
         {
             RemoveRecord(conn_id);
         }
 
         Clear(it->second);
-        LOG_DEBUG("remove tcp conn ok, socket fd: " << sock_fd << ", conn id: " << conn_id);
+        LOG_DEBUG("destroy tcp conn ok, socket fd: " << sock_fd << ", conn id: " << conn_id);
     }
     else
     {
@@ -314,13 +314,15 @@ void ConnMgr::UpdateConnStatus(ConnID conn_id)
     if (it != conn_id_hash_map_.end())
     {
         UpsertRecord(conn_id, it->second, conn_mgr_ctx_.inactive_conn_life);
+
+        // 统计收包的频率，对疑似攻击的client加入黑名单 TODO
     }
 }
 
 void ConnMgr::Clear(BaseConn* conn)
 {
 #if defined(USE_BUFFEREVENT)
-    BufferEventConn* tcp_conn = (BufferEventConn*) conn;
+    BufferEventConn* tcp_conn = static_cast<BufferEventConn*>(conn);
     conn_hash_map_.erase(tcp_conn->GetSockFD());
 
     const ConnID conn_id = tcp_conn->GetConnGUID()->conn_id;
@@ -329,7 +331,7 @@ void ConnMgr::Clear(BaseConn* conn)
     conn_id_seq_.Free(conn_id);
     conn_id_hash_map_.erase(conn_id);
 #else
-    NormalConn* tcp_conn = (NormalConn*) conn;
+    NormalConn* tcp_conn = static_cast<NormalConn*>(conn);
     conn_hash_map_.erase(tcp_conn->GetSockFD());
 
     const ConnID conn_id = tcp_conn->GetConnID();
@@ -343,7 +345,8 @@ void ConnMgr::Clear(BaseConn* conn)
 void ConnMgr::OnTimeout(const ConnID& k, BaseConn* const& v, int timeout_sec)
 {
     LOG_DEBUG("ConnMgr::OnTimeout, key: " << k << ", val: " << v << ", timeout: " << timeout_sec);
-    thread_sink_->OnConnTimeout(v);
+
+    thread_sink_->OnClientClosed(v);
     Clear(v);
 }
 }

@@ -8,6 +8,7 @@ namespace timer_axis_test
 MyRecordTimeoutMgr::MyRecordTimeoutMgr()
 {
     i_ = 0;
+    thread_ev_base_ = NULL;
 }
 
 MyRecordTimeoutMgr::~MyRecordTimeoutMgr()
@@ -32,8 +33,10 @@ void MyRecordTimeoutMgr::OnTimeout(const Key& k, const Value& v, int timeout_sec
 #endif
 }
 
-RecordTimeoutMgrTest::RecordTimeoutMgrTest()
+RecordTimeoutMgrTest::RecordTimeoutMgrTest() : loader_(), record_timeout_mgr_()
 {
+    thread_ev_base_ = NULL;
+    timer_axis_ = NULL;
 }
 
 RecordTimeoutMgrTest::~RecordTimeoutMgrTest()

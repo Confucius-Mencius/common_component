@@ -84,14 +84,12 @@ public:
         return &conn_mgr_;
     }
 
-    void CloseConn(evutil_socket_t sock_fd);
-    void OnClientClosed(BaseConn* conn);
-    void OnConnTimeout(BaseConn* conn);
+    void OnClientClosed(const BaseConn* conn);
 
 private:
     int LoadLocalLogic();
     int LoadLogicGroup();
-    void OnClientConnected(const NewConnCtx* new_conn_ctx);
+    int OnClientConnected(const NewConnCtx* new_conn_ctx);
 
 #if defined(USE_BUFFEREVENT)
     void OnRecvClientData(struct evbuffer* input_buf, int sock_fd, BaseConn* conn);

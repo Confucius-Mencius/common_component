@@ -1,7 +1,7 @@
 #ifndef TCP_THREADS_SRC_LISTEN_THREAD_SINK_H_
 #define TCP_THREADS_SRC_LISTEN_THREAD_SINK_H_
 
-// 单独的监听线程是有必要的，如果放在io线程中，如果io处理逻辑慢了就会影响建立连接。
+// 单独的监听线程是有必要的，如果放在io线程中，一旦io处理逻辑慢了就会影响建立连接。
 
 #include <event2/listener.h>
 #include "new_conn.h"
@@ -35,7 +35,6 @@ public:
     void OnTask(const ThreadTask* task) override;
     bool CanExit() const override;
 
-public:
     void SetThreadsCtx(const ThreadsCtx* threads_ctx)
     {
         threads_ctx_ = threads_ctx;
@@ -51,10 +50,10 @@ public:
 private:
     const ThreadsCtx* threads_ctx_;
     ThreadGroupInterface* tcp_thread_group_;
-    evutil_socket_t listen_sock_fd_;
     struct evconnlistener* listener_;
     int online_tcp_conn_count_;
     int max_online_tcp_conn_count_;
+    int tcp_thread_count_;
     int last_tcp_thread_idx_;
 };
 }

@@ -72,7 +72,7 @@ public:
             return -1;
         }
 
-        logic_ctx_ = *((LogicCtx*) ctx);
+        logic_ctx_ = *(static_cast<const LogicCtx*>(ctx));
         return 0;
     }
 
@@ -104,7 +104,7 @@ public:
     }
 
     /**
-     * 连接管理接口，当有客户端连接断开时会回调到这里，包括服务器主动关闭该连接
+     * 连接管理接口，当有客户端连接断开时会回调到这里，包括服务器主动关闭的连接
      * @param conn_guid
      */
     virtual void OnClientClosed(const ConnGUID* conn_guid)
@@ -112,18 +112,10 @@ public:
         (void) conn_guid;
     }
 
+#if defined(USE_BUFFEREVENT)
     virtual void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
     {
         (void) conn_guid;
-        (void) data;
-        (void) len;
-    }
-
-#if defined(USE_BUFFEREVENT)
-    virtual void OnTask(const ConnGUID* conn_guid, ThreadInterface* source_thread, const void* data, size_t len)
-    {
-        (void) conn_guid;
-        (void) source_thread;
         (void) data;
         (void) len;
     }
@@ -139,6 +131,14 @@ public:
     {
     }
 #endif
+
+    virtual void OnTask(const ConnGUID* conn_guid, ThreadInterface* source_thread, const void* data, size_t len)
+    {
+        (void) conn_guid;
+        (void) source_thread;
+        (void) data;
+        (void) len;
+    }
 
 protected:
     LogicCtx logic_ctx_;

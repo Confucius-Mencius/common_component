@@ -74,7 +74,7 @@ void ThreadCenterTestEx::Test001()
     ThreadGroupInterface* source_thread_group = thread_center_->CreateThreadGroup(&source_thread_group_ctx);
     ASSERT_TRUE(source_thread_group != NULL);
 
-    SourceThreadSink* source_thread_sink = (SourceThreadSink*) source_thread_group->GetThread(0)->GetThreadSink();
+    SourceThreadSink* source_thread_sink = static_cast<SourceThreadSink*>(source_thread_group->GetThread(0)->GetThreadSink());
     source_thread_sink->SetReleatedThreadGroup(thread_group);
 
     // 线程组都active好了才可以start

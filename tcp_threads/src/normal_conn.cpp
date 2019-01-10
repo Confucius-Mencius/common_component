@@ -8,7 +8,7 @@ namespace tcp
 {
 void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
 {
-    LOG_DEBUG("events occured, socket fd: " << fd << ", events: "
+    LOG_DEBUG("events occured on socket, fd: " << fd << ", events: "
               << setiosflags(std::ios::showbase) << std::hex << events);
 
     NormalConn* conn = static_cast<NormalConn*>(arg);
@@ -50,7 +50,8 @@ void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
                 }
                 else if (ECONNRESET == err || EPIPE == err)
                 {
-                    // 对端关闭了。此时select/epoll指示socket可读，但是read返回-1，errno为ECONNRESET或EPIPE
+                    // 对端关闭了。此时select/epoll指示socket可读，但是read返回-1，errno为ECONNRESET或EPIPE。在可读时处理对端关闭
+                    // TODO
                 }
                 else
                 {
@@ -149,28 +150,43 @@ int NormalConn::Send(const void* data, size_t len)
 {
     if (NULL == write_event_)
     {
-        write_event_ = event_new(event_get_base(read_event_), sock_fd_, EV_WRITE | EV_PERSIST,
-                                 NormalConn::WriteCallback, this);
-        if (NULL == write_event_)
+        int ret = -1;
+
+        do
         {
-            const int err = EVUTIL_SOCKET_ERROR();
-            LOG_ERROR("failed to create write event, errno: " << err << ", err msg: "
-                      << evutil_socket_error_to_string(err));
-            return -1;
-        }
+            write_event_ = event_new(event_get_base(read_event_), sock_fd_,
+                                     EV_CLOSED | EV_WRITE | EV_PERSIST,
+                                     NormalConn::WriteCallback, this);
+            if (NULL == write_event_)
+            {
+                const int err = EVUTIL_SOCKET_ERROR();
+                LOG_ERROR("failed to create write event, errno: " << err << ", err msg: "
+                          << evutil_socket_error_to_string(err));
+                break;
+            }
 
-        if (event_add(write_event_, NULL) != 0)
+            if (event_add(write_event_, NULL) != 0)
+            {
+                const int err = EVUTIL_SOCKET_ERROR();
+                LOG_ERROR("failed to add write event, errno: " << err << ", err msg: "
+                          << evutil_socket_error_to_string(err));
+                break;
+            }
+
+            LOG_DEBUG("add write event ok");
+            ret = 0;
+        } while (0);
+
+        if (ret != 0)
         {
-            const int err = EVUTIL_SOCKET_ERROR();
-            LOG_ERROR("failed to add write event, errno: " << err << ", err msg: "
-                      << evutil_socket_error_to_string(err));
+            if (write_event_ != NULL)
+            {
+                event_free(write_event_);
+                write_event_ = NULL;
+            }
 
-            event_free(write_event_);
-            write_event_ = NULL;
-            return -1;
+            return ret;
         }
-
-        LOG_DEBUG("add write event ok");
     }
     else
     {
