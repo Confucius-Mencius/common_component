@@ -2,7 +2,6 @@
 #include <unistd.h>
 #include <iomanip>
 #include <event2/event.h>
-#include <event2/event_struct.h>
 #include "app_frame_conf_mgr_interface.h"
 #include "file_util.h"
 #include "str_util.h"
@@ -65,7 +64,7 @@ void ThreadSink::BufferEventEventCallback(struct bufferevent* buffer_event, shor
 
         if (events & BEV_EVENT_TIMEOUT)
         {
-            LOG_ERROR("timeout event occurred on socket, fd: " << sock_fd);  // TODO 什么时候会出现timeout？逻辑如何处理？
+            LOG_ERROR("timeout event occurred on socket, fd: " << sock_fd); // TODO 什么时候会出现timeout？逻辑如何处理？
         }
 
         return;
@@ -105,10 +104,17 @@ void ThreadSink::BufferEventReadCallback(struct bufferevent* buffer_event, void*
 #else
 void ThreadSink::NormalReadCallback(evutil_socket_t fd, short events, void* arg)
 {
-    LOG_TRACE("events occured on socket, fd: " << fd << ", events: " << setiosflags(std::ios::showbase) << std::hex
-              << events);
+    LOG_TRACE("events occured on socket, fd: " << fd << ", events: "
+              << setiosflags(std::ios::showbase) << std::hex << events);
 
     ThreadSink* sink = static_cast<ThreadSink*>(arg);
+
+    BaseConn* conn = sink->conn_mgr_.GetConn(fd);
+    if (NULL == conn)
+    {
+        LOG_ERROR("failed to get tcp conn by socket fd: " << fd);
+        return;
+    }
 
     do
     {
@@ -120,51 +126,36 @@ void ThreadSink::NormalReadCallback(evutil_socket_t fd, short events, void* arg)
 
         if (events & EV_READ)
         {
-            if (sink->thread_->IsStopping())
+            if (sink->self_thread_->IsStopping())
             {
-                LOG_WARN("in stopping status, refuse tcp client data");
+                LOG_WARN("in stopping status, refuse all client data");
                 return;
             }
 
-            ConnInterface* conn = sink->conn_center_->GetConn(fd);
-            if (NULL == conn)
-            {
-                LOG_ERROR("failed to get tcp conn by socket fd: " << fd);
-                return;
-            }
+            sink->conn_mgr_.UpdateConnStatus(conn->GetConnGUID()->conn_id);
 
-            sink->conn_center_->UpdateConnStatus(conn->GetConnGuid().conn_id);
             bool closed = false;
-
-            if (sink->threads_ctx_->raw)
-            {
-                sink->OnClientRawData(closed, fd, conn);
-            }
-            else
-            {
-                sink->OnClientData(closed, fd, conn);
-            }
+            sink->OnRecvClientData(closed, fd, conn);
 
             if (closed)
             {
-                // 空连接关闭，不会收到close事件，但会收到read事件，read返回0
+                // 注：空连接关闭时，不会收到close事件，但会收到read事件，read返回0
                 break;
             }
         }
 
         if (events & EV_TIMEOUT)
         {
-            LOG_ERROR("timeout event occurred on socket, fd: " << fd);
+            LOG_ERROR("timeout event occurred on socket, fd: " << fd); // TODO 什么时候会出现timeout？逻辑如何处理？
         }
 
         return;
     } while (0);
 
-    sink->CloseConn(fd);
+    sink->OnClientClosed(conn);
 }
 #endif
 
-#if defined(USE_BUFFEREVENT)
 ThreadSink::ThreadSink()
     : local_logic_loader_(), logic_item_vec_(), conn_mgr_(), scheduler_()
 {
@@ -174,17 +165,6 @@ ThreadSink::ThreadSink()
     related_thread_group_ = NULL;
     local_logic_ = NULL;
 }
-#else
-ThreadSink::ThreadSink()
-    : local_logic_loader_(), logic_item_vec_(), conn_mgr_(), scheduler_()
-{
-    threads_ctx_ = NULL;
-    listen_thread_ = NULL;
-    tcp_thread_group_ = NULL;
-    related_thread_group_ = NULL;
-    local_logic_ = NULL;
-}
-#endif
 
 ThreadSink::~ThreadSink()
 {
@@ -259,20 +239,6 @@ void ThreadSink::OnFinalize()
     SAFE_FINALIZE(local_logic_);
     scheduler_.Finalize();
     conn_mgr_.Finalize();
-
-#if !defined(USE_BUFFEREVENT)
-    for (ConnRecvCtxHashTable::iterator it = conn_recv_ctx_hash_table_.begin();
-            it != conn_recv_ctx_hash_table_.end(); ++it)
-    {
-        if (it->second.msg_recv_buf_ != NULL)
-        {
-            free(it->second.msg_recv_buf_);
-            it->second.msg_recv_buf_ = NULL;
-        }
-    }
-
-    conn_recv_ctx_hash_table_.clear();
-#endif
 
     ThreadSinkInterface::OnFinalize();
 }
@@ -458,21 +424,6 @@ void ThreadSink::OnClientClosed(const BaseConn* conn)
     }
 
     listen_thread_->PushTask(task);
-
-#if !defined(USE_BUFFEREVENT)
-    ConnRecvCtxHashTable::iterator it = conn_recv_ctx_hash_table_.find(conn->GetSockFd());
-    if (it != conn_recv_ctx_hash_table_.end())
-    {
-        if (it->second.msg_recv_buf_ != NULL)
-        {
-            free(it->second.msg_recv_buf_);
-            it->second.msg_recv_buf_ = NULL;
-        }
-
-        conn_recv_ctx_hash_table_.erase(it);
-    }
-#endif
-
     conn_mgr_.DestroyConn(conn->GetSockFD());
 }
 
@@ -680,76 +631,55 @@ int ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
 
     return 0;
 #else
-    ConnInterface* conn = conn_center_->GetConn(new_conn_ctx->client_sock_fd);
+    BaseConn* conn = conn_mgr_.GetConn(new_conn_ctx->client_sock_fd);
     if (conn != NULL)
     {
         LOG_WARN("tcp conn already exist, socket fd: " << new_conn_ctx->client_sock_fd << ", destroy it first");
-        conn_center_->RemoveConn(conn->GetSockFd());
+        conn_mgr_.DestroyConn(conn->GetSockFD());
     }
 
-    struct event* read_event = event_new(thread_->GetThreadEvBase(), new_conn_ctx->client_sock_fd,
-                                         EV_READ | EV_PERSIST | EV_CLOSED, ThreadSink::NormalReadCallback, this);
+    struct event* read_event = event_new(self_thread_->GetThreadEvBase(),
+                                         new_conn_ctx->client_sock_fd,
+                                         EV_READ | EV_PERSIST | EV_CLOSED,
+                                         ThreadSink::NormalReadCallback, this);
     if (NULL == read_event)
     {
         const int err = EVUTIL_SOCKET_ERROR();
         LOG_ERROR("failed to create read event, errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
-
         evutil_closesocket(new_conn_ctx->client_sock_fd);
-        return;
+        return -1;
     }
 
     if (event_add(read_event, NULL) != 0)
     {
         const int err = EVUTIL_SOCKET_ERROR();
         LOG_ERROR("failed to add event, errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
-
         event_free(read_event);
         evutil_closesocket(new_conn_ctx->client_sock_fd);
-
-        return;
+        return -1;
     }
 
-    conn = conn_center_->CreateNormalConn(thread_->GetThreadIdx(), new_conn_ctx->client_sock_fd, read_event,
-                                          new_conn_ctx->client_ip, new_conn_ctx->client_port);
+    conn = conn_mgr_.CreateNormalConn(self_thread_->GetThreadIdx(), new_conn_ctx->client_sock_fd,
+                                      read_event, new_conn_ctx->client_ip, new_conn_ctx->client_port);
     if (NULL == conn)
     {
         event_del(read_event);
         event_free(read_event);
         evutil_closesocket(new_conn_ctx->client_sock_fd);
-
-        return;
-    }
-
-    if (!conn_recv_ctx_hash_table_.insert(
-                ConnRecvCtxHashTable::value_type(new_conn_ctx->client_sock_fd, ConnRecvCtx())).second)
-    {
-        const int err = errno;
-        LOG_ERROR("failed to insert to hash table, socket fd: " << new_conn_ctx->client_sock_fd
-                  << ", errno: " << err << ", err msg: " << strerror(err));
-
-        CloseConn(new_conn_ctx->client_sock_fd);
-        return;
-    }
-
-    conn_recv_ctx_hash_table_[new_conn_ctx->client_sock_fd].msg_recv_buf_ = (char*) malloc(max_msg_recv_len_ + 1);
-    if (NULL == conn_recv_ctx_hash_table_[new_conn_ctx->client_sock_fd].msg_recv_buf_)
-    {
-        const int err = errno;
-        LOG_ERROR("failed to alloc recv buf, errno: " << err << ", err msg: " << strerror(err));
-
-        CloseConn(new_conn_ctx->client_sock_fd);
-        return;
+        return -1;
     }
 
     if (local_logic_ != NULL)
     {
-        local_logic_->OnClientConnected(&conn->GetConnGuid());
+        local_logic_->OnClientConnected(conn->GetConnGUID());
     }
 
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
-        (*it).logic->OnClientConnected(&conn->GetConnGuid());
+        (*it).logic->OnClientConnected(conn->GetConnGUID());
     }
+
+    return 0;
 #endif
 }
 
@@ -787,222 +717,18 @@ void ThreadSink::OnRecvClientData(struct evbuffer* input_buf, int sock_fd, BaseC
     // TODO data_buf要不要手动释放？
 }
 #else
-void ThreadSink::OnClientData(bool& closed, int sock_fd, ConnInterface* conn)
-{
-    ConnRecvCtxHashTable::iterator it = conn_recv_ctx_hash_table_.find(sock_fd);
-    if (it == conn_recv_ctx_hash_table_.end())
-    {
-        return;
-    }
-
-    ConnRecvCtx& conn_recv_ctx = it->second;
-    MsgCodecInterface* msg_codec = tcp_msg_codec_;
-
-    while (true)
-    {
-        MsgHead msg_head;
-        MsgId err_msg_id = MSG_ID_OK;
-
-        if (conn_recv_ctx.total_msg_len_network_recved_len_ < (ssize_t) TOTAL_MSG_LEN_FIELD_LEN)
-        {
-            // 继续读头
-            ssize_t n = read(sock_fd,
-                             &(conn_recv_ctx.total_msg_len_network_[conn_recv_ctx.total_msg_len_network_recved_len_]),
-                             TOTAL_MSG_LEN_FIELD_LEN - conn_recv_ctx.total_msg_len_network_recved_len_);
-            if (0 == n)
-            {
-                LOG_TRACE("read 0, fd: " << sock_fd);
-                closed = true;
-                return;
-            }
-            else if (n < 0)
-            {
-                const int err = errno;
-                if (EINTR == err)
-                {
-                    // 被中断了，可以继续读
-                    continue;
-                }
-                else if (EAGAIN == err)
-                {
-                    // 没有数据可读了
-                    return;
-                }
-                else if (ECONNRESET == err)
-                {
-                    LOG_TRACE("conn reset by peer");
-                    closed = true;
-                    return;
-                }
-                else
-                {
-                    LOG_ERROR("read error, n: " << n << ", socked fd: " << sock_fd << ", errno: " << err
-                              << ", err msg: " << evutil_socket_error_to_string(err));
-                    return;
-                }
-            }
-
-            conn_recv_ctx.total_msg_len_network_recved_len_ += n;
-
-            if (conn_recv_ctx.total_msg_len_network_recved_len_ < (ssize_t) TOTAL_MSG_LEN_FIELD_LEN)
-            {
-                LOG_TRACE("total msg len field not recv complete, wait for next time, recv len: "
-                          << conn_recv_ctx.total_msg_len_network_recved_len_);
-
-                // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
-                part_msg_mgr_.UpsertRecord(conn, sock_fd, threads_ctx_->conf_mgr->GetTcpPartMsgConnLife());
-
-                return;
-            }
-        }
-
-        if (0 == conn_recv_ctx.total_msg_recved_len_)
-        {
-            // 4个字节的头读全了，看后面的数据有多长
-            uint32_t n;
-            memcpy(&n, conn_recv_ctx.total_msg_len_network_, TOTAL_MSG_LEN_FIELD_LEN);
-
-            conn_recv_ctx.total_msg_len_ = ntohl(n);
-            if ((conn_recv_ctx.total_msg_len_ < (int32_t) MIN_TOTAL_MSG_LEN) ||
-                    (conn_recv_ctx.total_msg_len_ > (int32_t) max_msg_recv_len_))
-            {
-                LOG_ERROR("invalid msg len: " << conn_recv_ctx.total_msg_len_ << ", throw away all bytes in the buf");
-
-                // 把socket中的数据读完扔掉
-                ExhaustSocketData(sock_fd);
-
-                // 回复
-                msg_head.Reset();
-                msg_head.msg_id = MSG_ID_INVALID_MSG_LEN;
-                conn->Send(msg_head, NULL, 0, -1);
-
-                // 重置各个标记
-                conn_recv_ctx.total_msg_len_network_recved_len_ = 0;
-                conn_recv_ctx.total_msg_len_ = 0;
-                conn_recv_ctx.total_msg_recved_len_ = 0;
-
-                return;
-            }
-
-            LOG_TRACE("total msg len: " << conn_recv_ctx.total_msg_len_);
-        }
-
-        ssize_t n = read(sock_fd, &(conn_recv_ctx.msg_recv_buf_[conn_recv_ctx.total_msg_recved_len_]),
-                         conn_recv_ctx.total_msg_len_ - conn_recv_ctx.total_msg_recved_len_);
-        if (0 == n)
-        {
-            return;
-        }
-        else if (n < 0)
-        {
-            const int err = errno;
-            if (EINTR == err)
-            {
-                // 被中断了，可以继续读
-                continue;
-            }
-            else if (EAGAIN == err)
-            {
-                // 没有数据可读了
-                return;
-            }
-            else
-            {
-                LOG_ERROR("read error, n: " << n << ", socked fd: " << sock_fd << ", errno: " << err << ", err msg: "
-                          << evutil_socket_error_to_string(err));
-                return;
-            }
-        }
-
-        conn_recv_ctx.total_msg_recved_len_ += n;
-
-        if (conn_recv_ctx.total_msg_recved_len_ < conn_recv_ctx.total_msg_len_)
-        {
-            LOG_TRACE("not a whole msg, socket fd: " << sock_fd << ", total msg recved len: "
-                      << conn_recv_ctx.total_msg_recved_len_ << ", total msg len: "
-                      << conn_recv_ctx.total_msg_len_);
-
-            // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
-            part_msg_mgr_.UpsertRecord(conn, sock_fd, threads_ctx_->conf_mgr->GetTcpPartMsgConnLife());
-
-            return;
-        }
-
-        conn_recv_ctx.msg_recv_buf_[conn_recv_ctx.total_msg_len_] = '\0';
-        part_msg_mgr_.RemoveRecord(conn, false);
-
-        char* msg_body = NULL;
-        size_t msg_body_len = 0;
-
-        msg_head.Reset();
-
-        if (msg_codec->DecodeMsg(err_msg_id, &msg_head, &msg_body, msg_body_len, conn_recv_ctx.msg_recv_buf_,
-                                 conn_recv_ctx.total_msg_len_) != 0)
-        {
-            msg_head.Reset();
-            msg_head.msg_id = err_msg_id;
-            conn->Send(msg_head, NULL, 0, -1);
-
-            // 把socket中的数据读完扔掉
-            ExhaustSocketData(sock_fd);
-
-            // 重置各个标记
-            conn_recv_ctx.total_msg_len_network_recved_len_ = 0;
-            conn_recv_ctx.total_msg_len_ = 0;
-            conn_recv_ctx.total_msg_recved_len_ = 0;
-
-            return;
-        }
-
-        OnRecvClientMsg(&conn->GetConnGuid(), msg_head, msg_body, msg_body_len);
-
-        // 重置各个标记
-        conn_recv_ctx.total_msg_len_network_recved_len_ = 0;
-        conn_recv_ctx.total_msg_len_ = 0;
-        conn_recv_ctx.total_msg_recved_len_ = 0;
-    }
-}
-
-void ThreadSink::OnClientRawData(bool& closed, int sock_fd, const ConnInterface* conn)
+void ThreadSink::OnRecvClientData(bool& closed, int sock_fd, BaseConn* conn)
 {
     // logic处理
     if (local_logic_ != NULL)
     {
-        local_logic_->OnClientRawData(closed, &conn->GetConnGuid(), sock_fd);
+        local_logic_->OnRecvClientData(closed, conn->GetConnGUID(), sock_fd);
     }
 
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
-        (*it).logic->OnClientRawData(closed, &conn->GetConnGuid(), sock_fd);
+        (*it).logic->OnRecvClientData(closed, conn->GetConnGUID(), sock_fd);
     }
 }
 #endif
-
-//void ThreadSink::ExhaustSocketData(int sock_fd)
-//{
-//    while (true)
-//    {
-//        ssize_t n = read(sock_fd, msg_recv_buf_, max_msg_recv_len_);
-//        if (n < 0)
-//        {
-//            const int err = errno;
-//            if (EINTR == err)
-//            {
-//                // 被中断了，可以继续读
-//                continue;
-//            }
-//            else if (EAGAIN == err)
-//            {
-//                // 没有数据可读了
-//                return;
-//            }
-//            else
-//            {
-//                LOG_ERROR("read error, n: " << n << ", socked fd: " << sock_fd << ", errno: " << err << ", err msg: "
-//                          << evutil_socket_error_to_string(err));
-//                return;
-//            }
-//        }
-//    }
-//}
 }

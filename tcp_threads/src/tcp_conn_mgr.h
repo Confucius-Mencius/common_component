@@ -43,8 +43,8 @@ public:
     BaseConn* CreateBufferEventConn(int io_thread_idx, int sock_fd, struct bufferevent* buffer_event,
                                     const char* ip, unsigned short port);
 #else
-    ConnInterface* CreateNormalConn(int io_thread_idx, int sock_fd, struct event* read_event,
-                                    const char* ip, unsigned short port);
+    BaseConn* CreateNormalConn(int io_thread_idx, int sock_fd, struct event* read_event,
+                               const char* ip, unsigned short port);
 #endif
 
     void DestroyConn(int sock_fd);

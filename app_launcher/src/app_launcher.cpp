@@ -112,12 +112,49 @@ int AppLauncher::Initialize(const AppLauncherCtx* app_launcher_ctx)
     PrintAllResLimits();
 
     ////////////////////////////////////////////////////////////////////////////////
+//    struct event_config* cfg = event_config_new();
+//    if (NULL == cfg)
+//    {
+//        const int err = errno;
+//        LOG_ERROR("failed to create libevent config, errno: " << err << ", err msg: " << strerror(err));
+//        return -1;
+//    }
+
+//    if (event_config_require_features(cfg,  EV_FEATURE_ET | EV_FEATURE_O1 | EV_FEATURE_FDS | EV_FEATURE_EARLY_CLOSE) != 0)
+//    {
+//        LOG_ERROR("failed to set libevent config");
+//        event_config_free(cfg);
+//        return -1;
+//    }
+
+//    thread_ev_base_ = event_base_new_with_config(cfg);
     thread_ev_base_ = event_base_new();
     if (NULL == thread_ev_base_)
     {
         const int err = errno;
-        LOG_ERROR("failed to create main event base, errno: " << err << ", err msg: " << strerror(err));
+        LOG_ERROR("failed to create main thread event base, errno: " << err << ", err msg: " << strerror(err));
         return -1;
+    }
+
+    const int features = event_base_get_features(thread_ev_base_);
+    if (features & EV_FEATURE_ET)
+    {
+        LOG_INFO("libevent feature EV_FEATURE_ET supported");
+    }
+
+    if (features & EV_FEATURE_O1)
+    {
+        LOG_INFO("libevent feature EV_FEATURE_O1 supported");
+    }
+
+    if (features & EV_FEATURE_FDS)
+    {
+        LOG_INFO("libevent feature EV_FEATURE_FDS supported"); // linux下不支持
+    }
+
+    if (features & EV_FEATURE_EARLY_CLOSE)
+    {
+        LOG_INFO("libevent feature EV_FEATURE_EARLY_CLOSE supported");
     }
 
     LOG_INFO("libevent version: " << event_get_version()

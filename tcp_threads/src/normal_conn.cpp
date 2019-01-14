@@ -11,6 +11,12 @@ void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
     LOG_DEBUG("events occured on socket, fd: " << fd << ", events: "
               << setiosflags(std::ios::showbase) << std::hex << events);
 
+    // 在read事件中处理
+//    if (events & EV_CLOSED)
+//    {
+//        return;
+//    }
+
     NormalConn* conn = static_cast<NormalConn*>(arg);
 
     for (SendList::iterator it = conn->send_list_.begin(); it != conn->send_list_.end();)
@@ -155,7 +161,7 @@ int NormalConn::Send(const void* data, size_t len)
         do
         {
             write_event_ = event_new(event_get_base(read_event_), sock_fd_,
-                                     EV_CLOSED | EV_WRITE | EV_PERSIST,
+                                     EV_WRITE | EV_PERSIST, // EV_CLOSED 在read事件中处理
                                      NormalConn::WriteCallback, this);
             if (NULL == write_event_)
             {

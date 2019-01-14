@@ -4,6 +4,7 @@
 #include <set>
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
+#include <event2/event_struct.h>
 #include <event2/util.h>
 #include "new_conn.h"
 #include "mem_util.h"
@@ -94,11 +95,8 @@ private:
 #if defined(USE_BUFFEREVENT)
     void OnRecvClientData(struct evbuffer* input_buf, int sock_fd, BaseConn* conn);
 #else
-    void OnClientData(bool& closed, int sock_fd, ConnInterface* conn);
-    void OnClientRawData(bool& closed, int sock_fd, const ConnInterface* conn);
+    void OnRecvClientData(bool& closed, int sock_fd, BaseConn* conn);
 #endif
-
-//    void ExhaustSocketData(int sock_fd);
 
 private:
     const ThreadsCtx* threads_ctx_;
@@ -112,28 +110,6 @@ private:
 
     ConnMgr conn_mgr_;
     Scheduler scheduler_;
-
-#if !defined(USE_BUFFEREVENT)
-    struct ConnRecvCtx
-    {
-        char total_msg_len_network_[TOTAL_MSG_LEN_FIELD_LEN];
-        ssize_t total_msg_len_network_recved_len_;
-        int32_t total_msg_len_;
-        ssize_t total_msg_recved_len_;
-        char* msg_recv_buf_;
-
-        ConnRecvCtx()
-        {
-            total_msg_len_network_recved_len_ = 0;
-            total_msg_len_ = 0;
-            total_msg_recved_len_ = 0;
-            msg_recv_buf_ = NULL;
-        }
-    };
-
-    typedef __hash_map<int, ConnRecvCtx> ConnRecvCtxHashTable;
-    ConnRecvCtxHashTable conn_recv_ctx_hash_table_;
-#endif
 };
 }
 

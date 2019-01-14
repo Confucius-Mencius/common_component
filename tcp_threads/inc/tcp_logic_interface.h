@@ -129,6 +129,9 @@ public:
      */
     virtual void OnRecvClientData(bool& closed, const ConnGUID* conn_guid, int sock_fd)
     {
+        (void) closed;
+        (void) conn_guid;
+        (void) sock_fd;
     }
 #endif
 
