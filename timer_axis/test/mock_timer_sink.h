@@ -20,11 +20,18 @@ public:
 class TimerSink1 : public TimerSinkInterface
 {
 public:
-    void SetCtx(struct event_base* thread_event_base, TimerAxisInterface* timer_axis, TimerSinkInterface* sink)
+    TimerSink1()
     {
-        thread_event_base_ = thread_event_base;
+        thread_ev_base_ = NULL;
+        timer_axis_ = NULL;
+        timer_sink_ = NULL;
+    }
+
+    void SetCtx(struct event_base* thread_ev_base, TimerAxisInterface* timer_axis, TimerSinkInterface* sink)
+    {
+        thread_ev_base_ = thread_ev_base;
         timer_axis_ = timer_axis;
-        sink_ = sink;
+        timer_sink_ = sink;
     }
 
     virtual void OnTimer(TimerID timer_id, void* data, size_t len, int times)
@@ -33,14 +40,14 @@ public:
         (void) len;
 
         LOG_DEBUG("on timer, times: " << times);
-        timer_axis_->KillTimer(sink_, timer_id);
-        event_base_loopbreak(thread_event_base_);
+        timer_axis_->KillTimer(timer_sink_, timer_id);
+        event_base_loopbreak(thread_ev_base_);
     }
 
 private:
-    struct event_base* thread_event_base_;
+    struct event_base* thread_ev_base_;
     TimerAxisInterface* timer_axis_;
-    TimerSinkInterface* sink_;
+    TimerSinkInterface* timer_sink_;
 };
 
 class MockTimerSink1 : public TimerSinkInterface
@@ -48,9 +55,9 @@ class MockTimerSink1 : public TimerSinkInterface
 public:
     MOCK_METHOD4(OnTimer, void(TimerID timer_id, void* data, size_t len, int times));
 
-    void Delegate(struct event_base* thread_event_base, TimerAxisInterface* timer_axis)
+    void Delegate(struct event_base* thread_ev_base, TimerAxisInterface* timer_axis)
     {
-        timer_sink_.SetCtx(thread_event_base, timer_axis, this);
+        timer_sink_.SetCtx(thread_ev_base, timer_axis, this);
         ON_CALL(*this, OnTimer(_, _, _, _)).WillByDefault(Invoke(&timer_sink_, &TimerSink1::OnTimer));
     }
 
@@ -62,12 +69,20 @@ private:
 class TimerSink2 : public TimerSinkInterface
 {
 public:
-    void SetCtx(struct event_base* thread_event_base, TimerAxisInterface* timer_axis, TimerSinkInterface* sink,
+    TimerSink2()
+    {
+        thread_ev_base_ = NULL;
+        timer_axis_ = NULL;
+        timer_sink_ = NULL;
+        interval_.tv_sec = interval_.tv_usec = 0;
+    }
+
+    void SetCtx(struct event_base* thread_ev_base, TimerAxisInterface* timer_axis, TimerSinkInterface* sink,
                 const struct timeval& interval)
     {
-        thread_event_base_ = thread_event_base;
+        thread_ev_base_ = thread_ev_base;
         timer_axis_ = timer_axis;
-        sink_ = sink;
+        timer_sink_ = sink;
         interval_ = interval;
     }
 
@@ -77,23 +92,23 @@ public:
         (void) len;
 
         LOG_DEBUG("on timer, times: " << times);
-        timer_axis_->KillTimer(sink_, timer_id);
-        timer_axis_->SetTimer(sink_, timer_id, interval_, NULL, 0);
+        timer_axis_->KillTimer(timer_sink_, timer_id);
+        timer_axis_->SetTimer(timer_sink_, timer_id, interval_, NULL, 0);
 
         static int n = 0;
 
         if (2 == n)
         {
-            event_base_loopbreak(thread_event_base_);
+            event_base_loopbreak(thread_ev_base_);
         }
 
         ++n;
     }
 
 private:
-    struct event_base* thread_event_base_;
+    struct event_base* thread_ev_base_;
     TimerAxisInterface* timer_axis_;
-    TimerSinkInterface* sink_;
+    TimerSinkInterface* timer_sink_;
     struct timeval interval_;
 };
 
@@ -102,9 +117,9 @@ class MockTimerSink2 : public TimerSinkInterface
 public:
     MOCK_METHOD4(OnTimer, void(TimerID timer_id, void* data, size_t len, int times));
 
-    void Delegate(struct event_base* thread_event_base, TimerAxisInterface* timer_axis, const struct timeval& interval)
+    void Delegate(struct event_base* thread_ev_base, TimerAxisInterface* timer_axis, const struct timeval& interval)
     {
-        timer_sink_.SetCtx(thread_event_base, timer_axis, this, interval);
+        timer_sink_.SetCtx(thread_ev_base, timer_axis, this, interval);
         ON_CALL(*this, OnTimer(_, _, _, _)).WillByDefault(Invoke(&timer_sink_, &TimerSink2::OnTimer));
     }
 
@@ -116,12 +131,20 @@ private:
 class TimerSink3 : public TimerSinkInterface
 {
 public:
-    void SetCtx(struct event_base* thread_event_base, TimerAxisInterface* timer_axis, TimerSinkInterface* other_sink, TimerID other_id)
+    TimerSink3()
     {
-        thread_event_base_ = thread_event_base;
+        thread_ev_base_ = NULL;
+        timer_axis_ = NULL;
+        other_timer_sink_ = NULL;
+        other_timer_id_ = -1;
+    }
+
+    void SetCtx(struct event_base* thread_ev_base, TimerAxisInterface* timer_axis, TimerSinkInterface* other_sink, TimerID other_id)
+    {
+        thread_ev_base_ = thread_ev_base;
         timer_axis_ = timer_axis;
-        other_sink_ = other_sink;
-        other_id_ = other_id;
+        other_timer_sink_ = other_sink;
+        other_timer_id_ = other_id;
     }
 
     virtual void OnTimer(TimerID timer_id, void* data, size_t len, int times)
@@ -131,23 +154,23 @@ public:
         (void) len;
 
         LOG_DEBUG("on timer, times: " << times);
-        timer_axis_->KillTimer(other_sink_, other_id_);
+        timer_axis_->KillTimer(other_timer_sink_, other_timer_id_);
 
         static int n = 0;
 
         if (2 == n)
         {
-            event_base_loopbreak(thread_event_base_);
+            event_base_loopbreak(thread_ev_base_);
         }
 
         ++n;
     }
 
 private:
-    struct event_base* thread_event_base_;
+    struct event_base* thread_ev_base_;
     TimerAxisInterface* timer_axis_;
-    TimerSinkInterface* other_sink_;
-    TimerID other_id_;
+    TimerSinkInterface* other_timer_sink_;
+    TimerID other_timer_id_;
 };
 
 class MockTimerSink3 : public TimerSinkInterface
@@ -155,27 +178,36 @@ class MockTimerSink3 : public TimerSinkInterface
 public:
     MOCK_METHOD4(OnTimer, void(TimerID timer_id, void* data, size_t len, int times));
 
-    void Delegate(struct event_base* thread_event_base, TimerAxisInterface* timer_axis, TimerSinkInterface* other_sink, TimerID other_id)
+    void Delegate(struct event_base* thread_ev_base, TimerAxisInterface* timer_axis, TimerSinkInterface* other_sink, TimerID other_id)
     {
-        timer_sink.SetCtx(thread_event_base, timer_axis, other_sink, other_id);
-        ON_CALL(*this, OnTimer(_, _, _, _)).WillByDefault(Invoke(&timer_sink, &TimerSink3::OnTimer));
+        timer_sink_.SetCtx(thread_ev_base, timer_axis, other_sink, other_id);
+        ON_CALL(*this, OnTimer(_, _, _, _)).WillByDefault(Invoke(&timer_sink_, &TimerSink3::OnTimer));
     }
 
 private:
-    TimerSink3 timer_sink;
+    TimerSink3 timer_sink_;
 };
 
 // 在回调的时候添加其它的定时器
 class TimerSink4 : public TimerSinkInterface
 {
 public:
-    void SetCtx(struct event_base* thread_event_base, TimerAxisInterface* timer_axis, TimerSinkInterface* other_sink,
+    TimerSink4()
+    {
+        thread_ev_base_ = NULL;
+        timer_axis_ = NULL;
+        other_timer_sink_ = NULL;
+        other_timer_id_ = -1;
+        other_interval_.tv_sec = other_interval_.tv_usec = 0;
+    }
+
+    void SetCtx(struct event_base* thread_ev_base, TimerAxisInterface* timer_axis, TimerSinkInterface* other_sink,
                 TimerID other_id, const struct timeval& other_interval)
     {
-        thread_event_base_ = thread_event_base;
+        thread_ev_base_ = thread_ev_base;
         timer_axis_ = timer_axis;
-        other_sink_ = other_sink;
-        other_id_ = other_id;
+        other_timer_sink_ = other_sink;
+        other_timer_id_ = other_id;
         other_interval_ = other_interval;
     }
 
@@ -186,23 +218,23 @@ public:
         (void) len;
 
         LOG_DEBUG("on timer, times: " << times);
-        timer_axis_->SetTimer(other_sink_, other_id_, other_interval_, NULL, 0);
+        timer_axis_->SetTimer(other_timer_sink_, other_timer_id_, other_interval_, NULL, 0);
 
         static int n = 0;
 
         if (2 == n)
         {
-            event_base_loopbreak(thread_event_base_);
+            event_base_loopbreak(thread_ev_base_);
         }
 
         ++n;
     }
 
 private:
-    struct event_base* thread_event_base_;
+    struct event_base* thread_ev_base_;
     TimerAxisInterface* timer_axis_;
-    TimerSinkInterface* other_sink_;
-    TimerID other_id_;
+    TimerSinkInterface* other_timer_sink_;
+    TimerID other_timer_id_;
     struct timeval other_interval_;
 };
 
@@ -211,10 +243,10 @@ class MockTimerSink4 : public TimerSinkInterface
 public:
     MOCK_METHOD4(OnTimer, void(TimerID timer_id, void* data, size_t len, int times));
 
-    void Delegate(struct event_base* thread_event_base, TimerAxisInterface* timer_axis, TimerSinkInterface* other_sink,
+    void Delegate(struct event_base* thread_ev_base, TimerAxisInterface* timer_axis, TimerSinkInterface* other_sink,
                   TimerID other_id, const struct timeval& other_interval)
     {
-        timer_sink_.SetCtx(thread_event_base, timer_axis, other_sink, other_id, other_interval);
+        timer_sink_.SetCtx(thread_ev_base, timer_axis, other_sink, other_id, other_interval);
         ON_CALL(*this, OnTimer(_, _, _, _)).WillByDefault(Invoke(&timer_sink_, &TimerSink4::OnTimer));
     }
 
@@ -226,11 +258,19 @@ private:
 class TimerSink5 : public TimerSinkInterface
 {
 public:
-    void SetCtx(struct event_base* thread_event_base, TimerAxisInterface* timer_axis, TimerSinkInterface* sink, int ntimes)
+    TimerSink5()
     {
-        thread_event_base_ = thread_event_base;
+        thread_ev_base_ = NULL;
+        timer_axis_ = NULL;
+        timer_sink_ = NULL;
+        ntimes_ = 0;
+    }
+
+    void SetCtx(struct event_base* thread_ev_base, TimerAxisInterface* timer_axis, TimerSinkInterface* sink, int ntimes)
+    {
+        thread_ev_base_ = thread_ev_base;
         timer_axis_ = timer_axis;
-        sink_ = sink;
+        timer_sink_ = sink;
         ntimes_ = ntimes;
     }
 
@@ -244,14 +284,14 @@ public:
 
         if (times >= ntimes_)
         {
-            event_base_loopbreak(thread_event_base_);
+            event_base_loopbreak(thread_ev_base_);
         }
     }
 
 private:
-    struct event_base* thread_event_base_;
+    struct event_base* thread_ev_base_;
     TimerAxisInterface* timer_axis_;
-    TimerSinkInterface* sink_;
+    TimerSinkInterface* timer_sink_;
     int ntimes_;
 };
 
@@ -260,9 +300,9 @@ class MockTimerSink5 : public TimerSinkInterface
 public:
     MOCK_METHOD4(OnTimer, void(TimerID timer_id, void* data, size_t len, int ntimes));
 
-    void Delegate(struct event_base* thread_event_base, TimerAxisInterface* timer_axis, int ntimes)
+    void Delegate(struct event_base* thread_ev_base, TimerAxisInterface* timer_axis, int ntimes)
     {
-        timer_sink_.SetCtx(thread_event_base, timer_axis, this, ntimes);
+        timer_sink_.SetCtx(thread_ev_base, timer_axis, this, ntimes);
         ON_CALL(*this, OnTimer(_, _, _, _)).WillByDefault(Invoke(&timer_sink_, &TimerSink5::OnTimer));
     }
 

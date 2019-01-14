@@ -40,13 +40,11 @@ void PrintResLimits(char* name, int resource)
 
     if (limit.rlim_max == RLIM_INFINITY)
     {
-        n = StrPrintf(buf + offset, sizeof(buf) - offset, "(infinite)     ");
-        offset += n;
+        StrPrintf(buf + offset, sizeof(buf) - offset, "(infinite)     ");
     }
     else
     {
-        n = StrPrintf(buf + offset, sizeof(buf) - offset, "%-15ld", limit.rlim_max);
-        offset += n;
+        StrPrintf(buf + offset, sizeof(buf) - offset, "%-15ld", limit.rlim_max);
     }
 
     LOG_INFO(buf);

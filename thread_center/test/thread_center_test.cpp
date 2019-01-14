@@ -196,7 +196,7 @@ void ThreadCenterTest::Test004()
 
 void ProducerThreadProcess(ThreadGroupInterface* thread_group, int thread_count)
 {
-    for (int i = 0; i < 10000000; ++i)
+    for (int i = 0; i < 1000000; ++i)
     {
         ThreadTask* task = new ThreadTask();
         ASSERT_TRUE(task != NULL);

@@ -26,7 +26,7 @@ void MyRecordTimeoutMgr::OnTimeout(const Key& k, const Value& v, int timeout_sec
 
     if (0 == GetRecordCount())
     {
-        event_base_loopbreak(thread_event_base_);
+        event_base_loopbreak(thread_ev_base_);
     }
 #else
     event_base_loopbreak(thread_ev_base_);
