@@ -17,10 +17,19 @@ void ThreadSink::BufferEventEventCallback(struct bufferevent* buffer_event, shor
 {
     const int err = EVUTIL_SOCKET_ERROR();
     const evutil_socket_t sock_fd = bufferevent_getfd(buffer_event);
+    ThreadSink* sink = static_cast<ThreadSink*>(arg);
+
     LOG_DEBUG("events occured on socket, fd: " << sock_fd << ", events: "
               << setiosflags(std::ios::showbase) << std::hex << events);
 
-    ThreadSink* sink = static_cast<ThreadSink*>(arg);
+    BaseConn* conn = sink->conn_mgr_.GetConn(sock_fd);
+    if (NULL == conn)
+    {
+        LOG_ERROR("failed to get tcp conn by socket fd: " << sock_fd);
+        return;
+    }
+
+    bool closed = false;
 
     do
     {
@@ -32,12 +41,14 @@ void ThreadSink::BufferEventEventCallback(struct bufferevent* buffer_event, shor
                           << ", err msg: " << evutil_socket_error_to_string(err));
             }
 
+            closed = true;
             break;
         }
 
         if (events & BEV_EVENT_EOF)
         {
             LOG_DEBUG("tcp conn closed, fd: " << sock_fd);
+            closed = true;
             break;
         }
 
@@ -53,6 +64,7 @@ void ThreadSink::BufferEventEventCallback(struct bufferevent* buffer_event, shor
             {
                 // 这个事件等价于上面的EOF事件,都表示对端关闭了
                 LOG_DEBUG("tcp conn closed, socket fd: " << sock_fd);
+                closed = true;
                 break;
             }
         }
@@ -64,14 +76,11 @@ void ThreadSink::BufferEventEventCallback(struct bufferevent* buffer_event, shor
 
         if (events & BEV_EVENT_TIMEOUT)
         {
-            LOG_ERROR("timeout event occurred on socket, fd: " << sock_fd); // TODO 什么时候会出现timeout？逻辑如何处理？
+            LOG_WARN("timeout event occurred on socket, fd: " << sock_fd); // TODO 什么时候会出现timeout？逻辑如何处理？
         }
-
-        return;
     } while (0);
 
-    BaseConn* conn = sink->conn_mgr_.GetConn(sock_fd);
-    if (conn != NULL)
+    if (closed)
     {
         sink->OnClientClosed(conn);
     }
@@ -116,11 +125,14 @@ void ThreadSink::NormalReadCallback(evutil_socket_t fd, short events, void* arg)
         return;
     }
 
+    bool closed = false;
+
     do
     {
         if (events & EV_CLOSED)
         {
             LOG_INFO("tcp conn closed, fd: " << fd);
+            closed = true;
             break;
         }
 
@@ -129,30 +141,30 @@ void ThreadSink::NormalReadCallback(evutil_socket_t fd, short events, void* arg)
             if (sink->self_thread_->IsStopping())
             {
                 LOG_WARN("in stopping status, refuse all client data");
-                return;
+                break;
             }
 
             sink->conn_mgr_.UpdateConnStatus(conn->GetConnGUID()->conn_id);
-
-            bool closed = false;
             sink->OnRecvClientData(closed, fd, conn);
 
             if (closed)
             {
                 // 注：空连接关闭时，不会收到close事件，但会收到read事件，read返回0
+                closed = true;
                 break;
             }
         }
 
         if (events & EV_TIMEOUT)
         {
-            LOG_ERROR("timeout event occurred on socket, fd: " << fd); // TODO 什么时候会出现timeout？逻辑如何处理？
+            LOG_WARN("timeout event occurred on socket, fd: " << fd); // TODO 什么时候会出现timeout？逻辑如何处理？
         }
-
-        return;
     } while (0);
 
-    sink->OnClientClosed(conn);
+    if (closed)
+    {
+        sink->OnClientClosed(conn);
+    }
 }
 #endif
 
