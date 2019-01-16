@@ -1,8 +1,0 @@
-#ifndef RANDOM_ENGINE_SRC_EXPORTER_H_
-#define RANDOM_ENGINE_SRC_EXPORTER_H_
-
-#include "module_util.h"
-
-MODULE_EXPORTER_DECL();
-
-#endif // RANDOM_ENGINE_SRC_EXPORTER_H_

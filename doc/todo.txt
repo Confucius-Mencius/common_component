@@ -112,3 +112,15 @@ bufferevent_get_write_max_(struct bufferevent_private *bev)
 
 
 等以后有了名字服务,增加一个调试模式配置，调试模式时读配置直连其他server，不通过名字服务获取服务地址。
+
+common_component:
+搜LOG_TRACE LOG_DEBUG LOG_INFO LOG_WARN，统一
+
+搜todo TODO
+
+
+ET模式的实验与对比（bufferevent和normal）
+event_new选项排查
+
+
+

@@ -1,8 +1,0 @@
-#ifndef MONGODB_ENGINE_SRC_EXPORTER_H_
-#define MONGODB_ENGINE_SRC_EXPORTER_H_
-
-#include "module_util.h"
-
-MODULE_EXPORTER_DECL();
-
-#endif // MONGODB_ENGINE_SRC_EXPORTER_H_

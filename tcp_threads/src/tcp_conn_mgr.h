@@ -21,6 +21,8 @@ struct ConnMgrCtx
         timer_axis = NULL;
         inactive_conn_check_interval.tv_sec = inactive_conn_check_interval.tv_usec = 0;
         inactive_conn_life = 0;
+        storm_interval = 0;
+        storm_recv_count = 0;
     }
 };
 

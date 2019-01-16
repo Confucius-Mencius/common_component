@@ -1,8 +1,0 @@
-#ifndef WORDS_FILTER_SRC_EXPORTER_H_
-#define WORDS_FILTER_SRC_EXPORTER_H_
-
-#include "module_util.h"
-
-MODULE_EXPORTER_DECL();
-
-#endif // WORDS_FILTER_SRC_EXPORTER_H_
