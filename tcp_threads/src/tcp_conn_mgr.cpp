@@ -72,7 +72,12 @@ void ConnMgr::Finalize()
 
 int ConnMgr::Activate()
 {
-    return RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*>::Activate();
+    if (RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*>::Activate() != 0)
+    {
+        return -1;
+    }
+
+    return 0;
 }
 
 void ConnMgr::Freeze()
@@ -115,7 +120,9 @@ BaseConn* ConnMgr::CreateBufferEventConn(int io_thread_idx, int sock_fd, struct 
         return NULL;
     }
 
-    conn->SetCreatedTime(time(NULL));
+    const time_t now = time(NULL);
+
+    conn->SetCreatedTime(now);
     conn->SetSockFD(sock_fd);
     conn->SetClientIP(ip);
     conn->SetClientPort(port);
@@ -142,11 +149,9 @@ BaseConn* ConnMgr::CreateBufferEventConn(int io_thread_idx, int sock_fd, struct 
             break;
         }
 
-        if (!conn_hash_map_.insert(ConnHashMap::value_type(sock_fd, conn)).second)
-        {
-            LOG_ERROR("failed to insert to conn hash map, socket fd: " << sock_fd);
-            break;
-        }
+        conn_hash_map_[sock_fd].conn = conn;
+        conn_hash_map_[sock_fd].start_time = now;
+        conn_hash_map_[sock_fd].recv_count = 0;
 
         UpsertRecord(conn_id, conn, conn_mgr_ctx_.inactive_conn_life);
 
@@ -270,14 +275,14 @@ void ConnMgr::DestroyConn(int sock_fd)
     ConnHashMap::iterator it = conn_hash_map_.find(sock_fd);
     if (it != conn_hash_map_.end())
     {
-        const ConnID conn_id = it->second->GetConnGUID()->conn_id;
+        const ConnID conn_id = it->second.conn->GetConnGUID()->conn_id;
 
         if (RecordExist(conn_id))
         {
             RemoveRecord(conn_id);
         }
 
-        Clear(it->second);
+        Clear(it->second.conn);
         LOG_DEBUG("destroy tcp conn ok, socket fd: " << sock_fd << ", conn id: " << conn_id);
     }
     else
@@ -291,7 +296,7 @@ BaseConn* ConnMgr::GetConn(int sock_fd) const
     ConnHashMap::const_iterator it = conn_hash_map_.find(sock_fd);
     if (it != conn_hash_map_.end())
     {
-        return it->second;
+        return it->second.conn;
     }
 
     return NULL;
@@ -308,15 +313,39 @@ BaseConn* ConnMgr::GetConnByID(ConnID conn_id) const
     return NULL;
 }
 
-void ConnMgr::UpdateConnStatus(ConnID conn_id)
+int ConnMgr::UpdateConnStatus(ConnID conn_id)
 {
     ConnIDHashMap::const_iterator it = conn_id_hash_map_.find(conn_id);
     if (it != conn_id_hash_map_.end())
     {
-        UpsertRecord(conn_id, it->second, conn_mgr_ctx_.inactive_conn_life);
+        const BaseConn* conn = it->second;
+        const int sock_fd = conn->GetSockFD();
 
-        // 统计收包的频率，对疑似攻击的client加入黑名单 TODO
+        // 统计收包的频率，断开疑似攻击的连接
+        ++(conn_hash_map_[sock_fd].recv_count);
+
+        const time_t now = time(NULL);
+        if ((now - conn_hash_map_[sock_fd].start_time) >= conn_mgr_ctx_.storm_interval)
+        {
+            if (conn_hash_map_[sock_fd].recv_count >= conn_mgr_ctx_.storm_recv_count)
+            {
+                LOG_WARN("net storm! conn id: " << conn_id << ", now: " << now << ", start time: "
+                         << conn_hash_map_[sock_fd].start_time << ", recv count: " << conn_hash_map_[sock_fd].recv_count);
+                DestroyConn(sock_fd);
+                return -1;
+            }
+            else
+            {
+                // 重新计数
+                conn_hash_map_[sock_fd].start_time = now;
+                conn_hash_map_[sock_fd].recv_count = 0;
+            }
+        }
+
+        UpsertRecord(conn_id, it->second, conn_mgr_ctx_.inactive_conn_life);
     }
+
+    return 0;
 }
 
 void ConnMgr::Clear(BaseConn* conn)

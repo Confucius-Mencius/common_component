@@ -16,6 +16,9 @@ static void pthreads_thread_id(CRYPTO_THREADID* tid)
 
 static void pthreads_locking_callback(int mode, int type, const char* file, int line)
 {
+    (void) file;
+    (void) line;
+
 //    BIO_printf(bio_err, "thread=%4d mode=%s lock=%s %s:%d\n",
 //               CRYPTO_thread_id(),
 //               (mode & CRYPTO_LOCK) ? "l" : "u",
@@ -116,7 +119,7 @@ static void* zero_malloc(size_t __size)
     return calloc(1, __size);
 }
 
-void OpenSSLInit()
+void OpenSSLInitialize()
 {
     CRYPTO_set_mem_functions(zero_malloc, realloc, free);
 
@@ -128,7 +131,7 @@ void OpenSSLInit()
     LOG_INFO("openssl version: " << SSLeay_version(SSLEAY_VERSION));
 }
 
-void OpenSSLFin()
+void OpenSSLFinalize()
 {
     thread_cleanup();
     ENGINE_cleanup();

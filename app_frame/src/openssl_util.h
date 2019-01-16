@@ -1,5 +1,5 @@
-#ifndef OPENSSL_UTIL_H
-#define OPENSSL_UTIL_H
+#ifndef APP_FRAME_SRC_OPENSSL_UTIL_H
+#define APP_FRAME_SRC_OPENSSL_UTIL_H
 
 //https://stackoverflow.com/questions/29845527/how-to-properly-uninitialize-openssl
 //How to properly uninitialize OpenSSL
@@ -26,7 +26,7 @@
 
 //You only need CRYPTO_set_id_callback and CRYPTO_set_locking_callback if your program is multi-threaded.
 
-void OpenSSLInit();
-void OpenSSLFin();
+void OpenSSLInitialize();
+void OpenSSLFinalize();
 
-#endif // OPENSSL_UTIL_H
+#endif // APP_FRAME_SRC_OPENSSL_UTIL_H

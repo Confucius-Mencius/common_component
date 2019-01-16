@@ -13,6 +13,8 @@ struct ConnMgrCtx
     TimerAxisInterface* timer_axis;
     struct timeval inactive_conn_check_interval;
     int inactive_conn_life;
+    int storm_interval;
+    int storm_recv_count;
 
     ConnMgrCtx()
     {
@@ -52,11 +54,11 @@ public:
     BaseConn* GetConn(int sock_fd) const;
     BaseConn* GetConnByID(ConnID conn_id) const;
 
-    void UpdateConnStatus(ConnID conn_id);
+    int UpdateConnStatus(ConnID conn_id);
 
 private:
     ///////////////////////// RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*> /////////////////////////
-    void OnTimeout(const ConnID& k, BaseConn* const& v, int timeout_sec) override;
+    void OnTimeout(const ConnID& k, BaseConn* const& v, int timeout_sec) override; // 空闲连接管理
 
     // 清理相关数据结构
     void Clear(BaseConn* conn);
@@ -65,7 +67,21 @@ private:
     ConnMgrCtx conn_mgr_ctx_;
     ThreadSink* thread_sink_;
 
-    typedef __hash_map<int, BaseConn*> ConnHashMap; // socket fd ->
+    struct ClientCtx
+    {
+        BaseConn* conn;
+        time_t start_time; // 统计计时
+        int recv_count; // 读回调次数
+
+        ClientCtx()
+        {
+            conn = NULL;
+            start_time = 0;
+            recv_count = 0;
+        }
+    };
+
+    typedef __hash_map<int, ClientCtx> ConnHashMap; // socket fd ->
     ConnHashMap conn_hash_map_;
 
     typedef __hash_map<ConnID, BaseConn*> ConnIDHashMap;

@@ -11,5 +11,5 @@ COMMON_COMPONENT_INSTALL_PREFIX=/opt/common_component # common component的安�
 #     thread_center conn_center_mgr client_center_mgr global_thread work_threads burden_threads tcp_threads 
 #     http_threads udp_threads app_frame app_launcher event_center script_engine words_filter)
 
-PROJ_LIST=(base log_engine conf_center timer_axis thread_center app_launcher tcp_threads)
+PROJ_LIST=(base log_engine conf_center timer_axis thread_center tcp_threads app_frame app_launcher)
 	# global_thread work_threads burden_threads http_ws_threads tcp_threads udp_threads app_frame app_launcher)

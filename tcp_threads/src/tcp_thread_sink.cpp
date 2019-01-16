@@ -107,7 +107,11 @@ void ThreadSink::BufferEventReadCallback(struct bufferevent* buffer_event, void*
         return;
     }
 
-    sink->conn_mgr_.UpdateConnStatus(conn->GetConnGUID()->conn_id);
+    if (sink->conn_mgr_.UpdateConnStatus(conn->GetConnGUID()->conn_id) != 0)
+    {
+        return;
+    }
+
     sink->OnRecvClientData(input_buf, sock_fd, conn);
 }
 #else
@@ -144,7 +148,12 @@ void ThreadSink::NormalReadCallback(evutil_socket_t fd, short events, void* arg)
                 break;
             }
 
-            sink->conn_mgr_.UpdateConnStatus(conn->GetConnGUID()->conn_id);
+            if (sink->conn_mgr_.UpdateConnStatus(conn->GetConnGUID()->conn_id) != 0)
+            {
+                closed = true;
+                break;
+            }
+
             sink->OnRecvClientData(closed, fd, conn);
 
             if (closed)
@@ -215,6 +224,8 @@ int ThreadSink::OnInitialize(ThreadInterface* thread)
     };
 
     conn_mgr_ctx.inactive_conn_life = threads_ctx_->conf_mgr->GetTCPInactiveConnLife();
+    conn_mgr_ctx.storm_interval = threads_ctx_->conf_mgr->GetTCPStormInterval();
+    conn_mgr_ctx.storm_recv_count = threads_ctx_->conf_mgr->GetTCPStormRecvCount();
 
     if (conn_mgr_.Initialize(&conn_mgr_ctx) != 0)
     {

@@ -15,11 +15,14 @@ public:
     virtual bool EnableCPUProfiling() = 0;
     virtual bool EnableMemProfiling() = 0;
     virtual bool ReleaseFreeMem() = 0;
+    virtual std::string GetGlobalLogicSo() = 0;
     virtual std::string GetTCPAddrPort() = 0;
     virtual int GetTCPConnCountLimit() = 0;
     virtual int GetTCPInactiveConnCheckIntervalSec() = 0;
     virtual int GetTCPInactiveConnCheckIntervalUsec() = 0;
     virtual int GetTCPInactiveConnLife() = 0;
+    virtual int GetTCPStormInterval() = 0;
+    virtual int GetTCPStormRecvCount() = 0;
     virtual int GetTCPThreadCount() = 0;
     virtual std::string GetTCPLocalLogicSo() = 0;
     virtual StrGroup GetTCPLogicSoGroup() = 0;
@@ -47,10 +50,16 @@ public:
     virtual int GetUDPInactiveConnCheckIntervalSec() = 0;
     virtual int GetUDPInactiveConnCheckIntervalUsec() = 0;
     virtual int GetUDPInactiveConnLife() = 0;
+    virtual bool UDPDoChecksum() = 0;
+    virtual int GetUDPMaxMsgBodyLen() = 0;
     virtual int GetUDPThreadCount() = 0;
     virtual std::string GetUDPLocalLogicSo() = 0;
     virtual StrGroup GetUDPLogicSoGroup() = 0;
-    virtual std::string GetGlobalLogicSo() = 0;
+    virtual int GetPeerNeedReplyMsgCheckInterval() = 0;
+    virtual int GetPeerTCPConnIntervalSec() = 0;
+    virtual int GetPeerTCPConnIntervalUsec() = 0;
+    virtual int GetPeerHTTPConnTimeout() = 0;
+    virtual int GetPeerHTTPConnMaxRetry() = 0;
     virtual int GetWorkThreadCount() = 0;
     virtual std::string GetWorkLocalLogicSo() = 0;
     virtual StrGroup GetWorkLogicSoGroup() = 0;
@@ -58,11 +67,6 @@ public:
     virtual int GetBurdenThreadCount() = 0;
     virtual std::string GetBurdenLocalLogicSo() = 0;
     virtual StrGroup GetBurdenLogicSoGroup() = 0;
-    virtual int GetPeerNeedReplyMsgCheckInterval() = 0;
-    virtual int GetPeerTCPConnIntervalSec() = 0;
-    virtual int GetPeerTCPConnIntervalUsec() = 0;
-    virtual int GetPeerHTTPConnTimeout() = 0;
-    virtual int GetPeerHTTPConnMaxRetry() = 0;
 };
 }
 

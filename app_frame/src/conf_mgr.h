@@ -8,7 +8,6 @@
 #include "conf_mgr_interface.h"
 #include "conf_xpath_define.h"
 #include "log_util.h"
-#include "msg_define.h"
 #include "thread_lock.h"
 
 // 注意：多个so中的conf_mgr文件名可以相同，类名不能相同，可以通过加namespace来解决。
@@ -45,6 +44,12 @@ public:
         return release_free_mem_;
     }
 
+    std::string GetGlobalLogicSo() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return global_logic_so_;
+    }
+
     std::string GetTCPAddrPort() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
@@ -73,6 +78,18 @@ public:
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return tcp_inactive_conn_life_;
+    }
+
+    int GetTCPStormInterval() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return tcp_storm_interval_;
+    }
+
+    int GetTCPStormRecvCount() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return tcp_storm_recv_count_;
     }
 
     int GetTCPThreadCount() override
@@ -237,6 +254,18 @@ public:
         return udp_inactive_conn_life_;
     }
 
+    bool UDPDoChecksum() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return udp_do_checksum_;
+    }
+
+    int GetUDPMaxMsgBodyLen() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return udp_max_msg_body_len_;
+    }
+
     int GetUDPThreadCount() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
@@ -255,10 +284,34 @@ public:
         return udp_logic_so_group_;
     }
 
-    std::string GetGlobalLogicSo() override
+    int GetPeerNeedReplyMsgCheckInterval() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return global_logic_so_;
+        return peer_need_reply_msg_check_interval_;
+    }
+
+    int GetPeerTCPConnIntervalSec() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return peer_tcp_conn_interval_sec_;
+    }
+
+    int GetPeerTCPConnIntervalUsec() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return peer_tcp_conn_interval_usec_;
+    }
+
+    int GetPeerHTTPConnTimeout() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return peer_http_conn_timeout_;
+    }
+
+    int GetPeerHTTPConnMaxRetry() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return peer_http_conn_max_retry_;
     }
 
     int GetWorkThreadCount() override
@@ -303,36 +356,6 @@ public:
         return burden_logic_so_group_;
     }
 
-    int GetPeerNeedReplyMsgCheckInterval() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return peer_need_reply_msg_check_interval_;
-    }
-
-    int GetPeerTCPConnIntervalSec() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return peer_tcp_conn_interval_sec_;
-    }
-
-    int GetPeerTCPConnIntervalUsec() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return peer_tcp_conn_interval_usec_;
-    }
-
-    int GetPeerHTTPConnTimeout() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return peer_http_conn_timeout_;
-    }
-
-    int GetPeerHTTPConnMaxRetry() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return peer_http_conn_max_retry_;
-    }
-
 private:
     int LoadEnableCPUProfiling()
     {
@@ -367,6 +390,20 @@ private:
             return -1;
         }
         release_free_mem_ = (release_free_mem != 0);
+        return 0;
+    }
+
+    int LoadGlobalLogicSo()
+    {
+        char* global_logic_so = NULL;
+        if (conf_center_->GetConf(&global_logic_so, GLOBAL_LOGIC_SO_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << GLOBAL_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&global_logic_so);
+            return -1;
+        }
+        global_logic_so_ = global_logic_so;
+        conf_center_->ReleaseConf(&global_logic_so);
         return 0;
     }
 
@@ -419,6 +456,26 @@ private:
         if (conf_center_->GetConf(tcp_inactive_conn_life_, TCP_INACTIVE_CONN_LIFE_XPATH, true, 1800) != 0)
         {
             LOG_ERROR("failed to get " << TCP_INACTIVE_CONN_LIFE_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadTCPStormInterval()
+    {
+        if (conf_center_->GetConf(tcp_storm_interval_, TCP_STORM_INTERVAL_XPATH, true, 10) != 0)
+        {
+            LOG_ERROR("failed to get " << TCP_STORM_INTERVAL_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadTCPStormRecvCount()
+    {
+        if (conf_center_->GetConf(tcp_storm_recv_count_, TCP_STORM_RECV_COUNT_XPATH, true, 1000) != 0)
+        {
+            LOG_ERROR("failed to get " << TCP_STORM_RECV_COUNT_XPATH << ": " << conf_center_->GetLastErrMsg());
             return -1;
         }
         return 0;
@@ -770,6 +827,28 @@ private:
         return 0;
     }
 
+    int LoadUDPDoChecksum()
+    {
+        int udp_do_checksum = 0;
+        if (conf_center_->GetConf(udp_do_checksum, UDP_DO_CHECKSUM_XPATH, true, 1) != 0)
+        {
+            LOG_ERROR("failed to get " << UDP_DO_CHECKSUM_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        udp_do_checksum_ = (udp_do_checksum != 0);
+        return 0;
+    }
+
+    int LoadUDPMaxMsgBodyLen()
+    {
+        if (conf_center_->GetConf(udp_max_msg_body_len_, UDP_MAX_MSG_BODY_LEN_XPATH, true, 65408) != 0)
+        {
+            LOG_ERROR("failed to get " << UDP_MAX_MSG_BODY_LEN_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
     int LoadUDPThreadCount()
     {
         if (conf_center_->GetConf(udp_thread_count_, UDP_THREAD_COUNT_XPATH, true, 0) != 0)
@@ -815,17 +894,53 @@ private:
         return 0;
     }
 
-    int LoadGlobalLogicSo()
+    int LoadPeerNeedReplyMsgCheckInterval()
     {
-        char* global_logic_so = NULL;
-        if (conf_center_->GetConf(&global_logic_so, GLOBAL_LOGIC_SO_XPATH, true, "") != 0)
+        if (conf_center_->GetConf(peer_need_reply_msg_check_interval_, PEER_NEED_REPLY_MSG_CHECK_INTERVAL_XPATH, true, 1) != 0)
         {
-            LOG_ERROR("failed to get " << GLOBAL_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&global_logic_so);
+            LOG_ERROR("failed to get " << PEER_NEED_REPLY_MSG_CHECK_INTERVAL_XPATH << ": " << conf_center_->GetLastErrMsg());
             return -1;
         }
-        global_logic_so_ = global_logic_so;
-        conf_center_->ReleaseConf(&global_logic_so);
+        return 0;
+    }
+
+    int LoadPeerTCPConnIntervalSec()
+    {
+        if (conf_center_->GetConf(peer_tcp_conn_interval_sec_, PEER_TCP_CONN_INTERVAL_SEC_XPATH, true, 1) != 0)
+        {
+            LOG_ERROR("failed to get " << PEER_TCP_CONN_INTERVAL_SEC_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadPeerTCPConnIntervalUsec()
+    {
+        if (conf_center_->GetConf(peer_tcp_conn_interval_usec_, PEER_TCP_CONN_INTERVAL_USEC_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << PEER_TCP_CONN_INTERVAL_USEC_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadPeerHTTPConnTimeout()
+    {
+        if (conf_center_->GetConf(peer_http_conn_timeout_, PEER_HTTP_CONN_TIMEOUT_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << PEER_HTTP_CONN_TIMEOUT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadPeerHTTPConnMaxRetry()
+    {
+        if (conf_center_->GetConf(peer_http_conn_max_retry_, PEER_HTTP_CONN_MAX_RETRY_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << PEER_HTTP_CONN_MAX_RETRY_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
         return 0;
     }
 
@@ -929,66 +1044,19 @@ private:
         return 0;
     }
 
-    int LoadPeerNeedReplyMsgCheckInterval()
-    {
-        if (conf_center_->GetConf(peer_need_reply_msg_check_interval_, PEER_NEED_REPLY_MSG_CHECK_INTERVAL_XPATH, true, 1) != 0)
-        {
-            LOG_ERROR("failed to get " << PEER_NEED_REPLY_MSG_CHECK_INTERVAL_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadPeerTCPConnIntervalSec()
-    {
-        if (conf_center_->GetConf(peer_tcp_conn_interval_sec_, PEER_TCP_CONN_INTERVAL_SEC_XPATH, true, 1) != 0)
-        {
-            LOG_ERROR("failed to get " << PEER_TCP_CONN_INTERVAL_SEC_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadPeerTCPConnIntervalUsec()
-    {
-        if (conf_center_->GetConf(peer_tcp_conn_interval_usec_, PEER_TCP_CONN_INTERVAL_USEC_XPATH, true, 0) != 0)
-        {
-            LOG_ERROR("failed to get " << PEER_TCP_CONN_INTERVAL_USEC_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadPeerHTTPConnTimeout()
-    {
-        if (conf_center_->GetConf(peer_http_conn_timeout_, PEER_HTTP_CONN_TIMEOUT_XPATH, true, 0) != 0)
-        {
-            LOG_ERROR("failed to get " << PEER_HTTP_CONN_TIMEOUT_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadPeerHTTPConnMaxRetry()
-    {
-        if (conf_center_->GetConf(peer_http_conn_max_retry_, PEER_HTTP_CONN_MAX_RETRY_XPATH, true, 0) != 0)
-        {
-            LOG_ERROR("failed to get " << PEER_HTTP_CONN_MAX_RETRY_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
 private:
     ThreadRWLock rwlock_;
     bool enable_cpu_profiling_;
     bool enable_mem_profiling_;
     bool release_free_mem_;
+    std::string global_logic_so_;
     std::string tcp_addr_port_;
     int tcp_conn_count_limit_;
     int tcp_inactive_conn_check_interval_sec_;
     int tcp_inactive_conn_check_interval_usec_;
     int tcp_inactive_conn_life_;
+    int tcp_storm_interval_;
+    int tcp_storm_recv_count_;
     int tcp_thread_count_;
     std::string tcp_local_logic_so_;
     StrGroup tcp_logic_so_group_;
@@ -1016,10 +1084,16 @@ private:
     int udp_inactive_conn_check_interval_sec_;
     int udp_inactive_conn_check_interval_usec_;
     int udp_inactive_conn_life_;
+    bool udp_do_checksum_;
+    int udp_max_msg_body_len_;
     int udp_thread_count_;
     std::string udp_local_logic_so_;
     StrGroup udp_logic_so_group_;
-    std::string global_logic_so_;
+    int peer_need_reply_msg_check_interval_;
+    int peer_tcp_conn_interval_sec_;
+    int peer_tcp_conn_interval_usec_;
+    int peer_http_conn_timeout_;
+    int peer_http_conn_max_retry_;
     int work_thread_count_;
     std::string work_local_logic_so_;
     StrGroup work_logic_so_group_;
@@ -1027,11 +1101,6 @@ private:
     int burden_thread_count_;
     std::string burden_local_logic_so_;
     StrGroup burden_logic_so_group_;
-    int peer_need_reply_msg_check_interval_;
-    int peer_tcp_conn_interval_sec_;
-    int peer_tcp_conn_interval_usec_;
-    int peer_http_conn_timeout_;
-    int peer_http_conn_max_retry_;
 };
 }
 

@@ -17,11 +17,14 @@ int ConfMgr::Load()
     enable_cpu_profiling_ = false;
     enable_mem_profiling_ = false;
     release_free_mem_ = false;
+    global_logic_so_ = "";
     tcp_addr_port_ = "";
     tcp_conn_count_limit_ = 0;
     tcp_inactive_conn_check_interval_sec_ = 0;
     tcp_inactive_conn_check_interval_usec_ = 0;
     tcp_inactive_conn_life_ = 0;
+    tcp_storm_interval_ = 0;
+    tcp_storm_recv_count_ = 0;
     tcp_thread_count_ = 0;
     tcp_local_logic_so_ = "";
     tcp_logic_so_group_.clear();
@@ -49,10 +52,16 @@ int ConfMgr::Load()
     udp_inactive_conn_check_interval_sec_ = 0;
     udp_inactive_conn_check_interval_usec_ = 0;
     udp_inactive_conn_life_ = 0;
+    udp_do_checksum_ = false;
+    udp_max_msg_body_len_ = 0;
     udp_thread_count_ = 0;
     udp_local_logic_so_ = "";
     udp_logic_so_group_.clear();
-    global_logic_so_ = "";
+    peer_need_reply_msg_check_interval_ = 0;
+    peer_tcp_conn_interval_sec_ = 0;
+    peer_tcp_conn_interval_usec_ = 0;
+    peer_http_conn_timeout_ = 0;
+    peer_http_conn_max_retry_ = 0;
     work_thread_count_ = 0;
     work_local_logic_so_ = "";
     work_logic_so_group_.clear();
@@ -60,11 +69,6 @@ int ConfMgr::Load()
     burden_thread_count_ = 0;
     burden_local_logic_so_ = "";
     burden_logic_so_group_.clear();
-    peer_need_reply_msg_check_interval_ = 0;
-    peer_tcp_conn_interval_sec_ = 0;
-    peer_tcp_conn_interval_usec_ = 0;
-    peer_http_conn_timeout_ = 0;
-    peer_http_conn_max_retry_ = 0;
 
     if (LoadEnableCPUProfiling() != 0)
     {
@@ -77,6 +81,11 @@ int ConfMgr::Load()
     }
 
     if (LoadReleaseFreeMem() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadGlobalLogicSo() != 0)
     {
         return -1;
     }
@@ -102,6 +111,16 @@ int ConfMgr::Load()
     }
 
     if (LoadTCPInactiveConnLife() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadTCPStormInterval() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadTCPStormRecvCount() != 0)
     {
         return -1;
     }
@@ -241,6 +260,16 @@ int ConfMgr::Load()
         return -1;
     }
 
+    if (LoadUDPDoChecksum() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadUDPMaxMsgBodyLen() != 0)
+    {
+        return -1;
+    }
+
     if (LoadUDPThreadCount() != 0)
     {
         return -1;
@@ -256,7 +285,27 @@ int ConfMgr::Load()
         return -1;
     }
 
-    if (LoadGlobalLogicSo() != 0)
+    if (LoadPeerNeedReplyMsgCheckInterval() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadPeerTCPConnIntervalSec() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadPeerTCPConnIntervalUsec() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadPeerHTTPConnTimeout() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadPeerHTTPConnMaxRetry() != 0)
     {
         return -1;
     }
@@ -292,31 +341,6 @@ int ConfMgr::Load()
     }
 
     if (LoadBurdenLogicSoGroup() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadPeerNeedReplyMsgCheckInterval() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadPeerTCPConnIntervalSec() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadPeerTCPConnIntervalUsec() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadPeerHTTPConnTimeout() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadPeerHTTPConnMaxRetry() != 0)
     {
         return -1;
     }
