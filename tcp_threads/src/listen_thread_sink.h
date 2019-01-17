@@ -25,7 +25,7 @@ public:
 
     ///////////////////////// ThreadSinkInterface /////////////////////////
     void Release() override;
-    int OnInitialize(ThreadInterface* thread) override;
+    int OnInitialize(ThreadInterface* thread, const void* ctx) override;
     void OnFinalize() override;
     int OnActivate() override;
     void OnFreeze() override;
@@ -34,11 +34,6 @@ public:
     void OnReload() override;
     void OnTask(const ThreadTask* task) override;
     bool CanExit() const override;
-
-    void SetThreadsCtx(const ThreadsCtx* threads_ctx)
-    {
-        threads_ctx_ = threads_ctx;
-    }
 
     void SetTCPThreadGroup(ThreadGroupInterface* tcp_thread_group)
     {

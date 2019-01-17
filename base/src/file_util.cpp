@@ -211,7 +211,7 @@ int GetAbsolutePath(char* buf, int buf_size, const char* path, const char* cur_w
         else
         {
             // 避免结尾是//
-            if (StrNoCaseEndWith(cur_working_dir, "/"))
+            if (StrEndWith(cur_working_dir, "/"))
             {
                 absolute_path.append(cur_working_dir);
             }
@@ -222,7 +222,7 @@ int GetAbsolutePath(char* buf, int buf_size, const char* path, const char* cur_w
             }
 
             // 避免结果中有./
-            if (StrNoCaseBeginWith(path, "./"))
+            if (StrBeginWith(path, "./"))
             {
                 absolute_path.append(path + 2);
             }

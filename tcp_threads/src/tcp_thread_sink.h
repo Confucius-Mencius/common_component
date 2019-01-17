@@ -47,7 +47,7 @@ public:
 
     ///////////////////////// ThreadSinkInterface /////////////////////////
     void Release() override;
-    int OnInitialize(ThreadInterface* thread) override;
+    int OnInitialize(ThreadInterface* thread, const void* ctx) override;
     void OnFinalize() override;
     int OnActivate() override;
     void OnFreeze() override;
@@ -58,11 +58,6 @@ public:
     bool CanExit() const override;
 
 public:
-    void SetThreadsCtx(const ThreadsCtx* threads_ctx)
-    {
-        threads_ctx_ = threads_ctx;
-    }
-
     void SetListenThread(ThreadInterface* listen_thread)
     {
         listen_thread_ = listen_thread;

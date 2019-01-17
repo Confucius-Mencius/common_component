@@ -16,7 +16,7 @@ public:
 
     ///////////////////////// ThreadSinkInterface /////////////////////////
     void Release() override;
-    virtual int OnInitialize(ThreadInterface* thread);
+    virtual int OnInitialize(ThreadInterface* thread, const void* ctx);
     void OnFinalize() override;
     int OnActivate() override;
     void OnFreeze() override;

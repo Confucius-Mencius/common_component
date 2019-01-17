@@ -90,37 +90,8 @@ bool StrCaseEQ(const char* str1, const char* str2, size_t min_buf_size);
  */
 bool StrNoCaseEQ(const char* str1, const char* str2, size_t min_buf_size);
 
-/**
- * @brief StrCaseBeginWith
- * @param str
- * @param needle
- * @return
- */
-bool StrCaseBeginWith(const char* str, const char* needle);
-
-/**
- * @brief StrNoCaseBeginWith
- * @param str
- * @param needle
- * @return
- */
-bool StrNoCaseBeginWith(const char* str, const char* needle);
-
-/**
- * @brief StrCaseEndWith
- * @param str
- * @param needle
- * @return
- */
-bool StrCaseEndWith(const char* str, const char* needle);
-
-/**
- * @brief StrNoCaseEndWith
- * @param str
- * @param needle
- * @return
- */
-bool StrNoCaseEndWith(const char* str, const char* needle);
+bool StrEndWith(const std::string& str, const std::string& tail);
+bool StrBeginWith(const std::string& str, const std::string& head);
 
 /**
  * @brief C语言字符串格式化到指定缓冲区中

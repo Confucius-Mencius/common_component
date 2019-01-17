@@ -61,7 +61,6 @@ ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
     }
 
     thread_group->SetThreadCenter(this);
-
     int ret = -1;
 
     do
@@ -82,6 +81,7 @@ ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
 
             thread_ctx.idx = i;
             thread_ctx.sink = ctx->thread_sink_creator();
+            thread_ctx.args = ctx->args;
 
             ThreadInterface* thread = thread_group->CreateThread(&thread_ctx);
             if (NULL == thread)
@@ -90,11 +90,6 @@ ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
                 SAFE_DESTROY(thread_group);
                 return NULL;
             }
-        }
-
-        if (thread_group->Activate() != 0)
-        {
-            break;
         }
 
         ret = 0;

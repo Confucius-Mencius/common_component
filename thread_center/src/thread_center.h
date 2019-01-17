@@ -24,12 +24,6 @@ public:
     ///////////////////////// ThreadCenterInterface /////////////////////////
     ThreadGroupInterface* CreateThreadGroup(const ThreadGroupCtx* ctx) override;
 
-public:
-    void RemoveThreadGroup(ThreadGroup* thread_group)
-    {
-        thread_group_set_.erase(thread_group);
-    }
-
 private:
     typedef std::set<ThreadGroup*> ThreadGroupSet;
     ThreadGroupSet thread_group_set_;

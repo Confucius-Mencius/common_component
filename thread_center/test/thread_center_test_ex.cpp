@@ -78,8 +78,10 @@ void ThreadCenterTestEx::Test001()
     source_thread_sink->SetReleatedThreadGroup(thread_group);
 
     // 线程组都active好了才可以start
-    thread_group->Start();
-    source_thread_group->Start();
+    EXPECT_EQ(0, thread_group->Activate());
+    EXPECT_EQ(0, source_thread_group->Activate());
+    EXPECT_EQ(0, thread_group->Start());
+    EXPECT_EQ(0, source_thread_group->Start());
 
     // 在源线程reload中push一个task给10个线程的线程组
     source_thread_group->NotifyReload();

@@ -164,10 +164,17 @@ void AppFrame::Finalize()
 
 int AppFrame::Activate()
 {
+    // activate
     if (SAFE_ACTIVATE_FAILED(tcp_threads_))
     {
         return -1;
     }
+
+    // ...
+
+    // start
+    tcp_threads_->GetTCPThreadGroup()->Start();
+    tcp_threads_->GetListenThreadGroup()->Start();
 
     // 等待所有线程都启动ok
     pthread_mutex_lock(&g_frame_threads_mutex);
@@ -323,46 +330,40 @@ bool AppFrame::CanExit() const
 //    if (global_threads_ != NULL && global_threads_->GetGlobalThreadGroup() != NULL)
 //    {
 //        can_exit &= (global_threads_->GetGlobalThreadGroup()->CanExit() ? 1 : 0);
-//        LOG_TRACE("global thread can exit: " << can_exit);
+//        LOG_DEBUG("global thread can exit: " << can_exit);
 //    }
 
 //    if (work_threads_ != NULL && work_threads_->GetWorkThreadGroup() != NULL)
 //    {
 //        can_exit &= (work_threads_->GetWorkThreadGroup()->CanExit() ? 1 : 0);
-//        LOG_TRACE("work threads can exit: " << can_exit);
+//        LOG_DEBUG("work threads can exit: " << can_exit);
 //    }
 
 //    if (burden_threads_ != NULL && burden_threads_->GetBurdenThreadGroup() != NULL)
 //    {
 //        can_exit &= (burden_threads_->GetBurdenThreadGroup()->CanExit() ? 1 : 0);
-//        LOG_TRACE("burden threads can exit: " << can_exit);
+//        LOG_DEBUG("burden threads can exit: " << can_exit);
 //    }
 
     if (tcp_threads_ != NULL)
     {
-        if (tcp_threads_->GetListenThreadGroup() != NULL)
-        {
-            can_exit &= (tcp_threads_->GetListenThreadGroup()->CanExit() ? 1 : 0);
-            LOG_DEBUG("tcp listen thread can exit: " << can_exit);
-        }
+        can_exit &= (tcp_threads_->GetListenThreadGroup()->CanExit() ? 1 : 0);
+        LOG_DEBUG("tcp listen thread can exit: " << can_exit);
 
-        if (tcp_threads_->GetTCPThreadGroup() != NULL)
-        {
-            can_exit &= (tcp_threads_->GetTCPThreadGroup()->CanExit() ? 1 : 0);
-            LOG_TRACE("tcp threads can exit: " << can_exit);
-        }
+        can_exit &= (tcp_threads_->GetTCPThreadGroup()->CanExit() ? 1 : 0);
+        LOG_DEBUG("tcp threads can exit: " << can_exit);
     }
 
 //    if (http_threads_ != NULL && http_threads_->GetHttpThreadGroup() != NULL)
 //    {
 //        can_exit &= (http_threads_->GetHttpThreadGroup()->CanExit() ? 1 : 0);
-//        LOG_TRACE("http threads can exit: " << can_exit);
+//        LOG_DEBUG("http threads can exit: " << can_exit);
 //    }
 
 //    if (udp_threads_ != NULL && udp_threads_->GetUdpThreadGroup() != NULL)
 //    {
 //        can_exit &= (udp_threads_->GetUdpThreadGroup()->CanExit() ? 1 : 0);
-//        LOG_TRACE("udp threads can exit: " << can_exit);
+//        LOG_DEBUG("udp threads can exit: " << can_exit);
 //    }
 
 //    if (raw_tcp_threads_ != NULL)
@@ -370,13 +371,13 @@ bool AppFrame::CanExit() const
 //        if (raw_tcp_threads_->GetListenThreadGroup() != NULL)
 //        {
 //            can_exit &= (raw_tcp_threads_->GetListenThreadGroup()->CanExit() ? 1 : 0);
-//            LOG_TRACE("raw tcp listen thread can exit: " << can_exit);
+//            LOG_DEBUG("raw tcp listen thread can exit: " << can_exit);
 //        }
 
 //        if (raw_tcp_threads_->GetTcpThreadGroup() != NULL)
 //        {
 //            can_exit &= (raw_tcp_threads_->GetTcpThreadGroup()->CanExit() ? 1 : 0);
-//            LOG_TRACE("raw tcp threads can exit: " << can_exit);
+//            LOG_DEBUG("raw tcp threads can exit: " << can_exit);
 //        }
 //    }
 
@@ -402,15 +403,11 @@ int AppFrame::NotifyExit()
 
     if (tcp_threads_ != NULL)
     {
-        if (tcp_threads_->GetListenThreadGroup() != NULL)
-        {
-            tcp_threads_->GetListenThreadGroup()->NotifyExit();
-        }
+        tcp_threads_->GetListenThreadGroup()->NotifyExit();
+        tcp_threads_->GetListenThreadGroup()->Join();
 
-        if (tcp_threads_->GetTCPThreadGroup() != NULL)
-        {
-            tcp_threads_->GetTCPThreadGroup()->NotifyExit();
-        }
+        tcp_threads_->GetTCPThreadGroup()->NotifyExit();
+        tcp_threads_->GetTCPThreadGroup()->Join();
     }
 
 //    if (http_threads_ != NULL && http_threads_->GetHttpThreadGroup() != NULL)
@@ -955,7 +952,7 @@ int AppFrame::LoadTCPThreads()
 
 int AppFrame::CreateThreads()
 {
-    LOG_TRACE("AppFrame::CreateThreads begin");
+    LOG_DEBUG("AppFrame::CreateThreads begin");
 
 //    if (conf_mgr_.GetGlobalLogicSo().length() > 0)
 //    {
@@ -1013,13 +1010,13 @@ int AppFrame::CreateThreads()
 //        }
 //    }
 
-    LOG_TRACE("AppFrame::CreateThreads end");
+    LOG_DEBUG("AppFrame::CreateThreads end");
     return 0;
 }
 
 void AppFrame::SetThreadsRelationship()
 {
-    LOG_TRACE("AppFrame::SetThreadsRelationship begin");
+    LOG_DEBUG("AppFrame::SetThreadsRelationship begin");
 
     // 各线程组互相访问
 //    if (global_threads_ != NULL)
@@ -1197,6 +1194,6 @@ void AppFrame::SetThreadsRelationship()
 //        raw_tcp_threads_->SetRelatedThreadGroup(&tcp_related_thread_group);
 //    }
 
-    LOG_TRACE("AppFrame::SetThreadsRelationship end");
+    LOG_DEBUG("AppFrame::SetThreadsRelationship end");
 }
 }

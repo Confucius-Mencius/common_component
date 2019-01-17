@@ -173,7 +173,7 @@ int Thread::Initialize(const void* ctx)
         return -1;
     }
 
-    if (thread_ctx_.sink->OnInitialize(this) != 0)
+    if (thread_ctx_.sink->OnInitialize(this, thread_ctx_.args) != 0)
     {
         return -1;
     }

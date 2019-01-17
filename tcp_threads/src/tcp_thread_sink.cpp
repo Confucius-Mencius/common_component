@@ -193,6 +193,8 @@ ThreadSink::~ThreadSink()
 
 void ThreadSink::Release()
 {
+    LOG_ERROR("this: " << this);
+
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
         SAFE_RELEASE_MODULE(it->logic, it->logic_loader);
@@ -205,13 +207,14 @@ void ThreadSink::Release()
     delete this;
 }
 
-int ThreadSink::OnInitialize(ThreadInterface* thread)
+int ThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 {
-    if (ThreadSinkInterface::OnInitialize(thread) != 0)
+    if (ThreadSinkInterface::OnInitialize(thread, ctx) != 0)
     {
         return -1;
     }
 
+    threads_ctx_ = static_cast<const ThreadsCtx*>(ctx);
     conn_mgr_.SetThreadSink(this);
 
     ConnMgrCtx conn_mgr_ctx;

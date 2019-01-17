@@ -27,7 +27,6 @@ const char* ThreadGroup::GetLastErrMsg() const
 void ThreadGroup::Release()
 {
     RELEASE_CONTAINER(thread_vec_);
-    thread_center_->RemoveThreadGroup(this);
     delete this;
 }
 
@@ -167,11 +166,6 @@ ThreadInterface* ThreadGroup::CreateThread(const ThreadCtx* thread_ctx)
         {
             break;
         }
-
-//        if (thread->Activate() != 0)
-//        {
-//            break;
-//        }
 
         ret = 0;
     } while (0);

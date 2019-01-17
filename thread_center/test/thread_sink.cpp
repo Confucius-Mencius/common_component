@@ -17,9 +17,9 @@ void ThreadSink::Release()
     delete this;
 }
 
-int ThreadSink::OnInitialize(ThreadInterface* thread)
+int ThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 {
-    if (ThreadSinkInterface::OnInitialize(thread) != 0)
+    if (ThreadSinkInterface::OnInitialize(thread, ctx) != 0)
     {
         return -1;
     }

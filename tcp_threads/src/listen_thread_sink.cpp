@@ -80,15 +80,18 @@ ListenThreadSink::~ListenThreadSink()
 
 void ListenThreadSink::Release()
 {
+    LOG_ERROR("this: " << this);
     delete this;
 }
 
-int ListenThreadSink::OnInitialize(ThreadInterface* thread)
+int ListenThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 {
-    if (ThreadSinkInterface::OnInitialize(thread) != 0)
+    if (ThreadSinkInterface::OnInitialize(thread, ctx) != 0)
     {
         return -1;
     }
+
+    threads_ctx_ = static_cast<const ThreadsCtx*>(ctx);
 
     const std::string tcp_addr_port = threads_ctx_->conf_mgr->GetTCPAddrPort();
     LOG_INFO("tcp listen addr port: " << tcp_addr_port);

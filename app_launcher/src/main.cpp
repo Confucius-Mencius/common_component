@@ -9,16 +9,16 @@
 DEFINE_string(log_conf_file_path, "xx_server_log_conf.properties", "log conf file path");
 DEFINE_string(logger_name, "xx_server", "logger name in the log conf file");
 DEFINE_string(app_conf_file_path, "xx_server_conf.xml", "app conf file path");
+DEFINE_string(common_component_dir, "common_component_dir", "common component dir");
 DEFINE_bool(daemon, true, "whether run as daemon");
 DEFINE_bool(chdir_to_root, false, "whether change working dir to '/'");
-DEFINE_string(common_component_dir, "common_component_dir", "common component dir");
 
 int main(int argc, char* argv[])
 {
     char buf[1024] = "";
 
-    if (StrPrintf(buf, sizeof(buf), "%s -log_conf_file_path=? -logger_name=? -app_conf_file_path=? -daemon=true/false "
-                  "chdir_to_root=ture/false -common_component_dir=?", argv[0]) <= 0)
+    if (StrPrintf(buf, sizeof(buf), "%s -log_conf_file_path=? -logger_name=? -app_conf_file_path=? "
+                  "-common_component_dir=? -daemon=true/false chdir_to_root=ture/false", argv[0]) <= 0)
     {
         return -1;
     }

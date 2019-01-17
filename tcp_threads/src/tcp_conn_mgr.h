@@ -1,6 +1,7 @@
 #ifndef TCP_THREADS_SRC_TCP_CONN_MGR_H_
 #define TCP_THREADS_SRC_TCP_CONN_MGR_H_
 
+#include <event2/bufferevent.h>
 #include "base_conn.h"
 #include "record_timeout_mgr.h"
 

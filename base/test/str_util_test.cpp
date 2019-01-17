@@ -366,15 +366,11 @@ void strtok_test()
 void StrBeginEndWithTest()
 {
     const char str[] = "hello, world";
-    EXPECT_TRUE(StrCaseBeginWith(str, "hello"));
-    EXPECT_FALSE(StrCaseBeginWith(str, "Hello"));
-    EXPECT_TRUE(StrNoCaseBeginWith(str, "hello"));
-    EXPECT_TRUE(StrNoCaseBeginWith(str, "Hello"));
+    EXPECT_TRUE(StrBeginWith(str, "hello"));
+    EXPECT_FALSE(StrBeginWith(str, "Hello"));
 
-    EXPECT_TRUE(StrCaseEndWith(str, "world"));
-    EXPECT_FALSE(StrCaseEndWith(str, "World"));
-    EXPECT_TRUE(StrNoCaseEndWith(str, "world"));
-    EXPECT_TRUE(StrNoCaseEndWith(str, "World"));
+    EXPECT_TRUE(StrEndWith(str, "world"));
+    EXPECT_FALSE(StrEndWith(str, "World"));
 }
 
 class O

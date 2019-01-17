@@ -59,80 +59,14 @@ bool StrNoCaseEQ(const char* str1, const char* str2, size_t min_buf_size)
     return (0 == strncasecmp(str1, str2, min_buf_size));
 }
 
-bool StrCaseBeginWith(const char* str, const char* needle)
+bool StrEndWith(const std::string& str, const std::string& tail)
 {
-    if (NULL == str)
-    {
-        return false;
-    }
-
-    const char* p = strstr(str, needle);
-    if (p != str)
-    {
-        return false;
-    }
-
-    return true;
+    return str.compare(str.size() - tail.size(), tail.size(), tail) == 0;
 }
 
-bool StrNoCaseBeginWith(const char* str, const char* needle)
+bool StrBeginWith(const std::string& str, const std::string& head)
 {
-    if (NULL == str)
-    {
-        return false;
-    }
-
-    const char* p = strcasestr(str, needle);
-    if (p != str)
-    {
-        return false;
-    }
-
-    return true;
-}
-
-bool StrCaseEndWith(const char* str, const char* needle)
-{
-    if (NULL == str)
-    {
-        return false;
-    }
-
-    const char* p = strstr(str, needle);
-    if (NULL == p)
-    {
-        return false;
-    }
-
-    const char* end = p + strlen(p);
-    if (end[0] != '\0')
-    {
-        return false;
-    }
-
-    return true;
-}
-
-bool StrNoCaseEndWith(const char* str, const char* needle)
-{
-    if (NULL == str)
-    {
-        return false;
-    }
-
-    const char* p = strcasestr(str, needle);
-    if (NULL == p)
-    {
-        return false;
-    }
-
-    const char* end = p + strlen(p);
-    if (end[0] != '\0')
-    {
-        return false;
-    }
-
-    return true;
+    return str.compare(0, head.size(), head) == 0;
 }
 
 int StrPrintf(char* buf, size_t buf_size, const char* fmt, ...)

@@ -53,8 +53,6 @@ void Threads::Finalize()
 
 int Threads::Activate()
 {
-    // 由thread center集中管理
-
     return 0;
 }
 
@@ -74,6 +72,7 @@ int Threads::CreateThreadGroup()
         listen_thread_group_ctx.thread_name = "tcp listen thread";
         listen_thread_group_ctx.thread_count = 1;
         listen_thread_group_ctx.thread_sink_creator = ListenThreadSink::Create;
+        listen_thread_group_ctx.args = &threads_ctx_;
 
         listen_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup(&listen_thread_group_ctx);
         if (NULL == listen_thread_group_)
@@ -86,6 +85,7 @@ int Threads::CreateThreadGroup()
         tcp_thread_group_ctx.thread_name = "tcp thread";
         tcp_thread_group_ctx.thread_count = threads_ctx_.conf_mgr->GetTCPThreadCount();
         tcp_thread_group_ctx.thread_sink_creator = ThreadSink::Create;
+        tcp_thread_group_ctx.args = &threads_ctx_;
 
         tcp_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup(&tcp_thread_group_ctx);
         if (NULL == tcp_thread_group_)
@@ -95,13 +95,11 @@ int Threads::CreateThreadGroup()
 
         ThreadInterface* listen_thread = listen_thread_group_->GetThread(0);
         ListenThreadSink* listen_thread_sink = static_cast<ListenThreadSink*>(listen_thread->GetThreadSink());
-        listen_thread_sink->SetThreadsCtx(&threads_ctx_);
         listen_thread_sink->SetTCPThreadGroup(tcp_thread_group_);
 
         for (int i = 0; i < tcp_thread_group_->GetThreadCount(); ++i)
         {
             ThreadSink* tcp_thread_sink = static_cast<ThreadSink*>(tcp_thread_group_->GetThread(i)->GetThreadSink());
-            tcp_thread_sink->SetThreadsCtx(&threads_ctx_);
             tcp_thread_sink->SetListenThread(listen_thread);
             tcp_thread_sink->SetTCPThreadGroup(tcp_thread_group_);
         }

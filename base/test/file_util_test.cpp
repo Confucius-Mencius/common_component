@@ -389,6 +389,13 @@ void FileUtilTest::Test009()
     ASSERT_EQ(0, GetAbsolutePath(buf, sizeof(buf), ".", "/home"));
     LOG_CPP(buf);
 
+    ASSERT_EQ(0, GetAbsolutePath(buf, sizeof(buf), "../xx", "/home"));
+    LOG_CPP(buf);
+
+    char cur_working_dir[] = "/home";
+    ASSERT_EQ(0, GetAbsolutePath(buf, sizeof(buf), "../xx", cur_working_dir));
+    LOG_CPP(buf);
+
     ASSERT_EQ(0, GetAbsolutePath(buf, sizeof(buf), "./www", "/home/"));
     LOG_CPP(buf);
 

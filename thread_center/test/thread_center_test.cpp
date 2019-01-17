@@ -62,7 +62,8 @@ void ThreadCenterTest::Test001()
     ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
     ASSERT_TRUE(thread_group != NULL);
 
-    thread_group->Start();
+    EXPECT_EQ(0, thread_group->Activate());
+    EXPECT_EQ(0, thread_group->Start());
 
     thread_group->NotifyStop();
 
@@ -98,7 +99,8 @@ void ThreadCenterTest::Test002()
     ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
     ASSERT_TRUE(thread_group != NULL);
 
-    thread_group->Start();
+    EXPECT_EQ(0, thread_group->Activate());
+    EXPECT_EQ(0, thread_group->Start());
 
     thread_group->NotifyReload();
     thread_group->NotifyStop();
@@ -135,7 +137,8 @@ void ThreadCenterTest::Test003()
     ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
     ASSERT_TRUE(thread_group != NULL);
 
-    thread_group->Start();
+    EXPECT_EQ(0, thread_group->Activate());
+    EXPECT_EQ(0, thread_group->Start());
 
     ThreadTask* task = new ThreadTask();
     ASSERT_TRUE(task != NULL);
@@ -176,7 +179,8 @@ void ThreadCenterTest::Test004()
     ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
     ASSERT_TRUE(thread_group != NULL);
 
-    thread_group->Start();
+    EXPECT_EQ(0, thread_group->Activate());
+    EXPECT_EQ(0, thread_group->Start());
 
     ThreadTask* task = new ThreadTask();
     ASSERT_TRUE(task != NULL);
@@ -237,7 +241,8 @@ void ThreadCenterTest::Test005()
     ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
     ASSERT_TRUE(thread_group != NULL);
 
-    thread_group->Start();
+    EXPECT_EQ(0, thread_group->Activate());
+    EXPECT_EQ(0, thread_group->Start());
 
     std::vector<std::thread*> threads;
 
