@@ -93,17 +93,15 @@ void ThreadCenterTestEx::Test001()
     if (thread_group->CanExit())
     {
         thread_group->NotifyExit();
-        thread_group->Join();
     }
 
     if (source_thread_group->CanExit())
     {
         source_thread_group->NotifyExit();
-        source_thread_group->Join();
     }
 
-    SAFE_DESTROY(thread_group);
-    SAFE_DESTROY(source_thread_group);
+    thread_group->Join();
+    source_thread_group->Join();
 }
 
 ADD_TEST_F(ThreadCenterTestEx, Test001);

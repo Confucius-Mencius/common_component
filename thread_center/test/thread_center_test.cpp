@@ -70,10 +70,11 @@ void ThreadCenterTest::Test001()
     if (thread_group->CanExit())
     {
         thread_group->NotifyExit();
-        thread_group->Join();
     }
 
-    SAFE_DESTROY(thread_group);
+    thread_group->Join();
+
+    // 注意：thread_group不用手动释放，thread_center_销毁的时候会一起管理
 }
 
 /**
@@ -108,10 +109,9 @@ void ThreadCenterTest::Test002()
     if (thread_group->CanExit())
     {
         thread_group->NotifyExit();
-        thread_group->Join();
     }
 
-    SAFE_DESTROY(thread_group);
+    thread_group->Join();
 }
 
 /**
@@ -150,10 +150,9 @@ void ThreadCenterTest::Test003()
     if (thread_group->CanExit())
     {
         thread_group->NotifyExit();
-        thread_group->Join();
     }
 
-    SAFE_DESTROY(thread_group);
+    thread_group->Join();
 }
 
 /**
@@ -192,10 +191,9 @@ void ThreadCenterTest::Test004()
     if (thread_group->CanExit())
     {
         thread_group->NotifyExit();
-        thread_group->Join();
     }
 
-    SAFE_DESTROY(thread_group);
+    thread_group->Join();
 }
 
 void ProducerThreadProcess(ThreadGroupInterface* thread_group, int thread_count)
@@ -262,10 +260,9 @@ void ThreadCenterTest::Test005()
     if (thread_group->CanExit())
     {
         thread_group->NotifyExit();
-        thread_group->Join();
     }
 
-    SAFE_DESTROY(thread_group);
+    thread_group->Join();
 }
 
 ADD_TEST_F(ThreadCenterTest, Test001);

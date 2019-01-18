@@ -164,6 +164,7 @@ ThreadInterface* ThreadGroup::CreateThread(const ThreadCtx* thread_ctx)
     {
         if (thread->Initialize(thread_ctx) != 0)
         {
+            LOG_ERROR("thread initialize failed");
             break;
         }
 

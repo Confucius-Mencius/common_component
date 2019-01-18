@@ -67,6 +67,7 @@ ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
     {
         if (thread_group->Initialize(ctx) != 0)
         {
+            LOG_ERROR("thread group initialize failed");
             break;
         }
 
@@ -83,8 +84,7 @@ ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
             thread_ctx.sink = ctx->thread_sink_creator();
             thread_ctx.args = ctx->args;
 
-            ThreadInterface* thread = thread_group->CreateThread(&thread_ctx);
-            if (NULL == thread)
+            if (NULL == thread_group->CreateThread(&thread_ctx))
             {
                 LOG_ERROR("failed to create thread, i: " << i);
                 SAFE_DESTROY(thread_group);
