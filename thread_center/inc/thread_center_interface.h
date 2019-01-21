@@ -10,6 +10,7 @@
 
 #include <pthread.h>
 #include <functional>
+#include "log_util.h"
 #include "module_interface.h"
 #include "thread_task.h"
 
@@ -77,7 +78,8 @@ public:
     {
         self_thread_ = thread;
         (void) ctx;
-//        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnInitialize");
+
+        LOG_TRACE(self_thread_->GetThreadName() << " OnInitialize");
         return 0;
     }
 
@@ -88,7 +90,7 @@ public:
             return;
         }
 
-//        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnFinalize");
+        LOG_TRACE(self_thread_->GetThreadName() << " OnFinalize");
     }
 
     virtual int OnActivate()
@@ -98,7 +100,7 @@ public:
             return 0;
         }
 
-//        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnActivate");
+        LOG_TRACE(self_thread_->GetThreadName() << " OnActivate");
         return 0;
     }
 
@@ -109,7 +111,7 @@ public:
             return;
         }
 
-//        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnFreeze");
+        LOG_TRACE(self_thread_->GetThreadName() << " OnFreeze");
     }
 
     /**
@@ -117,12 +119,12 @@ public:
      */
     virtual void OnThreadStartOK()
     {
-//        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnThreadStartOK");
+        LOG_TRACE(self_thread_->GetThreadName() << " OnThreadStartOK");
     }
 
     virtual void OnStop()
     {
-//        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnStop");
+        LOG_TRACE(self_thread_->GetThreadName() << " OnStop");
 
         ////////////////////////////////////////////////////////////////////////////////
         // stop routine here...
@@ -131,13 +133,13 @@ public:
 
     virtual void OnReload()
     {
-//        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnReload");
+        LOG_TRACE(self_thread_->GetThreadName() << " OnReload");
     }
 
     virtual void OnTask(const ThreadTask* task)
     {
         (void) task;
-//        LOG_DEBUG(self_thread_->GetThreadName() << " " << self_thread_->GetThreadIdx() << " OnTask, task type: " << task->GetType());
+        LOG_TRACE(self_thread_->GetThreadName() << " OnTask, task type: " << task->GetType());
     }
 
     virtual bool CanExit() const = 0;
