@@ -61,7 +61,7 @@ void ThreadCenterTestEx::Test001()
     for (int i = 0; i < thread_group->GetThreadCount(); ++i)
     {
         ThreadInterface* thread = thread_group->GetThread(i);
-        LOG_DEBUG(thread->GetThreadName() << ", " << thread->GetThreadIdx());
+        LOG_DEBUG("thread name: " << thread->GetThreadName() << ", idx: " << thread->GetThreadIdx());
     }
 
     // 新建源线程组，只包含一个线程
@@ -102,6 +102,9 @@ void ThreadCenterTestEx::Test001()
 
     thread_group->Join();
     source_thread_group->Join();
+
+    SAFE_DESTROY(thread_group);
+    SAFE_DESTROY(source_thread_group);
 }
 
 ADD_TEST_F(ThreadCenterTestEx, Test001);

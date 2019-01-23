@@ -128,7 +128,7 @@ void OpenSSLInitialize()
     thread_setup();
     OpenSSL_add_all_algorithms();
 
-    LOG_INFO("openssl version: " << SSLeay_version(SSLEAY_VERSION));
+    LOG_ALWAYS("openssl version: " << SSLeay_version(SSLEAY_VERSION));
 }
 
 void OpenSSLFinalize()

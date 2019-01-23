@@ -1,7 +1,6 @@
 #ifndef THREAD_CENTER_SRC_THREAD_CENTER_H_
 #define THREAD_CENTER_SRC_THREAD_CENTER_H_
 
-#include <set>
 #include "thread_group.h"
 
 namespace thread_center
@@ -23,10 +22,6 @@ public:
 
     ///////////////////////// ThreadCenterInterface /////////////////////////
     ThreadGroupInterface* CreateThreadGroup(const ThreadGroupCtx* ctx) override;
-
-private:
-    typedef std::set<ThreadGroup*> ThreadGroupSet;
-    ThreadGroupSet thread_group_set_;
 };
 } // namespace thread_center
 

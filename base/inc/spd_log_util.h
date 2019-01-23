@@ -5,20 +5,23 @@
 
 #include <spdlog/spdlog.h>
 
-struct SpdLogCtx
+struct SPDLogCtx
 {
     const char* logger_file_path;
     const char* logger_name;
+    int log_level;
 
-    SpdLogCtx()
+    SPDLogCtx()
     {
         logger_file_path = NULL;
         logger_name = NULL;
+        log_level = spdlog::level::trace;
     }
 };
 
-int SpdLogInitialize(const SpdLogCtx* ctx);
-void SpdLogFinalize();
+int SPDLogInitialize(const SPDLogCtx* ctx);
+void SPDLogFinalize();
+int SPDLogSetLevel(int level);
 
 #define SPDLOG_STR_H(x) #x
 #define SPDLOG_STR_HELPER(x) SPDLOG_STR_H(x)

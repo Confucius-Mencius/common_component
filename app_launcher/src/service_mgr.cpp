@@ -70,7 +70,7 @@ void ServiceMgr::Reload(bool& app_conf_changed)
         }
         else
         {
-            LOG_INFO("reload app conf ok");
+            LOG_ALWAYS("reload app conf ok");
         }
     }
 }

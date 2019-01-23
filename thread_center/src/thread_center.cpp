@@ -1,11 +1,10 @@
 #include "thread_center.h"
-#include "container_util.h"
 #include "str_util.h"
 #include "version.h"
 
 namespace thread_center
 {
-ThreadCenter::ThreadCenter() : thread_group_set_()
+ThreadCenter::ThreadCenter()
 {
 }
 
@@ -25,7 +24,6 @@ const char* ThreadCenter::GetLastErrMsg() const
 
 void ThreadCenter::Release()
 {
-    RELEASE_CONTAINER(thread_group_set_);
     delete this;
 }
 
@@ -37,7 +35,6 @@ int ThreadCenter::Initialize(const void* ctx)
 
 void ThreadCenter::Finalize()
 {
-    FINALIZE_CONTAINER(thread_group_set_);
 }
 
 int ThreadCenter::Activate()
@@ -47,7 +44,6 @@ int ThreadCenter::Activate()
 
 void ThreadCenter::Freeze()
 {
-    FREEZE_CONTAINER(thread_group_set_);
 }
 
 ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
@@ -75,7 +71,7 @@ ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
         {
             ThreadCtx thread_ctx;
             thread_ctx.common_component_dir = ctx->common_component_dir;
-
+            thread_ctx.enable_cpu_profiling = ctx->enable_cpu_profiling;
             char thread_name[64] = "";
             StrPrintf(thread_name, sizeof(thread_name), "%s #%d", ctx->thread_name.c_str(), i);
             thread_ctx.name.assign(thread_name);
@@ -101,7 +97,6 @@ ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
         return NULL;
     }
 
-    thread_group_set_.insert(thread_group);
     return thread_group;
 }
 } // namespace thread_center

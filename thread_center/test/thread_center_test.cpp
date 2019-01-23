@@ -73,8 +73,7 @@ void ThreadCenterTest::Test001()
     }
 
     thread_group->Join();
-
-    // 注意：thread_group不用手动释放，thread_center_销毁的时候会一起管理
+    SAFE_DESTROY(thread_group);
 }
 
 /**
@@ -112,6 +111,7 @@ void ThreadCenterTest::Test002()
     }
 
     thread_group->Join();
+    SAFE_DESTROY(thread_group);
 }
 
 /**
@@ -153,6 +153,7 @@ void ThreadCenterTest::Test003()
     }
 
     thread_group->Join();
+    SAFE_DESTROY(thread_group);
 }
 
 /**
@@ -172,7 +173,7 @@ void ThreadCenterTest::Test004()
     ThreadGroupCtx thread_group_ctx;
     thread_group_ctx.common_component_dir = "..";
     thread_group_ctx.thread_name = "xx thread";
-    thread_group_ctx.thread_count = 50;
+    thread_group_ctx.thread_count = 1;
     thread_group_ctx.thread_sink_creator = ThreadSink::Create;
 
     ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
@@ -194,6 +195,7 @@ void ThreadCenterTest::Test004()
     }
 
     thread_group->Join();
+    SAFE_DESTROY(thread_group);
 }
 
 void ProducerThreadProcess(ThreadGroupInterface* thread_group, int thread_count)
@@ -263,6 +265,7 @@ void ThreadCenterTest::Test005()
     }
 
     thread_group->Join();
+    SAFE_DESTROY(thread_group);
 }
 
 ADD_TEST_F(ThreadCenterTest, Test001);

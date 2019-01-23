@@ -250,11 +250,11 @@ void Thread::PushTask(ThreadTask* task)
     //     If there is room to write n bytes to the pipe, then write(2) succeeds immediately, writing all n bytes; otherwise write(2) fails, with errno set to EAGAIN.
     if (write(pipe_[1], buf, 1) != 1)
     {
-        // 被信号中断或者pipe满了 TODO 将定时器改为监听pipe[1]的可写时间
+        // 被信号中断或者pipe满了 TODO 将定时器改为监听pipe[1]的可写事件
         const int err = errno;
         LOG_WARN("failed to write pipe, errno: " << err << ", err msg: " << strerror(err));
 
-        pending_notify_list_.push_back('t');
+        pending_notify_list_.push_back(buf[0]);
         StartPendingNotifyTimer();
     }
 }
@@ -307,7 +307,7 @@ void* Thread::WorkLoop()
 #if defined(NDEBUG)
     if (thread_ctx_.enable_cpu_profiling)
     {
-        LOG_INFO(thread_ctx_.name << " " << thread_ctx_.idx << " enable cpu profiling");
+        LOG_ALWAYS(thread_ctx_.name << " enable cpu profiling");
         ProfilerRegisterThread();
     }
 #endif
@@ -328,7 +328,7 @@ void Thread::NotifyStop()
         const int err = errno;
         LOG_WARN("failed to write pipe, errno: " << err << ", err msg: " << strerror(err));
 
-        pending_notify_list_.push_back('s');
+        pending_notify_list_.push_back(buf[0]);
         StartPendingNotifyTimer();
     }
 }
@@ -368,7 +368,7 @@ void Thread::NotifyReload()
         const int err = errno;
         LOG_WARN("failed to write pipe, errno: " << err << ", err msg: " << strerror(err));
 
-        pending_notify_list_.push_back('r');
+        pending_notify_list_.push_back(buf[0]);
         StartPendingNotifyTimer();
     }
 }
@@ -394,7 +394,7 @@ void Thread::NotifyExit()
         const int err = errno;
         LOG_WARN("failed to write pipe, errno: " << err << ", err msg: " << strerror(err));
 
-        pending_notify_list_.push_back('e');
+        pending_notify_list_.push_back(buf[0]);
         StartPendingNotifyTimer();
     }
 }

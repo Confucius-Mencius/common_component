@@ -177,7 +177,7 @@ BaseConn* ConnMgr::CreateBufferEventConn(int io_thread_idx, int sock_fd, struct 
                  << max_online_conn_count_);
     }
 
-    LOG_DEBUG("tcp thread idx: " << conn->GetConnGUID()->io_thread_idx
+    LOG_TRACE("tcp thread idx: " << conn->GetConnGUID()->io_thread_idx
               << ", create conn ok, socket fd: " << sock_fd << ", conn id: " << conn_id);
     return conn;
 }
@@ -264,7 +264,7 @@ BaseConn* ConnMgr::CreateNormalConn(int io_thread_idx, int sock_fd, struct event
                  << max_online_conn_count_);
     }
 
-    LOG_DEBUG("tcp thread idx: " << conn->GetConnGUID()->io_thread_idx
+    LOG_TRACE("tcp thread idx: " << conn->GetConnGUID()->io_thread_idx
               << ", create conn ok, socket fd: " << sock_fd << ", conn id: " << conn_id);
     return conn;
 }
@@ -283,11 +283,11 @@ void ConnMgr::DestroyConn(int sock_fd)
         }
 
         Clear(it->second.conn);
-        LOG_DEBUG("destroy tcp conn ok, socket fd: " << sock_fd << ", conn id: " << conn_id);
+        LOG_TRACE("destroy tcp conn ok, socket fd: " << sock_fd << ", conn id: " << conn_id);
     }
     else
     {
-        LOG_WARN("failed to get tcp conn by socket fd: " << sock_fd);
+        LOG_ERROR("failed to get tcp conn by socket fd: " << sock_fd);
     }
 }
 
@@ -373,7 +373,7 @@ void ConnMgr::Clear(BaseConn* conn)
 
 void ConnMgr::OnTimeout(const ConnID& k, BaseConn* const& v, int timeout_sec)
 {
-    LOG_DEBUG("ConnMgr::OnTimeout, key: " << k << ", val: " << v << ", timeout: " << timeout_sec);
+    LOG_TRACE("ConnMgr::OnTimeout, key: " << k << ", val: " << v << ", timeout: " << timeout_sec);
     thread_sink_->OnClientClosed(v);
     Clear(v);
 }

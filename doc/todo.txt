@@ -113,8 +113,6 @@ bufferevent_get_write_max_(struct bufferevent_private *bev)
 
 等以后有了名字服务,增加一个调试模式配置，调试模式时读配置直连其他server，不通过名字服务获取服务地址。
 
-common_component:
-搜LOG_TRACE LOG_DEBUG LOG_INFO LOG_WARN，统一
 
 搜todo TODO
 
@@ -124,3 +122,9 @@ event_new选项排查
 
 
 
+common_component:
+搜LOG_TRACE LOG_DEBUG LOG_INFO LOG_WARN，统一
+
+echo proj中的脚本整理 sh -x
+
+网络风暴测试

@@ -63,11 +63,8 @@ int AppFrame::Initialize(const void* ctx)
     }
 
     app_frame_ctx_ = *((AppFrameCtx*) ctx);
-
     srand(time(NULL));
-
-    // 初始化openssl，保证只有一次调用
-    OpenSSLInitialize();
+    OpenSSLInitialize(); // 初始化openssl，保证只有一次调用
 
     if (pthread_mutex_init(&g_frame_threads_mutex, NULL) != 0)
     {
@@ -91,19 +88,19 @@ int AppFrame::Initialize(const void* ctx)
 #if defined(NDEBUG)
     if (conf_mgr_.EnableCPUProfiling())
     {
-        LOG_INFO("enable cpu profiling");
+        LOG_ALWAYS("enable cpu profiling");
         ProfilerStart("cpu_profiling.prof"); // 程序启动目录下
     }
 
     if (conf_mgr_.EnableMemProfiling())
     {
-        LOG_INFO("enable mem profiling");
+        LOG_ALWAYS("enable mem profiling");
         HeapProfilerStart("mem_profiling"); // prefix，程序启动目录下
     }
 
-    LOG_INFO("before set, tcmalloc free mem release rate: " << MallocExtension::instance()->GetMemoryReleaseRate());
+    LOG_DEBUG("before set, tcmalloc free mem release rate: " << MallocExtension::instance()->GetMemoryReleaseRate());
     MallocExtension::instance()->SetMemoryReleaseRate(5);
-    LOG_INFO("after set, tcmalloc free mem release rate: " << MallocExtension::instance()->GetMemoryReleaseRate());
+    LOG_DEBUG("after set, tcmalloc free mem release rate: " << MallocExtension::instance()->GetMemoryReleaseRate());
 #endif
 
 //    if (LoadGlobalThread() != 0)
@@ -141,7 +138,7 @@ int AppFrame::Initialize(const void* ctx)
 //        return -1;
 //    }
 
-    if (CreateThreads() != 0)
+    if (CreateAllThreads() != 0)
     {
         return -1;
     }
@@ -173,8 +170,15 @@ int AppFrame::Activate()
     // ...
 
     // start
-    tcp_threads_->GetTCPThreadGroup()->Start();
-    tcp_threads_->GetListenThreadGroup()->Start();
+    if (tcp_threads_->GetTCPThreadGroup()->Start() != 0)
+    {
+        return -1;
+    }
+
+    if (tcp_threads_->GetListenThreadGroup()->Start() != 0)
+    {
+        return -1;
+    }
 
     // 等待所有线程都启动ok
     pthread_mutex_lock(&g_frame_threads_mutex);
@@ -263,7 +267,7 @@ int AppFrame::NotifyReload(bool changed)
 
         if (release_free_mem_date_ != date)
         {
-            LOG_INFO("release free mem right now");
+            LOG_ALWAYS("release free mem right now");
             MallocExtension::instance()->ReleaseFreeMemory();
             release_free_mem_date_ = date;
         }
@@ -348,10 +352,10 @@ bool AppFrame::CanExit() const
     if (tcp_threads_ != NULL)
     {
         can_exit &= (tcp_threads_->GetListenThreadGroup()->CanExit() ? 1 : 0);
-        LOG_DEBUG("tcp listen thread can exit: " << can_exit);
+        LOG_ALWAYS("tcp listen thread can exit: " << can_exit);
 
         can_exit &= (tcp_threads_->GetTCPThreadGroup()->CanExit() ? 1 : 0);
-        LOG_DEBUG("tcp threads can exit: " << can_exit);
+        LOG_ALWAYS("tcp threads can exit: " << can_exit);
     }
 
 //    if (http_threads_ != NULL && http_threads_->GetHttpThreadGroup() != NULL)
@@ -453,7 +457,7 @@ int AppFrame::LoadAndCheckConf()
     // global thread
     if (conf_mgr_.GetGlobalLogicSo().length() > 0)
     {
-        LOG_INFO("global thread count: 1");
+        LOG_ALWAYS("global thread count: 1");
         ++app_frame_threads_count_;
     }
 
@@ -468,7 +472,7 @@ int AppFrame::LoadAndCheckConf()
     {
         tcp_exist = true; // 有tcp
 
-        LOG_INFO("tcp listen thread count: 1");
+        LOG_ALWAYS("tcp listen thread count: 1");
         ++app_frame_threads_count_; // listen thread
 
         if (0 == conf_mgr_.GetTCPThreadCount())
@@ -477,7 +481,7 @@ int AppFrame::LoadAndCheckConf()
             return -1;
         }
 
-        LOG_INFO("tcp thread count: " << conf_mgr_.GetTCPThreadCount());
+        LOG_ALWAYS("tcp thread count: " << conf_mgr_.GetTCPThreadCount());
         app_frame_threads_count_ += conf_mgr_.GetTCPThreadCount();
 
         if (0 == conf_mgr_.GetWorkThreadCount())
@@ -783,7 +787,7 @@ int AppFrame::LoadTCPThreads()
         return -1;
     }
 
-    tcp_threads_ = (tcp::ThreadsInterface*) tcp_threads_loader_.GetModuleInterface();
+    tcp_threads_ = static_cast<tcp::ThreadsInterface*>(tcp_threads_loader_.GetModuleInterface());
     if (NULL == tcp_threads_)
     {
         LOG_ERROR(tcp_threads_loader_.GetLastErrMsg());
@@ -950,9 +954,9 @@ int AppFrame::LoadTCPThreads()
 //    return 0;
 //}
 
-int AppFrame::CreateThreads()
+int AppFrame::CreateAllThreads()
 {
-    LOG_DEBUG("AppFrame::CreateThreads begin");
+    LOG_TRACE("AppFrame::CreateAllThreads begin");
 
 //    if (conf_mgr_.GetGlobalLogicSo().length() > 0)
 //    {
@@ -1010,13 +1014,13 @@ int AppFrame::CreateThreads()
 //        }
 //    }
 
-    LOG_DEBUG("AppFrame::CreateThreads end");
+    LOG_TRACE("AppFrame::CreateAllThreads end");
     return 0;
 }
 
 void AppFrame::SetThreadsRelationship()
 {
-    LOG_DEBUG("AppFrame::SetThreadsRelationship begin");
+    LOG_TRACE("AppFrame::SetThreadsRelationship begin");
 
     // 各线程组互相访问
 //    if (global_threads_ != NULL)
@@ -1194,6 +1198,6 @@ void AppFrame::SetThreadsRelationship()
 //        raw_tcp_threads_->SetRelatedThreadGroup(&tcp_related_thread_group);
 //    }
 
-    LOG_DEBUG("AppFrame::SetThreadsRelationship end");
+    LOG_TRACE("AppFrame::SetThreadsRelationship end");
 }
 }

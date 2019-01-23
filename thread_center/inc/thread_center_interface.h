@@ -37,10 +37,20 @@ class TimerAxisInterface;
 struct ThreadGroupCtx
 {
     const char* common_component_dir;
+    bool enable_cpu_profiling;
     std::string thread_name;
     int thread_count;
     std::function<ThreadSinkInterface* ()> thread_sink_creator; // thread_sink必须是动态分配的，框架会自动释放
     const void* args;
+
+    ThreadGroupCtx() : thread_name("")
+    {
+        common_component_dir = NULL;
+        enable_cpu_profiling = false;
+        thread_count = 0;
+        thread_sink_creator = NULL;
+        args = NULL;
+    }
 };
 
 class ThreadInterface
@@ -119,7 +129,7 @@ public:
      */
     virtual void OnThreadStartOK()
     {
-        LOG_TRACE(self_thread_->GetThreadName() << " OnThreadStartOK");
+        LOG_TRACE(self_thread_->GetThreadName() << " OnThreadStartOK, sink: " << this);
     }
 
     virtual void OnStop()

@@ -5,29 +5,29 @@
 
 namespace spd_log_util_test
 {
-SpdLogUtilTest::SpdLogUtilTest()
+SPDLogUtilTest::SPDLogUtilTest()
 {
 }
 
-SpdLogUtilTest::~SpdLogUtilTest()
+SPDLogUtilTest::~SPDLogUtilTest()
 {
 }
 
-void SpdLogUtilTest::SetUpTestCase()
+void SPDLogUtilTest::SetUpTestCase()
 {
-    SpdLogCtx ctx;
+    SPDLogCtx ctx;
     ctx.logger_file_path = "./logs/spdlog.log";
     ctx.logger_name = "spdlog";
 
-    EXPECT_EQ(0, SpdLogInitialize(&ctx));
+    EXPECT_EQ(0, SPDLogInitialize(&ctx));
 }
 
-void SpdLogUtilTest::TearDownTestCase()
+void SPDLogUtilTest::TearDownTestCase()
 {
-    SpdLogFinalize();
+    SPDLogFinalize();
 }
 
-void SpdLogUtilTest::Test001()
+void SPDLogUtilTest::Test001()
 {
 //    https://github.com/fmtlib/fmt
 
@@ -45,7 +45,7 @@ void SpdLogUtilTest::Test001()
     SPD_LOG_TRACE("spdlog", "Positional args are {1} {0}..", "too", "supported");
 }
 
-void SpdLogUtilTest::Test002()
+void SPDLogUtilTest::Test002()
 {
     SPD_LOG_TRACE("spdlog", "hello {}, {}, pid: {}, tid: {}", "world", 10000, getpid(), pthread_self()); // spdlog打印的线程id不对
     SPD_LOG_DEBUG("spdlog", "hello {}, {}, pid: {}, tid: {}", "world", 10000, getpid(), pthread_self());
@@ -54,7 +54,7 @@ void SpdLogUtilTest::Test002()
     SPD_LOG_ERROR("spdlog", "hello {}, {}, pid: {}, tid: {}", "world", 10000, getpid(), pthread_self());
 }
 
-void SpdLogUtilTest::Test003()
+void SPDLogUtilTest::Test003()
 {
     std::thread t([&]()
     {
@@ -64,7 +64,25 @@ void SpdLogUtilTest::Test003()
     t.join();
 }
 
-ADD_TEST_F(SpdLogUtilTest, Test001);
-ADD_TEST_F(SpdLogUtilTest, Test002);
-ADD_TEST_F(SpdLogUtilTest, Test003);
+// 动态调整日志级别
+void SPDLogUtilTest::Test004()
+{
+    SPD_LOG_TRACE("spdlog", "1");
+    SPD_LOG_DEBUG("spdlog", "1");
+
+    SPDLogSetLevel(spdlog::level::debug);
+
+    SPD_LOG_TRACE("spdlog", "1");
+    SPD_LOG_DEBUG("spdlog", "1");
+
+    SPDLogSetLevel(spdlog::level::info);
+
+    SPD_LOG_TRACE("spdlog", "1");
+    SPD_LOG_DEBUG("spdlog", "1");
+}
+
+ADD_TEST_F(SPDLogUtilTest, Test001);
+ADD_TEST_F(SPDLogUtilTest, Test002);
+ADD_TEST_F(SPDLogUtilTest, Test003);
+ADD_TEST_F(SPDLogUtilTest, Test004);
 }

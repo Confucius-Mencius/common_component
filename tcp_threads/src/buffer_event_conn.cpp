@@ -54,7 +54,7 @@ int BufferEventConn::Send(const void* data, size_t len)
     }
     else
     {
-        LOG_DEBUG("send ok, " << client_ip_ << ":" << client_port_ << ", socket fd: " << sock_fd_ << ", " << conn_guid_);
+        LOG_TRACE("send ok, " << client_ip_ << ":" << client_port_ << ", socket fd: " << sock_fd_ << ", " << conn_guid_);
         return 0;
     }
 }

@@ -56,8 +56,8 @@ void ListenThreadSink::OnAccept(struct evconnlistener* listener, evutil_socket_t
     else
     {
         new_conn_ctx.client_port = ntohs(client_addr->sin_port);
-        LOG_INFO("conn connected, client ip: " << new_conn_ctx.client_ip << ", port: " << new_conn_ctx.client_port
-                 << ", socket fd: " << sock_fd);
+        LOG_DEBUG("conn connected, client ip: " << new_conn_ctx.client_ip << ", port: " << new_conn_ctx.client_port
+                  << ", socket fd: " << sock_fd);
     }
 
     sink->OnClientConnected(&new_conn_ctx);
@@ -80,7 +80,6 @@ ListenThreadSink::~ListenThreadSink()
 
 void ListenThreadSink::Release()
 {
-    LOG_ERROR("this: " << this);
     delete this;
 }
 
@@ -94,7 +93,7 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
     threads_ctx_ = static_cast<const ThreadsCtx*>(ctx);
 
     const std::string tcp_addr_port = threads_ctx_->conf_mgr->GetTCPAddrPort();
-    LOG_INFO("tcp listen addr port: " << tcp_addr_port);
+    LOG_ALWAYS("tcp listen addr port: " << tcp_addr_port);
 
 //    listen_sock_fd_ = socket(AF_INET, SOCK_STREAM, 0);
 //    if (listen_sock_fd_ < 0)
@@ -223,7 +222,7 @@ void ListenThreadSink::OnTask(const ThreadTask* task)
     {
         case TASK_TYPE_TCP_CONN_CLOSED:
         {
-            LOG_DEBUG("tcp conn closed: " << task->GetData()); // close by client self or server
+            LOG_TRACE("tcp conn closed: " << task->GetData()); // close by client self or server
             --online_tcp_conn_count_;
         }
         break;

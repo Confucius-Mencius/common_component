@@ -9,8 +9,8 @@
 
 namespace tcp
 {
-const static size_t BUFFER_EVENT_MAX_SINGLE_READ = 524288; // 512k
-const static size_t BUFFER_EVENT_MAX_SINGLE_WRITE = 524288;
+const static size_t BUFFER_EVENT_MAX_SINGLE_READ = 16384; // 16k
+const static size_t BUFFER_EVENT_MAX_SINGLE_WRITE = 16384;
 
 #if defined(USE_BUFFEREVENT)
 void ThreadSink::BufferEventEventCallback(struct bufferevent* buffer_event, short events, void* arg)
@@ -19,7 +19,7 @@ void ThreadSink::BufferEventEventCallback(struct bufferevent* buffer_event, shor
     const evutil_socket_t sock_fd = bufferevent_getfd(buffer_event);
     ThreadSink* sink = static_cast<ThreadSink*>(arg);
 
-    LOG_DEBUG("events occured on socket, fd: " << sock_fd << ", events: "
+    LOG_TRACE("events occured on socket, fd: " << sock_fd << ", events: "
               << setiosflags(std::ios::showbase) << std::hex << events);
 
     BaseConn* conn = sink->conn_mgr_.GetConn(sock_fd);
@@ -37,8 +37,8 @@ void ThreadSink::BufferEventEventCallback(struct bufferevent* buffer_event, shor
         {
             if (err != 0)
             {
-                LOG_DEBUG("error occured on socket, fd: " << sock_fd << ", errno: " << err
-                          << ", err msg: " << evutil_socket_error_to_string(err));
+                LOG_WARN("error occured on socket, fd: " << sock_fd << ", errno: " << err
+                         << ", err msg: " << evutil_socket_error_to_string(err));
             }
 
             closed = true;
@@ -47,14 +47,14 @@ void ThreadSink::BufferEventEventCallback(struct bufferevent* buffer_event, shor
 
         if (events & BEV_EVENT_EOF)
         {
-            LOG_DEBUG("tcp conn closed, fd: " << sock_fd);
+            LOG_TRACE("tcp conn closed, fd: " << sock_fd);
             closed = true;
             break;
         }
 
         if (events & BEV_EVENT_READING)
         {
-            LOG_DEBUG("reading event occurred on socket, fd: " << sock_fd);
+            LOG_TRACE("reading event occurred on socket, fd: " << sock_fd);
 
             struct evbuffer* input_buf = bufferevent_get_input(buffer_event);
             const size_t input_buf_len = evbuffer_get_length(input_buf);
@@ -63,7 +63,7 @@ void ThreadSink::BufferEventEventCallback(struct bufferevent* buffer_event, shor
             if (0 == input_buf_len)
             {
                 // 这个事件等价于上面的EOF事件,都表示对端关闭了
-                LOG_DEBUG("tcp conn closed, socket fd: " << sock_fd);
+                LOG_TRACE("tcp conn closed, socket fd: " << sock_fd);
                 closed = true;
                 break;
             }
@@ -71,12 +71,12 @@ void ThreadSink::BufferEventEventCallback(struct bufferevent* buffer_event, shor
 
         if (events & BEV_EVENT_WRITING)
         {
-            LOG_DEBUG("writing event occurred on socket, fd:" << sock_fd);
+            LOG_TRACE("writing event occurred on socket, fd:" << sock_fd);
         }
 
         if (events & BEV_EVENT_TIMEOUT)
         {
-            LOG_WARN("timeout event occurred on socket, fd: " << sock_fd); // TODO 什么时候会出现timeout？逻辑如何处理？
+            LOG_TRACE("timeout event occurred on socket, fd: " << sock_fd); // TODO 什么时候会出现timeout？逻辑如何处理？
         }
     } while (0);
 
@@ -90,7 +90,7 @@ void ThreadSink::BufferEventReadCallback(struct bufferevent* buffer_event, void*
 {
     struct evbuffer* input_buf = bufferevent_get_input(buffer_event);
     const evutil_socket_t sock_fd = bufferevent_getfd(buffer_event);
-    LOG_DEBUG("recv data, socket fd: " << sock_fd << ", input buf len: " << evbuffer_get_length(input_buf));
+    LOG_TRACE("recv data, socket fd: " << sock_fd << ", input buf len: " << evbuffer_get_length(input_buf));
 
     ThreadSink* sink = static_cast<ThreadSink*>(arg);
 
@@ -135,7 +135,7 @@ void ThreadSink::NormalReadCallback(evutil_socket_t fd, short events, void* arg)
     {
         if (events & EV_CLOSED)
         {
-            LOG_INFO("tcp conn closed, fd: " << fd);
+            LOG_TRACE("tcp conn closed, fd: " << fd);
             closed = true;
             break;
         }
@@ -166,7 +166,7 @@ void ThreadSink::NormalReadCallback(evutil_socket_t fd, short events, void* arg)
 
         if (events & EV_TIMEOUT)
         {
-            LOG_WARN("timeout event occurred on socket, fd: " << fd); // TODO 什么时候会出现timeout？逻辑如何处理？
+            LOG_TRACE("timeout event occurred on socket, fd: " << fd); // TODO 什么时候会出现timeout？逻辑如何处理？
         }
     } while (0);
 
@@ -193,8 +193,6 @@ ThreadSink::~ThreadSink()
 
 void ThreadSink::Release()
 {
-    LOG_ERROR("this: " << this);
-
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
         SAFE_RELEASE_MODULE(it->logic, it->logic_loader);
@@ -313,7 +311,7 @@ void ThreadSink::OnThreadStartOK()
 {
     ThreadSinkInterface::OnThreadStartOK();
 
-    // TODO 这块怎么优化？
+    // TODO
     pthread_mutex_lock(threads_ctx_->frame_threads_mutex);
     ++(*threads_ctx_->frame_threads_count);
     pthread_cond_signal(threads_ctx_->frame_threads_cond);
@@ -485,7 +483,7 @@ int ThreadSink::LoadLocalLogic()
     char local_logic_so_path[MAX_PATH_LEN] = "";
     GetAbsolutePath(local_logic_so_path, sizeof(local_logic_so_path),
                     tcp_local_logic_so.c_str(), threads_ctx_->cur_working_dir);
-    LOG_DEBUG("load local logic so " << local_logic_so_path << " begin");
+    LOG_TRACE("load local logic so " << local_logic_so_path << " begin");
 
     if (local_logic_loader_.Load(local_logic_so_path) != 0)
     {
@@ -518,7 +516,7 @@ int ThreadSink::LoadLocalLogic()
         return -1;
     }
 
-    LOG_INFO("load local logic so " << local_logic_so_path << " end");
+    LOG_TRACE("load local logic so " << local_logic_so_path << " end");
     return 0;
 }
 
@@ -542,7 +540,7 @@ int ThreadSink::LoadLogicGroup()
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
         LogicItem& logic_item = *it;
-        LOG_DEBUG("load logic so " << logic_item.logic_so_path << " begin");
+        LOG_TRACE("load logic so " << logic_item.logic_so_path << " begin");
 
         if (logic_item.logic_loader.Load(logic_item.logic_so_path.c_str()) != 0)
         {
@@ -575,7 +573,7 @@ int ThreadSink::LoadLogicGroup()
             return -1;
         }
 
-        LOG_DEBUG("load logic so " << logic_item.logic_so_path << " end");
+        LOG_TRACE("load logic so " << logic_item.logic_so_path << " end");
     }
 
     return 0;
@@ -603,23 +601,10 @@ int ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
         return -1;
     }
 
-    // int send_buf_size = 0;
-    // int recv_buf_size = 0;
-
-    // GetSocketBufSize(send_buf_size, recv_buf_size, client_sock_fd);
-    // LOG_TRACE("before set, send buf size: " << send_buf_size << ", recv buf size: " << recv_buf_size
-    //           << ", sock_fd: " << client_sock_fd);
-
-    // SetSocketBufSize(client_sock_fd, 4 * 1024 * 1024, 4 * 1024 * 1024); // 实际发现设置后缓冲区反而变小了
-
-    // GetSocketBufSize(send_buf_size, recv_buf_size, client_sock_fd);
-    // LOG_TRACE("after set, send buf size: " << send_buf_size << ", recv buf size: " << recv_buf_size
-    //           << ", sock_fd: " << client_sock_fd);
-
     LOG_DEBUG("before set, single read size limit: " << bufferevent_get_max_single_read(buffer_event)
               << ", single write size limit: " << bufferevent_get_max_single_write(buffer_event));
 
-    bufferevent_set_max_single_read(buffer_event, BUFFER_EVENT_MAX_SINGLE_READ); // TODO 看一下libevent源码改动还有没有必要
+    bufferevent_set_max_single_read(buffer_event, BUFFER_EVENT_MAX_SINGLE_READ);
     bufferevent_set_max_single_write(buffer_event, BUFFER_EVENT_MAX_SINGLE_WRITE);
 
     LOG_DEBUG("after set, single read size limit: " << bufferevent_get_max_single_read(buffer_event)

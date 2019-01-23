@@ -28,7 +28,7 @@ int TaskQueue::PushBack(ThreadTask* task)
     if (cur_task_count_ > max_task_count_)
     {
         max_task_count_ = cur_task_count_;
-        LOG_WARN(thread_->GetThreadName() << ", max task count: " << max_task_count_);
+        LOG_WARN(thread_->GetThreadName() << " max task count: " << max_task_count_);
     }
 
     return 0;
@@ -58,7 +58,7 @@ ThreadTask* TaskQueue::PopFront()
     ThreadTask* task = task_list_.front();
     task_list_.pop_front();
     --cur_task_count_;
-    LOG_DEBUG(thread_->GetThreadName() << ", task count in queue: " << cur_task_count_);
+    LOG_DEBUG(thread_->GetThreadName() << " task count in queue: " << cur_task_count_);
 
     return task;
 }

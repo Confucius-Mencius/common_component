@@ -5,11 +5,11 @@
 
 namespace spd_log_util_test
 {
-class SpdLogUtilTest : public GTest
+class SPDLogUtilTest : public GTest
 {
 public:
-    SpdLogUtilTest();
-    virtual ~SpdLogUtilTest();
+    SPDLogUtilTest();
+    virtual ~SPDLogUtilTest();
 
     static void SetUpTestCase();
     static void TearDownTestCase();
@@ -17,6 +17,7 @@ public:
     void Test001();
     void Test002();
     void Test003();
+    void Test004();
 };
 }
 

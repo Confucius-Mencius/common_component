@@ -9,7 +9,7 @@ void SignalWrapper::OnStopSignal(evutil_socket_t fd, short event, void* arg)
     (void) fd;
     (void) event;
 
-    LOG_INFO("receive stop signal");
+    LOG_ALWAYS("receive stop signal");
     AppLauncher* app_launcher = static_cast<AppLauncher*>(arg);
     app_launcher->OnStop();
 }
@@ -19,7 +19,7 @@ void SignalWrapper::OnReloadSignal(evutil_socket_t fd, short event, void* arg)
     (void) fd;
     (void) event;
 
-    LOG_INFO("receive reload signal");
+    LOG_ALWAYS("receive reload signal");
     AppLauncher* app_launcher = static_cast<AppLauncher*>(arg);
     app_launcher->OnReload();
 }

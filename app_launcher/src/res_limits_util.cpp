@@ -47,7 +47,7 @@ void PrintResLimits(char* name, int resource)
         StrPrintf(buf + offset, sizeof(buf) - offset, "%-15ld", limit.rlim_max);
     }
 
-    LOG_INFO(buf);
+    LOG_ALWAYS(buf);
 }
 
 struct ResEntry
@@ -81,7 +81,7 @@ void PrintAllResLimits()
 {
     char buf[MAX_LINE] = "";
     StrPrintf(buf, sizeof(buf), "%-24s%-15s%-15s", "[name]", "[soft limit]", "[hard limit]");
-    LOG_INFO(buf);
+    LOG_ALWAYS(buf);
 
     for (int i = 0; i < COUNT_OF(res_entries); ++i)
     {
@@ -89,9 +89,9 @@ void PrintAllResLimits()
     }
 
     ExecShellCmd(buf, sizeof(buf), "cat /proc/sys/kernel/core_pattern");
-    LOG_INFO("cat /proc/sys/kernel/core_pattern: " << buf);
+    LOG_ALWAYS("cat /proc/sys/kernel/core_pattern: " << buf);
 
     ExecShellCmd(buf, sizeof(buf), "cat /proc/sys/kernel/core_uses_pid");
-    LOG_INFO("cat /proc/sys/kernel/core_uses_pid: " << buf);
+    LOG_ALWAYS("cat /proc/sys/kernel/core_uses_pid: " << buf);
 }
 }

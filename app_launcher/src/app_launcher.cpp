@@ -19,7 +19,7 @@ void AppLauncher::OnExitCheckTimer(evutil_socket_t fd, short event, void* arg)
     (void) fd;
     (void) event;
 
-    LOG_DEBUG("in exit check timer");
+    LOG_TRACE("in exit check timer");
     AppLauncher* app_launcher = static_cast<AppLauncher*>(arg);
 
     if (!app_launcher->app_frame_->CanExit())
@@ -56,7 +56,7 @@ void AppLauncher::Release()
 
     if (g_log_engine != NULL)
     {
-        LOG_INFO(app_launcher_ctx_->app_name << " exit ok");
+        LOG_ALWAYS(app_launcher_ctx_->app_name << " exit ok");
     }
 
     service_mgr_.Release();
@@ -93,20 +93,20 @@ int AppLauncher::Initialize(const AppLauncherCtx* app_launcher_ctx)
     // !!!此后就可以用LOG_XXX打印日志了!!!
     ////////////////////////////////////////////////////////////////////////////////
 
-    LOG_INFO("app launcher version: " << APP_LAUNCHER_VERSION);
-    LOG_INFO("argc: " << app_launcher_ctx_->argc);
+    LOG_ALWAYS("app launcher version: " << APP_LAUNCHER_VERSION);
+    LOG_DEBUG("argc: " << app_launcher_ctx_->argc);
 
     for (int i = 0; i < app_launcher_ctx_->argc; ++i)
     {
-        LOG_INFO("argv " << i << ": " << app_launcher_ctx_->argv[i]);
+        LOG_DEBUG("argv " << i << ": " << app_launcher_ctx_->argv[i]);
     }
 
-    LOG_INFO("common component dir: " << app_launcher_ctx_->common_component_dir);
-    LOG_INFO("log conf file path: " << app_launcher_ctx_->log_conf_file_path);
-    LOG_INFO("logger name: " << app_launcher_ctx_->logger_name);
-    LOG_INFO("app conf file path: " << app_launcher_ctx_->app_conf_file_path);
-    LOG_INFO("cur working dir: " << app_launcher_ctx_->cur_working_dir);
-    LOG_INFO("app name: " << app_launcher_ctx_->app_name);
+    LOG_ALWAYS("common component dir: " << app_launcher_ctx_->common_component_dir);
+    LOG_ALWAYS("log conf file path: " << app_launcher_ctx_->log_conf_file_path);
+    LOG_ALWAYS("logger name: " << app_launcher_ctx_->logger_name);
+    LOG_ALWAYS("app conf file path: " << app_launcher_ctx_->app_conf_file_path);
+    LOG_ALWAYS("cur working dir: " << app_launcher_ctx_->cur_working_dir);
+    LOG_ALWAYS("app name: " << app_launcher_ctx_->app_name);
 
     ////////////////////////////////////////////////////////////////////////////////
     PrintAllResLimits();
@@ -139,26 +139,26 @@ int AppLauncher::Initialize(const AppLauncherCtx* app_launcher_ctx)
     const int features = event_base_get_features(thread_ev_base_);
     if (features & EV_FEATURE_ET)
     {
-        LOG_INFO("libevent feature EV_FEATURE_ET supported");
+        LOG_ALWAYS("libevent feature EV_FEATURE_ET supported");
     }
 
     if (features & EV_FEATURE_O1)
     {
-        LOG_INFO("libevent feature EV_FEATURE_O1 supported");
+        LOG_ALWAYS("libevent feature EV_FEATURE_O1 supported");
     }
 
     if (features & EV_FEATURE_FDS)
     {
-        LOG_INFO("libevent feature EV_FEATURE_FDS supported"); // linux下不支持
+        LOG_ALWAYS("libevent feature EV_FEATURE_FDS supported"); // linux下不支持
     }
 
     if (features & EV_FEATURE_EARLY_CLOSE)
     {
-        LOG_INFO("libevent feature EV_FEATURE_EARLY_CLOSE supported");
+        LOG_ALWAYS("libevent feature EV_FEATURE_EARLY_CLOSE supported");
     }
 
-    LOG_INFO("libevent version: " << event_get_version()
-             << ", libevent method: " << event_base_get_method(thread_ev_base_));
+    LOG_ALWAYS("libevent version: " << event_get_version()
+               << ", libevent method: " << event_base_get_method(thread_ev_base_));
 
     ////////////////////////////////////////////////////////////////////////////////
     if (signal_wrapper_.Initialize(this) != 0)
@@ -230,7 +230,7 @@ int AppLauncher::Activate()
             return -1;
         }
 
-        LOG_INFO("add conf check timer ok, interval: " << conf_check_interval << "(second)");
+        LOG_ALWAYS("add conf check timer ok, interval: " << conf_check_interval << "s"); // 单位：秒
     }
 
     if (app_frame_->Activate() != 0)
@@ -239,7 +239,7 @@ int AppLauncher::Activate()
         return -1;
     }
 
-    LOG_INFO(app_launcher_ctx_->app_name << " is running now");
+    LOG_ALWAYS(app_launcher_ctx_->app_name << " is running now");
     event_base_dispatch(thread_ev_base_);
 
     return 0;

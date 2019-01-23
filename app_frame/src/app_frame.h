@@ -40,7 +40,7 @@ private:
 //    int LoadHttpThreads();
 //    int LoadUdpThreads();
 //    int LoadRawTcpThreads();
-    int CreateThreads();
+    int CreateAllThreads();
     void SetThreadsRelationship();
 
 private:

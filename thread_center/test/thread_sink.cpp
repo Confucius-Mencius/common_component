@@ -14,6 +14,7 @@ ThreadSink::~ThreadSink()
 
 void ThreadSink::Release()
 {
+    LOG_TRACE(self_thread_->GetThreadName() << " Release");
     delete this;
 }
 

@@ -8,7 +8,7 @@ namespace tcp
 {
 void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
 {
-    LOG_DEBUG("events occured on socket, fd: " << fd << ", events: "
+    LOG_TRACE("events occured on socket, fd: " << fd << ", events: "
               << setiosflags(std::ios::showbase) << std::hex << events);
 
     // 在read事件中处理
@@ -31,7 +31,7 @@ void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
             if (0 == n)
             {
                 // 一个字节都没写成功，继续写
-                LOG_DEBUG("nothing write, continue");
+                LOG_TRACE("nothing write, continue");
                 continue;
             }
 
@@ -75,7 +75,7 @@ void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
                 if (sent_len == (*it).size())
                 {
                     // 全部发送OK了
-                    LOG_DEBUG("all send ok");
+                    LOG_TRACE("all send ok");
                     break;
                 }
 
@@ -88,7 +88,7 @@ void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
 
     if (conn->send_list_.empty())
     {
-        LOG_DEBUG("send list is empty, del write event");
+        LOG_TRACE("send list is empty, del write event");
 
         if (event_del(conn->write_event_) != 0)
         {
@@ -98,7 +98,7 @@ void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
         }
         else
         {
-            LOG_DEBUG("del write event ok");
+            LOG_TRACE("del write event ok");
         }
     }
 }
@@ -179,7 +179,7 @@ int NormalConn::Send(const void* data, size_t len)
                 break;
             }
 
-            LOG_DEBUG("add write event ok");
+            LOG_TRACE("add write event ok");
             ret = 0;
         } while (0);
 
@@ -209,7 +209,7 @@ int NormalConn::Send(const void* data, size_t len)
                 return -1;
             }
 
-            LOG_DEBUG("add write event ok");
+            LOG_TRACE("add write event ok");
         }
     }
 
