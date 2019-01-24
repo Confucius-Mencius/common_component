@@ -13,8 +13,6 @@ class ConsoleLogEngine : public LogEngineInterface
 public:
     ConsoleLogEngine() : log_engine_ctx_(), logger_()
     {
-        log4cplus::initialize();
-
         // 定义Logger
         logger_ = log4cplus::Logger::getInstance("console_logger");
 
@@ -34,7 +32,6 @@ public:
 
     virtual ~ConsoleLogEngine()
     {
-        log4cplus::Logger::shutdown(); // 放在最后关闭，使得在其它模块的Release接口中也能正常打印日志
     }
 
     ///////////////////////// ModuleInterface /////////////////////////

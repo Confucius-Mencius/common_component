@@ -2,9 +2,10 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <gflags/gflags.h>
+#include <log4cplus/initializer.h>
 #include "app_launcher.h"
 #include "str_util.h"
-#include "daemonize.h"
+#include "util.h"
 
 DEFINE_string(log_conf_file_path, "xx_server_log_conf.properties", "log conf file path");
 DEFINE_string(logger_name, "xx_server", "logger name in the log conf file");
@@ -33,6 +34,49 @@ int main(int argc, char* argv[])
 
     gflags::ParseCommandLineFlags(&argc, &argv, false);
 
+    // the information will write to
+    // '/var/log/syslog' on ubuntu
+    // or '/var/log/messages' on centos
+    openlog(argv[0], LOG_CONS | LOG_PID, LOG_USER);
+
+    bool run_as_daemon = FLAGS_daemon;
+    bool chdir_to_root = FLAGS_chdir_to_root;
+
+    char cur_working_dir[MAX_PATH_LEN] = "";
+    if (NULL == getcwd(cur_working_dir, sizeof(cur_working_dir)))
+    {
+        const int err = errno;
+        syslog(LOG_ERR, "getcwd failed, errno: %d, err msg: %s", err, strerror(err));
+        return -1;
+    }
+
+    syslog(LOG_DEBUG, "run as daemon: %d", run_as_daemon);
+
+    if (run_as_daemon)
+    {
+        if (daemon(!chdir_to_root, 0) != 0)
+        {
+            const int err = errno;
+            syslog(LOG_ERR, "daemon failed, errno: %d, err msg: %s", err, strerror(err));
+            return -1;
+        }
+
+        // log4cplus 2.0.2要求deamon进程后调用一次exec以非daemon方式启动，否则不能正常退出
+        std::ostringstream app_path("");
+        app_path << cur_working_dir << "/" << argv[0];
+
+        const char arg_daemon[] = "-daemon=false";
+
+        if (-1 == execl(app_path.str().c_str(), argv[0], argv[1], argv[2], argv[3], argv[4], arg_daemon, argv[6], NULL))
+        {
+            const int err = errno;
+            syslog(LOG_ERR, "execl failed, errno: %d, err msg: %s", err, strerror(err));
+            return -1;
+        }
+    }
+
+    log4cplus::Initializer initializer; // log4cplus 2.0.2的用法
+
     app_launcher::AppLauncherCtx app_launcher_ctx;
     app_launcher_ctx.argc = argc;
     app_launcher_ctx.argv = argv;
@@ -48,15 +92,7 @@ int main(int argc, char* argv[])
     StrCpy(app_launcher_ctx.app_conf_file_path, sizeof(app_launcher_ctx.app_conf_file_path),
            FLAGS_app_conf_file_path.c_str());
 
-    bool run_as_daemon = FLAGS_daemon;
-    bool chdir_to_root = FLAGS_chdir_to_root;
-
     gflags::ShutDownCommandLineFlags();
-
-    if (run_as_daemon)
-    {
-        app_launcher::Daemonize(argv[0], chdir_to_root);
-    }
 
     if (NULL == getcwd(app_launcher_ctx.cur_working_dir, sizeof(app_launcher_ctx.cur_working_dir)))
     {
@@ -86,9 +122,6 @@ int main(int argc, char* argv[])
     app_launcher::AppLauncher* app_launcher = app_launcher::AppLauncher::Create();
     if (NULL == app_launcher)
     {
-        // the information will write to
-        // '/var/log/syslog' on ubuntu
-        // or '/var/log/messages' on centos
         syslog(LOG_ERR, "failed to create app launcher");
         return -1;
     }

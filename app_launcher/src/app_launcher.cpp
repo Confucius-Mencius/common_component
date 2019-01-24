@@ -1,6 +1,6 @@
 #include "app_launcher.h"
-#include "daemonize.h"
 #include "res_limits_util.h"
+#include "util.h"
 #include "version.h"
 
 namespace app_launcher

@@ -1,5 +1,6 @@
 #include "service_mgr.h"
 #include "app_launcher.h"
+#include "conf_xpath_define.h"
 #include "num_util.h"
 
 LogEngineInterface* g_log_engine = NULL;
@@ -42,12 +43,12 @@ void ServiceMgr::EventLogCallback(int severity, const char* msg)
     }
 }
 
-ServiceMgr::ServiceMgr() : last_err_msg_(), log_engine_loader_(), conf_center_loader_(), conf_mgr_(),
-    thread_center_loader_()
+ServiceMgr::ServiceMgr() : last_err_msg_(), conf_center_loader_(), log_engine_loader_(),
+    conf_mgr_(), thread_center_loader_()
 {
     app_launcher_ctx_ = NULL;
-    log_engine_ = NULL;
     conf_center_ = NULL;
+    log_engine_ = NULL;
     thread_center_ = NULL;
 }
 
@@ -66,7 +67,7 @@ void ServiceMgr::Reload(bool& app_conf_changed)
     {
         if (conf_mgr_.Reload() != 0)
         {
-            LOG_ERROR("conf mgr reload failed");
+            LOG_ERROR("failed to reload app conf");
         }
         else
         {
@@ -82,7 +83,6 @@ const char* ServiceMgr::GetLastErrMsg() const
 
 void ServiceMgr::Release()
 {
-    ////////////////////////////////////////////////////////////////////////////////
     SAFE_RELEASE_MODULE(thread_center_, thread_center_loader_);
     SAFE_RELEASE_MODULE(conf_center_, conf_center_loader_);
     SAFE_RELEASE_MODULE(log_engine_, log_engine_loader_);
@@ -98,12 +98,12 @@ int ServiceMgr::Initialize(const AppLauncherCtx* app_launcher_ctx)
 
     app_launcher_ctx_ = app_launcher_ctx;
 
-    if (LoadLogEngine() != 0)
+    if (LoadConfCenter() != 0)
     {
         return -1;
     }
 
-    if (LoadConfCenter() != 0)
+    if (LoadLogEngine() != 0)
     {
         return -1;
     }
@@ -125,21 +125,21 @@ void ServiceMgr::Finalize()
 {
     SAFE_FINALIZE(thread_center_);
     conf_mgr_.Finalize();
-    SAFE_FINALIZE(conf_center_);
     SAFE_FINALIZE(log_engine_);
+    SAFE_FINALIZE(conf_center_);
 }
 
 int ServiceMgr::Activate()
 {
-    if (SAFE_ACTIVATE_FAILED(log_engine_))
-    {
-        LOG_ERROR(log_engine_->GetLastErrMsg());
-        return -1;
-    }
-
     if (SAFE_ACTIVATE_FAILED(conf_center_))
     {
         LOG_ERROR(conf_center_->GetLastErrMsg());
+        return -1;
+    }
+
+    if (SAFE_ACTIVATE_FAILED(log_engine_))
+    {
+        LOG_ERROR(log_engine_->GetLastErrMsg());
         return -1;
     }
 
@@ -155,43 +155,8 @@ int ServiceMgr::Activate()
 void ServiceMgr::Freeze()
 {
     SAFE_FREEZE(thread_center_);
-    SAFE_FREEZE(conf_center_);
     SAFE_FREEZE(log_engine_);
-}
-
-int ServiceMgr::LoadLogEngine()
-{
-    char log_engine_so_path[MAX_PATH_LEN] = "";
-    StrPrintf(log_engine_so_path, sizeof(log_engine_so_path), "%s/liblog_engine.so",
-              app_launcher_ctx_->common_component_dir);
-
-    if (log_engine_loader_.Load(log_engine_so_path) != 0)
-    {
-        SET_LAST_ERR_MSG(&last_err_msg_, log_engine_loader_.GetLastErrMsg());
-        return -1;
-    }
-
-    log_engine_ = static_cast<LogEngineInterface*>(log_engine_loader_.GetModuleInterface(0));
-    if (NULL == log_engine_)
-    {
-        SET_LAST_ERR_MSG(&last_err_msg_, log_engine_loader_.GetLastErrMsg());
-        return -1;
-    }
-
-    LogEngineCtx log_engine_ctx;
-    log_engine_ctx.log_conf_file_path = app_launcher_ctx_->log_conf_file_path;
-    log_engine_ctx.logger_name = app_launcher_ctx_->logger_name;
-
-    if (log_engine_->Initialize(&log_engine_ctx) != 0)
-    {
-        SET_LAST_ERR_MSG(&last_err_msg_, log_engine_->GetLastErrMsg());
-        return -1;
-    }
-
-    g_log_engine = log_engine_; // 此后运行的代码就可以使用LOG_XXX宏记录日志了
-    event_set_log_callback(ServiceMgr::EventLogCallback);
-
-    return 0;
+    SAFE_FREEZE(conf_center_);
 }
 
 int ServiceMgr::LoadConfCenter()
@@ -221,6 +186,47 @@ int ServiceMgr::LoadConfCenter()
         SET_LAST_ERR_MSG(&last_err_msg_, conf_center_->GetLastErrMsg());
         return -1;
     }
+
+    return 0;
+}
+
+int ServiceMgr::LoadLogEngine()
+{
+    char log_engine_so_path[MAX_PATH_LEN] = "";
+    StrPrintf(log_engine_so_path, sizeof(log_engine_so_path), "%s/liblog_engine.so",
+              app_launcher_ctx_->common_component_dir);
+
+    if (log_engine_loader_.Load(log_engine_so_path) != 0)
+    {
+        SET_LAST_ERR_MSG(&last_err_msg_, log_engine_loader_.GetLastErrMsg());
+        return -1;
+    }
+
+    log_engine_ = static_cast<LogEngineInterface*>(log_engine_loader_.GetModuleInterface(0));
+    if (NULL == log_engine_)
+    {
+        SET_LAST_ERR_MSG(&last_err_msg_, log_engine_loader_.GetLastErrMsg());
+        return -1;
+    }
+
+    LogEngineCtx log_engine_ctx;
+    log_engine_ctx.log_conf_file_path = app_launcher_ctx_->log_conf_file_path;
+    log_engine_ctx.logger_name = app_launcher_ctx_->logger_name;
+
+    if (conf_center_->GetConf(log_engine_ctx.log_conf_file_check_interval, CONF_CHECK_INTERVAL_XPATH, true, 0) != 0)
+    {
+        SET_LAST_ERR_MSG(&last_err_msg_, "failed to get " << CONF_CHECK_INTERVAL_XPATH << ": " << conf_center_->GetLastErrMsg());
+        return -1;
+    }
+
+    if (log_engine_->Initialize(&log_engine_ctx) != 0)
+    {
+        SET_LAST_ERR_MSG(&last_err_msg_, log_engine_->GetLastErrMsg());
+        return -1;
+    }
+
+    g_log_engine = log_engine_; // 此后运行的代码就可以使用LOG_XXX宏记录日志了
+    event_set_log_callback(ServiceMgr::EventLogCallback);
 
     return 0;
 }

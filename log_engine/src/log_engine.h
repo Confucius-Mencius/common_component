@@ -33,8 +33,8 @@ private:
 private:
     LastErrMsg last_err_msg_;
     LogEngineCtx log_engine_ctx_;
-    log4cplus::ConfigureAndWatchThread* log_conf_file_watch_thread_;
     log4cplus::Logger logger_;
+    log4cplus::ConfigureAndWatchThread* log_conf_file_watch_thread_;
 };
 }
 

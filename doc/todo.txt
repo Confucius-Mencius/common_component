@@ -128,3 +128,7 @@ common_component:
 echo proj中的脚本整理 sh -x
 
 网络风暴测试
+
+chdir_to_root测试，看程序运行对不对
+
+syslog测试

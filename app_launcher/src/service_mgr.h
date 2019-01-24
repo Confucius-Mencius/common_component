@@ -46,19 +46,19 @@ public:
     void Freeze();
 
 private:
-    int LoadLogEngine();
     int LoadConfCenter();
+    int LoadLogEngine();
     int LoadThreadCenter();
 
 private:
     LastErrMsg last_err_msg_;
     const AppLauncherCtx* app_launcher_ctx_;
 
-    ModuleLoader log_engine_loader_;
-    LogEngineInterface* log_engine_;
-
     ModuleLoader conf_center_loader_;
     ConfCenterInterface* conf_center_;
+
+    ModuleLoader log_engine_loader_;
+    LogEngineInterface* log_engine_;
 
     app_launcher::ConfMgr conf_mgr_;
 
