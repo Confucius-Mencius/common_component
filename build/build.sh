@@ -6,29 +6,28 @@
 
 SCRIPT_PATH=$(cd `dirname $0`; pwd)
 
-if [ $# == 0 ]; then
-    echo "usage: ${SCRIPT_PATH}/build.sh
-         -h show this help info.
-         -b debug|release build projects.
-         -r debug|release rebuild projects.
-         -c debug|release clear tmp files."
-    exit 1
-fi
+function Usage()
+{
+    echo "Usage: $1
+         -h                show this help info.
+         -b debug|release  build projects.
+         -r debug|release  rebuild projects.
+         -c debug|release  clear tmp files."
+    exit 0   
+}
 
+if [ $# == 0 ]; then
+    Usage $0
+fi
 
 . ${SCRIPT_PATH}/../../sh_tools/base/util.sh
 . ${SCRIPT_PATH}/../../sh_tools/base/proj_util.sh
 . ${SCRIPT_PATH}/common.sh
 
-
 while getopts "b:c:r:h" opt; do
     case $opt in
         h)
-            echo "usage: ${SCRIPT_PATH}/build.sh
-                 -h show this help info.
-                 -b debug|release build projects.
-                 -r debug|release rebuild projects.
-                 -c debug|release clear tmp files."
+            Usage $0
         ;;
         b)
             if [ "${OPTARG}"x = "debug"x ]; then
