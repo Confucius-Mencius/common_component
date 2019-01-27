@@ -17,7 +17,7 @@ class LogicInterface;
 namespace tcp
 {
 class SchedulerInterface;
-class LocalLogicInterface;
+class CommonLogicInterface;
 
 struct LogicCtx
 {
@@ -29,7 +29,7 @@ struct LogicCtx
     ConfCenterInterface* conf_center;
     TimerAxisInterface* timer_axis;
     SchedulerInterface* scheduler;
-    LocalLogicInterface* local_logic;
+    CommonLogicInterface* common_logic;
     struct event_base* thread_ev_base;
 
     LogicCtx()
@@ -42,7 +42,7 @@ struct LogicCtx
         conf_center = NULL;
         timer_axis = NULL;
         scheduler = NULL;
-        local_logic = NULL;
+        common_logic = NULL;
         thread_ev_base = NULL;
     }
 };
@@ -149,10 +149,10 @@ protected:
     global::LogicInterface* global_logic_;
 };
 
-class LocalLogicInterface : public LogicInterface
+class CommonLogicInterface : public LogicInterface
 {
 public:
-    virtual ~LocalLogicInterface()
+    virtual ~CommonLogicInterface()
     {
     }
 };

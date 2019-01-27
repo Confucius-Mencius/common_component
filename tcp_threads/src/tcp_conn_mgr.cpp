@@ -327,7 +327,7 @@ int ConnMgr::UpdateConnStatus(ConnID conn_id)
         const time_t now = time(NULL);
         if ((now - conn_hash_map_[sock_fd].start_time) >= conn_mgr_ctx_.storm_interval)
         {
-            if (conn_hash_map_[sock_fd].recv_count >= conn_mgr_ctx_.storm_recv_count)
+            if (conn_hash_map_[sock_fd].recv_count >= conn_mgr_ctx_.storm_threshold)
             {
                 LOG_WARN("net storm! conn id: " << conn_id << ", now: " << now << ", start time: "
                          << conn_hash_map_[sock_fd].start_time << ", recv count: " << conn_hash_map_[sock_fd].recv_count);

@@ -17,57 +17,31 @@ int ConfMgr::Load()
     enable_cpu_profiling_ = false;
     enable_mem_profiling_ = false;
     release_free_mem_ = false;
-    global_logic_so_ = "";
+    global_common_logic_so_ = "";
+    global_logic_so_group_.clear();
     tcp_addr_port_ = "";
     tcp_conn_count_limit_ = 0;
     tcp_inactive_conn_check_interval_sec_ = 0;
     tcp_inactive_conn_check_interval_usec_ = 0;
     tcp_inactive_conn_life_ = 0;
     tcp_storm_interval_ = 0;
-    tcp_storm_recv_count_ = 0;
+    tcp_storm_threshold_ = 0;
     tcp_thread_count_ = 0;
-    tcp_local_logic_so_ = "";
+    tcp_common_logic_so_ = "";
     tcp_logic_so_group_.clear();
-    http_addr_port_ = "";
-    https_addr_port_ = "";
-    https_certificate_chain_file_path_ = "";
-    https_private_key_file_path_ = "";
-    http_conn_count_limit_ = 0;
-    http_max_header_size_ = 0;
-    http_max_body_size_ = 0;
-    http_conn_timeout_sec_ = 0;
-    http_conn_timeout_usec_ = 0;
-    http_thread_count_ = 0;
-    http_local_logic_so_ = "";
-    http_logic_so_group_.clear();
-    http_print_parsed_info_ = false;
-    http_decode_uri_ = false;
-    http_content_type_ = "";
-    http_no_cache_ = false;
-    http_flash_cross_domain_path_ = "";
-    http_file_upload_path_ = "";
-    http_file_download_path_ = "";
-    http_file_storage_dir_ = "";
     udp_addr_port_ = "";
     udp_inactive_conn_check_interval_sec_ = 0;
     udp_inactive_conn_check_interval_usec_ = 0;
     udp_inactive_conn_life_ = 0;
-    udp_do_checksum_ = false;
-    udp_max_msg_body_len_ = 0;
     udp_thread_count_ = 0;
-    udp_local_logic_so_ = "";
+    udp_common_logic_so_ = "";
     udp_logic_so_group_.clear();
-    peer_need_reply_msg_check_interval_ = 0;
-    peer_tcp_conn_interval_sec_ = 0;
-    peer_tcp_conn_interval_usec_ = 0;
-    peer_http_conn_timeout_ = 0;
-    peer_http_conn_max_retry_ = 0;
     work_thread_count_ = 0;
-    work_local_logic_so_ = "";
+    work_common_logic_so_ = "";
     work_logic_so_group_.clear();
     io_to_work_tq_size_limit_ = 0;
     burden_thread_count_ = 0;
-    burden_local_logic_so_ = "";
+    burden_common_logic_so_ = "";
     burden_logic_so_group_.clear();
 
     if (LoadEnableCPUProfiling() != 0)
@@ -85,7 +59,12 @@ int ConfMgr::Load()
         return -1;
     }
 
-    if (LoadGlobalLogicSo() != 0)
+    if (LoadGlobalCommonLogicSo() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadGlobalLogicSoGroup() != 0)
     {
         return -1;
     }
@@ -120,7 +99,7 @@ int ConfMgr::Load()
         return -1;
     }
 
-    if (LoadTCPStormRecvCount() != 0)
+    if (LoadTCPStormThreshold() != 0)
     {
         return -1;
     }
@@ -130,112 +109,12 @@ int ConfMgr::Load()
         return -1;
     }
 
-    if (LoadTCPLocalLogicSo() != 0)
+    if (LoadTCPCommonLogicSo() != 0)
     {
         return -1;
     }
 
     if (LoadTCPLogicSoGroup() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPAddrPort() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPsAddrPort() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPsCertificateChainFilePath() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPsPrivateKeyFilePath() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPConnCountLimit() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPMaxHeaderSize() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPMaxBodySize() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPConnTimeoutSec() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPConnTimeoutUsec() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPThreadCount() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPLocalLogicSo() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPLogicSoGroup() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPPrintParsedInfo() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPDecodeUri() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPContentType() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPNoCache() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPFlashCrossDomainPath() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPFileUploadPath() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPFileDownloadPath() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadHTTPFileStorageDir() != 0)
     {
         return -1;
     }
@@ -260,22 +139,12 @@ int ConfMgr::Load()
         return -1;
     }
 
-    if (LoadUDPDoChecksum() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadUDPMaxMsgBodyLen() != 0)
-    {
-        return -1;
-    }
-
     if (LoadUDPThreadCount() != 0)
     {
         return -1;
     }
 
-    if (LoadUDPLocalLogicSo() != 0)
+    if (LoadUDPCommonLogicSo() != 0)
     {
         return -1;
     }
@@ -285,37 +154,12 @@ int ConfMgr::Load()
         return -1;
     }
 
-    if (LoadPeerNeedReplyMsgCheckInterval() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadPeerTCPConnIntervalSec() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadPeerTCPConnIntervalUsec() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadPeerHTTPConnTimeout() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadPeerHTTPConnMaxRetry() != 0)
-    {
-        return -1;
-    }
-
     if (LoadWorkThreadCount() != 0)
     {
         return -1;
     }
 
-    if (LoadWorkLocalLogicSo() != 0)
+    if (LoadWorkCommonLogicSo() != 0)
     {
         return -1;
     }
@@ -335,7 +179,7 @@ int ConfMgr::Load()
         return -1;
     }
 
-    if (LoadBurdenLocalLogicSo() != 0)
+    if (LoadBurdenCommonLogicSo() != 0)
     {
         return -1;
     }

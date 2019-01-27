@@ -125,10 +125,10 @@ event_new选项排查
 common_component:
 搜LOG_TRACE LOG_DEBUG LOG_INFO LOG_WARN，统一
 
-echo proj中的脚本整理 sh -x
 
 网络风暴测试
 
 chdir_to_root测试，看程序运行对不对
 
-syslog测试
+
+common component 和 echo proj中，将py_tools和sh_tools作为submodule，调整目录

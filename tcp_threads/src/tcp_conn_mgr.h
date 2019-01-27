@@ -15,7 +15,7 @@ struct ConnMgrCtx
     struct timeval inactive_conn_check_interval;
     int inactive_conn_life;
     int storm_interval;
-    int storm_recv_count;
+    int storm_threshold;
 
     ConnMgrCtx()
     {
@@ -23,7 +23,7 @@ struct ConnMgrCtx
         inactive_conn_check_interval.tv_sec = inactive_conn_check_interval.tv_usec = 0;
         inactive_conn_life = 0;
         storm_interval = 0;
-        storm_recv_count = 0;
+        storm_threshold = 0;
     }
 };
 

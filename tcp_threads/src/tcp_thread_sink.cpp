@@ -178,13 +178,13 @@ void ThreadSink::NormalReadCallback(evutil_socket_t fd, short events, void* arg)
 #endif
 
 ThreadSink::ThreadSink()
-    : local_logic_loader_(), logic_item_vec_(), conn_mgr_(), scheduler_()
+    : common_logic_loader_(), logic_item_vec_(), conn_mgr_(), scheduler_()
 {
     threads_ctx_ = NULL;
     listen_thread_ = NULL;
     tcp_thread_group_ = NULL;
     related_thread_group_ = NULL;
-    local_logic_ = NULL;
+    common_logic_ = NULL;
 }
 
 ThreadSink::~ThreadSink()
@@ -199,7 +199,7 @@ void ThreadSink::Release()
     }
 
     logic_item_vec_.clear();
-    SAFE_RELEASE_MODULE(local_logic_, local_logic_loader_);
+    SAFE_RELEASE_MODULE(common_logic_, common_logic_loader_);
     conn_mgr_.Release();
 
     delete this;
@@ -226,7 +226,7 @@ int ThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 
     conn_mgr_ctx.inactive_conn_life = threads_ctx_->conf_mgr->GetTCPInactiveConnLife();
     conn_mgr_ctx.storm_interval = threads_ctx_->conf_mgr->GetTCPStormInterval();
-    conn_mgr_ctx.storm_recv_count = threads_ctx_->conf_mgr->GetTCPStormRecvCount();
+    conn_mgr_ctx.storm_threshold = threads_ctx_->conf_mgr->GetTCPStormThreshold();
 
     if (conn_mgr_.Initialize(&conn_mgr_ctx) != 0)
     {
@@ -240,7 +240,7 @@ int ThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
         return -1;
     }
 
-    if (LoadLocalLogic() != 0)
+    if (LoadCommonLogic() != 0)
     {
         return -1;
     }
@@ -260,7 +260,7 @@ void ThreadSink::OnFinalize()
         SAFE_FINALIZE(it->logic);
     }
 
-    SAFE_FINALIZE(local_logic_);
+    SAFE_FINALIZE(common_logic_);
     scheduler_.Finalize();
     conn_mgr_.Finalize();
 
@@ -279,7 +279,7 @@ int ThreadSink::OnActivate()
         return -1;
     }
 
-    if (SAFE_ACTIVATE_FAILED(local_logic_))
+    if (SAFE_ACTIVATE_FAILED(common_logic_))
     {
         return -1;
     }
@@ -302,7 +302,7 @@ void ThreadSink::OnFreeze()
         SAFE_FREEZE(it->logic);
     }
 
-    SAFE_FREEZE(local_logic_);
+    SAFE_FREEZE(common_logic_);
     conn_mgr_.Freeze();
     ThreadSinkInterface::OnFreeze();
 }
@@ -327,9 +327,9 @@ void ThreadSink::OnStop()
         it->logic->OnStop();
     }
 
-    if (local_logic_ != NULL)
+    if (common_logic_ != NULL)
     {
-        local_logic_->OnStop();
+        common_logic_->OnStop();
     }
 }
 
@@ -342,9 +342,9 @@ void ThreadSink::OnReload()
         it->logic->OnReload();
     }
 
-    if (local_logic_ != NULL)
+    if (common_logic_ != NULL)
     {
-        local_logic_->OnReload();
+        common_logic_->OnReload();
     }
 }
 
@@ -416,9 +416,9 @@ bool ThreadSink::CanExit() const
         can_exit &= (it->logic->CanExit() ? 1 : 0);
     }
 
-    if (local_logic_ != NULL)
+    if (common_logic_ != NULL)
     {
-        can_exit &= (local_logic_->CanExit() ? 1 : 0);
+        can_exit &= (common_logic_->CanExit() ? 1 : 0);
     }
 
     return (can_exit != 0);
@@ -431,9 +431,9 @@ void ThreadSink::OnClientClosed(const BaseConn* conn)
         (*it).logic->OnClientClosed(conn->GetConnGUID());
     }
 
-    if (local_logic_ != NULL)
+    if (common_logic_ != NULL)
     {
-        local_logic_->OnClientClosed(conn->GetConnGUID());
+        common_logic_->OnClientClosed(conn->GetConnGUID());
     }
 
     char client_ctx_buf[128] = "";
@@ -457,9 +457,9 @@ void ThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_grou
 
     if (related_thread_group_->global_logic != NULL)
     {
-        if (local_logic_ != NULL)
+        if (common_logic_ != NULL)
         {
-            local_logic_->SetGlobalLogic(related_thread_group_->global_logic);
+            common_logic_->SetGlobalLogic(related_thread_group_->global_logic);
         }
 
         for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
@@ -472,30 +472,30 @@ void ThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_grou
     scheduler_.SetRelatedThreadGroups(related_thread_groups);
 }
 
-int ThreadSink::LoadLocalLogic()
+int ThreadSink::LoadCommonLogic()
 {
-    const std::string tcp_local_logic_so = threads_ctx_->conf_mgr->GetTCPLocalLogicSo();
-    if (0 == tcp_local_logic_so.length())
+    const std::string tcp_common_logic_so = threads_ctx_->conf_mgr->GetTCPCommonLogicSo();
+    if (0 == tcp_common_logic_so.length())
     {
         return 0;
     }
 
-    char local_logic_so_path[MAX_PATH_LEN] = "";
-    GetAbsolutePath(local_logic_so_path, sizeof(local_logic_so_path),
-                    tcp_local_logic_so.c_str(), threads_ctx_->cur_working_dir);
-    LOG_TRACE("load local logic so " << local_logic_so_path << " begin");
+    char common_logic_so_path[MAX_PATH_LEN] = "";
+    GetAbsolutePath(common_logic_so_path, sizeof(common_logic_so_path),
+                    tcp_common_logic_so.c_str(), threads_ctx_->cur_working_dir);
+    LOG_TRACE("load common logic so " << common_logic_so_path << " begin");
 
-    if (local_logic_loader_.Load(local_logic_so_path) != 0)
+    if (common_logic_loader_.Load(common_logic_so_path) != 0)
     {
-        LOG_ERROR("failed to load local logic so " << local_logic_so_path
-                  << ", " << local_logic_loader_.GetLastErrMsg());
+        LOG_ERROR("failed to load common logic so " << common_logic_so_path
+                  << ", " << common_logic_loader_.GetLastErrMsg());
         return -1;
     }
 
-    local_logic_ = static_cast<LocalLogicInterface*>(local_logic_loader_.GetModuleInterface());
-    if (NULL == local_logic_)
+    common_logic_ = static_cast<CommonLogicInterface*>(common_logic_loader_.GetModuleInterface());
+    if (NULL == common_logic_)
     {
-        LOG_ERROR("failed to get local logic, " << local_logic_loader_.GetLastErrMsg());
+        LOG_ERROR("failed to get common logic, " << common_logic_loader_.GetLastErrMsg());
         return -1;
     }
 
@@ -508,15 +508,15 @@ int ThreadSink::LoadLocalLogic()
     logic_ctx.conf_center = threads_ctx_->conf_center;
     logic_ctx.timer_axis = self_thread_->GetTimerAxis();
     logic_ctx.scheduler = &scheduler_;
-    logic_ctx.local_logic = local_logic_;
+    logic_ctx.common_logic = common_logic_;
     logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
 
-    if (local_logic_->Initialize(&logic_ctx) != 0)
+    if (common_logic_->Initialize(&logic_ctx) != 0)
     {
         return -1;
     }
 
-    LOG_TRACE("load local logic so " << local_logic_so_path << " end");
+    LOG_TRACE("load common logic so " << common_logic_so_path << " end");
     return 0;
 }
 
@@ -565,7 +565,7 @@ int ThreadSink::LoadLogicGroup()
         logic_ctx.conf_center = threads_ctx_->conf_center;
         logic_ctx.timer_axis = self_thread_->GetTimerAxis();
         logic_ctx.scheduler = &scheduler_;
-        logic_ctx.local_logic = local_logic_;
+        logic_ctx.common_logic = common_logic_;
         logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
 
         if (logic_item.logic->Initialize(&logic_ctx) != 0)
@@ -630,9 +630,9 @@ int ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
         return -1;
     }
 
-    if (local_logic_ != NULL)
+    if (common_logic_ != NULL)
     {
-        local_logic_->OnClientConnected(conn->GetConnGUID());
+        common_logic_->OnClientConnected(conn->GetConnGUID());
     }
 
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
@@ -680,9 +680,9 @@ int ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
         return -1;
     }
 
-    if (local_logic_ != NULL)
+    if (common_logic_ != NULL)
     {
-        local_logic_->OnClientConnected(conn->GetConnGUID());
+        common_logic_->OnClientConnected(conn->GetConnGUID());
     }
 
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
@@ -708,9 +708,9 @@ void ThreadSink::OnRecvClientData(struct evbuffer* input_buf, int sock_fd, BaseC
     unsigned char* data_buf = evbuffer_pullup(input_buf, input_buf_len);
 
     // logic处理
-    if (local_logic_ != NULL)
+    if (common_logic_ != NULL)
     {
-        local_logic_->OnRecvClientData(conn->GetConnGUID(), data_buf, input_buf_len);
+        common_logic_->OnRecvClientData(conn->GetConnGUID(), data_buf, input_buf_len);
     }
 
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
@@ -731,9 +731,9 @@ void ThreadSink::OnRecvClientData(struct evbuffer* input_buf, int sock_fd, BaseC
 void ThreadSink::OnRecvClientData(bool& closed, int sock_fd, BaseConn* conn)
 {
     // logic处理
-    if (local_logic_ != NULL)
+    if (common_logic_ != NULL)
     {
-        local_logic_->OnRecvClientData(closed, conn->GetConnGUID(), sock_fd);
+        common_logic_->OnRecvClientData(closed, conn->GetConnGUID(), sock_fd);
     }
 
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)

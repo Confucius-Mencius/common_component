@@ -455,11 +455,11 @@ int AppFrame::LoadAndCheckConf()
 
     ////////////////////////////////////////////////////////////////////////////////
     // global thread
-    if (conf_mgr_.GetGlobalLogicSo().length() > 0)
-    {
-        LOG_ALWAYS("global thread count: 1");
-        ++app_frame_threads_count_;
-    }
+//    if (conf_mgr_.GetGlobalLogicSo().length() > 0)
+//    {
+//        LOG_ALWAYS("global thread count: 1");
+//        ++app_frame_threads_count_;
+//    }
 
     bool tcp_exist = false;
 //    bool http_exist = false;

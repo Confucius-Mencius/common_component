@@ -7,6 +7,7 @@
 
 // 对配置脚本进行监控，一旦发现配置脚本被更新则立刻重新加载配置。
 // log4cplus::ConfigureAndWatchThread configureThread("log4cplus.properties", 5 * 1000);
+// todo 查看log4cplus监控配置文件变化后的逻辑，用inotify机制重新实现，不用再起定时器。改好后看下app launcher中的exec是否可以去掉
 
 namespace log_engine
 {

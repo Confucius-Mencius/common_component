@@ -83,7 +83,7 @@ public:
     void OnClientClosed(const BaseConn* conn);
 
 private:
-    int LoadLocalLogic();
+    int LoadCommonLogic();
     int LoadLogicGroup();
     int OnClientConnected(const NewConnCtx* new_conn_ctx);
 
@@ -99,8 +99,8 @@ private:
     ThreadGroupInterface* tcp_thread_group_;
     RelatedThreadGroups* related_thread_group_;
 
-    ModuleLoader local_logic_loader_;
-    LocalLogicInterface* local_logic_;
+    ModuleLoader common_logic_loader_;
+    CommonLogicInterface* common_logic_;
     LogicItemVec logic_item_vec_;
 
     ConnMgr conn_mgr_;

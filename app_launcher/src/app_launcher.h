@@ -77,7 +77,7 @@ private:
     AppFrameInterface* app_frame_;
 
     // 根据配置定时检查配置文件的修改时间和size,如果有变化则重新加载
-    struct event* conf_check_timer_event_;
+    struct event* conf_check_timer_event_; // todo 改为inotify机制，配置项可以去掉
 
     // 收到退出信号后，定时检查各个线程是否都成功退出，然后主线程才退出
     bool stopping_;
