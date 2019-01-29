@@ -62,7 +62,7 @@ int AppFrame::Initialize(const void* ctx)
         return -1;
     }
 
-    app_frame_ctx_ = *((AppFrameCtx*) ctx);
+    app_frame_ctx_ = *(static_cast<AppFrameCtx*>(ctx));
     srand(time(NULL));
     OpenSSLInitialize(); // 初始化openssl，保证只有一次调用
 

@@ -11,7 +11,7 @@
 class ConsoleLogEngine : public LogEngineInterface
 {
 public:
-    ConsoleLogEngine() : log_engine_ctx_(), logger_()
+    ConsoleLogEngine() : log_engine_ctx_()
     {
         // 定义Logger
         logger_ = log4cplus::Logger::getInstance("console_logger");
