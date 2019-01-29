@@ -325,6 +325,12 @@ int ConnMgr::UpdateConnStatus(ConnID conn_id)
         ++(conn_hash_map_[sock_fd].recv_count);
 
         const time_t now = time(NULL);
+        LOG_DEBUG("socket fd: " << sock_fd << ", now: " << now
+                  << ", start_time: " << conn_hash_map_[sock_fd].start_time
+                  << ", recv count: " << conn_hash_map_[sock_fd].recv_count
+                  << ", storm interval: " << conn_mgr_ctx_.storm_interval
+                  << ", storm threshold: " << conn_mgr_ctx_.storm_threshold);
+
         if ((now - conn_hash_map_[sock_fd].start_time) >= conn_mgr_ctx_.storm_interval)
         {
             if (conn_hash_map_[sock_fd].recv_count >= conn_mgr_ctx_.storm_threshold)

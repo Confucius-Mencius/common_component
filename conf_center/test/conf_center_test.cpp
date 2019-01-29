@@ -139,14 +139,34 @@ void ConfCenterTest::Test001()
     ////////////////////////////////////////////////////////////////////////////////
     // 不存在的节点
     ////////////////////////////////////////////////////////////////////////////////
+    i32 not_exist_i32;
+
+    ret = conf_center_->GetConf(not_exist_i32, "/conf/not_exist_node");
+    EXPECT_TRUE(ret != 0);
+
+    ret = conf_center_->GetConf(not_exist_i32, "/conf/not_exist_node", true, 100);
+    EXPECT_EQ(0, ret);
+    EXPECT_EQ(100, not_exist_i32);
+
+    ////////////////////////////////////////////////////////////////////////////////
     i64 not_exist_i64;
 
     ret = conf_center_->GetConf(not_exist_i64, "/conf/not_exist_node");
     EXPECT_TRUE(ret != 0);
 
-    ret = conf_center_->GetConf(not_exist_i64, "/conf/not_exist_node", true, 100);
+    ret = conf_center_->GetConf(not_exist_i64, "/conf/not_exist_node", true, 100L);
     EXPECT_EQ(0, ret);
-    EXPECT_EQ(100, not_exist_i64);
+    EXPECT_EQ(100L, not_exist_i64);
+
+    ////////////////////////////////////////////////////////////////////////////////
+    f32 not_exist_f32;
+
+    ret = conf_center_->GetConf(not_exist_f32, "/conf/not_exist_node");
+    EXPECT_TRUE(ret != 0);
+
+    ret = conf_center_->GetConf(not_exist_f32, "/conf/not_exist_node", true, 100.0F);
+    EXPECT_EQ(0, ret);
+    EXPECT_DOUBLE_EQ(100.0F, not_exist_f32);
 
     ////////////////////////////////////////////////////////////////////////////////
     f64 not_exist_f64;

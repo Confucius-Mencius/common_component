@@ -601,14 +601,15 @@ int ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
         return -1;
     }
 
-    LOG_DEBUG("before set, single read size limit: " << bufferevent_get_max_single_read(buffer_event)
-              << ", single write size limit: " << bufferevent_get_max_single_write(buffer_event));
+    // libevent源码中已经改为16k
+//    LOG_DEBUG("before set, single read size limit: " << bufferevent_get_max_single_read(buffer_event)
+//              << ", single write size limit: " << bufferevent_get_max_single_write(buffer_event));
 
-    bufferevent_set_max_single_read(buffer_event, BUFFER_EVENT_MAX_SINGLE_READ);
-    bufferevent_set_max_single_write(buffer_event, BUFFER_EVENT_MAX_SINGLE_WRITE);
+//    bufferevent_set_max_single_read(buffer_event, BUFFER_EVENT_MAX_SINGLE_READ);
+//    bufferevent_set_max_single_write(buffer_event, BUFFER_EVENT_MAX_SINGLE_WRITE);
 
-    LOG_DEBUG("after set, single read size limit: " << bufferevent_get_max_single_read(buffer_event)
-              << ", single write size limit: " << bufferevent_get_max_single_write(buffer_event));
+//    LOG_DEBUG("after set, single read size limit: " << bufferevent_get_max_single_read(buffer_event)
+//              << ", single write size limit: " << bufferevent_get_max_single_write(buffer_event));
 
     bufferevent_setcb(buffer_event, ThreadSink::BufferEventReadCallback, NULL,
                       ThreadSink::BufferEventEventCallback, this);

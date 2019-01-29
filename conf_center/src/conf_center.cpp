@@ -69,7 +69,7 @@ int ConfCenter::GetConf(i32& conf, const char* xpath, bool with_default, i32 val
 
     Int64Group result;
     GetConf<Int64Group, Int64ValueGroupMap, i64>(result, i64_value_group_map_, xpath, with_default,
-            Variant(value), Variant::TYPE_I64);
+            Variant((i64) value), Variant::TYPE_I64);
 
     if (!with_default && 0 == result.size())
     {
@@ -109,7 +109,7 @@ int ConfCenter::GetConf(f32& conf, const char* xpath, bool with_default, f32 val
 
     Float64Group result;
     GetConf<Float64Group, Float64ValueGroupMap, f64>(result, f64_value_group_map_, xpath, with_default,
-            Variant(value), Variant::TYPE_F64);
+            Variant((f64) value), Variant::TYPE_F64);
 
     if (!with_default && 0 == result.size())
     {
@@ -199,7 +199,7 @@ int ConfCenter::GetConf(i32** conf_array, int& n, const char* xpath, bool with_d
 
     Int64Group result;
     GetConf<Int64Group, Int64ValueGroupMap, i64>(result, i64_value_group_map_, xpath, with_default,
-            Variant(value), Variant::TYPE_I64);
+            Variant((i64) value), Variant::TYPE_I64);
 
     n = (int) result.size();
 
@@ -295,7 +295,7 @@ int ConfCenter::GetConf(f32** conf_array, int& n, const char* xpath, bool with_d
 
     Float64Group result;
     GetConf<Float64Group, Float64ValueGroupMap, f64>(result, f64_value_group_map_, xpath, with_default,
-            Variant(value), Variant::TYPE_F64);
+            Variant((f64) value), Variant::TYPE_F64);
 
     n = (int) result.size();
 

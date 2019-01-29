@@ -24,6 +24,8 @@ fi
 . ${SCRIPT_PATH}/../../sh_tools/base/proj_util.sh
 . ${SCRIPT_PATH}/common.sh
 
+RUN_TEST=0
+
 while getopts "b:c:r:h" opt; do
     case $opt in
         h)
@@ -52,7 +54,7 @@ while getopts "b:c:r:h" opt; do
                 PROJ=$i
 
                 cd ${CODE_BASE_DIR}
-                BuildProj ${PROJ} ${SCRIPT_PATH}/../${PROJ} ${BUILD_PARENT_DIR}/${PROJ} ${BUILD_TYPE} ${COMMON_COMPONENT_INSTALL_PREFIX}
+                BuildProj ${PROJ} ${SCRIPT_PATH}/../${PROJ} ${BUILD_PARENT_DIR}/${PROJ} ${BUILD_TYPE} ${COMMON_COMPONENT_INSTALL_PREFIX} ${RUN_TEST}
 
                 cd ${CODE_BASE_DIR}
                 InstallProj ${PROJ} ${BUILD_PARENT_DIR}/${PROJ}
@@ -81,7 +83,7 @@ while getopts "b:c:r:h" opt; do
                 PROJ=$i
 
                 cd ${CODE_BASE_DIR}
-                RebuildProj ${PROJ} ${SCRIPT_PATH}/../${PROJ} ${BUILD_PARENT_DIR}/${PROJ} ${BUILD_TYPE} ${COMMON_COMPONENT_INSTALL_PREFIX}
+                RebuildProj ${PROJ} ${SCRIPT_PATH}/../${PROJ} ${BUILD_PARENT_DIR}/${PROJ} ${BUILD_TYPE} ${COMMON_COMPONENT_INSTALL_PREFIX} ${RUN_TEST}
 
                 cd ${CODE_BASE_DIR}
                 InstallProj ${PROJ} ${BUILD_PARENT_DIR}/${PROJ}

@@ -3,8 +3,8 @@
 
 // 加载对app_frame提供的服务so
 
-#include "conf_mgr.h"
 #include "module_loader.h"
+#include "conf_center_interface.h"
 #include "log_engine_interface.h"
 #include "thread_center_interface.h"
 
@@ -26,11 +26,6 @@ public:
         return conf_center_;
     }
 
-    app_launcher::ConfMgr* GetConfMgr() const
-    {
-        return const_cast<app_launcher::ConfMgr*>(&conf_mgr_);
-    }
-
     ThreadCenterInterface* GetThreadCenter() const
     {
         return thread_center_;
@@ -46,21 +41,19 @@ public:
     void Freeze();
 
 private:
-    int LoadConfCenter();
     int LoadLogEngine();
+    int LoadConfCenter();
     int LoadThreadCenter();
 
 private:
     LastErrMsg last_err_msg_;
     const AppLauncherCtx* app_launcher_ctx_;
 
-    ModuleLoader conf_center_loader_;
-    ConfCenterInterface* conf_center_;
-
     ModuleLoader log_engine_loader_;
     LogEngineInterface* log_engine_;
 
-    app_launcher::ConfMgr conf_mgr_;
+    ModuleLoader conf_center_loader_;
+    ConfCenterInterface* conf_center_;
 
     ModuleLoader thread_center_loader_;
     ThreadCenterInterface* thread_center_;

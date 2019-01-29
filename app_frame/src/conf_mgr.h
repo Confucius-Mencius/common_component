@@ -22,7 +22,7 @@ public:
 
 private:
     ///////////////////////// base::ConfMgrInterface /////////////////////////
-    virtual int Load();
+    int Load() override;
 
 public:
     ///////////////////////// ConfMgrInterface /////////////////////////

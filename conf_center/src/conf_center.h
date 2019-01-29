@@ -54,7 +54,7 @@ public:
     int Reload(bool& changed) override;
 
 private:
-    // 内部只用i64 f64 string三种类型存储
+    // 内部只用i64 f64 string三种类型存储，i64包括了i32，f64包括了f32
     typedef std::map<std::string, Int64Group> Int64ValueGroupMap; // key -> values
     typedef std::map<std::string, Float64Group> Float64ValueGroupMap;
     typedef std::map<std::string, StrGroup> StrValueGroupMap;

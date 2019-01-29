@@ -1,5 +1,6 @@
 #include "app_launcher.h"
 #include "res_limits_util.h"
+#include "str_util.h"
 #include "util.h"
 #include "version.h"
 
@@ -112,6 +113,7 @@ int AppLauncher::Initialize(const AppLauncherCtx* app_launcher_ctx)
     PrintAllResLimits();
 
     ////////////////////////////////////////////////////////////////////////////////
+    // event_config方式
 //    struct event_config* cfg = event_config_new();
 //    if (NULL == cfg)
 //    {
@@ -210,8 +212,7 @@ int AppLauncher::Activate()
     }
 
     ////////////////////////////////////////////////////////////////////////////////
-    const int conf_check_interval = service_mgr_.GetConfMgr()->GetConfCheckInterval();
-    if (conf_check_interval > 0)
+    const int conf_check_interval = 60;
     {
         conf_check_timer_event_ = event_new(thread_ev_base_, -1, EV_PERSIST, AppLauncher::OnConfCheckTimer, this);
         if (NULL == conf_check_timer_event_)
