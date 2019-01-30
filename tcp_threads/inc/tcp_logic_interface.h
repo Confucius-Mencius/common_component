@@ -112,28 +112,12 @@ public:
         (void) conn_guid;
     }
 
-#if defined(USE_BUFFEREVENT)
     virtual void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
     {
         (void) conn_guid;
         (void) data;
         (void) len;
     }
-#else
-    /**
-     *
-     * @param closed 如果read返回0，表示对端关闭了，需要将closed置为true。如果read返回-1，且errno为ECONNRESET，也要将closed置为true
-     * @param conn_guid
-     * @param sock_fd
-     * @attention 需要循环读到出错为止
-     */
-    virtual void OnRecvClientData(bool& closed, const ConnGUID* conn_guid, int sock_fd)
-    {
-        (void) closed;
-        (void) conn_guid;
-        (void) sock_fd;
-    }
-#endif
 
     virtual void OnTask(const ConnGUID* conn_guid, ThreadInterface* source_thread, const void* data, size_t len)
     {

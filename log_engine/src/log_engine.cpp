@@ -1,19 +1,15 @@
 #include "log_engine.h"
+#include <log4cplus/configurator.h>
 #include <log4cplus/fileappender.h>
 #include <log4cplus/hierarchy.h>
 #include <log4cplus/loggingmacros.h>
 #include "str_util.h"
 #include "version.h"
 
-// 对配置脚本进行监控，一旦发现配置脚本被更新则立刻重新加载配置。
-// log4cplus::ConfigureAndWatchThread configureThread("log4cplus.properties", 5 * 1000);
-// todo 查看log4cplus监控配置文件变化后的逻辑，用inotify机制重新实现，不用再起定时器。改好后看下app launcher中的exec是否可以去掉
-
 namespace log_engine
 {
 LogEngine::LogEngine() : last_err_msg_(), log_engine_ctx_(), logger_()
 {
-    log_conf_file_watch_thread_ = NULL;
 }
 
 LogEngine::~LogEngine()
@@ -57,16 +53,6 @@ int LogEngine::Initialize(const void* ctx)
         }
 
         logger_ = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT(log_engine_ctx_.logger_name));
-
-        // 对配置脚本进行监控，一旦发现配置脚本被更新则立刻重新加载配置
-        log_conf_file_watch_thread_ = new log4cplus::ConfigureAndWatchThread(
-            LOG4CPLUS_C_STR_TO_TSTRING(log_engine_ctx_.log_conf_file_path),
-            log_engine_ctx_.log_conf_file_check_interval * 1000);
-        if (NULL == log_conf_file_watch_thread_)
-        {
-            SET_LAST_ERR_MSG(&last_err_msg_, "failed to create log conf file watch thread");
-            return -1;
-        }
     }
     catch (...)
     {
@@ -79,11 +65,6 @@ int LogEngine::Initialize(const void* ctx)
 
 void LogEngine::Finalize()
 {
-    if (log_conf_file_watch_thread_ != NULL)
-    {
-        delete log_conf_file_watch_thread_;
-        log_conf_file_watch_thread_ = NULL;
-    }
 }
 
 int LogEngine::Activate()
@@ -103,5 +84,40 @@ const log4cplus::Logger& LogEngine::GetLogger() const
 void LogEngine::SetLogLevel(int level)
 {
     logger_.setLogLevel(level);
+}
+
+int LogEngine::Reload()
+{
+    log4cplus::Logger::getRoot().closeNestedAppenders();
+    log4cplus::Logger::getRoot().removeAllAppenders();
+
+    // my named logger
+    logger_.closeNestedAppenders();
+    logger_.removeAllAppenders();
+
+    log4cplus::Logger::getRoot().getHierarchy().resetConfiguration();
+    logger_.getHierarchy().resetConfiguration();
+
+    try
+    {
+        // 从配置文件中获取logger、appender和layout
+        log4cplus::PropertyConfigurator::doConfigure(LOG4CPLUS_C_STR_TO_TSTRING(log_engine_ctx_.log_conf_file_path));
+
+        if (!log4cplus::Logger::exists(LOG4CPLUS_C_STR_TO_TSTRING(log_engine_ctx_.logger_name)))
+        {
+            SET_LAST_ERR_MSG(&last_err_msg_, "can not find logger name " << log_engine_ctx_.logger_name
+                             << " in file " << log_engine_ctx_.log_conf_file_path);
+            return -1;
+        }
+
+        logger_ = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT(log_engine_ctx_.logger_name));
+    }
+    catch (...)
+    {
+        SET_LAST_ERR_MSG(&last_err_msg_, "log4cplus caught exception");
+        return -1;
+    }
+
+    return 0;
 }
 }

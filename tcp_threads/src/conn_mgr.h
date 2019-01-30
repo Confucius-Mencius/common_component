@@ -1,7 +1,6 @@
-#ifndef TCP_THREADS_SRC_TCP_CONN_MGR_H_
-#define TCP_THREADS_SRC_TCP_CONN_MGR_H_
+#ifndef TCP_THREADS_SRC_CONN_MGR_H_
+#define TCP_THREADS_SRC_CONN_MGR_H_
 
-#include <event2/bufferevent.h>
 #include "base_conn.h"
 #include "record_timeout_mgr.h"
 
@@ -44,14 +43,7 @@ public:
         thread_sink_ = sink;
     }
 
-#if defined(USE_BUFFEREVENT)
-    BaseConn* CreateBufferEventConn(int io_thread_idx, int sock_fd, struct bufferevent* buffer_event,
-                                    const char* ip, unsigned short port);
-#else
-    BaseConn* CreateNormalConn(int io_thread_idx, int sock_fd, struct event* read_event,
-                               const char* ip, unsigned short port);
-#endif
-
+    BaseConn* CreateConn(int io_thread_idx, const char* ip, unsigned short port, int sock_fd);
     void DestroyConn(int sock_fd);
 
     BaseConn* GetConn(int sock_fd) const;
@@ -95,4 +87,4 @@ private:
 };
 }
 
-#endif // TCP_THREADS_SRC_TCP_CONN_MGR_H_
+#endif // TCP_THREADS_SRC_CONN_MGR_H_

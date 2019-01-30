@@ -56,9 +56,14 @@ ServiceMgr::~ServiceMgr()
 {
 }
 
-void ServiceMgr::Reload(bool& app_conf_changed)
+void ServiceMgr::Reload(bool app_conf_changed, bool log_conf_changed)
 {
-    if (conf_center_->Reload(app_conf_changed) != 0)
+    if (log_conf_changed && log_engine_->Reload() != 0)
+    {
+        LOG_ERROR("failed to reload log conf");
+    }
+
+    if (app_conf_changed && conf_center_->Reload() != 0)
     {
         LOG_ERROR("failed to reload app conf");
     }
@@ -163,7 +168,6 @@ int ServiceMgr::LoadLogEngine()
     LogEngineCtx log_engine_ctx;
     log_engine_ctx.log_conf_file_path = app_launcher_ctx_->log_conf_file_path;
     log_engine_ctx.logger_name = app_launcher_ctx_->logger_name;
-    log_engine_ctx.log_conf_file_check_interval = 60;
 
     if (log_engine_->Initialize(&log_engine_ctx) != 0)
     {

@@ -1,10 +1,10 @@
-#include "tcp_conn_mgr.h"
+#include "conn_mgr.h"
 #include <string.h>
 #include "log_util.h"
 #include "mem_util.h"
 #include "buffer_event_conn.h"
 #include "normal_conn.h"
-#include "tcp_thread_sink.h"
+#include "thread_sink.h"
 
 namespace tcp
 {
@@ -26,12 +26,7 @@ void ConnMgr::Release()
     {
         BaseConn* conn = it->second;
         conn_id_seq_.Free(conn->GetConnGUID()->conn_id);
-
-#if defined(USE_BUFFEREVENT)
-        (static_cast<BufferEventConn*>(conn))->Release();
-#else
-        (static_cast<NormalConn*>(conn))->Release();
-#endif
+        conn->Release();
     }
 
     conn_id_hash_map_.clear();
@@ -62,11 +57,7 @@ void ConnMgr::Finalize()
 
     for (ConnIDHashMap::iterator it = conn_id_hash_map_.begin(); it != conn_id_hash_map_.end(); ++it)
     {
-#if defined(USE_BUFFEREVENT)
-        (static_cast<BufferEventConn*>(it->second))->Finalize();
-#else
-        (static_cast<NormalConn*>(it->second))->Finalize();
-#endif
+        it->second->Finalize();
     }
 }
 
@@ -86,24 +77,18 @@ void ConnMgr::Freeze()
 
     for (ConnIDHashMap::iterator it = conn_id_hash_map_.begin(); it != conn_id_hash_map_.end(); ++it)
     {
-#if defined(USE_BUFFEREVENT)
-        (static_cast<BufferEventConn*>(it->second))->Freeze();
-#else
-        (static_cast<NormalConn*>(it->second))->Freeze();
-#endif
+        it->second->Freeze();
     }
 }
 
-#if defined(USE_BUFFEREVENT)
-BaseConn* ConnMgr::CreateBufferEventConn(int io_thread_idx, int sock_fd, struct bufferevent* buffer_event,
-        const char* ip, unsigned short port)
+BaseConn* ConnMgr::CreateConn(int io_thread_idx, const char* ip, unsigned short port, int sock_fd)
 {
-    if (sock_fd < 0 || NULL == buffer_event)
-    {
-        return NULL;
-    }
-
+#if defined(USE_BUFFEREVENT)
     BufferEventConn* conn = BufferEventConn::Create();
+#else
+    NormalConn* conn = NormalConn::Create();
+#endif
+
     if (NULL == conn)
     {
         const int err = errno;
@@ -127,7 +112,7 @@ BaseConn* ConnMgr::CreateBufferEventConn(int io_thread_idx, int sock_fd, struct 
     conn->SetClientIP(ip);
     conn->SetClientPort(port);
     conn->SetConnGUID(io_thread_idx, conn_id);
-    conn->SetBufferEvent(buffer_event);
+    conn->SetThreadSink(thread_sink_);
 
     int ret = -1;
 
@@ -181,94 +166,6 @@ BaseConn* ConnMgr::CreateBufferEventConn(int io_thread_idx, int sock_fd, struct 
               << ", create conn ok, socket fd: " << sock_fd << ", conn id: " << conn_id);
     return conn;
 }
-#else
-BaseConn* ConnMgr::CreateNormalConn(int io_thread_idx, int sock_fd, struct event* read_event,
-                                    const char* ip, unsigned short port)
-{
-    if (sock_fd < 0 || NULL == read_event)
-    {
-        return NULL;
-    }
-
-    NormalConn* conn = NormalConn::Create();
-    if (NULL == conn)
-    {
-        const int err = errno;
-        LOG_ERROR("failed to create tcp conn, errno: " << err << ", err msg: " << strerror(errno));
-        return NULL;
-    }
-
-    const ConnID conn_id = conn_id_seq_.Alloc();
-    if (INVALID_CONN_ID == conn_id)
-    {
-        const int err = errno;
-        LOG_ERROR("failed to alloc tcp conn id, errno: " << err << ", err msg: " << strerror(errno));
-        conn->Release();
-        return NULL;
-    }
-
-    conn->SetCreatedTime(time(NULL));
-    conn->SetSockFD(sock_fd);
-    conn->SetClientIP(ip);
-    conn->SetClientPort(port);
-    conn->SetConnGUID(io_thread_idx, conn_id);
-    conn->SetReadEvent(read_event);
-
-    int ret = -1;
-
-    do
-    {
-        if (conn->Initialize(NULL) != 0)
-        {
-            break;
-        }
-
-        if (conn->Activate() != 0)
-        {
-            break;
-        }
-
-        if (!conn_id_hash_map_.insert(ConnIDHashMap::value_type(conn_id, conn)).second)
-        {
-            LOG_ERROR("failed to insert to conn id hash map, conn id: " << conn_id);
-            break;
-        }
-
-        if (!conn_hash_map_.insert(ConnHashMap::value_type(sock_fd, conn)).second)
-        {
-            LOG_ERROR("failed to insert to conn hash map, socket fd: " << sock_fd);
-            break;
-        }
-
-        UpsertRecord(conn_id, conn, conn_mgr_ctx_.inactive_conn_life);
-
-        ret = 0;
-    } while (0);
-
-    if (ret != 0)
-    {
-        if (RecordExist(conn_id))
-        {
-            RemoveRecord(conn_id);
-        }
-
-        Clear(conn);
-        return NULL;
-    }
-
-    const int cur_online_conn_count = (int) conn_hash_map_.size();
-    if (cur_online_conn_count > max_online_conn_count_)
-    {
-        max_online_conn_count_ = cur_online_conn_count;
-        LOG_WARN("tcp thread idx: " << conn->GetConnGUID()->io_thread_idx << ", max online tcp conn count: "
-                 << max_online_conn_count_);
-    }
-
-    LOG_TRACE("tcp thread idx: " << conn->GetConnGUID()->io_thread_idx
-              << ", create conn ok, socket fd: " << sock_fd << ", conn id: " << conn_id);
-    return conn;
-}
-#endif
 
 void ConnMgr::DestroyConn(int sock_fd)
 {
@@ -337,7 +234,6 @@ int ConnMgr::UpdateConnStatus(ConnID conn_id)
             {
                 LOG_WARN("net storm! conn id: " << conn_id << ", now: " << now << ", start time: "
                          << conn_hash_map_[sock_fd].start_time << ", recv count: " << conn_hash_map_[sock_fd].recv_count);
-                DestroyConn(sock_fd);
                 return -1;
             }
             else
@@ -356,25 +252,13 @@ int ConnMgr::UpdateConnStatus(ConnID conn_id)
 
 void ConnMgr::Clear(BaseConn* conn)
 {
-#if defined(USE_BUFFEREVENT)
-    BufferEventConn* tcp_conn = static_cast<BufferEventConn*>(conn);
-    conn_hash_map_.erase(tcp_conn->GetSockFD());
+    conn_hash_map_.erase(conn->GetSockFD());
 
-    const ConnID conn_id = tcp_conn->GetConnGUID()->conn_id;
-    SAFE_DESTROY(tcp_conn);
+    const ConnID conn_id = conn->GetConnGUID()->conn_id;
+    SAFE_DESTROY(conn);
 
     conn_id_seq_.Free(conn_id);
     conn_id_hash_map_.erase(conn_id);
-#else
-    NormalConn* tcp_conn = static_cast<NormalConn*>(conn);
-    conn_hash_map_.erase(tcp_conn->GetSockFD());
-
-    const ConnID conn_id = tcp_conn->GetConnGUID()->conn_id;
-    SAFE_DESTROY(tcp_conn);
-
-    conn_id_seq_.Free(conn_id);
-    conn_id_hash_map_.erase(conn_id);
-#endif
 }
 
 void ConnMgr::OnTimeout(const ConnID& k, BaseConn* const& v, int timeout_sec)

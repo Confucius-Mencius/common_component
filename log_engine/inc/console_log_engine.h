@@ -79,6 +79,11 @@ public:
         logger_.setLogLevel(level);
     }
 
+    int Reload() override
+    {
+        return 0;
+    }
+
 private:
     LogEngineCtx log_engine_ctx_;
     log4cplus::Logger logger_;

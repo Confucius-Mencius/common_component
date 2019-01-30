@@ -79,7 +79,7 @@ public:
      * @param changed 是否有配置变化
      * @return
      */
-    virtual int Reload(bool& changed) = 0;
+    virtual int Reload() = 0;
 };
 
 #endif // CONF_CENTER_INC_CONF_CENTER_INTERFACE_H_

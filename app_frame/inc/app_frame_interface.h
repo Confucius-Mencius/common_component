@@ -37,10 +37,10 @@ public:
     }
 
     virtual int NotifyStop() = 0;
-    virtual int NotifyReload(bool changed) = 0;
+    virtual int NotifyReload() = 0;
 
     virtual bool CanExit() const = 0;
-    virtual int NotifyExit() = 0;
+    virtual int NotifyExitAndJoin() = 0;
 };
 
 #endif // APP_FRAME_INC_APP_FRAME_INTERFACE_H_

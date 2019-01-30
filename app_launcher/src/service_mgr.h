@@ -31,7 +31,7 @@ public:
         return thread_center_;
     }
 
-    void Reload(bool& app_conf_changed);
+    void Reload(bool app_conf_changed, bool log_conf_changed);
 
     const char* GetLastErrMsg() const;
     void Release();

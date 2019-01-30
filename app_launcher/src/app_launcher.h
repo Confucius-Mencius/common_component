@@ -2,10 +2,10 @@
 #define APP_LAUNCHER_SRC_APP_LAUNCHER_H_
 
 #include "app_frame_interface.h"
+#include "event_wrapper.h"
 #include "file_util.h"
 #include "mem_util.h"
 #include "service_mgr.h"
-#include "signal_wrapper.h"
 
 namespace app_launcher
 {
@@ -37,10 +37,6 @@ class AppLauncher
 {
     CREATE_FUNC(AppLauncher)
 
-private:
-    static void OnConfCheckTimer(evutil_socket_t fd, short event, void* arg);
-    static void OnExitCheckTimer(evutil_socket_t fd, short event, void* arg);
-
 public:
     AppLauncher();
     ~AppLauncher();
@@ -50,6 +46,16 @@ public:
         return thread_ev_base_;
     }
 
+    const AppLauncherCtx* GetAppLauncherCtx() const
+    {
+        return app_launcher_ctx_;
+    }
+
+    AppFrameInterface* GetAppFrame() const
+    {
+        return app_frame_;
+    }
+
     const char* GetLastErrMsg() const;
     void Release();
     int Initialize(const AppLauncherCtx* app_launcher_ctx);
@@ -57,8 +63,10 @@ public:
     int Activate();
     void Freeze();
 
-    void OnStop();
-    void OnReload(); // reload conf file
+    void OnReload(bool app_conf_changed, bool log_conf_changed); // reload conf file
+    void OnExitCheck();
+
+    void Stop();
 
 private:
     int SingleRunCheck(); // lock a unique file for only a single app instance
@@ -71,17 +79,10 @@ private:
     const AppLauncherCtx* app_launcher_ctx_;
     ServiceMgr service_mgr_;
     struct event_base* thread_ev_base_;
-    SignalWrapper signal_wrapper_;
+    EventWrapper event_wrapper_;
 
     ModuleLoader app_frame_loader_;
     AppFrameInterface* app_frame_;
-
-    // 根据配置定时检查配置文件的修改时间和size,如果有变化则重新加载
-    struct event* conf_check_timer_event_; // todo 改为inotify机制，配置项可以去掉
-
-    // 收到退出信号后，定时检查各个线程是否都成功退出，然后主线程才退出
-    bool stopping_;
-    struct event* exit_check_timer_event_;
 };
 }
 

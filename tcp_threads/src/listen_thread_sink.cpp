@@ -8,6 +8,7 @@ namespace tcp
 {
 void ListenThreadSink::ErrorCallback(struct evconnlistener* listener, void* arg)
 {
+    // 当ulimit -n较低时会报错： errno: 24, err msg: Too many open files
     (void) arg;
 
     const int err = EVUTIL_SOCKET_ERROR();
@@ -15,8 +16,6 @@ void ListenThreadSink::ErrorCallback(struct evconnlistener* listener, void* arg)
 
     LOG_ERROR("err occured on socket, fd: " << sock_fd << ", errno: " << err
               << ", err msg: " << evutil_socket_error_to_string(err));
-
-    // TODO 这里应该怎么办？重新监听？
 }
 
 void ListenThreadSink::OnAccept(struct evconnlistener* listener, evutil_socket_t sock_fd,

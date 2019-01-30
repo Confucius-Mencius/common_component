@@ -51,7 +51,7 @@ public:
     int GetConf(char*** conf_array, int& n, const char* xpath, bool with_default, const char* value) override;
     void ReleaseConf(char*** conf_array, int n) override;
 
-    int Reload(bool& changed) override;
+    int Reload() override;
 
 private:
     // 内部只用i64 f64 string三种类型存储，i64包括了i32，f64包括了f32
@@ -86,7 +86,6 @@ private:
     std::mutex mutex_; // get的时候有更新内存的操作，不能用读写锁
 
     xmlDocPtr xml_doc_ptr_;
-    FileStat app_conf_file_stat_;
 
     Int64ValueGroupMap i64_value_group_map_;
     Float64ValueGroupMap f64_value_group_map_;

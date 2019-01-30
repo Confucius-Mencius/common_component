@@ -1,5 +1,5 @@
-#ifndef TCP_THREADS_SRC_TCP_SCHEDULER_H_
-#define TCP_THREADS_SRC_TCP_SCHEDULER_H_
+#ifndef TCP_THREADS_SRC_SCHEDULER_H_
+#define TCP_THREADS_SRC_SCHEDULER_H_
 
 #include "tcp_scheduler_interface.h"
 #include "tcp_threads_interface.h"
@@ -45,4 +45,4 @@ private:
 };
 }
 
-#endif // TCP_THREADS_SRC_TCP_SCHEDULER_H_
+#endif // TCP_THREADS_SRC_SCHEDULER_H_

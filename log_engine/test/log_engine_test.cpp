@@ -37,7 +37,6 @@ void LogEngineTest::SetUp()
     LogEngineCtx log_engine_ctx;
     log_engine_ctx.log_conf_file_path = LOG_CONF_FILE_PATH;
     log_engine_ctx.logger_name = LOGGER_NAME;
-    log_engine_ctx.log_conf_file_check_interval = 10;
 
     if (log_engine_->Initialize(&log_engine_ctx) != 0)
     {
@@ -83,10 +82,11 @@ void LogEngineTest::Test002()
     LOG_FATAL("hello");
     LOG_ALWAYS("hello");
 
-    // ... 手动修改日志配置文件
-
 //    while (true)
 //    {
+//        // ... 手动修改日志配置文件，然后reload
+//        log_engine_->Reload();
+
     LOG_TRACE("hello");
     LOG_DEBUG("hello");
     LOG_INFO("hello");
@@ -94,8 +94,6 @@ void LogEngineTest::Test002()
     LOG_ERROR("hello");
     LOG_FATAL("hello");
     LOG_ALWAYS("hello");
-
-//        sleep(1);
 //    }
 
     // 修改日志级别

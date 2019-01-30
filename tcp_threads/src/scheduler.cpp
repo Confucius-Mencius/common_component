@@ -1,8 +1,8 @@
-#include "tcp_scheduler.h"
+#include "scheduler.h"
 #include "app_frame_conf_mgr_interface.h"
 #include "num_util.h"
 #include "task_type.h"
-#include "tcp_thread_sink.h"
+#include "thread_sink.h"
 
 namespace tcp
 {

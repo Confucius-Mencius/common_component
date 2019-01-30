@@ -4,7 +4,7 @@
 
 namespace conf_center
 {
-ConfCenter::ConfCenter() : last_err_msg_(), conf_center_ctx_(), mutex_(), app_conf_file_stat_(), i64_value_group_map_(),
+ConfCenter::ConfCenter() : last_err_msg_(), conf_center_ctx_(), mutex_(), i64_value_group_map_(),
     f64_value_group_map_(), str_value_group_map_()
 {
     xml_doc_ptr_ = NULL;
@@ -458,24 +458,9 @@ void ConfCenter::ReleaseConf(char*** conf_array, int n)
     }
 }
 
-int ConfCenter::Reload(bool& changed)
+int ConfCenter::Reload()
 {
-    FileStat file_stat;
-
-    if (0 == GetFileStat(file_stat, conf_center_ctx_.app_conf_file_path))
-    {
-        if (file_stat.Equals(app_conf_file_stat_))
-        {
-            changed = false;
-            return 0;
-        }
-
-        changed = true;
-        app_conf_file_stat_ = file_stat;
-        return Load(conf_center_ctx_.app_conf_file_path);
-    }
-
-    return -1;
+    return Load(conf_center_ctx_.app_conf_file_path);
 }
 
 int ConfCenter::Load(const char* conf_file_path)
@@ -523,12 +508,6 @@ int ConfCenter::Load(const char* conf_file_path)
         if (NULL == root_node)
         {
             SET_LAST_ERR_MSG(&last_err_msg_, "no root node found in xml file " << conf_file_path);
-            break;
-        }
-
-        if (GetFileStat(app_conf_file_stat_, conf_file_path) != 0)
-        {
-            SET_LAST_ERR_MSG(&last_err_msg_, "failed to get file stat: " << conf_file_path);
             break;
         }
 

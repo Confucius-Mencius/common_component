@@ -5,7 +5,7 @@
 #include <log4cplus/initializer.h>
 #include "app_launcher.h"
 #include "str_util.h"
-#include "util.h"
+#include "app_util.h"
 
 DEFINE_string(log_conf_file_path, "xx_server_log_conf.properties", "log conf file path");
 DEFINE_string(logger_name, "xx_server", "logger name in the log conf file");
@@ -62,7 +62,8 @@ int main(int argc, char* argv[])
             return -1;
         }
 
-        // log4cplus 2.0.2要求deamon进程后调用一次exec以非daemon方式启动，否则不能正常退出
+        // log4cplus 2.0.2要求deamon进程后调用一次exec以非daemon方式启动，否则不能正常退出。
+        // log4cplus 1.2.1不用这样子。
         std::ostringstream app_path("");
         app_path << cur_working_dir << "/" << argv[0];
 
@@ -148,7 +149,7 @@ int main(int argc, char* argv[])
 
     if (ret != 0)
     {
-        app_launcher->OnStop();
+        app_launcher->Stop();
     }
 
     SAFE_DESTROY(app_launcher);

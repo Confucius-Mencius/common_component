@@ -5,6 +5,8 @@
 
 namespace tcp
 {
+class ThreadSink;
+
 class BaseConn
 {
 public:
@@ -66,12 +68,18 @@ public:
         return &conn_guid_;
     }
 
+    void SetThreadSink(ThreadSink* sink)
+    {
+        thread_sink_ = sink;
+    }
+
 protected:
     time_t created_time_;
     int sock_fd_;
     std::string client_ip_;
     unsigned short client_port_;
     ConnGUID conn_guid_;
+    ThreadSink* thread_sink_;
 };
 }
 

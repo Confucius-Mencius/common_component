@@ -1,45 +1,16 @@
 #include "app_launcher.h"
 #include "res_limits_util.h"
 #include "str_util.h"
-#include "util.h"
+#include "app_util.h"
 #include "version.h"
 
 namespace app_launcher
 {
-void AppLauncher::OnConfCheckTimer(evutil_socket_t fd, short event, void* arg)
-{
-    (void) fd;
-    (void) event;
-
-    AppLauncher* app_launcher = static_cast<AppLauncher*>(arg);
-    app_launcher->OnReload();
-}
-
-void AppLauncher::OnExitCheckTimer(evutil_socket_t fd, short event, void* arg)
-{
-    (void) fd;
-    (void) event;
-
-    LOG_TRACE("in exit check timer");
-    AppLauncher* app_launcher = static_cast<AppLauncher*>(arg);
-
-    if (!app_launcher->app_frame_->CanExit())
-    {
-        return;
-    }
-
-    app_launcher->app_frame_->NotifyExit();
-    event_base_loopbreak(app_launcher->thread_ev_base_);
-}
-
-AppLauncher::AppLauncher() : last_err_msg_(), service_mgr_(), signal_wrapper_(), app_frame_loader_()
+AppLauncher::AppLauncher() : last_err_msg_(), service_mgr_(), event_wrapper_(), app_frame_loader_()
 {
     app_launcher_ctx_ = NULL;
     thread_ev_base_ = NULL;
     app_frame_ = NULL;
-    conf_check_timer_event_ = NULL;
-    stopping_ = false;
-    exit_check_timer_event_ = NULL;
 }
 
 AppLauncher::~AppLauncher()
@@ -83,7 +54,6 @@ int AppLauncher::Initialize(const AppLauncherCtx* app_launcher_ctx)
         return -1;
     }
 
-    ////////////////////////////////////////////////////////////////////////////////
     if (service_mgr_.Initialize(app_launcher_ctx_) != 0)
     {
         SET_LAST_ERR_MSG(&last_err_msg_, service_mgr_.GetLastErrMsg());
@@ -109,10 +79,8 @@ int AppLauncher::Initialize(const AppLauncherCtx* app_launcher_ctx)
     LOG_ALWAYS("cur working dir: " << app_launcher_ctx_->cur_working_dir);
     LOG_ALWAYS("app name: " << app_launcher_ctx_->app_name);
 
-    ////////////////////////////////////////////////////////////////////////////////
     PrintAllResLimits();
 
-    ////////////////////////////////////////////////////////////////////////////////
     // event_config方式
 //    struct event_config* cfg = event_config_new();
 //    if (NULL == cfg)
@@ -162,16 +130,14 @@ int AppLauncher::Initialize(const AppLauncherCtx* app_launcher_ctx)
     LOG_ALWAYS("libevent version: " << event_get_version()
                << ", libevent method: " << event_base_get_method(thread_ev_base_));
 
-    ////////////////////////////////////////////////////////////////////////////////
-    if (signal_wrapper_.Initialize(this) != 0)
+    if (LoadAppFrame(app_launcher_ctx_->common_component_dir) != 0)
     {
-        LOG_ERROR(signal_wrapper_.GetLastErrMsg());
         return -1;
     }
 
-    ////////////////////////////////////////////////////////////////////////////////
-    if (LoadAppFrame(app_launcher_ctx_->common_component_dir) != 0)
+    if (event_wrapper_.Initialize(this) != 0)
     {
+        LOG_ERROR(event_wrapper_.GetLastErrMsg());
         return -1;
     }
 
@@ -180,21 +146,9 @@ int AppLauncher::Initialize(const AppLauncherCtx* app_launcher_ctx)
 
 void AppLauncher::Finalize()
 {
+    event_wrapper_.Finalize();
     SAFE_FINALIZE(app_frame_);
-    signal_wrapper_.Finalize();
     service_mgr_.Finalize();
-
-    if (exit_check_timer_event_ != NULL)
-    {
-        event_free(exit_check_timer_event_);
-        exit_check_timer_event_ = NULL;
-    }
-
-    if (conf_check_timer_event_ != NULL)
-    {
-        event_free(conf_check_timer_event_);
-        conf_check_timer_event_ = NULL;
-    }
 
     if (thread_ev_base_ != NULL)
     {
@@ -209,29 +163,6 @@ int AppLauncher::Activate()
     {
         LOG_ERROR("failed to activate service mgr");
         return -1;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////
-    const int conf_check_interval = 60;
-    {
-        conf_check_timer_event_ = event_new(thread_ev_base_, -1, EV_PERSIST, AppLauncher::OnConfCheckTimer, this);
-        if (NULL == conf_check_timer_event_)
-        {
-            const int err = errno;
-            LOG_ERROR("failed to create conf check timer event, errno: " << err << ", err msg: " << strerror(err));
-            return -1;
-        }
-
-        const struct timeval tv = {conf_check_interval, 0};
-
-        if (event_add(conf_check_timer_event_, &tv) != 0)
-        {
-            const int err = errno;
-            LOG_ERROR("failed to add conf check timer event, errno: " << err << ", err msg: " << strerror(err));
-            return -1;
-        }
-
-        LOG_ALWAYS("add conf check timer ok, interval: " << conf_check_interval << "s"); // 单位：秒
     }
 
     if (app_frame_->Activate() != 0)
@@ -250,55 +181,36 @@ void AppLauncher::Freeze()
 {
     SAFE_FREEZE(app_frame_);
     service_mgr_.Freeze();
+}
 
-    if (exit_check_timer_event_ != NULL)
-    {
-        event_del(exit_check_timer_event_);
-    }
+void AppLauncher::OnReload(bool app_conf_changed, bool log_conf_changed)
+{
+    service_mgr_.Reload(app_conf_changed, log_conf_changed);
 
-    if (conf_check_timer_event_ != NULL)
+    if (app_conf_changed)
     {
-        event_del(conf_check_timer_event_);
+        app_frame_->NotifyReload();
     }
 }
 
-void AppLauncher::OnStop()
+void AppLauncher::OnExitCheck()
 {
-    if (stopping_ || NULL == thread_ev_base_)
+    if (app_frame_ != NULL)
     {
-        return;
+        if (!app_frame_->CanExit())
+        {
+            return;
+        }
+
+        app_frame_->NotifyExitAndJoin();
     }
 
-    stopping_ = true;
-    app_frame_->NotifyStop();
-
-    exit_check_timer_event_ = event_new(thread_ev_base_, -1, EV_PERSIST, AppLauncher::OnExitCheckTimer, this);
-    if (NULL == exit_check_timer_event_)
-    {
-        const int err = errno;
-        LOG_ERROR("failed to create exit check timer event, errno: " << err << ", err msg: " << strerror(err));
-        return;
-    }
-
-    // 起一个退出检测定时器，200毫秒检查一次是否可以退出
-    const struct timeval tv = {0, 200000};
-
-    if (event_add(exit_check_timer_event_, &tv) != 0)
-    {
-        const int err = errno;
-        LOG_ERROR("failed to add exit check timer event, errno: " << err << ", err msg: " << strerror(err));
-        event_del(exit_check_timer_event_);
-        exit_check_timer_event_ = NULL;
-        return;
-    }
+    event_base_loopbreak(thread_ev_base_);
 }
 
-void AppLauncher::OnReload()
+void AppLauncher::Stop()
 {
-    // 信号或定时器均可触发reload
-    bool app_conf_changed = false;
-    service_mgr_.Reload(app_conf_changed);
-    app_frame_->NotifyReload(app_conf_changed);
+    event_wrapper_.OnStop();
 }
 
 int AppLauncher::SingleRunCheck()

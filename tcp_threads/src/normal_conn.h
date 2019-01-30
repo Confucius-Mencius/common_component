@@ -6,6 +6,7 @@
 #include "base_conn.h"
 #include "mem_util.h"
 
+#if !defined(USE_BUFFEREVENT)
 namespace tcp
 {
 class NormalConn : public BaseConn
@@ -13,6 +14,7 @@ class NormalConn : public BaseConn
     CREATE_FUNC(NormalConn)
 
 private:
+    static void NormalReadCallback(evutil_socket_t fd, short events, void* arg);
     static void WriteCallback(evutil_socket_t fd, short events, void* arg);
 
 public:
@@ -27,11 +29,6 @@ public:
 
     int Send(const void* data, size_t len) override;
 
-    void SetReadEvent(struct event* read_event)
-    {
-        read_event_ = read_event;
-    }
-
 private:
     struct event* read_event_;
 
@@ -41,5 +38,6 @@ private:
     struct event* write_event_;
 };
 }
+#endif
 
 #endif // TCP_THREADS_SRC_NORMAL_CONN_H_

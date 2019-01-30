@@ -62,7 +62,7 @@ int AppFrame::Initialize(const void* ctx)
         return -1;
     }
 
-    app_frame_ctx_ = *(static_cast<AppFrameCtx*>(ctx));
+    app_frame_ctx_ = *(static_cast<const AppFrameCtx*>(ctx));
     srand(time(NULL));
     OpenSSLInitialize(); // 初始化openssl，保证只有一次调用
 
@@ -253,12 +253,9 @@ int AppFrame::NotifyStop()
     return 0;
 }
 
-int AppFrame::NotifyReload(bool changed)
+int AppFrame::NotifyReload()
 {
-    if (changed)
-    {
-        conf_mgr_.Reload();
-    }
+    conf_mgr_.Reload();
 
 #if defined(NDEBUG)
     if (conf_mgr_.ReleaseFreeMem())
@@ -273,11 +270,6 @@ int AppFrame::NotifyReload(bool changed)
         }
     }
 #endif
-
-    if (!changed)
-    {
-        return 0;
-    }
 
 //    if (global_threads_ != NULL)
 //    {
@@ -388,7 +380,7 @@ bool AppFrame::CanExit() const
     return (can_exit != 0);
 }
 
-int AppFrame::NotifyExit()
+int AppFrame::NotifyExitAndJoin()
 {
 //    if (global_threads_ != NULL && global_threads_->GetGlobalThreadGroup() != NULL)
 //    {

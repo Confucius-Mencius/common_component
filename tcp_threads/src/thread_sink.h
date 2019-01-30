@@ -1,5 +1,5 @@
-#ifndef TCP_THREADS_SRC_TCP_THREAD_SINK_H_
-#define TCP_THREADS_SRC_TCP_THREAD_SINK_H_
+#ifndef TCP_THREADS_SRC_THREAD_SINK_H_
+#define TCP_THREADS_SRC_THREAD_SINK_H_
 
 #include <set>
 #include <event2/buffer.h>
@@ -9,9 +9,9 @@
 #include "new_conn.h"
 #include "mem_util.h"
 #include "module_loader.h"
-#include "tcp_conn_mgr.h"
+#include "conn_mgr.h"
 #include "tcp_logic_interface.h"
-#include "tcp_scheduler.h"
+#include "scheduler.h"
 
 namespace tcp
 {
@@ -32,14 +32,6 @@ typedef std::vector<LogicItem> LogicItemVec;
 class ThreadSink : public ThreadSinkInterface
 {
     CREATE_FUNC(ThreadSink)
-
-private:
-#if defined(USE_BUFFEREVENT)
-    static void BufferEventEventCallback(struct bufferevent* buffer_event, short events, void* arg);
-    static void BufferEventReadCallback(struct bufferevent* buffer_event, void* arg);
-#else
-    static void NormalReadCallback(evutil_socket_t fd, short events, void* arg);
-#endif
 
 public:
     ThreadSink();
@@ -81,17 +73,12 @@ public:
     }
 
     void OnClientClosed(const BaseConn* conn);
+    void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len);
 
 private:
     int LoadCommonLogic();
     int LoadLogicGroup();
-    int OnClientConnected(const NewConnCtx* new_conn_ctx);
-
-#if defined(USE_BUFFEREVENT)
-    void OnRecvClientData(struct evbuffer* input_buf, int sock_fd, BaseConn* conn);
-#else
-    void OnRecvClientData(bool& closed, int sock_fd, BaseConn* conn);
-#endif
+    void OnClientConnected(const NewConnCtx* new_conn_ctx);
 
 private:
     const ThreadsCtx* threads_ctx_;
@@ -108,4 +95,4 @@ private:
 };
 }
 
-#endif // TCP_THREADS_SRC_TCP_THREAD_SINK_H_
+#endif // TCP_THREADS_SRC_THREAD_SINK_H_

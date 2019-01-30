@@ -1,5 +1,5 @@
-#ifndef APP_LAUNCHER_SRC_UTIL_H_
-#define APP_LAUNCHER_SRC_UTIL_H_
+#ifndef APP_LAUNCHER_SRC_APP_UTIL_H_
+#define APP_LAUNCHER_SRC_APP_UTIL_H_
 
 #include <stddef.h>
 
@@ -10,4 +10,4 @@ int SingleRunCheck(const char* lock_file_path);
 int RecordPID(const char* pid_file_path);
 }
 
-#endif // APP_LAUNCHER_SRC_UTIL_H_
+#endif // APP_LAUNCHER_SRC_APP_UTIL_H_

@@ -25,10 +25,10 @@ public:
 
     ///////////////////////// AppFrameInterface /////////////////////////
     int NotifyStop() override;
-    int NotifyReload(bool changed) override;
+    int NotifyReload() override;
 
     bool CanExit() const override;
-    int NotifyExit() override;
+    int NotifyExitAndJoin() override;
 
 private:
     int LoadAndCheckConf();

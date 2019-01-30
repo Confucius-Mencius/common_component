@@ -5,11 +5,16 @@
 #include "base_conn.h"
 #include "mem_util.h"
 
+#if defined(USE_BUFFEREVENT)
 namespace tcp
 {
 class BufferEventConn : public BaseConn
 {
     CREATE_FUNC(BufferEventConn)
+
+private:
+    static void BufferEventEventCallback(struct bufferevent* buffer_event, short events, void* arg);
+    static void BufferEventReadCallback(struct bufferevent* buffer_event, void* arg);
 
 public:
     BufferEventConn();
@@ -23,14 +28,10 @@ public:
 
     int Send(const void* data, size_t len) override;
 
-    void SetBufferEvent(struct bufferevent* buffer_event)
-    {
-        buffer_event_ = buffer_event;
-    }
-
 private:
     struct bufferevent* buffer_event_;
 };
 }
+#endif
 
 #endif // TCP_THREADS_SRC_BUFFER_EVENT_CONN_H_

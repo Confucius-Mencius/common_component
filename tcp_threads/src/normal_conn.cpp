@@ -3,9 +3,113 @@
 #include <unistd.h>
 #include <iomanip>
 #include "log_util.h"
+#include "thread_sink.h"
 
+#if !defined(USE_BUFFEREVENT)
 namespace tcp
 {
+void NormalConn::NormalReadCallback(evutil_socket_t fd, short events, void* arg)
+{
+    LOG_TRACE("events occured on socket, fd: " << fd << ", events: "
+              << setiosflags(std::ios::showbase) << std::hex << events);
+
+    ThreadSink* thread_sink = static_cast<NormalConn*>(arg)->thread_sink_;
+    ConnMgr* conn_mgr = thread_sink->GetConnMgr();
+
+    BaseConn* conn = conn_mgr->GetConn(fd);
+    if (NULL == conn)
+    {
+        LOG_ERROR("failed to get tcp conn by socket fd: " << fd);
+        return;
+    }
+
+    bool closed = false;
+
+    do
+    {
+        if (events & EV_CLOSED)
+        {
+            LOG_TRACE("tcp conn closed, fd: " << fd);
+            closed = true;
+            break;
+        }
+
+        if (events & EV_READ)
+        {
+            if (thread_sink->GetThread()->IsStopping())
+            {
+                LOG_WARN("in stopping status, refuse all client data");
+                break;
+            }
+
+            if (conn_mgr->UpdateConnStatus(conn->GetConnGUID()->conn_id) != 0)
+            {
+                closed = true;
+                break;
+            }
+
+            LOG_TRACE("recv data, socket fd: " << fd);
+
+            char buf[16384] = "";
+            const int max_read_len = sizeof(buf);
+
+            while (true)
+            {
+                ssize_t n = read(fd, buf, max_read_len);
+                if (0 == n)
+                {
+                    // 对端关闭了。注：空连接关闭时，不会收到close事件，但会收到read事件，read返回0
+                    LOG_TRACE("read 0, eof");
+                    closed = true;
+                    break;
+                }
+                else if (n < 0)
+                {
+                    const int err = errno;
+
+                    if (EINTR == err)
+                    {
+                        // 被信号中断了，重试
+                        continue;
+                    }
+                    else if (EAGAIN == err || EWOULDBLOCK == err)
+                    {
+                        // socket缓冲区中没有数据可读了
+                        break;
+                    }
+                    else if (ECONNRESET == err || EPIPE == err)
+                    {
+                        // 对端关闭了
+                        LOG_ERROR("conn reset by peer");
+                        closed = true;
+                        break;
+                    }
+                    else
+                    {
+                        // 其它错误
+                        LOG_ERROR("read error, n: " << n << ", socket fd: " << fd
+                                  << ", errno: " << err << ", err msg: " << strerror(err));
+                        break;
+                    }
+                }
+
+                LOG_DEBUG("recv len: " << n);
+                thread_sink->OnRecvClientData(conn->GetConnGUID(), buf, n);
+            }
+        }
+
+        if (events & EV_TIMEOUT)
+        {
+            LOG_TRACE("timeout event occurred on socket, fd: " << fd); // TODO 什么时候会出现timeout？逻辑如何处理？
+        }
+    } while (0);
+
+    if (closed)
+    {
+        thread_sink->OnClientClosed(conn);
+    }
+}
+
 void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
 {
     LOG_TRACE("events occured on socket, fd: " << fd << ", events: "
@@ -44,7 +148,7 @@ void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
 
                 if (EINTR == err)
                 {
-                    // 被中断了，重试
+                    // 被信号中断了，重试
                     // The call was interrupted by a signal before any data was written
                     continue;
                 }
@@ -57,7 +161,6 @@ void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
                 else if (ECONNRESET == err || EPIPE == err)
                 {
                     // 对端关闭了。此时select/epoll指示socket可读，但是read返回-1，errno为ECONNRESET或EPIPE。在可读时处理对端关闭
-                    // TODO
                 }
                 else
                 {
@@ -121,6 +224,32 @@ void NormalConn::Release()
 int NormalConn::Initialize(const void* ctx)
 {
     (void) ctx;
+
+    read_event_ = event_new(thread_sink_->GetThread()->GetThreadEvBase(),
+                            sock_fd_,
+                            EV_READ | EV_PERSIST | EV_CLOSED,
+                            NormalConn::NormalReadCallback, this);
+    if (NULL == read_event_)
+    {
+        const int err = EVUTIL_SOCKET_ERROR();
+        LOG_ERROR("failed to create read event, errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
+        evutil_closesocket(sock_fd_);
+        return -1;
+    }
+
+    if (event_add(read_event_, NULL) != 0)
+    {
+        const int err = EVUTIL_SOCKET_ERROR();
+        LOG_ERROR("failed to add event, errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
+
+        evutil_closesocket(sock_fd_);
+
+        event_free(read_event_);
+        read_event_ = NULL;
+
+        return -1;
+    }
+
     return 0;
 }
 
@@ -217,3 +346,4 @@ int NormalConn::Send(const void* data, size_t len)
     return 0;
 }
 }
+#endif
