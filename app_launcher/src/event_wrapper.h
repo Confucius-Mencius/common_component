@@ -3,6 +3,7 @@
 
 #include <event2/event.h>
 #include "conf_center_interface.h"
+#include "file_util.h"
 #include "last_err_msg.h"
 
 namespace app_launcher
@@ -38,6 +39,9 @@ private:
     int inotify_wd_app_conf_;
     int inotify_wd_log_conf_;
     struct event* inotify_read_event_;
+
+    FileStat app_conf_filestat_;
+    FileStat log_conf_filestat_;
 
     struct event* stop_event_;
 

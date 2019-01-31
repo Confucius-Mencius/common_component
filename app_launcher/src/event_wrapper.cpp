@@ -7,6 +7,9 @@
 
 namespace app_launcher
 {
+static const uint32_t inotify_watch_mask =
+    IN_CLOSE_WRITE | IN_CREATE | IN_DELETE | IN_DELETE_SELF | IN_MOVE | IN_MOVE_SELF;
+
 void EventWrapper::OnInotifyReadEvent(evutil_socket_t fd, short events, void* arg)
 {
     LOG_TRACE("EventWrapper::OnInotifyReadEvent, fd: " << fd
@@ -50,32 +53,100 @@ void EventWrapper::OnInotifyReadEvent(evutil_socket_t fd, short events, void* ar
         }
 
         const struct inotify_event* ievent;
+        bool need_check_filestat = false;
+        bool need_rewatch = false;
 
         for (char* ptr = buf; ptr < buf + n;
                 ptr += sizeof(struct inotify_event) + ievent->len)
         {
             ievent = (const struct inotify_event*) ptr;
-            LOG_DEBUG("inotify mask: " << setiosflags(std::ios::showbase) << std::hex << ievent->mask
-                      << ", wd: " << ievent->wd);
 
-            if (ievent->mask & IN_MODIFY)
-            {
-                LOG_TRACE("IN_MODIFY");
-            }
+            LOG_DEBUG("inotify mask: " << setiosflags(std::ios::showbase) << std::hex << ievent->mask
+                      << ", len: " << ievent->len << ", wd: " << ievent->wd);
 
             if (ievent->len > 0)
             {
                 LOG_DEBUG("inotify event name: " << ievent->name);
             }
 
-            if (ievent->wd == event_wrapper->inotify_wd_app_conf_)
+            if (ievent->mask & IN_CLOSE_WRITE) // 需要监听，且要比较file stat是否有变化
             {
-                app_conf_changed = true;
+                LOG_TRACE("IN_CLOSE_WRITE");
+                need_check_filestat = true;
+            }
+            else if (ievent->mask & (IN_DELETE | IN_DELETE_SELF)) // 需要监听，需要rm后再add watch
+            {
+                LOG_TRACE("IN_DELETE | IN_DELETE_SELF");
+                need_check_filestat = true;
+                need_rewatch = true;
             }
 
-            if (ievent->wd == event_wrapper->inotify_wd_log_conf_)
+            if (need_check_filestat)
             {
-                log_conf_changed = true;
+                const AppLauncherCtx* app_launcher_ctx = event_wrapper->app_launcher_->GetAppLauncherCtx();
+
+                if (ievent->wd == event_wrapper->inotify_wd_app_conf_)
+                {
+                    FileStat app_conf_filestat;
+                    GetFileStat(app_conf_filestat, app_launcher_ctx->app_conf_file_path);
+
+                    if (!app_conf_filestat.Equals(event_wrapper->app_conf_filestat_))
+                    {
+                        app_conf_changed = true;
+                        event_wrapper->app_conf_filestat_ = app_conf_filestat;
+                    }
+                }
+
+                if (ievent->wd == event_wrapper->inotify_wd_log_conf_)
+                {
+                    FileStat log_conf_filestat;
+                    GetFileStat(log_conf_filestat, app_launcher_ctx->log_conf_file_path);
+
+                    if (!log_conf_filestat.Equals(event_wrapper->log_conf_filestat_))
+                    {
+                        log_conf_changed = true;
+                        event_wrapper->log_conf_filestat_ = log_conf_filestat;
+                    }
+                }
+            }
+
+            if (need_rewatch)
+            {
+                if (ievent->wd == event_wrapper->inotify_wd_app_conf_)
+                {
+                    app_conf_changed = true;
+
+                    inotify_rm_watch(event_wrapper->inotify_fd_, event_wrapper->inotify_wd_app_conf_);
+
+                    event_wrapper->inotify_wd_app_conf_ = inotify_add_watch(event_wrapper->inotify_fd_,
+                                                          event_wrapper->app_launcher_->GetAppLauncherCtx()->app_conf_file_path,
+                                                          inotify_watch_mask);
+                    if (-1 == event_wrapper->inotify_wd_app_conf_)
+                    {
+                        const int err = errno;
+                        LOG_ERROR("inotify_add_watch failed (app conf), errno: " << err << ", err msg: " << strerror((err)));
+                    }
+
+                    LOG_DEBUG("inotify wd of app conf: " << event_wrapper->inotify_wd_app_conf_);
+                }
+
+                if (ievent->wd == event_wrapper->inotify_wd_log_conf_)
+                {
+                    log_conf_changed = true;
+
+                    inotify_rm_watch(event_wrapper->inotify_fd_, event_wrapper->inotify_wd_log_conf_);
+
+                    event_wrapper->inotify_wd_log_conf_ = inotify_add_watch(event_wrapper->inotify_fd_,
+                                                          event_wrapper->app_launcher_->GetAppLauncherCtx()->log_conf_file_path,
+                                                          inotify_watch_mask);
+                    if (-1 == event_wrapper->inotify_wd_log_conf_)
+                    {
+                        const int err = errno;
+                        LOG_ERROR("inotify_add_watch failed (log conf), errno: " << err << ", err msg: " << strerror((err)));
+                    }
+
+                    LOG_DEBUG("inotify wd of log conf: " << event_wrapper->inotify_wd_log_conf_);
+                }
             }
         }
     }
@@ -104,7 +175,7 @@ void EventWrapper::OnExitCheckTimer(evutil_socket_t fd, short events, void* arg)
     app_launcher->OnExitCheck();
 }
 
-EventWrapper::EventWrapper() : last_err_msg_()
+EventWrapper::EventWrapper() : last_err_msg_(), app_conf_filestat_(), log_conf_filestat_()
 {
     app_launcher_ = NULL;
     inotify_fd_ = -1;
@@ -253,7 +324,7 @@ int EventWrapper::WatchConfFiles()
 
     const AppLauncherCtx* app_launcher_ctx = app_launcher_->GetAppLauncherCtx();
 
-    inotify_wd_app_conf_ = inotify_add_watch(inotify_fd_, app_launcher_ctx->app_conf_file_path, IN_MODIFY);
+    inotify_wd_app_conf_ = inotify_add_watch(inotify_fd_, app_launcher_ctx->app_conf_file_path, inotify_watch_mask);
     if (-1 == inotify_wd_app_conf_)
     {
         const int err = errno;
@@ -263,7 +334,7 @@ int EventWrapper::WatchConfFiles()
 
     LOG_DEBUG("inotify wd of app conf: " << inotify_wd_app_conf_);
 
-    inotify_wd_log_conf_ = inotify_add_watch(inotify_fd_, app_launcher_ctx->log_conf_file_path, IN_MODIFY);
+    inotify_wd_log_conf_ = inotify_add_watch(inotify_fd_, app_launcher_ctx->log_conf_file_path, inotify_watch_mask);
     if (-1 == inotify_wd_log_conf_)
     {
         const int err = errno;
@@ -288,6 +359,9 @@ int EventWrapper::WatchConfFiles()
         LOG_ERROR("failed to add inotify event, errno: " << err << ", err msg: " << strerror(err));
         return -1;
     }
+
+    GetFileStat(app_conf_filestat_, app_launcher_ctx->app_conf_file_path);
+    GetFileStat(log_conf_filestat_, app_launcher_ctx->log_conf_file_path);
 
     return 0;
 }
