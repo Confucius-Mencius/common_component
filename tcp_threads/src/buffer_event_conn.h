@@ -13,8 +13,8 @@ class BufferEventConn : public BaseConn
     CREATE_FUNC(BufferEventConn)
 
 private:
-    static void BufferEventEventCallback(struct bufferevent* buffer_event, short events, void* arg);
-    static void BufferEventReadCallback(struct bufferevent* buffer_event, void* arg);
+    static void EventCallback(struct bufferevent* buffer_event, short events, void* arg);
+    static void ReadCallback(struct bufferevent* buffer_event, void* arg);
 
 public:
     BufferEventConn();

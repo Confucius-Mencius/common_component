@@ -196,11 +196,10 @@ void ListenThreadSink::OnThreadStartOK()
 {
     ThreadSinkInterface::OnThreadStartOK();
 
-//    TODO refactor下面的重复逻辑
-    pthread_mutex_lock(threads_ctx_->frame_threads_mutex);
-    ++(*threads_ctx_->frame_threads_count);
-    pthread_cond_signal(threads_ctx_->frame_threads_cond);
-    pthread_mutex_unlock(threads_ctx_->frame_threads_mutex);
+    pthread_mutex_lock(threads_ctx_->app_frame_threads_sync_mutex);
+    ++(*threads_ctx_->app_frame_threads_count);
+    pthread_cond_signal(threads_ctx_->app_frame_threads_sync_cond);
+    pthread_mutex_unlock(threads_ctx_->app_frame_threads_sync_mutex);
 }
 
 void ListenThreadSink::OnStop()

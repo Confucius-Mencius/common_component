@@ -14,7 +14,7 @@ class NormalConn : public BaseConn
     CREATE_FUNC(NormalConn)
 
 private:
-    static void NormalReadCallback(evutil_socket_t fd, short events, void* arg);
+    static void ReadCallback(evutil_socket_t fd, short events, void* arg);
     static void WriteCallback(evutil_socket_t fd, short events, void* arg);
 
 public:

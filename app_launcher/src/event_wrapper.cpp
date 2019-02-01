@@ -196,15 +196,8 @@ const char* EventWrapper::GetLastErrMsg() const
     return last_err_msg_.What();
 }
 
-int EventWrapper::Initialize(AppLauncher* app_launcher)
+int EventWrapper::Initialize()
 {
-    if (NULL == app_launcher)
-    {
-        return -1;
-    }
-
-    app_launcher_ = app_launcher;
-
     // 要屏蔽的信号
     // Block some signals; other threads created by main() will inherit a copy of the signal mask.
     sigset_t set;

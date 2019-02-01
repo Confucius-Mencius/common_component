@@ -54,7 +54,10 @@ int AppLauncher::Initialize(const AppLauncherCtx* app_launcher_ctx)
         return -1;
     }
 
-    if (service_mgr_.Initialize(app_launcher_ctx_) != 0)
+    service_mgr_.SetAppLauncher(this);
+    event_wrapper_.SetAppLauncher(this);
+
+    if (service_mgr_.Initialize() != 0)
     {
         SET_LAST_ERR_MSG(&last_err_msg_, service_mgr_.GetLastErrMsg());
         return -1;
@@ -135,7 +138,7 @@ int AppLauncher::Initialize(const AppLauncherCtx* app_launcher_ctx)
         return -1;
     }
 
-    if (event_wrapper_.Initialize(this) != 0)
+    if (event_wrapper_.Initialize() != 0)
     {
         LOG_ERROR(event_wrapper_.GetLastErrMsg());
         return -1;

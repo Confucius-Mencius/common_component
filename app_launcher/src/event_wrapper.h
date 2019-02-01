@@ -21,8 +21,13 @@ public:
     EventWrapper();
     ~EventWrapper();
 
+    void SetAppLauncher(AppLauncher* app_launcher)
+    {
+        app_launcher_ = app_launcher;
+    }
+
     const char* GetLastErrMsg() const;
-    int Initialize(AppLauncher* app_launcher);
+    int Initialize();
     void Finalize();
 
     void OnStop();

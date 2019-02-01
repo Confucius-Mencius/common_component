@@ -12,7 +12,7 @@ namespace tcp
 //const static size_t BUFFER_EVENT_MAX_SINGLE_READ = 16384; // 16k
 //const static size_t BUFFER_EVENT_MAX_SINGLE_WRITE = 16384;
 
-void BufferEventConn::BufferEventEventCallback(struct bufferevent* buffer_event, short events, void* arg)
+void BufferEventConn::EventCallback(struct bufferevent* buffer_event, short events, void* arg)
 {
     const int err = EVUTIL_SOCKET_ERROR();
     const evutil_socket_t sock_fd = bufferevent_getfd(buffer_event);
@@ -85,7 +85,7 @@ void BufferEventConn::BufferEventEventCallback(struct bufferevent* buffer_event,
     }
 }
 
-void BufferEventConn::BufferEventReadCallback(struct bufferevent* buffer_event, void* arg)
+void BufferEventConn::ReadCallback(struct bufferevent* buffer_event, void* arg)
 {
     struct evbuffer* input_buf = bufferevent_get_input(buffer_event);
     const evutil_socket_t sock_fd = bufferevent_getfd(buffer_event);
@@ -175,8 +175,8 @@ int BufferEventConn::Initialize(const void* ctx)
 //    LOG_DEBUG("after set, single read size limit: " << bufferevent_get_max_single_read(buffer_event_)
 //              << ", single write size limit: " << bufferevent_get_max_single_write(buffer_event_));
 
-    bufferevent_setcb(buffer_event_, BufferEventConn::BufferEventReadCallback, NULL,
-                      BufferEventConn::BufferEventEventCallback, this);
+    bufferevent_setcb(buffer_event_, BufferEventConn::ReadCallback, NULL,
+                      BufferEventConn::EventCallback, this);
 
     if (bufferevent_enable(buffer_event_, EV_READ | EV_WRITE | EV_PERSIST) != 0)
     {

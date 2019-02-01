@@ -46,7 +46,7 @@ void ServiceMgr::EventLogCallback(int severity, const char* msg)
 ServiceMgr::ServiceMgr() : last_err_msg_(), log_engine_loader_(), conf_center_loader_(),
     thread_center_loader_()
 {
-    app_launcher_ctx_ = NULL;
+    app_launcher_ = NULL;
     log_engine_ = NULL;
     conf_center_ = NULL;
     thread_center_ = NULL;
@@ -82,15 +82,8 @@ void ServiceMgr::Release()
     g_log_engine = NULL;
 }
 
-int ServiceMgr::Initialize(const AppLauncherCtx* app_launcher_ctx)
+int ServiceMgr::Initialize()
 {
-    if (NULL == app_launcher_ctx)
-    {
-        return -1;
-    }
-
-    app_launcher_ctx_ = app_launcher_ctx;
-
     if (LoadLogEngine() != 0)
     {
         return -1;
@@ -150,7 +143,7 @@ int ServiceMgr::LoadLogEngine()
 {
     char log_engine_so_path[MAX_PATH_LEN] = "";
     StrPrintf(log_engine_so_path, sizeof(log_engine_so_path), "%s/liblog_engine.so",
-              app_launcher_ctx_->common_component_dir);
+              app_launcher_->GetAppLauncherCtx()->common_component_dir);
 
     if (log_engine_loader_.Load(log_engine_so_path) != 0)
     {
@@ -166,8 +159,8 @@ int ServiceMgr::LoadLogEngine()
     }
 
     LogEngineCtx log_engine_ctx;
-    log_engine_ctx.log_conf_file_path = app_launcher_ctx_->log_conf_file_path;
-    log_engine_ctx.logger_name = app_launcher_ctx_->logger_name;
+    log_engine_ctx.log_conf_file_path = app_launcher_->GetAppLauncherCtx()->log_conf_file_path;
+    log_engine_ctx.logger_name = app_launcher_->GetAppLauncherCtx()->logger_name;
 
     if (log_engine_->Initialize(&log_engine_ctx) != 0)
     {
@@ -185,7 +178,7 @@ int ServiceMgr::LoadConfCenter()
 {
     char conf_center_so_path[MAX_PATH_LEN] = "";
     StrPrintf(conf_center_so_path, sizeof(conf_center_so_path), "%s/libconf_center.so",
-              app_launcher_ctx_->common_component_dir);
+              app_launcher_->GetAppLauncherCtx()->common_component_dir);
 
     if (conf_center_loader_.Load(conf_center_so_path) != 0)
     {
@@ -201,7 +194,7 @@ int ServiceMgr::LoadConfCenter()
     }
 
     ConfCenterCtx conf_center_ctx;
-    conf_center_ctx.app_conf_file_path = app_launcher_ctx_->app_conf_file_path;
+    conf_center_ctx.app_conf_file_path = app_launcher_->GetAppLauncherCtx()->app_conf_file_path;
 
     if (conf_center_->Initialize(&conf_center_ctx) != 0)
     {
@@ -216,7 +209,7 @@ int ServiceMgr::LoadThreadCenter()
 {
     char thread_center_so_path[MAX_PATH_LEN] = "";
     StrPrintf(thread_center_so_path, sizeof(thread_center_so_path), "%s/libthread_center.so",
-              app_launcher_ctx_->common_component_dir);
+              app_launcher_->GetAppLauncherCtx()->common_component_dir);
 
     if (thread_center_loader_.Load(thread_center_so_path) != 0)
     {

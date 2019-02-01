@@ -10,7 +10,7 @@
 
 namespace app_launcher
 {
-struct AppLauncherCtx;
+class AppLauncher;
 
 class ServiceMgr
 {
@@ -20,6 +20,11 @@ public:
 public:
     ServiceMgr();
     ~ServiceMgr();
+
+    void SetAppLauncher(AppLauncher* app_launcher)
+    {
+        app_launcher_ = app_launcher;
+    }
 
     ConfCenterInterface* GetConfCenter() const
     {
@@ -35,7 +40,7 @@ public:
 
     const char* GetLastErrMsg() const;
     void Release();
-    int Initialize(const AppLauncherCtx* app_launcher_ctx);
+    int Initialize();
     void Finalize();
     int Activate();
     void Freeze();
@@ -47,7 +52,7 @@ private:
 
 private:
     LastErrMsg last_err_msg_;
-    const AppLauncherCtx* app_launcher_ctx_;
+    AppLauncher* app_launcher_;
 
     ModuleLoader log_engine_loader_;
     LogEngineInterface* log_engine_;

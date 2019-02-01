@@ -22,9 +22,9 @@ enum
     PENDING_NOTIFY_TIMER_ID = 1,
 };
 
-void Thread::OnRead(int fd, short which, void* arg)
+void Thread::ReadCallback(evutil_socket_t fd, short events, void* arg)
 {
-    (void) which;
+    (void) events;
 
     Thread* thread = static_cast<Thread*>(arg);
 
@@ -39,8 +39,7 @@ void Thread::OnRead(int fd, short which, void* arg)
                 continue;
             }
 
-            // write了才会触发read，且每次只read一次，所以不会有EAGAIN
-            // 真正出错了
+            // 真正出错了。write了才会触发read，且每次只read一次，所以不会有EAGAIN
             LOG_ERROR("failed to read pipe, errno: " << err << ", err msg: " << strerror(err));
             return;
         }
@@ -153,7 +152,7 @@ int Thread::Initialize(const void* ctx)
         return -1;
     }
 
-    read_event_ = event_new(thread_ev_base_, pipe_[0], EV_READ | EV_PERSIST, Thread::OnRead, this);
+    read_event_ = event_new(thread_ev_base_, pipe_[0], EV_READ | EV_PERSIST, Thread::ReadCallback, this);
     if (NULL == read_event_)
     {
         const int err = errno;
@@ -255,7 +254,7 @@ void Thread::PushTask(ThreadTask* task)
         LOG_WARN("failed to write pipe, errno: " << err << ", err msg: " << strerror(err));
 
         pending_notify_list_.push_back(buf[0]);
-        StartPendingNotifyTimer();
+        StartPendingNotifyTimer(); // TODO 定时器不用一直添加和删除，能disable和enable比较好
     }
 }
 
@@ -266,6 +265,7 @@ void Thread::OnTimer(TimerID timer_id, void* data, size_t len, int times)
     (void) len;
     (void) times;
 
+    // 加锁后每次只发送一个通知，基本不会影响往队列里面写
     std::lock_guard<std::mutex> lock(write_fd_mutex_);
 
     if (pending_notify_list_.empty())

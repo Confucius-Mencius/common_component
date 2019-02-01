@@ -27,9 +27,9 @@ struct ThreadsCtx
     ConfCenterInterface* conf_center;
     ThreadCenterInterface* thread_center;
     app_frame::ConfMgrInterface* conf_mgr;
-    int* frame_threads_count;
-    pthread_mutex_t* frame_threads_mutex;
-    pthread_cond_t* frame_threads_cond;
+    int* app_frame_threads_count;
+    pthread_mutex_t* app_frame_threads_sync_mutex;
+    pthread_cond_t* app_frame_threads_sync_cond;
 
     ThreadsCtx()
     {
@@ -41,9 +41,9 @@ struct ThreadsCtx
         conf_center = NULL;
         thread_center = NULL;
         conf_mgr = NULL;
-        frame_threads_count = NULL;
-        frame_threads_mutex = NULL;
-        frame_threads_cond = NULL;
+        app_frame_threads_count = NULL;
+        app_frame_threads_sync_mutex = NULL;
+        app_frame_threads_sync_cond = NULL;
     }
 };
 

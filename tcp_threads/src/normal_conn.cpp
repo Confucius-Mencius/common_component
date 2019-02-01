@@ -8,7 +8,7 @@
 #if !defined(USE_BUFFEREVENT)
 namespace tcp
 {
-void NormalConn::NormalReadCallback(evutil_socket_t fd, short events, void* arg)
+void NormalConn::ReadCallback(evutil_socket_t fd, short events, void* arg)
 {
     LOG_TRACE("events occured on socket, fd: " << fd << ", events: "
               << setiosflags(std::ios::showbase) << std::hex << events);
@@ -156,7 +156,7 @@ void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
                 if (EAGAIN == err || EWOULDBLOCK == err)
                 {
                     // socket缓冲区满了，等下次回调再写
-                    (*it).assign(((char*) (*it).data()) + sent_len, want_send_len); // todo 重叠assign是否安全？
+                    (*it).assign(((char*) (*it).data()) + sent_len, want_send_len); // TODO 重叠assign是否安全？
                 }
                 else if (ECONNRESET == err || EPIPE == err)
                 {
@@ -165,7 +165,7 @@ void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
                 else
                 {
                     // 其它错误，等下次回调再写
-                    (*it).assign(((char*) (*it).data()) + sent_len, want_send_len); // todo 重叠assign是否安全？
+                    (*it).assign(((char*) (*it).data()) + sent_len, want_send_len); // TODO 重叠assign是否安全？
                 }
 
                 return;
@@ -228,7 +228,7 @@ int NormalConn::Initialize(const void* ctx)
     read_event_ = event_new(thread_sink_->GetThread()->GetThreadEvBase(),
                             sock_fd_,
                             EV_READ | EV_PERSIST | EV_CLOSED,
-                            NormalConn::NormalReadCallback, this);
+                            NormalConn::ReadCallback, this);
     if (NULL == read_event_)
     {
         const int err = EVUTIL_SOCKET_ERROR();

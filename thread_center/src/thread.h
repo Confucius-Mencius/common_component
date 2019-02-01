@@ -37,7 +37,7 @@ class Thread : public ThreadInterface, public TimerSinkInterface
     CREATE_FUNC(Thread)
 
 private:
-    static void OnRead(int fd, short which, void* arg);
+    static void ReadCallback(evutil_socket_t fd, short events, void* arg);
     static void* ThreadRoutine(void* arg);
 
 public:

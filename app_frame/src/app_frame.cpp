@@ -66,14 +66,14 @@ int AppFrame::Initialize(const void* ctx)
     srand(time(NULL));
     OpenSSLInitialize(); // 初始化openssl，保证只有一次调用
 
-    if (pthread_mutex_init(&g_frame_threads_mutex, NULL) != 0)
+    if (pthread_mutex_init(&g_threads_sync_mutex, NULL) != 0)
     {
         const int err = errno;
         LOG_ERROR("pthread_mutex_init failed, errno: " << err << ", err msg: " << strerror(err));
         return -1;
     }
 
-    if (pthread_cond_init(&g_frame_threads_cond, NULL) != 0)
+    if (pthread_cond_init(&g_threads_sync_cond, NULL) != 0)
     {
         const int err = errno;
         LOG_ERROR("pthread_cond_init failed, errno: " << err << ", err msg: " << strerror(err));
@@ -153,8 +153,8 @@ void AppFrame::Finalize()
 
     conf_mgr_.Finalize();
 
-    pthread_mutex_destroy(&g_frame_threads_mutex);
-    pthread_cond_destroy(&g_frame_threads_cond);
+    pthread_mutex_destroy(&g_threads_sync_mutex);
+    pthread_cond_destroy(&g_threads_sync_cond);
 
     OpenSSLFinalize();
 }
@@ -181,14 +181,14 @@ int AppFrame::Activate()
     }
 
     // 等待所有线程都启动ok
-    pthread_mutex_lock(&g_frame_threads_mutex);
+    pthread_mutex_lock(&g_threads_sync_mutex);
 
-    while (g_frame_threads_count < app_frame_threads_count_)
+    while (g_threads_count < app_frame_threads_count_)
     {
-        pthread_cond_wait(&g_frame_threads_cond, &g_frame_threads_mutex);
+        pthread_cond_wait(&g_threads_sync_cond, &g_threads_sync_mutex);
     }
 
-    pthread_mutex_unlock(&g_frame_threads_mutex);
+    pthread_mutex_unlock(&g_threads_sync_mutex);
     return 0;
 }
 
@@ -795,9 +795,9 @@ int AppFrame::LoadTCPThreads()
     threads_ctx.conf_center = app_frame_ctx_.conf_center;
     threads_ctx.thread_center = app_frame_ctx_.thread_center;
     threads_ctx.conf_mgr = &conf_mgr_;
-    threads_ctx.frame_threads_count = &g_frame_threads_count;
-    threads_ctx.frame_threads_mutex = &g_frame_threads_mutex;
-    threads_ctx.frame_threads_cond = &g_frame_threads_cond;
+    threads_ctx.app_frame_threads_count = &g_threads_count;
+    threads_ctx.app_frame_threads_sync_mutex = &g_threads_sync_mutex;
+    threads_ctx.app_frame_threads_sync_cond = &g_threads_sync_cond;
 
     if (tcp_threads_->Initialize(&threads_ctx) != 0)
     {
