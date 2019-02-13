@@ -1,5 +1,5 @@
-#ifndef TCP_THREADS_INC_TCP_THREADS_INTERFACE_H_
-#define TCP_THREADS_INC_TCP_THREADS_INTERFACE_H_
+#ifndef WS_THREADS_INC_WS_THREADS_INTERFACE_H_
+#define WS_THREADS_INC_WS_THREADS_INTERFACE_H_
 
 #include "thread_center_interface.h"
 
@@ -15,7 +15,7 @@ namespace app_frame
 class ConfMgrInterface;
 }
 
-namespace tcp
+namespace ws
 {
 struct ThreadsCtx
 {
@@ -70,9 +70,8 @@ public:
 
     virtual int CreateThreadGroup() = 0;
     virtual void SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups) = 0;
-    virtual ThreadGroupInterface* GetListenThreadGroup() const = 0;
-    virtual ThreadGroupInterface* GetTCPThreadGroup() const = 0;
+    virtual ThreadGroupInterface* GetWSThreadGroup() const = 0;
 };
 }
 
-#endif // TCP_THREADS_INC_TCP_THREADS_INTERFACE_H_
+#endif // WS_THREADS_INC_WS_THREADS_INTERFACE_H_

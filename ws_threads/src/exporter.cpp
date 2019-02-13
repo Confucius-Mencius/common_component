@@ -1,4 +1,4 @@
 #include "exporter.h"
-#include "tcp_threads.h"
+#include "ws_threads.h"
 
-MODULE_EXPORTER_IMPL(tcp::Threads);
+MODULE_EXPORTER_IMPL(ws::Threads);

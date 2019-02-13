@@ -1,10 +1,10 @@
-#ifndef TCP_THREADS_SRC_CONN_MGR_H_
-#define TCP_THREADS_SRC_CONN_MGR_H_
+#ifndef WS_THREADS_SRC_CONN_MGR_H_
+#define WS_THREADS_SRC_CONN_MGR_H_
 
 #include "base_conn.h"
 #include "record_timeout_mgr.h"
 
-namespace tcp
+namespace ws
 {
 class ThreadSink;
 
@@ -87,4 +87,4 @@ private:
 };
 }
 
-#endif // TCP_THREADS_SRC_CONN_MGR_H_
+#endif // WS_THREADS_SRC_CONN_MGR_H_

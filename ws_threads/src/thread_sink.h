@@ -1,19 +1,19 @@
-#ifndef TCP_THREADS_SRC_THREAD_SINK_H_
-#define TCP_THREADS_SRC_THREAD_SINK_H_
+#ifndef WS_THREADS_SRC_THREAD_SINK_H_
+#define WS_THREADS_SRC_THREAD_SINK_H_
 
 #include <set>
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
 #include <event2/event_struct.h>
 #include <event2/util.h>
-#include "new_conn.h"
+#include <libwebsockets.h>
 #include "mem_util.h"
 #include "module_loader.h"
 #include "conn_mgr.h"
-#include "tcp_logic_interface.h"
+#include "ws_logic_interface.h"
 #include "scheduler.h"
 
-namespace tcp
+namespace ws
 {
 struct LogicItem
 {
@@ -50,19 +50,14 @@ public:
     bool CanExit() const override;
 
 public:
-    void SetListenThread(ThreadInterface* listen_thread)
+    void SetWSThreadGroup(ThreadGroupInterface* ws_thread_group)
     {
-        listen_thread_ = listen_thread;
+        ws_thread_group_ = ws_thread_group;
     }
 
-    void SetTCPThreadGroup(ThreadGroupInterface* tcp_thread_group)
+    ThreadGroupInterface* GetWSThreadGroup()
     {
-        tcp_thread_group_ = tcp_thread_group;
-    }
-
-    ThreadGroupInterface* GetTCPThreadGroup()
-    {
-        return tcp_thread_group_;
+        return ws_thread_group_;
     }
 
     void SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups);
@@ -76,15 +71,24 @@ public:
     void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len);
 
 private:
+    int BindWSSocket();
     int LoadCommonLogic();
     int LoadLogicGroup();
-    void OnClientConnected(const NewConnCtx* new_conn_ctx);
+//    void OnClientConnected(const NewConnCtx* new_conn_ctx);
 
 private:
     const ThreadsCtx* threads_ctx_;
     ThreadInterface* listen_thread_;
-    ThreadGroupInterface* tcp_thread_group_;
+    ThreadGroupInterface* ws_thread_group_;
     RelatedThreadGroups* related_thread_group_;
+
+    struct lws_context_creation_info ws_info_;
+    char ws_iface_[128];
+//    struct lws_http_mount http_mount_;
+    char cert_path[1024];
+    char key_path[1024];
+    void* ws_foreign_loops_[1];
+    struct lws_context* ws_context_;
 
     ModuleLoader common_logic_loader_;
     CommonLogicInterface* common_logic_;
@@ -95,4 +99,4 @@ private:
 };
 }
 
-#endif // TCP_THREADS_SRC_THREAD_SINK_H_
+#endif // WS_THREADS_SRC_THREAD_SINK_H_

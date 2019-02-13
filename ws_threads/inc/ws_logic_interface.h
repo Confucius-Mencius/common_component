@@ -1,5 +1,5 @@
-#ifndef TCP_THREADS_INC_TCP_LOGIC_INTERFACE_H_
-#define TCP_THREADS_INC_TCP_LOGIC_INTERFACE_H_
+#ifndef WS_THREADS_INC_WS_LOGIC_INTERFACE_H_
+#define WS_THREADS_INC_WS_LOGIC_INTERFACE_H_
 
 #include "conn_define.h"
 #include "module_interface.h"
@@ -14,7 +14,7 @@ namespace global
 class LogicInterface;
 }
 
-namespace tcp
+namespace ws
 {
 class SchedulerInterface;
 class CommonLogicInterface;
@@ -142,4 +142,4 @@ public:
 };
 }
 
-#endif // TCP_THREADS_INC_TCP_LOGIC_INTERFACE_H_
+#endif // WS_THREADS_INC_WS_LOGIC_INTERFACE_H_

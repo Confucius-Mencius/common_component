@@ -1,19 +1,18 @@
-#include "normal_conn.h"
+#include "conn.h"
 #include <string.h>
 #include <unistd.h>
 #include <iomanip>
 #include "log_util.h"
 #include "thread_sink.h"
 
-#if !defined(USE_BUFFEREVENT)
-namespace tcp
+namespace ws
 {
-void NormalConn::ReadCallback(evutil_socket_t fd, short events, void* arg)
+void Conn::ReadCallback(evutil_socket_t fd, short events, void* arg)
 {
     LOG_TRACE("events occured on socket, fd: " << fd << ", events: "
               << setiosflags(std::ios::showbase) << std::hex << events);
 
-    ThreadSink* thread_sink = static_cast<NormalConn*>(arg)->thread_sink_;
+    ThreadSink* thread_sink = static_cast<Conn*>(arg)->thread_sink_;
     ConnMgr* conn_mgr = thread_sink->GetConnMgr();
 
     BaseConn* conn = conn_mgr->GetConn(fd);
@@ -110,7 +109,7 @@ void NormalConn::ReadCallback(evutil_socket_t fd, short events, void* arg)
     }
 }
 
-void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
+void Conn::WriteCallback(evutil_socket_t fd, short events, void* arg)
 {
     LOG_TRACE("events occured on socket, fd: " << fd << ", events: "
               << setiosflags(std::ios::showbase) << std::hex << events);
@@ -121,7 +120,7 @@ void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
 //        return;
 //    }
 
-    NormalConn* conn = static_cast<NormalConn*>(arg);
+    Conn* conn = static_cast<Conn*>(arg);
 
     for (SendList::iterator it = conn->send_list_.begin(); it != conn->send_list_.end();)
     {
@@ -206,29 +205,29 @@ void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
     }
 }
 
-NormalConn::NormalConn() : send_list_()
+Conn::Conn() : send_list_()
 {
     read_event_ = NULL;
     write_event_ = NULL;
 }
 
-NormalConn::~NormalConn()
+Conn::~Conn()
 {
 }
 
-void NormalConn::Release()
+void Conn::Release()
 {
     delete this;
 }
 
-int NormalConn::Initialize(const void* ctx)
+int Conn::Initialize(const void* ctx)
 {
     (void) ctx;
 
     read_event_ = event_new(thread_sink_->GetThread()->GetThreadEvBase(),
                             sock_fd_,
                             EV_READ | EV_PERSIST | EV_CLOSED,
-                            NormalConn::ReadCallback, this);
+                            Conn::ReadCallback, this);
     if (NULL == read_event_)
     {
         const int err = EVUTIL_SOCKET_ERROR();
@@ -253,7 +252,7 @@ int NormalConn::Initialize(const void* ctx)
     return 0;
 }
 
-void NormalConn::Finalize()
+void Conn::Finalize()
 {
     if (write_event_ != NULL)
     {
@@ -272,16 +271,16 @@ void NormalConn::Finalize()
     send_list_.clear();
 }
 
-int NormalConn::Activate()
+int Conn::Activate()
 {
     return 0;
 }
 
-void NormalConn::Freeze()
+void Conn::Freeze()
 {
 }
 
-int NormalConn::Send(const void* data, size_t len)
+int Conn::Send(const void* data, size_t len)
 {
     if (NULL == write_event_)
     {
@@ -291,7 +290,7 @@ int NormalConn::Send(const void* data, size_t len)
         {
             write_event_ = event_new(event_get_base(read_event_), sock_fd_,
                                      EV_WRITE | EV_PERSIST, // EV_CLOSED 在read事件中处理
-                                     NormalConn::WriteCallback, this);
+                                     Conn::WriteCallback, this);
             if (NULL == write_event_)
             {
                 const int err = EVUTIL_SOCKET_ERROR();
@@ -346,4 +345,3 @@ int NormalConn::Send(const void* data, size_t len)
     return 0;
 }
 }
-#endif

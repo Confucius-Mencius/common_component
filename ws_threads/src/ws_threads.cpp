@@ -1,17 +1,15 @@
-#include "tcp_threads.h"
+#include "ws_threads.h"
 #include "app_frame_conf_mgr_interface.h"
 #include "container_util.h"
-#include "listen_thread_sink.h"
 #include "str_util.h"
 #include "thread_sink.h"
 #include "version.h"
 
-namespace tcp
+namespace ws
 {
 Threads::Threads() : threads_ctx_(), related_thread_groups_()
 {
-    listen_thread_group_ = NULL;
-    tcp_thread_group_ = NULL;
+    ws_thread_group_ = NULL;
 }
 
 Threads::~Threads()
@@ -20,7 +18,7 @@ Threads::~Threads()
 
 const char* Threads::GetVersion() const
 {
-    return TCP_THREADS_VERSION;
+    return WS_THREADS_VERSION;
 }
 
 const char* Threads::GetLastErrMsg() const
@@ -30,8 +28,7 @@ const char* Threads::GetLastErrMsg() const
 
 void Threads::Release()
 {
-    SAFE_RELEASE(tcp_thread_group_);
-    SAFE_RELEASE(listen_thread_group_);
+    SAFE_RELEASE(ws_thread_group_);
     delete this;
 }
 
@@ -48,18 +45,12 @@ int Threads::Initialize(const void* ctx)
 
 void Threads::Finalize()
 {
-    SAFE_FINALIZE(tcp_thread_group_);
-    SAFE_FINALIZE(listen_thread_group_);
+    SAFE_FINALIZE(ws_thread_group_);
 }
 
 int Threads::Activate()
 {
-    if (SAFE_ACTIVATE_FAILED(listen_thread_group_))
-    {
-        return -1;
-    }
-
-    if (SAFE_ACTIVATE_FAILED(tcp_thread_group_) != 0)
+    if (SAFE_ACTIVATE_FAILED(ws_thread_group_) != 0)
     {
         return -1;
     }
@@ -69,8 +60,7 @@ int Threads::Activate()
 
 void Threads::Freeze()
 {
-    SAFE_FREEZE(tcp_thread_group_);
-    SAFE_FREEZE(listen_thread_group_);
+    SAFE_FREEZE(ws_thread_group_);
 }
 
 int Threads::CreateThreadGroup()
@@ -79,43 +69,24 @@ int Threads::CreateThreadGroup()
 
     do
     {
-        ThreadGroupCtx listen_thread_group_ctx;
-        listen_thread_group_ctx.common_component_dir = threads_ctx_.common_component_dir;
-        listen_thread_group_ctx.enable_cpu_profiling = threads_ctx_.conf_mgr->EnableCPUProfiling();
-        listen_thread_group_ctx.thread_name = "tcp listen thread";
-        listen_thread_group_ctx.thread_count = 1;
-        listen_thread_group_ctx.thread_sink_creator = ListenThreadSink::Create;
-        listen_thread_group_ctx.args = &threads_ctx_;
+        ThreadGroupCtx ws_thread_group_ctx;
+        ws_thread_group_ctx.common_component_dir = threads_ctx_.common_component_dir;
+        ws_thread_group_ctx.enable_cpu_profiling = threads_ctx_.conf_mgr->EnableCPUProfiling();
+        ws_thread_group_ctx.thread_name = "ws thread";
+        ws_thread_group_ctx.thread_count = threads_ctx_.conf_mgr->GetWSThreadCount();
+        ws_thread_group_ctx.thread_sink_creator = ThreadSink::Create;
+        ws_thread_group_ctx.args = &threads_ctx_;
 
-        listen_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup(&listen_thread_group_ctx);
-        if (NULL == listen_thread_group_)
+        ws_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup(&ws_thread_group_ctx);
+        if (NULL == ws_thread_group_)
         {
             break;
         }
 
-        ThreadGroupCtx tcp_thread_group_ctx;
-        tcp_thread_group_ctx.common_component_dir = threads_ctx_.common_component_dir;
-        tcp_thread_group_ctx.enable_cpu_profiling = threads_ctx_.conf_mgr->EnableCPUProfiling();
-        tcp_thread_group_ctx.thread_name = "tcp thread";
-        tcp_thread_group_ctx.thread_count = threads_ctx_.conf_mgr->GetTCPThreadCount();
-        tcp_thread_group_ctx.thread_sink_creator = ThreadSink::Create;
-        tcp_thread_group_ctx.args = &threads_ctx_;
-
-        tcp_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup(&tcp_thread_group_ctx);
-        if (NULL == tcp_thread_group_)
+        for (int i = 0; i < ws_thread_group_->GetThreadCount(); ++i)
         {
-            break;
-        }
-
-        ThreadInterface* listen_thread = listen_thread_group_->GetThread(0);
-        ListenThreadSink* listen_thread_sink = static_cast<ListenThreadSink*>(listen_thread->GetThreadSink());
-        listen_thread_sink->SetTCPThreadGroup(tcp_thread_group_);
-
-        for (int i = 0; i < tcp_thread_group_->GetThreadCount(); ++i)
-        {
-            ThreadSink* tcp_thread_sink = static_cast<ThreadSink*>(tcp_thread_group_->GetThread(i)->GetThreadSink());
-            tcp_thread_sink->SetListenThread(listen_thread);
-            tcp_thread_sink->SetTCPThreadGroup(tcp_thread_group_);
+            ThreadSink* ws_thread_sink = static_cast<ThreadSink*>(ws_thread_group_->GetThread(i)->GetThreadSink());
+            ws_thread_sink->SetWSThreadGroup(ws_thread_group_);
         }
 
         ret = 0;
@@ -123,28 +94,18 @@ int Threads::CreateThreadGroup()
 
     if (ret != 0)
     {
-        if (tcp_thread_group_ != NULL)
+        if (ws_thread_group_ != NULL)
         {
-            SAFE_DESTROY(tcp_thread_group_);
-        }
-
-        if (listen_thread_group_ != NULL)
-        {
-            SAFE_DESTROY(listen_thread_group_);
+            SAFE_DESTROY(ws_thread_group_);
         }
     }
 
     return ret;
 }
 
-ThreadGroupInterface* Threads::GetListenThreadGroup() const
+ThreadGroupInterface* Threads::GetWSThreadGroup() const
 {
-    return listen_thread_group_;
-}
-
-ThreadGroupInterface* Threads::GetTCPThreadGroup() const
-{
-    return tcp_thread_group_;
+    return ws_thread_group_;
 }
 
 void Threads::SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups)
@@ -156,10 +117,10 @@ void Threads::SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_g
 
     related_thread_groups_ = *related_thread_groups;
 
-    for (int i = 0; i < tcp_thread_group_->GetThreadCount(); ++i)
+    for (int i = 0; i < ws_thread_group_->GetThreadCount(); ++i)
     {
-        ThreadSink* tcp_thread_sink = static_cast<ThreadSink*>(tcp_thread_group_->GetThread(i)->GetThreadSink());
-        tcp_thread_sink->SetRelatedThreadGroups(&related_thread_groups_);
+        ThreadSink* ws_thread_sink = static_cast<ThreadSink*>(ws_thread_group_->GetThread(i)->GetThreadSink());
+        ws_thread_sink->SetRelatedThreadGroups(&related_thread_groups_);
     }
 }
 }

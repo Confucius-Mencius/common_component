@@ -1,25 +1,24 @@
-#ifndef TCP_THREADS_SRC_NORMAL_CONN_H_
-#define TCP_THREADS_SRC_NORMAL_CONN_H_
+#ifndef WS_THREADS_SRC_CONN_H_
+#define WS_THREADS_SRC_CONN_H_
 
 #include <list>
 #include <event2/event.h>
 #include "base_conn.h"
 #include "mem_util.h"
 
-#if !defined(USE_BUFFEREVENT)
-namespace tcp
+namespace ws
 {
-class NormalConn : public BaseConn
+class Conn : public BaseConn
 {
-    CREATE_FUNC(NormalConn)
+    CREATE_FUNC(Conn)
 
 private:
     static void ReadCallback(evutil_socket_t fd, short events, void* arg);
     static void WriteCallback(evutil_socket_t fd, short events, void* arg);
 
 public:
-    NormalConn();
-    virtual ~NormalConn();
+    Conn();
+    virtual ~Conn();
 
     void Release() override;
     int Initialize(const void* ctx) override;
@@ -38,6 +37,5 @@ private:
     struct event* write_event_;
 };
 }
-#endif
 
-#endif // TCP_THREADS_SRC_NORMAL_CONN_H_
+#endif // WS_THREADS_SRC_CONN_H_

@@ -1,10 +1,10 @@
-#ifndef TCP_THREADS_SRC_SCHEDULER_H_
-#define TCP_THREADS_SRC_SCHEDULER_H_
+#ifndef WS_THREADS_SRC_SCHEDULER_H_
+#define WS_THREADS_SRC_SCHEDULER_H_
 
-#include "tcp_scheduler_interface.h"
-#include "tcp_threads_interface.h"
+#include "ws_scheduler_interface.h"
+#include "ws_threads_interface.h"
 
-namespace tcp
+namespace ws
 {
 class ThreadSink;
 
@@ -20,7 +20,7 @@ public:
     ///////////////////////// SchedulerInterface /////////////////////////
     int SendToClient(const ConnGUID* conn_guid, const void* data, size_t len) override;
     int CloseClient(const ConnGUID* conn_guid) override;
-    int SendToTCPThread(const ConnGUID* conn_guid, const void* data, size_t len, int tcp_thread_idx) override;
+    int SendToWSThread(const ConnGUID* conn_guid, const void* data, size_t len, int ws_thread_idx) override;
     int SendToWorkThread(const ConnGUID* conn_guid, const void* data, size_t len, int work_thread_idx) override;
     int SendToGlobalThread(const ConnGUID* conn_guid, const void* data, size_t len) override;
 
@@ -32,7 +32,7 @@ public:
     void SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups);
 
 private:
-    int GetScheduleTCPThreadIdx(int tcp_thread_idx);
+    int GetScheduleWSThreadIdx(int ws_thread_idx);
     int GetScheduleWorkThreadIdx(int work_thread_idx);
 
 private:
@@ -40,9 +40,9 @@ private:
     ThreadSink* thread_sink_;
     RelatedThreadGroups* related_thread_groups_;
 
-    int last_tcp_thread_idx_;
+    int last_ws_thread_idx_;
     int last_work_thread_idx_;
 };
 }
 
-#endif // TCP_THREADS_SRC_SCHEDULER_H_
+#endif // WS_THREADS_SRC_SCHEDULER_H_

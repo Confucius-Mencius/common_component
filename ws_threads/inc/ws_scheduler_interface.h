@@ -1,9 +1,9 @@
-#ifndef TCP_THREADS_INC_TCP_SCHEDULER_INTERFACE_H_
-#define TCP_THREADS_INC_TCP_SCHEDULER_INTERFACE_H_
+#ifndef WS_THREADS_INC_WS_SCHEDULER_INTERFACE_H_
+#define WS_THREADS_INC_WS_SCHEDULER_INTERFACE_H_
 
 #include "conn_define.h"
 
-namespace tcp
+namespace ws
 {
 class SchedulerInterface
 {
@@ -28,11 +28,11 @@ public:
     // 自己这组线程，下一级线程组，global线程组
 
     /**
-     * @brief 发送给tcp thread，包括自己
-     * @param tcp_thread_idx 为-1则由框架自行调度一个tcp线程
+     * @brief 发送给ws thread，包括自己
+     * @param ws_thread_idx 为-1则由框架自行调度一个ws线程
      * @return
      */
-    virtual int SendToTCPThread(const ConnGUID* conn_guid, const void* data, size_t len, int tcp_thread_idx) = 0;
+    virtual int SendToWSThread(const ConnGUID* conn_guid, const void* data, size_t len, int ws_thread_idx) = 0;
 
     /**
      * @brief
@@ -45,4 +45,4 @@ public:
 };
 }
 
-#endif // TCP_THREADS_INC_TCP_SCHEDULER_INTERFACE_H_
+#endif // WS_THREADS_INC_WS_SCHEDULER_INTERFACE_H_

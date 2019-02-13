@@ -1,7 +1,7 @@
 #include "base_conn.h"
 #include "log_util.h"
 
-namespace tcp
+namespace ws
 {
 BaseConn::BaseConn() : client_ip_(""), conn_guid_()
 {

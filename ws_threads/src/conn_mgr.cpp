@@ -1,12 +1,11 @@
 #include "conn_mgr.h"
 #include <string.h>
+#include "conn.h"
 #include "log_util.h"
 #include "mem_util.h"
-#include "buffer_event_conn.h"
-#include "normal_conn.h"
 #include "thread_sink.h"
 
-namespace tcp
+namespace ws
 {
 ConnMgr::ConnMgr() : conn_mgr_ctx_(), conn_hash_map_(), conn_id_seq_(), conn_id_hash_map_()
 {
@@ -83,11 +82,7 @@ void ConnMgr::Freeze()
 
 BaseConn* ConnMgr::CreateConn(int io_thread_idx, const char* ip, unsigned short port, int sock_fd)
 {
-#if defined(USE_BUFFEREVENT)
-    BufferEventConn* conn = BufferEventConn::Create();
-#else
-    NormalConn* conn = NormalConn::Create();
-#endif
+    Conn* conn = Conn::Create();
 
     if (NULL == conn)
     {

@@ -116,6 +116,96 @@ public:
         return tcp_logic_so_group_;
     }
 
+    std::string GetWSIface() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return ws_iface_;
+    }
+
+    int GetWSPort() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return ws_port_;
+    }
+
+    std::string GetWSSIface() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return wss_iface_;
+    }
+
+    int GetWSSPort() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return wss_port_;
+    }
+
+    std::string GetWSSCertificateChainFilePath() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return wss_certificate_chain_file_path_;
+    }
+
+    std::string GetWSSPrivateKeyFilePath() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return wss_private_key_file_path_;
+    }
+
+    int GetWSConnCountLimit() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return ws_conn_count_limit_;
+    }
+
+    int GetWSInactiveConnCheckIntervalSec() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return ws_inactive_conn_check_interval_sec_;
+    }
+
+    int GetWSInactiveConnCheckIntervalUsec() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return ws_inactive_conn_check_interval_usec_;
+    }
+
+    int GetWSInactiveConnLife() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return ws_inactive_conn_life_;
+    }
+
+    int GetWSStormInterval() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return ws_storm_interval_;
+    }
+
+    int GetWSStormThreshold() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return ws_storm_threshold_;
+    }
+
+    int GetWSThreadCount() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return ws_thread_count_;
+    }
+
+    std::string GetWSCommonLogicSo() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return ws_common_logic_so_;
+    }
+
+    StrGroup GetWSLogicSoGroup() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return ws_logic_so_group_;
+    }
+
     std::string GetUDPAddrPort() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
@@ -391,6 +481,187 @@ private:
         return 0;
     }
 
+    int LoadWSIface()
+    {
+        char* ws_iface = NULL;
+        if (conf_center_->GetConf(&ws_iface, WS_IFACE_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << WS_IFACE_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&ws_iface);
+            return -1;
+        }
+        ws_iface_ = ws_iface;
+        conf_center_->ReleaseConf(&ws_iface);
+        return 0;
+    }
+
+    int LoadWSPort()
+    {
+        if (conf_center_->GetConf(ws_port_, WS_PORT_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << WS_PORT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadWSSIface()
+    {
+        char* wss_iface = NULL;
+        if (conf_center_->GetConf(&wss_iface, WSS_IFACE_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << WSS_IFACE_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&wss_iface);
+            return -1;
+        }
+        wss_iface_ = wss_iface;
+        conf_center_->ReleaseConf(&wss_iface);
+        return 0;
+    }
+
+    int LoadWSSPort()
+    {
+        if (conf_center_->GetConf(wss_port_, WSS_PORT_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << WSS_PORT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadWSSCertificateChainFilePath()
+    {
+        char* wss_certificate_chain_file_path = NULL;
+        if (conf_center_->GetConf(&wss_certificate_chain_file_path, WSS_CERTIFICATE_CHAIN_FILE_PATH_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << WSS_CERTIFICATE_CHAIN_FILE_PATH_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&wss_certificate_chain_file_path);
+            return -1;
+        }
+        wss_certificate_chain_file_path_ = wss_certificate_chain_file_path;
+        conf_center_->ReleaseConf(&wss_certificate_chain_file_path);
+        return 0;
+    }
+
+    int LoadWSSPrivateKeyFilePath()
+    {
+        char* wss_private_key_file_path = NULL;
+        if (conf_center_->GetConf(&wss_private_key_file_path, WSS_PRIVATE_KEY_FILE_PATH_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << WSS_PRIVATE_KEY_FILE_PATH_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&wss_private_key_file_path);
+            return -1;
+        }
+        wss_private_key_file_path_ = wss_private_key_file_path;
+        conf_center_->ReleaseConf(&wss_private_key_file_path);
+        return 0;
+    }
+
+    int LoadWSConnCountLimit()
+    {
+        if (conf_center_->GetConf(ws_conn_count_limit_, WS_CONN_COUNT_LIMIT_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << WS_CONN_COUNT_LIMIT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadWSInactiveConnCheckIntervalSec()
+    {
+        if (conf_center_->GetConf(ws_inactive_conn_check_interval_sec_, WS_INACTIVE_CONN_CHECK_INTERVAL_SEC_XPATH, true, 60) != 0)
+        {
+            LOG_ERROR("failed to get " << WS_INACTIVE_CONN_CHECK_INTERVAL_SEC_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadWSInactiveConnCheckIntervalUsec()
+    {
+        if (conf_center_->GetConf(ws_inactive_conn_check_interval_usec_, WS_INACTIVE_CONN_CHECK_INTERVAL_USEC_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << WS_INACTIVE_CONN_CHECK_INTERVAL_USEC_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadWSInactiveConnLife()
+    {
+        if (conf_center_->GetConf(ws_inactive_conn_life_, WS_INACTIVE_CONN_LIFE_XPATH, true, 1800) != 0)
+        {
+            LOG_ERROR("failed to get " << WS_INACTIVE_CONN_LIFE_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadWSStormInterval()
+    {
+        if (conf_center_->GetConf(ws_storm_interval_, WS_STORM_INTERVAL_XPATH, true, 10) != 0)
+        {
+            LOG_ERROR("failed to get " << WS_STORM_INTERVAL_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadWSStormThreshold()
+    {
+        if (conf_center_->GetConf(ws_storm_threshold_, WS_STORM_THRESHOLD_XPATH, true, 1000) != 0)
+        {
+            LOG_ERROR("failed to get " << WS_STORM_THRESHOLD_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadWSThreadCount()
+    {
+        if (conf_center_->GetConf(ws_thread_count_, WS_THREAD_COUNT_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << WS_THREAD_COUNT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadWSCommonLogicSo()
+    {
+        char* ws_common_logic_so = NULL;
+        if (conf_center_->GetConf(&ws_common_logic_so, WS_COMMON_LOGIC_SO_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << WS_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&ws_common_logic_so);
+            return -1;
+        }
+        ws_common_logic_so_ = ws_common_logic_so;
+        conf_center_->ReleaseConf(&ws_common_logic_so);
+        return 0;
+    }
+
+    int LoadWSLogicSoGroup()
+    {
+        char** ws_logic_so = NULL;
+        int n = 0;
+        if (conf_center_->GetConf(&ws_logic_so, n, WS_LOGIC_SO_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << WS_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&ws_logic_so, n);
+            return -1;
+        }
+        for (int i = 0; i < n; ++i)
+        {
+            if (strlen(ws_logic_so[i]) > 0)
+            {
+                ws_logic_so_group_.push_back(ws_logic_so[i]);
+            }
+        }
+        conf_center_->ReleaseConf(&ws_logic_so, n);
+        return 0;
+    }
+
     int LoadUDPAddrPort()
     {
         char* udp_addr_port = NULL;
@@ -597,6 +868,21 @@ private:
     int tcp_thread_count_;
     std::string tcp_common_logic_so_;
     StrGroup tcp_logic_so_group_;
+    std::string ws_iface_;
+    int ws_port_;
+    std::string wss_iface_;
+    int wss_port_;
+    std::string wss_certificate_chain_file_path_;
+    std::string wss_private_key_file_path_;
+    int ws_conn_count_limit_;
+    int ws_inactive_conn_check_interval_sec_;
+    int ws_inactive_conn_check_interval_usec_;
+    int ws_inactive_conn_life_;
+    int ws_storm_interval_;
+    int ws_storm_threshold_;
+    int ws_thread_count_;
+    std::string ws_common_logic_so_;
+    StrGroup ws_logic_so_group_;
     std::string udp_addr_port_;
     int udp_inactive_conn_check_interval_sec_;
     int udp_inactive_conn_check_interval_usec_;

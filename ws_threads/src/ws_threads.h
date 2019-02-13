@@ -1,9 +1,9 @@
-#ifndef TCP_THREADS_SRC_TCP_THREADS_H_
-#define TCP_THREADS_SRC_TCP_THREADS_H_
+#ifndef WS_THREADS_SRC_WS_THREADS_H_
+#define WS_THREADS_SRC_WS_THREADS_H_
 
-#include "tcp_threads_interface.h"
+#include "ws_threads_interface.h"
 
-namespace tcp
+namespace ws
 {
 class Threads : public ThreadsInterface
 {
@@ -23,15 +23,13 @@ public:
     ///////////////////////// ThreadsInterface /////////////////////////
     int CreateThreadGroup() override;
     void SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups) override;
-    ThreadGroupInterface* GetListenThreadGroup() const override;
-    ThreadGroupInterface* GetTCPThreadGroup() const override;
+    ThreadGroupInterface* GetWSThreadGroup() const override;
 
 private:
     ThreadsCtx threads_ctx_;
-    ThreadGroupInterface* listen_thread_group_;
-    ThreadGroupInterface* tcp_thread_group_;
+    ThreadGroupInterface* ws_thread_group_;
     RelatedThreadGroups related_thread_groups_;
 };
 }
 
-#endif // TCP_THREADS_SRC_TCP_THREADS_H_
+#endif // WS_THREADS_SRC_WS_THREADS_H_

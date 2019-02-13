@@ -1,9 +1,9 @@
-#ifndef TCP_THREADS_SRC_BASE_CONN_H_
-#define TCP_THREADS_SRC_BASE_CONN_H_
+#ifndef WS_THREADS_SRC_BASE_CONN_H_
+#define WS_THREADS_SRC_BASE_CONN_H_
 
 #include "conn_define.h"
 
-namespace tcp
+namespace ws
 {
 class ThreadSink;
 
@@ -58,7 +58,7 @@ public:
 
     void SetConnGUID(int io_thread_idx, ConnID conn_id)
     {
-        conn_guid_.io_thread_type = IO_THREAD_TYPE_TCP;
+        conn_guid_.io_thread_type = IO_THREAD_TYPE_WS;
         conn_guid_.io_thread_idx = io_thread_idx;
         conn_guid_.conn_id = conn_id;
     }
@@ -83,4 +83,4 @@ protected:
 };
 }
 
-#endif // TCP_THREADS_SRC_BASE_CONN_H_
+#endif // WS_THREADS_SRC_BASE_CONN_H_
