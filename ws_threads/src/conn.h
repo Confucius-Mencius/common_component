@@ -29,7 +29,7 @@ public:
 
     int Send(const void* data, size_t len) override;
 
-    int SendBinary();
+    int SendListData();
 
 private:
     struct lws* wsi_; // 客户端连接句柄

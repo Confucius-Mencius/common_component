@@ -504,6 +504,7 @@ int AppFrame::LoadAndCheckConf()
 //    }
 
     bool tcp_exist = false;
+    bool ws_exist = false;
 //    bool http_exist = false;
 //    bool udp_exist = false;
 //    bool raw_tcp_exist = false;
@@ -532,6 +533,31 @@ int AppFrame::LoadAndCheckConf()
             if (0 == conf_mgr_.GetTCPLogicSoGroup().size())
             {
                 LOG_ERROR("there is no work thread, so there must be at least one tcp logic so");
+                return -1;
+            }
+        }
+    }
+
+    // ws
+    if (conf_mgr_.GetWSIface().length() > 0)
+    {
+        ws_exist = true; // 有ws
+
+        if (0 == conf_mgr_.GetWSThreadCount())
+        {
+            LOG_ERROR("there must be at least one ws thread");
+            return -1;
+        }
+
+        LOG_ALWAYS("ws thread count: " << conf_mgr_.GetWSThreadCount());
+        app_frame_threads_count_ += conf_mgr_.GetWSThreadCount();
+
+        if (0 == conf_mgr_.GetWorkThreadCount())
+        {
+            // 当没有work thread时，io logic group必须存在
+            if (0 == conf_mgr_.GetWSLogicSoGroup().size())
+            {
+                LOG_ERROR("there is no work thread, so there must be at least one ws logic so");
                 return -1;
             }
         }
@@ -659,9 +685,9 @@ int AppFrame::LoadAndCheckConf()
 
     // tcp、http、udp可以同时存在，也可以只有一个存在，不能都不存在
 //    if (!tcp_exist && !http_exist && !udp_exist && !raw_tcp_exist)
-    if (!tcp_exist)
+    if (!tcp_exist && !ws_exist)
     {
-        LOG_ERROR("there must be one tcp or http/https or udp or raw tcp module");
+        LOG_ERROR("there must be one tcp or ws or udp io module");
         return -1;
     }
 

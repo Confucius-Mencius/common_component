@@ -57,14 +57,17 @@ int Conn::Send(const void* data, size_t len)
     buf[LWS_PRE + len] = '\0';
 
     send_list_.push_back(std::string(buf, LWS_PRE + len));
+    LOG_TRACE("push sending data into list, len: " << len);
+
     free(buf);
+    buf = NULL;
 
     lws_callback_on_writable(wsi_);
 
     return 0;
 }
 
-int Conn::SendBinary()
+int Conn::SendListData()
 {
     if (NULL == wsi_)
     {
@@ -73,13 +76,15 @@ int Conn::SendBinary()
 
     for (SendList::const_iterator it = send_list_.begin(); it != send_list_.end(); ++it)
     {
-        const int m = lws_write(wsi_, (unsigned char*) it->data() + LWS_PRE, it->size() - LWS_PRE, LWS_WRITE_BINARY);
-        if (m < (int) (it->size() - LWS_PRE))
+        const int n = lws_write(wsi_, (unsigned char*) it->data() + LWS_PRE, it->size() - LWS_PRE, LWS_WRITE_BINARY);
+        if (n < (int) (it->size() - LWS_PRE))
         {
             const int err = errno;
             LOG_ERROR("lws_write failed, err: " << err << ", err msg: " << strerror(err));
             return -1;
         }
+
+        LOG_TRACE("send ok, n: " << n << ", " << conn_guid_);
     }
 
     return 0;

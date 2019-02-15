@@ -12,42 +12,13 @@
 
 namespace ws
 {
-static void log_emit_function(int level, const char* msg)
-{
-    switch (level)
-    {
-        case LLL_ERR:
-        {
-            LOG_ERROR(msg);
-        }
-        break;
-
-        case LLL_WARN:
-        {
-            LOG_WARN(msg);
-        }
-        break;
-
-        case LLL_NOTICE:
-        {
-            LOG_INFO(msg);
-        }
-        break;
-
-        default:
-        {
-        }
-        break;
-    }
-}
-
 /* one of these is created for each vhost our protocol is used with */
-struct per_vhost_data
-{
-    struct lws_context* context;
-    struct lws_vhost* vhost;
-    const struct lws_protocols* protocol;
-};
+//struct per_vhost_data
+//{
+//    struct lws_context* context;
+//    struct lws_vhost* vhost;
+//    const struct lws_protocols* protocol;
+//};
 
 /*
  * this is just an example of parsing handshake headers, you don't need this
@@ -94,10 +65,10 @@ static int callback_ws(struct lws* wsi, enum lws_callback_reasons reason, void* 
 //        (struct per_session_data*) user;
 
     // 由vhost与protocol获取通过lws_protocol_vh_priv_zalloc分配的结构
-    struct per_vhost_data* vhd = (struct per_vhost_data*) lws_protocol_vh_priv_get(lws_get_vhost(wsi), lws_get_protocol(wsi));
-    if (vhd != NULL)
-    {
-    }
+//    struct per_vhost_data* vhd = (struct per_vhost_data*) lws_protocol_vh_priv_get(lws_get_vhost(wsi), lws_get_protocol(wsi));
+//    if (vhd != NULL)
+//    {
+//    }
 
     const struct lws_protocols* protocol = lws_get_protocol(wsi);
     if (protocol != NULL)
@@ -159,17 +130,17 @@ static int callback_ws(struct lws* wsi, enum lws_callback_reasons reason, void* 
             LOG_TRACE("LWS_CALLBACK_PROTOCOL_INIT");
 
             // 分配vhost+protocol相关的存储块
-            vhd = (struct per_vhost_data*) lws_protocol_vh_priv_zalloc(lws_get_vhost(wsi), lws_get_protocol(wsi), sizeof(struct per_vhost_data));
-            if (NULL == vhd)
-            {
-                const int err = errno;
-                LOG_ERROR("lws_protocol_vh_priv_zalloc failed, errno: " << err << ", err msg: " << strerror(err));
-                return -1;
-            }
+//            vhd = (struct per_vhost_data*) lws_protocol_vh_priv_zalloc(lws_get_vhost(wsi), lws_get_protocol(wsi), sizeof(struct per_vhost_data));
+//            if (NULL == vhd)
+//            {
+//                const int err = errno;
+//                LOG_ERROR("lws_protocol_vh_priv_zalloc failed, errno: " << err << ", err msg: " << strerror(err));
+//                return -1;
+//            }
 
-            vhd->context = lws_get_context(wsi);
-            vhd->vhost = lws_get_vhost(wsi);
-            vhd->protocol = lws_get_protocol(wsi);
+//            vhd->context = lws_get_context(wsi);
+//            vhd->vhost = lws_get_vhost(wsi);
+//            vhd->protocol = lws_get_protocol(wsi);
         }
         break;
 
@@ -301,7 +272,7 @@ static int callback_ws(struct lws* wsi, enum lws_callback_reasons reason, void* 
                 return -1;
             }
 
-            conn->SendBinary();
+            conn->SendListData();
         }
         break;
 
@@ -401,9 +372,6 @@ int WSController::Initialize(const ThreadsCtx* threads_ctx)
 {
     threads_ctx_ = threads_ctx;
 
-    LOG_ALWAYS("libwebsockets version: " << lws_get_library_version());
-    lws_set_log_level(LLL_ERR | LLL_WARN | LLL_NOTICE, log_emit_function);
-
     if (CreateWSContext(false) != 0)
     {
         return -1;
@@ -434,7 +402,7 @@ void WSController::Finalize()
 
 int WSController::CreateWSContext(bool use_ssl)
 {
-    unsigned int opts = LWS_SERVER_OPTION_LIBEVENT;
+    unsigned int opts = LWS_SERVER_OPTION_ALLOW_LISTEN_SHARE | LWS_SERVER_OPTION_LIBEVENT;
     std::string ws = "ws";
     struct lws_context_creation_info* info = &ws_info_;
 
@@ -446,17 +414,19 @@ int WSController::CreateWSContext(bool use_ssl)
 
     memset(info, 0, sizeof(struct lws_context_creation_info));
 
-    info->port = threads_ctx_->conf_mgr->GetWSPort();
-
     if (use_ssl)
     {
         info->port = threads_ctx_->conf_mgr->GetWSSPort();
+    }
+    else
+    {
+        info->port = threads_ctx_->conf_mgr->GetWSPort();
     }
 
     if (0 == threads_ctx_->conf_mgr->GetWSIface().length())
     {
         info->iface = NULL; // 监听所有ip
-        LOG_ALWAYS(ws << " listen addr port: 0.0.0.0:" << threads_ctx_->conf_mgr->GetWSPort());
+        LOG_ALWAYS(ws << " listen addr port: 0.0.0.0:" << info->port);
     }
     else
     {
@@ -480,7 +450,7 @@ int WSController::CreateWSContext(bool use_ssl)
         {
             if (ifp->ifa_addr && ifp->ifa_addr->sa_family == AF_INET)
             {
-                if (strcmp(ifp->ifa_name, iface_))
+                if (0 == strcmp(ifp->ifa_name, iface_))
                 {
                     strncpy(ip, inet_ntoa(((struct sockaddr_in*)ifp->ifa_addr)->sin_addr), 16);
                     strncpy(netmask, inet_ntoa(((struct sockaddr_in*)ifp->ifa_netmask)->sin_addr), 16);
@@ -490,7 +460,7 @@ int WSController::CreateWSContext(bool use_ssl)
         }
 
         freeifaddrs(ifaddr);
-        LOG_ALWAYS(ws << " listen addr port: " << ip << ":" << threads_ctx_->conf_mgr->GetWSPort());
+        LOG_ALWAYS(ws << " listen addr port: " << ip << ":" << info->port);
     }
 
 //    /* 设置http服务器的配置 */
@@ -519,12 +489,6 @@ int WSController::CreateWSContext(bool use_ssl)
     info->protocols = protocols;
     info->extensions = NULL;
 
-    info->ssl_private_key_password = NULL; // TODO 查一下这些东西
-    info->ssl_cert_filepath = NULL;
-    info->ssl_private_key_filepath = NULL;
-    info->ssl_ca_filepath = NULL; // TODO
-    info->ssl_cipher_list = NULL; // TODO
-
     if (use_ssl)
     {
         strcpy(cert_file_path_, threads_ctx_->conf_mgr->GetWSSCertificateChainFilePath().c_str());
@@ -535,7 +499,15 @@ int WSController::CreateWSContext(bool use_ssl)
 
         info->ssl_cert_filepath = cert_file_path_;
         info->ssl_private_key_filepath = private_key_file_path_;
-        opts |= LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
+        opts |= LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT; // TODO app frame中的ssl init看还要不要
+    }
+    else
+    {
+        info->ssl_private_key_password = NULL; // TODO 查一下这些东西
+        info->ssl_cert_filepath = NULL;
+        info->ssl_private_key_filepath = NULL;
+        info->ssl_ca_filepath = NULL; // TODO
+        info->ssl_cipher_list = NULL; // TODO
     }
 
     info->gid = -1;
@@ -547,7 +519,7 @@ int WSController::CreateWSContext(bool use_ssl)
     info->max_http_header_pool = 0; // The max number of connections with http headers that can be processed simultaneously. 0 = allow as many ah as number of availble fds for the process
     info->count_threads = 1; // how many contexts to create in an array, 0 = 1
     info->fd_limit_per_thread = 0; // nonzero means restrict each service thread to this many fds, 0 means the default which is divide the process fd limit by the number of threads.
-    info->keepalive_timeout = 5; // seconds to allow remote client to hold on to an idle HTTP/1.1 connection, 0 = 5s TODO 配置
+    info->keepalive_timeout = 60; // seconds to allow remote client to hold on to an idle HTTP/1.1 connection, 0 = 5s TODO 配置
     info->mounts = NULL;
     info->ws_ping_pong_interval = 0; // 0 for none, else interval in seconds between sending PINGs on idle websocket connections.
     info->headers = NULL; // pointer to optional linked list of per-vhost canned headers that are added to server responses

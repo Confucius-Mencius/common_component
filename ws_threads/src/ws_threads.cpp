@@ -7,6 +7,35 @@
 
 namespace ws
 {
+static void log_emit_function(int level, const char* msg)
+{
+    switch (level)
+    {
+        case LLL_ERR:
+        {
+            LOG_ERROR(msg);
+        }
+        break;
+
+        case LLL_WARN:
+        {
+            LOG_WARN(msg);
+        }
+        break;
+
+        case LLL_NOTICE:
+        {
+            LOG_INFO(msg);
+        }
+        break;
+
+        default:
+        {
+        }
+        break;
+    }
+}
+
 Threads::Threads() : threads_ctx_(), related_thread_groups_()
 {
     ws_thread_group_ = NULL;
@@ -40,6 +69,10 @@ int Threads::Initialize(const void* ctx)
     }
 
     threads_ctx_ = *(static_cast<const ThreadsCtx*>(ctx));
+
+    LOG_ALWAYS("libwebsockets version: " << lws_get_library_version());
+    lws_set_log_level(LLL_ERR | LLL_WARN | LLL_NOTICE, log_emit_function);
+
     return 0;
 }
 
