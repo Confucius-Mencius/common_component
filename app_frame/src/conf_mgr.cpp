@@ -31,7 +31,6 @@ int ConfMgr::Load()
     tcp_logic_so_group_.clear();
     ws_iface_ = "";
     ws_port_ = 0;
-    wss_iface_ = "";
     wss_port_ = 0;
     wss_certificate_chain_file_path_ = "";
     wss_private_key_file_path_ = "";
@@ -140,11 +139,6 @@ int ConfMgr::Load()
     }
 
     if (LoadWSPort() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadWSSIface() != 0)
     {
         return -1;
     }

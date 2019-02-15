@@ -128,12 +128,6 @@ public:
         return ws_port_;
     }
 
-    std::string GetWSSIface() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return wss_iface_;
-    }
-
     int GetWSSPort() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
@@ -505,20 +499,6 @@ private:
         return 0;
     }
 
-    int LoadWSSIface()
-    {
-        char* wss_iface = NULL;
-        if (conf_center_->GetConf(&wss_iface, WSS_IFACE_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << WSS_IFACE_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&wss_iface);
-            return -1;
-        }
-        wss_iface_ = wss_iface;
-        conf_center_->ReleaseConf(&wss_iface);
-        return 0;
-    }
-
     int LoadWSSPort()
     {
         if (conf_center_->GetConf(wss_port_, WSS_PORT_XPATH, true, 0) != 0)
@@ -870,7 +850,6 @@ private:
     StrGroup tcp_logic_so_group_;
     std::string ws_iface_;
     int ws_port_;
-    std::string wss_iface_;
     int wss_port_;
     std::string wss_certificate_chain_file_path_;
     std::string wss_private_key_file_path_;

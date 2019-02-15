@@ -40,62 +40,58 @@ void Scheduler::Finalize()
 
 int Scheduler::SendToClient(const ConnGUID* conn_guid, const void* data, size_t len)
 {
-    (void) conn_guid;
-    (void) data;
-    (void) len;
-//    ThreadInterface* tcp_thread = thread_sink_->GetTCPThreadGroup()->GetThread(conn_guid->io_thread_idx);
-//    if (tcp_thread == thread_sink_->GetThread())
-//    {
-//        // 是自己
-//        BaseConn* conn = thread_sink_->GetConnMgr()->GetConnByID(conn_guid->conn_id);
-//        if (NULL == conn)
-//        {
-//            LOG_ERROR("failed to get tcp conn by id: " << conn_guid->conn_id);
-//            return -1;
-//        }
+    ThreadInterface* ws_thread = thread_sink_->GetWSThreadGroup()->GetThread(conn_guid->io_thread_idx);
+    if (ws_thread == thread_sink_->GetThread())
+    {
+        // 是自己
+        BaseConn* conn = thread_sink_->GetConnMgr()->GetConnByID(conn_guid->conn_id);
+        if (NULL == conn)
+        {
+            LOG_ERROR("failed to get ws conn by id: " << conn_guid->conn_id);
+            return -1;
+        }
 
-//        return conn->Send(data, len);
-//    }
+        return conn->Send(data, len);
+    }
 
-//    // 是其它的tcp线程
-//    ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_SEND_TO_CLIENT, thread_sink_->GetThread(), conn_guid, data, len);
-//    if (NULL == task)
-//    {
-//        const int err = errno;
-//        LOG_ERROR("failed to create task, errno: " << err << ", err msg: " << strerror(err));
-//        return -1;
-//    }
+    // 是其它的ws线程
+    ThreadTask* task = new ThreadTask(TASK_TYPE_WS_SEND_TO_CLIENT, thread_sink_->GetThread(), conn_guid, data, len);
+    if (NULL == task)
+    {
+        const int err = errno;
+        LOG_ERROR("failed to create task, errno: " << err << ", err msg: " << strerror(err));
+        return -1;
+    }
 
-//    tcp_thread->PushTask(task);
+    ws_thread->PushTask(task);
     return 0;
 }
 
 int Scheduler::CloseClient(const ConnGUID* conn_guid)
 {
-    (void) conn_guid;
-//    ThreadInterface* tcp_thread = thread_sink_->GetTCPThreadGroup()->GetThread(conn_guid->io_thread_idx);
-//    if (tcp_thread == thread_sink_->GetThread())
-//    {
-//        BaseConn* conn = thread_sink_->GetConnMgr()->GetConnByID(conn_guid->conn_id);
-//        if (NULL == conn)
-//        {
-//            LOG_ERROR("failed to get tcp conn by id: " << conn_guid->conn_id);
-//            return -1;
-//        }
+    ThreadInterface* ws_thread = thread_sink_->GetWSThreadGroup()->GetThread(conn_guid->io_thread_idx);
+    if (ws_thread == thread_sink_->GetThread())
+    {
+        BaseConn* conn = thread_sink_->GetConnMgr()->GetConnByID(conn_guid->conn_id);
+        if (NULL == conn)
+        {
+            LOG_ERROR("failed to get tcp conn by id: " << conn_guid->conn_id);
+            return -1;
+        }
 
-//        thread_sink_->OnClientClosed(conn);
-//        return 0;
-//    }
+        thread_sink_->OnClientClosed(conn);
+        return 0;
+    }
 
-//    ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_CLOSE_CONN, thread_sink_->GetThread(), conn_guid, NULL, 0);
-//    if (NULL == task)
-//    {
-//        const int err = errno;
-//        LOG_ERROR("failed to create task, errno: " << err << ", err msg: " << strerror(err));
-//        return -1;
-//    }
+    ThreadTask* task = new ThreadTask(TASK_TYPE_WS_CLOSE_CONN, thread_sink_->GetThread(), conn_guid, NULL, 0);
+    if (NULL == task)
+    {
+        const int err = errno;
+        LOG_ERROR("failed to create task, errno: " << err << ", err msg: " << strerror(err));
+        return -1;
+    }
 
-//    tcp_thread->PushTask(task);
+    ws_thread->PushTask(task);
     return 0;
 }
 

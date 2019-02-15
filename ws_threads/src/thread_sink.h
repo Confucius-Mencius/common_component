@@ -1,17 +1,13 @@
 #ifndef WS_THREADS_SRC_THREAD_SINK_H_
 #define WS_THREADS_SRC_THREAD_SINK_H_
 
-#include <set>
-#include <event2/buffer.h>
-#include <event2/bufferevent.h>
-#include <event2/event_struct.h>
-#include <event2/util.h>
-#include <libwebsockets.h>
+#include "conn_mgr.h"
 #include "mem_util.h"
 #include "module_loader.h"
-#include "conn_mgr.h"
-#include "ws_logic_interface.h"
+#include "new_conn.h"
 #include "scheduler.h"
+#include "ws_controller.h"
+#include "ws_logic_interface.h"
 
 namespace ws
 {
@@ -67,14 +63,13 @@ public:
         return &conn_mgr_;
     }
 
+    int OnClientConnected(const NewConnCtx* new_conn_ctx);
     void OnClientClosed(const BaseConn* conn);
     void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len);
 
 private:
-    int BindWSSocket();
     int LoadCommonLogic();
     int LoadLogicGroup();
-//    void OnClientConnected(const NewConnCtx* new_conn_ctx);
 
 private:
     const ThreadsCtx* threads_ctx_;
@@ -82,13 +77,7 @@ private:
     ThreadGroupInterface* ws_thread_group_;
     RelatedThreadGroups* related_thread_group_;
 
-    struct lws_context_creation_info ws_info_;
-    char ws_iface_[128];
-//    struct lws_http_mount http_mount_;
-    char cert_path[1024];
-    char key_path[1024];
-    void* ws_foreign_loops_[1];
-    struct lws_context* ws_context_;
+    WSController ws_controller_;
 
     ModuleLoader common_logic_loader_;
     CommonLogicInterface* common_logic_;

@@ -5,6 +5,7 @@
 #include "conf_mgr.h"
 #include "module_loader.h"
 #include "tcp_threads_interface.h"
+#include "ws_threads_interface.h"
 
 namespace app_frame
 {
@@ -37,6 +38,7 @@ private:
 //    int LoadWorkThreads();
 //    int LoadBurdenThreads();
     int LoadTCPThreads();
+    int LoadWSThreads();
 //    int LoadHttpThreads();
 //    int LoadUdpThreads();
 //    int LoadRawTcpThreads();
@@ -57,6 +59,9 @@ private:
 //    burden::ThreadsInterface* burden_threads_;
     ModuleLoader tcp_threads_loader_;
     tcp::ThreadsInterface* tcp_threads_;
+
+    ModuleLoader ws_threads_loader_;
+    ws::ThreadsInterface* ws_threads_;
 //    ModuleLoader http_threads_loader_;
 //    http::ThreadsInterface* http_threads_;
 //    ModuleLoader udp_threads_loader_;

@@ -393,7 +393,7 @@ int ThreadSink::LoadLogicGroup()
     return 0;
 }
 
-void ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
+int ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
 {
     BaseConn* conn = conn_mgr_.GetConn(new_conn_ctx->client_sock_fd);
     if (conn != NULL)
@@ -415,11 +415,11 @@ void ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
         if (NULL == task)
         {
             LOG_ERROR("failed to create tcp conn closed task");
-            return;
+            return -1;
         }
 
         listen_thread_->PushTask(task);
-        return;
+        return -1;
     }
 
     if (common_logic_ != NULL)
@@ -431,6 +431,8 @@ void ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
     {
         (*it).logic->OnClientConnected(conn->GetConnGUID());
     }
+
+    return 0;
 }
 
 void ThreadSink::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)

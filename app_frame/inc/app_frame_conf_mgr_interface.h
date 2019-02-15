@@ -29,7 +29,6 @@ public:
     virtual StrGroup GetTCPLogicSoGroup() = 0;
     virtual std::string GetWSIface() = 0;
     virtual int GetWSPort() = 0;
-    virtual std::string GetWSSIface() = 0;
     virtual int GetWSSPort() = 0;
     virtual std::string GetWSSCertificateChainFilePath() = 0;
     virtual std::string GetWSSPrivateKeyFilePath() = 0;

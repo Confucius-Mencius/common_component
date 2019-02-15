@@ -2,7 +2,7 @@
 #define WS_THREADS_SRC_CONN_H_
 
 #include <list>
-#include <event2/event.h>
+#include <libwebsockets.h>
 #include "base_conn.h"
 #include "mem_util.h"
 
@@ -12,13 +12,14 @@ class Conn : public BaseConn
 {
     CREATE_FUNC(Conn)
 
-private:
-    static void ReadCallback(evutil_socket_t fd, short events, void* arg);
-    static void WriteCallback(evutil_socket_t fd, short events, void* arg);
-
 public:
     Conn();
     virtual ~Conn();
+
+    void SetWsi(struct lws* wsi)
+    {
+        wsi_ = wsi;
+    }
 
     void Release() override;
     int Initialize(const void* ctx) override;
@@ -28,13 +29,13 @@ public:
 
     int Send(const void* data, size_t len) override;
 
+    int SendBinary();
+
 private:
-    struct event* read_event_;
+    struct lws* wsi_; // 客户端连接句柄
 
     typedef std::list<std::string> SendList; // data to send
     SendList send_list_;
-
-    struct event* write_event_;
 };
 }
 

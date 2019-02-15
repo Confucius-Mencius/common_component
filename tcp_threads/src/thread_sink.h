@@ -1,17 +1,12 @@
 #ifndef TCP_THREADS_SRC_THREAD_SINK_H_
 #define TCP_THREADS_SRC_THREAD_SINK_H_
 
-#include <set>
-#include <event2/buffer.h>
-#include <event2/bufferevent.h>
-#include <event2/event_struct.h>
-#include <event2/util.h>
-#include "new_conn.h"
+#include "conn_mgr.h"
 #include "mem_util.h"
 #include "module_loader.h"
-#include "conn_mgr.h"
-#include "tcp_logic_interface.h"
+#include "new_conn.h"
 #include "scheduler.h"
+#include "tcp_logic_interface.h"
 
 namespace tcp
 {
@@ -78,7 +73,7 @@ public:
 private:
     int LoadCommonLogic();
     int LoadLogicGroup();
-    void OnClientConnected(const NewConnCtx* new_conn_ctx);
+    int OnClientConnected(const NewConnCtx* new_conn_ctx);
 
 private:
     const ThreadsCtx* threads_ctx_;
