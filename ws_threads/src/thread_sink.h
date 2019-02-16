@@ -72,7 +72,6 @@ private:
 
 private:
     const ThreadsCtx* threads_ctx_;
-    ThreadInterface* listen_thread_;
     ThreadGroupInterface* ws_thread_group_;
     RelatedThreadGroups* related_thread_group_;
 

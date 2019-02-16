@@ -179,7 +179,8 @@ static int callback_ws(struct lws* wsi, enum lws_callback_reasons reason, void* 
         case LWS_CALLBACK_ESTABLISHED:
         {
             LOG_TRACE("LWS_CALLBACK_ESTABLISHED");
-            ThreadSink* thread_sink = static_cast<ThreadSink*>(lws_vhost_user(lws_get_vhost(wsi)));
+            ThreadGroupInterface* ws_thread_group = static_cast<ThreadGroupInterface*>(lws_vhost_user(lws_get_vhost(wsi)));
+            ThreadSink* thread_sink = static_cast<ThreadSink*>(ws_thread_group->GetThread(0)->GetThreadSink()); // TODO
 
             NewConnCtx new_conn_ctx;
             new_conn_ctx.client_sock_fd = lws_get_socket_fd(wsi);
@@ -244,7 +245,9 @@ static int callback_ws(struct lws* wsi, enum lws_callback_reasons reason, void* 
         case LWS_CALLBACK_CLOSED:
         {
             LOG_TRACE("LWS_CALLBACK_CLOSED");
-            ThreadSink* thread_sink = static_cast<ThreadSink*>(lws_vhost_user(lws_get_vhost(wsi)));
+            ThreadGroupInterface* ws_thread_group = static_cast<ThreadGroupInterface*>(lws_vhost_user(lws_get_vhost(wsi)));
+            ThreadSink* thread_sink = static_cast<ThreadSink*>(ws_thread_group->GetThread(0)->GetThreadSink()); // TODO
+
             const lws_sockfd_type sock_fd = lws_get_socket_fd(wsi);
 
             BaseConn* conn = thread_sink->GetConnMgr()->GetConn(sock_fd);
@@ -264,7 +267,9 @@ static int callback_ws(struct lws* wsi, enum lws_callback_reasons reason, void* 
             LOG_TRACE("LWS_CALLBACK_SERVER_WRITEABLE");
             LOG_DEBUG("LWS_PRE: " << LWS_PRE);
 
-            ThreadSink* thread_sink = static_cast<ThreadSink*>(lws_vhost_user(lws_get_vhost(wsi)));
+            ThreadGroupInterface* ws_thread_group = static_cast<ThreadGroupInterface*>(lws_vhost_user(lws_get_vhost(wsi)));
+            ThreadSink* thread_sink = static_cast<ThreadSink*>(ws_thread_group->GetThread(0)->GetThreadSink()); // TODO
+
             const lws_sockfd_type sock_fd = lws_get_socket_fd(wsi);
 
             ConnMgr* conn_mgr = thread_sink->GetConnMgr();
@@ -288,7 +293,8 @@ static int callback_ws(struct lws* wsi, enum lws_callback_reasons reason, void* 
             LOG_DEBUG("LWS_PRE: " << LWS_PRE << ", lws_is_final_fragment(wsi): " << lws_is_final_fragment(wsi));
             LOG_DEBUG("in: " << (const char*) in << ", len: " << len);
 
-            ThreadSink* thread_sink = static_cast<ThreadSink*>(lws_vhost_user(lws_get_vhost(wsi)));
+            ThreadGroupInterface* ws_thread_group = static_cast<ThreadGroupInterface*>(lws_vhost_user(lws_get_vhost(wsi)));
+            ThreadSink* thread_sink = static_cast<ThreadSink*>(ws_thread_group->GetThread(0)->GetThreadSink()); // TODO
 
             if (thread_sink->GetThread()->IsStopping())
             {
