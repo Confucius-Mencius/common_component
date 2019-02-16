@@ -36,7 +36,7 @@ static void log_emit_function(int level, const char* msg)
     }
 }
 
-Threads::Threads() : threads_ctx_(), related_thread_groups_()
+Threads::Threads() : threads_ctx_(), related_thread_groups_(), ws_controller_()
 {
     ws_thread_group_ = NULL;
 }
@@ -71,13 +71,14 @@ int Threads::Initialize(const void* ctx)
     threads_ctx_ = *(static_cast<const ThreadsCtx*>(ctx));
 
     LOG_ALWAYS("libwebsockets version: " << lws_get_library_version());
-    lws_set_log_level(LLL_ERR | LLL_WARN | LLL_NOTICE, log_emit_function);
+    lws_set_log_level(LLL_ERR | LLL_WARN | LLL_NOTICE | LLL_INFO, log_emit_function);
 
     return 0;
 }
 
 void Threads::Finalize()
 {
+    ws_controller_.Finalize();
     SAFE_FINALIZE(ws_thread_group_);
 }
 
@@ -130,6 +131,15 @@ int Threads::CreateThreadGroup()
         if (ws_thread_group_ != NULL)
         {
             SAFE_DESTROY(ws_thread_group_);
+        }
+    }
+    else
+    {
+        ws_controller_.SetWSThreadGroup(ws_thread_group_);
+
+        if (ws_controller_.Initialize(&threads_ctx_) != 0)
+        {
+            return -1;
         }
     }
 

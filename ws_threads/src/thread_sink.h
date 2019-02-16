@@ -6,7 +6,6 @@
 #include "module_loader.h"
 #include "new_conn.h"
 #include "scheduler.h"
-#include "ws_controller.h"
 #include "ws_logic_interface.h"
 
 namespace ws
@@ -76,8 +75,6 @@ private:
     ThreadInterface* listen_thread_;
     ThreadGroupInterface* ws_thread_group_;
     RelatedThreadGroups* related_thread_group_;
-
-    WSController ws_controller_;
 
     ModuleLoader common_logic_loader_;
     CommonLogicInterface* common_logic_;

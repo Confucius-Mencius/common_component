@@ -13,12 +13,12 @@
 namespace ws
 {
 /* one of these is created for each vhost our protocol is used with */
-//struct per_vhost_data
-//{
-//    struct lws_context* context;
-//    struct lws_vhost* vhost;
-//    const struct lws_protocols* protocol;
-//};
+struct per_vhost_data
+{
+    struct lws_context* context;
+    struct lws_vhost* vhost;
+    const struct lws_protocols* protocol;
+};
 
 /*
  * this is just an example of parsing handshake headers, you don't need this
@@ -50,7 +50,7 @@ void dump_handshake_info(struct lws* wsi)
         lws_hdr_copy(wsi, buf, sizeof buf, (lws_token_indexes) n);
         buf[sizeof(buf) - 1] = '\0';
 
-        lwsl_notice("    %s = %s\n", (char*) c, buf);
+        LOG_DEBUG((char*) c << " = " << buf);
         n++;
     } while (c);
 }
@@ -65,10 +65,7 @@ static int callback_ws(struct lws* wsi, enum lws_callback_reasons reason, void* 
 //        (struct per_session_data*) user;
 
     // 由vhost与protocol获取通过lws_protocol_vh_priv_zalloc分配的结构
-//    struct per_vhost_data* vhd = (struct per_vhost_data*) lws_protocol_vh_priv_get(lws_get_vhost(wsi), lws_get_protocol(wsi));
-//    if (vhd != NULL)
-//    {
-//    }
+    struct per_vhost_data* vhd = (struct per_vhost_data*) lws_protocol_vh_priv_get(lws_get_vhost(wsi), lws_get_protocol(wsi));
 
     const struct lws_protocols* protocol = lws_get_protocol(wsi);
     if (protocol != NULL)
@@ -117,8 +114,12 @@ static int callback_ws(struct lws* wsi, enum lws_callback_reasons reason, void* 
             break;
 
         case LWS_CALLBACK_PROTOCOL_DESTROY:
+        {
             LOG_TRACE("LWS_CALLBACK_PROTOCOL_DESTROY");
-            break;
+
+            // 销毁自己分配的一些资源
+        }
+        break;
 
         case LWS_CALLBACK_GET_THREAD_ID:
             LOG_TRACE("LWS_CALLBACK_GET_THREAD_ID");
@@ -130,17 +131,19 @@ static int callback_ws(struct lws* wsi, enum lws_callback_reasons reason, void* 
             LOG_TRACE("LWS_CALLBACK_PROTOCOL_INIT");
 
             // 分配vhost+protocol相关的存储块
-//            vhd = (struct per_vhost_data*) lws_protocol_vh_priv_zalloc(lws_get_vhost(wsi), lws_get_protocol(wsi), sizeof(struct per_vhost_data));
-//            if (NULL == vhd)
-//            {
-//                const int err = errno;
-//                LOG_ERROR("lws_protocol_vh_priv_zalloc failed, errno: " << err << ", err msg: " << strerror(err));
-//                return -1;
-//            }
+            vhd = (struct per_vhost_data*) lws_protocol_vh_priv_zalloc(lws_get_vhost(wsi), lws_get_protocol(wsi), sizeof(struct per_vhost_data));
+            if (NULL == vhd)
+            {
+                const int err = errno;
+                LOG_ERROR("lws_protocol_vh_priv_zalloc failed, errno: " << err << ", err msg: " << strerror(err));
+                return -1;
+            }
 
-//            vhd->context = lws_get_context(wsi);
-//            vhd->vhost = lws_get_vhost(wsi);
-//            vhd->protocol = lws_get_protocol(wsi);
+            vhd->context = lws_get_context(wsi);
+            vhd->vhost = lws_get_vhost(wsi);
+            vhd->protocol = lws_get_protocol(wsi);
+
+            // 自己分配一些资源
         }
         break;
 
@@ -358,7 +361,8 @@ static struct lws_protocols protocols[] =
 WSController::WSController()
 {
     threads_ctx_ = NULL;
-    thread_sink_ = NULL;
+    ws_thread_group_ = NULL;
+    ws_foreign_loops_ = NULL;
     ws_context_ = NULL;
     wss_context_ = NULL;
 }
@@ -397,6 +401,12 @@ void WSController::Finalize()
     {
         lws_context_destroy(ws_context_);
         ws_context_ = NULL;
+    }
+
+    if (ws_foreign_loops_ != NULL)
+    {
+        delete [] ws_foreign_loops_;
+        ws_foreign_loops_ = NULL;
     }
 }
 
@@ -460,6 +470,13 @@ int WSController::CreateWSContext(bool use_ssl)
         }
 
         freeifaddrs(ifaddr);
+
+        if ('\0' == ip[0])
+        {
+            LOG_ERROR("iface not found: " << iface_);
+            return -1;
+        }
+
         LOG_ALWAYS(ws << " listen addr port: " << ip << ":" << info->port);
     }
 
@@ -512,12 +529,12 @@ int WSController::CreateWSContext(bool use_ssl)
 
     info->gid = -1;
     info->uid = -1;
-    info->user = this;
+    info->user = ws_thread_group_;
     info->options = opts;
     info->max_http_header_data = 0;
     info->max_http_header_data2 = 1024; // The max amount of header payload that can be handled in an http request TODO 配置
     info->max_http_header_pool = 0; // The max number of connections with http headers that can be processed simultaneously. 0 = allow as many ah as number of availble fds for the process
-    info->count_threads = 1; // how many contexts to create in an array, 0 = 1
+    info->count_threads = ws_thread_group_->GetThreadCount(); // how many contexts to create in an array, 0 = 1
     info->fd_limit_per_thread = 0; // nonzero means restrict each service thread to this many fds, 0 means the default which is divide the process fd limit by the number of threads.
     info->keepalive_timeout = 60; // seconds to allow remote client to hold on to an idle HTTP/1.1 connection, 0 = 5s TODO 配置
     info->mounts = NULL;
@@ -530,11 +547,23 @@ int WSController::CreateWSContext(bool use_ssl)
     info->client_ssl_ca_filepath = NULL;
     info->client_ssl_cipher_list = NULL;
 
+    ws_foreign_loops_ = new void* [ws_thread_group_->GetThreadCount()];
+    if (NULL == ws_foreign_loops_)
+    {
+        const int err = errno;
+        LOG_ERROR("failed to alloc memory, errno: " << err << ", err msg: " << strerror(err));
+        return -1;
+    }
+
+    for (int i = 0; i < ws_thread_group_->GetThreadCount(); ++i)
+    {
+        ws_foreign_loops_[i] = ws_thread_group_->GetThread(i)->GetThreadEvBase();
+    }
+
+    info->foreign_loops = ws_foreign_loops_;
+
     if (use_ssl)
     {
-        wss_foreign_loops_[0] = thread_sink_->GetThread()->GetThreadEvBase();
-        info->foreign_loops = wss_foreign_loops_;
-
         wss_context_ = lws_create_context(info);
         if (NULL == wss_context_)
         {
@@ -545,14 +574,11 @@ int WSController::CreateWSContext(bool use_ssl)
     }
     else
     {
-        ws_foreign_loops_[0] = thread_sink_->GetThread()->GetThreadEvBase();
-        info->foreign_loops = ws_foreign_loops_;
-
         ws_context_ = lws_create_context(info);
         if (NULL == ws_context_)
         {
             const int err = errno;
-            LOG_ERROR("lws_create_context init failed, errno: " << err << ", err msg: " << strerror(err));
+            LOG_ERROR("lws_create_context failed, errno: " << err << ", err msg: " << strerror(err));
             return -1;
         }
     }

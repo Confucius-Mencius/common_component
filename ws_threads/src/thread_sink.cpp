@@ -42,14 +42,8 @@ int ThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
     }
 
     threads_ctx_ = static_cast<const ThreadsCtx*>(ctx);
-    ws_controller_.SetThreadSink(this);
     conn_mgr_.SetThreadSink(this);
     scheduler_.SetThreadSink(this);
-
-    if (ws_controller_.Initialize(threads_ctx_) != 0)
-    {
-        return -1;
-    }
 
     ConnMgrCtx conn_mgr_ctx;
     conn_mgr_ctx.timer_axis = self_thread_->GetTimerAxis();
@@ -97,7 +91,6 @@ void ThreadSink::OnFinalize()
     SAFE_FINALIZE(common_logic_);
     scheduler_.Finalize();
     conn_mgr_.Finalize();
-    ws_controller_.Finalize();
 
     ThreadSinkInterface::OnFinalize();
 }
