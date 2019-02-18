@@ -368,25 +368,81 @@ WSController::WSController()
 {
     threads_ctx_ = NULL;
     ws_thread_group_ = NULL;
-    ws_foreign_loops_ = NULL;
+    iface_[0] = '\0';
+    iface_ip_[0] = '\0';
+    cert_file_path_[0] = '\0';
+    private_key_file_path_[0] = '\0';
+    foreign_loops_ = NULL;
     ws_context_ = NULL;
     wss_context_ = NULL;
 }
 
 WSController::~WSController()
 {
-
 }
 
 int WSController::Initialize(const ThreadsCtx* threads_ctx)
 {
     threads_ctx_ = threads_ctx;
 
+    // common
+    if (threads_ctx_->conf_mgr->GetWSIface().length() > 0)
+    {
+        strcpy(iface_, threads_ctx_->conf_mgr->GetWSIface().c_str());
+
+        struct ifaddrs* ifaddr = NULL;
+
+        if (getifaddrs(&ifaddr) != 0)
+        {
+            const int err = errno;
+            LOG_ERROR("getifaddrs failed, errno: " << err << ", err msg: " << strerror(err));
+            return -1;
+        }
+
+//        char netmask[INET_ADDRSTRLEN] = "";
+
+        for (struct ifaddrs* ifp = ifaddr; ifp != NULL; ifp = ifp->ifa_next)
+        {
+            if (ifp->ifa_addr && ifp->ifa_addr->sa_family == AF_INET)
+            {
+                if (0 == strcmp(ifp->ifa_name, iface_))
+                {
+                    strncpy(iface_ip_, inet_ntoa(((struct sockaddr_in*)ifp->ifa_addr)->sin_addr), sizeof(iface_ip_));
+//                    strncpy(netmask, inet_ntoa(((struct sockaddr_in*)ifp->ifa_netmask)->sin_addr), sizeof(netmask));
+                    break;
+                }
+            }
+        }
+
+        freeifaddrs(ifaddr);
+
+        if ('\0' == iface_ip_[0])
+        {
+            LOG_ERROR("iface not found: " << iface_);
+            return -1;
+        }
+    }
+
+    foreign_loops_ = new void* [ws_thread_group_->GetThreadCount()];
+    if (NULL == foreign_loops_)
+    {
+        const int err = errno;
+        LOG_ERROR("failed to alloc memory, errno: " << err << ", err msg: " << strerror(err));
+        return -1;
+    }
+
+    for (int i = 0; i < ws_thread_group_->GetThreadCount(); ++i)
+    {
+        foreign_loops_[i] = ws_thread_group_->GetThread(i)->GetThreadEvBase();
+    }
+
+    // ws
     if (CreateWSContext(false) != 0)
     {
         return -1;
     }
 
+    // wss
     if (CreateWSContext(true) != 0)
     {
         return -1;
@@ -409,10 +465,10 @@ void WSController::Finalize()
         ws_context_ = NULL;
     }
 
-    if (ws_foreign_loops_ != NULL)
+    if (foreign_loops_ != NULL)
     {
-        delete [] ws_foreign_loops_;
-        ws_foreign_loops_ = NULL;
+        delete [] foreign_loops_;
+        foreign_loops_ = NULL;
     }
 }
 
@@ -439,51 +495,15 @@ int WSController::CreateWSContext(bool use_ssl)
         info->port = threads_ctx_->conf_mgr->GetWSPort();
     }
 
-    if (0 == threads_ctx_->conf_mgr->GetWSIface().length())
+    if ('\0' == iface_[0])
     {
         info->iface = NULL; // 监听所有ip
         LOG_ALWAYS(ws << " listen addr port: 0.0.0.0:" << info->port);
     }
     else
     {
-        strcpy(iface_, threads_ctx_->conf_mgr->GetWSIface().c_str());
         info->iface = iface_;
-
-        std::string iface_ip = "";
-        struct ifaddrs* ifaddr = NULL;
-
-        if (getifaddrs(&ifaddr) != 0)
-        {
-            const int err = errno;
-            LOG_ERROR("getifaddrs failed, errno: " << err << ", err msg: " << strerror(err));
-            return -1;
-        }
-
-        char ip[16] = "";
-        char netmask[16] = "";
-
-        for (struct ifaddrs* ifp = ifaddr; ifp != NULL; ifp = ifp->ifa_next)
-        {
-            if (ifp->ifa_addr && ifp->ifa_addr->sa_family == AF_INET)
-            {
-                if (0 == strcmp(ifp->ifa_name, iface_))
-                {
-                    strncpy(ip, inet_ntoa(((struct sockaddr_in*)ifp->ifa_addr)->sin_addr), 16);
-                    strncpy(netmask, inet_ntoa(((struct sockaddr_in*)ifp->ifa_netmask)->sin_addr), 16);
-                    break;
-                }
-            }
-        }
-
-        freeifaddrs(ifaddr);
-
-        if ('\0' == ip[0])
-        {
-            LOG_ERROR("iface not found: " << iface_);
-            return -1;
-        }
-
-        LOG_ALWAYS(ws << " listen addr port: " << ip << ":" << info->port);
+        LOG_ALWAYS(ws << " listen addr port: " << iface_ip_ << ":" << info->port);
     }
 
 //    /* 设置http服务器的配置 */
@@ -553,20 +573,7 @@ int WSController::CreateWSContext(bool use_ssl)
     info->client_ssl_ca_filepath = NULL;
     info->client_ssl_cipher_list = NULL;
 
-    ws_foreign_loops_ = new void* [ws_thread_group_->GetThreadCount()];
-    if (NULL == ws_foreign_loops_)
-    {
-        const int err = errno;
-        LOG_ERROR("failed to alloc memory, errno: " << err << ", err msg: " << strerror(err));
-        return -1;
-    }
-
-    for (int i = 0; i < ws_thread_group_->GetThreadCount(); ++i)
-    {
-        ws_foreign_loops_[i] = ws_thread_group_->GetThread(i)->GetThreadEvBase();
-    }
-
-    info->foreign_loops = ws_foreign_loops_;
+    info->foreign_loops = foreign_loops_;
 
     if (use_ssl)
     {

@@ -28,14 +28,15 @@ private:
     ThreadGroupInterface* ws_thread_group_;
 
     char iface_[128];
+    char iface_ip_[INET_ADDRSTRLEN];
 //    struct lws_http_mount http_mount_;
     char cert_file_path_[1024];
     char private_key_file_path_[1024];
-    void** ws_foreign_loops_;
+    void** foreign_loops_; // foreign loops是每个线程独立的
 
     // ws
     struct lws_context_creation_info ws_info_;
-    struct lws_context* ws_context_;
+    struct lws_context* ws_context_; // 这个context是被所有线程共用的，但event loop是每个线程独立的，回调中是什么情况？哪里需要加锁？TODO
 
     // wss
     struct lws_context_creation_info wss_info_;
