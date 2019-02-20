@@ -385,7 +385,7 @@ int WSController::Initialize(const ThreadsCtx* threads_ctx)
 {
     threads_ctx_ = threads_ctx;
 
-    // common
+    // ws/wss both
     if (threads_ctx_->conf_mgr->GetWSIface().length() > 0)
     {
         strcpy(iface_, threads_ctx_->conf_mgr->GetWSIface().c_str());
