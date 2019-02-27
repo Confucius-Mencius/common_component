@@ -17,8 +17,9 @@ link_directories(${BASE_LIB_DIR} ${LIBUUID_LIB_DIR} ${GTEST_LIB_DIR} ${GPERFTOOL
 # target and linked library
 file(GLOB HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.h ${PROJ_INC_DIR}/*.h)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} CUR_DIR_SRCS)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/cpp11 CPP11_TEST_SRCS)
 
-add_executable(${EXE_NAME} ${HEADERS} ${CUR_DIR_SRCS})
+add_executable(${EXE_NAME} ${HEADERS} ${CUR_DIR_SRCS} ${CPP11_TEST_SRCS})
 
 target_link_libraries(${EXE_NAME} ${BASE_LIB_NAME} ${LIBUUID_LIB_NAME} ${GTEST_LIB_NAME}
         pthread ${GPERFTOOLS_LIB_NAME})

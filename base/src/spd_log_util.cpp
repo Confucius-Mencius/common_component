@@ -2,7 +2,7 @@
 //#include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/daily_file_sink.h>
 
-int SPDLogInitialize(const SPDLogCtx* ctx)
+int SpdLogInitialize(const SpdLogCtx* ctx)
 {
     if (NULL == ctx || NULL == ctx->logger_file_path || NULL == ctx->logger_name)
     {
@@ -26,12 +26,12 @@ int SPDLogInitialize(const SPDLogCtx* ctx)
     return 0;
 }
 
-void SPDLogFinalize()
+void SpdLogFinalize()
 {
     spdlog::drop_all();
 }
 
-int SPDLogSetLevel(int level)
+int SpdLogSetLevel(int level)
 {
     if (level < spdlog::level::trace || level > spdlog::level::err)
     {

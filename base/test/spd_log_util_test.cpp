@@ -15,16 +15,16 @@ SPDLogUtilTest::~SPDLogUtilTest()
 
 void SPDLogUtilTest::SetUpTestCase()
 {
-    SPDLogCtx ctx;
+    SpdLogCtx ctx;
     ctx.logger_file_path = "./logs/spdlog.log";
     ctx.logger_name = "spdlog";
 
-    EXPECT_EQ(0, SPDLogInitialize(&ctx));
+    EXPECT_EQ(0, SpdLogInitialize(&ctx));
 }
 
 void SPDLogUtilTest::TearDownTestCase()
 {
-    SPDLogFinalize();
+    SpdLogFinalize();
 }
 
 void SPDLogUtilTest::Test001()
@@ -70,12 +70,12 @@ void SPDLogUtilTest::Test004()
     SPD_LOG_TRACE("spdlog", "1");
     SPD_LOG_DEBUG("spdlog", "1");
 
-    SPDLogSetLevel(spdlog::level::debug);
+    SpdLogSetLevel(spdlog::level::debug);
 
     SPD_LOG_TRACE("spdlog", "1");
     SPD_LOG_DEBUG("spdlog", "1");
 
-    SPDLogSetLevel(spdlog::level::info);
+    SpdLogSetLevel(spdlog::level::info);
 
     SPD_LOG_TRACE("spdlog", "1");
     SPD_LOG_DEBUG("spdlog", "1");
