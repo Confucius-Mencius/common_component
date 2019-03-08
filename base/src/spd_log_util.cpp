@@ -20,7 +20,6 @@ int SpdLogInitialize(const SpdLogCtx* ctx)
 
 //    auto logger = spdlog::rotating_logger_mt(ctx->logger_name, ctx->logger_file_path, 10485760, 10);
     auto logger = spdlog::daily_logger_mt(ctx->logger_name, ctx->logger_file_path, 0, 0);
-
     logger->flush_on(spdlog::level::info);
 
     return 0;
