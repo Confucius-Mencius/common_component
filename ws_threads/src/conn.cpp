@@ -53,7 +53,7 @@ int Conn::Send(const void* data, size_t len)
         return -1;
     }
 
-    memcpy(buf + len, data, len);
+    memcpy(buf + LWS_PRE, data, len);
     buf[LWS_PRE + len] = '\0';
 
     send_list_.push_back(std::string(buf, LWS_PRE + len));
