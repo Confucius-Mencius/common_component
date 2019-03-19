@@ -66,7 +66,7 @@ int AppFrame::Initialize(const void* ctx)
 
     app_frame_ctx_ = *(static_cast<const AppFrameCtx*>(ctx));
     srand(time(NULL));
-    OpenSSLInitialize(); // 初始化openssl，保证只有一次调用
+    // OpenSSLInitialize(); // 初始化openssl，保证只有一次调用
 
     if (pthread_mutex_init(&g_threads_sync_mutex, NULL) != 0)
     {
@@ -164,7 +164,7 @@ void AppFrame::Finalize()
     pthread_mutex_destroy(&g_threads_sync_mutex);
     pthread_cond_destroy(&g_threads_sync_cond);
 
-    OpenSSLFinalize();
+    // OpenSSLFinalize();
 }
 
 int AppFrame::Activate()

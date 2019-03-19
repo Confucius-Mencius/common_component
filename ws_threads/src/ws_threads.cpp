@@ -7,7 +7,7 @@
 
 namespace ws
 {
-static void log_emit_function(int level, const char* msg)
+static void LogEmitFunction(int level, const char* msg)
 {
     switch (level)
     {
@@ -28,6 +28,12 @@ static void log_emit_function(int level, const char* msg)
             LOG_INFO(msg);
         }
         break;
+
+//        case LLL_INFO: // 信息太多，先注释掉
+//        {
+//            LOG_DEBUG(msg);
+//        }
+//        break;
 
         default:
         {
@@ -71,7 +77,7 @@ int Threads::Initialize(const void* ctx)
     threads_ctx_ = *(static_cast<const ThreadsCtx*>(ctx));
 
     LOG_ALWAYS("libwebsockets version: " << lws_get_library_version());
-    lws_set_log_level(LLL_ERR | LLL_WARN | LLL_NOTICE | LLL_INFO, log_emit_function);
+    lws_set_log_level(LLL_ERR | LLL_WARN | LLL_NOTICE | LLL_INFO, LogEmitFunction);
 
     return 0;
 }

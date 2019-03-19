@@ -36,11 +36,11 @@ private:
 
     // ws
     struct lws_context_creation_info ws_info_;
-    struct lws_context* ws_context_; // 这个context是被所有线程共用的，但event loop是每个线程独立的，回调中是什么情况？哪里需要加锁？TODO
+    struct lws_context* ws_ctx_; // 这个context是被所有线程共用的，但event loop是每个线程独立的，回调中是什么情况？哪里需要加锁？TODO
 
     // wss
     struct lws_context_creation_info wss_info_;
-    struct lws_context* wss_context_;
+    struct lws_context* wss_ctx_;
 };
 }
 

@@ -87,7 +87,7 @@ BaseConn* ConnMgr::CreateConn(int io_thread_idx, const char* ip, unsigned short 
     if (NULL == conn)
     {
         const int err = errno;
-        LOG_ERROR("failed to create tcp conn, errno: " << err << ", err msg: " << strerror(errno));
+        LOG_ERROR("failed to create ws conn, errno: " << err << ", err msg: " << strerror(errno));
         return NULL;
     }
 
@@ -95,7 +95,7 @@ BaseConn* ConnMgr::CreateConn(int io_thread_idx, const char* ip, unsigned short 
     if (INVALID_CONN_ID == conn_id)
     {
         const int err = errno;
-        LOG_ERROR("failed to alloc tcp conn id, errno: " << err << ", err msg: " << strerror(errno));
+        LOG_ERROR("failed to alloc ws conn id, errno: " << err << ", err msg: " << strerror(errno));
         conn->Release();
         return NULL;
     }
@@ -153,11 +153,11 @@ BaseConn* ConnMgr::CreateConn(int io_thread_idx, const char* ip, unsigned short 
     if (cur_online_conn_count > max_online_conn_count_)
     {
         max_online_conn_count_ = cur_online_conn_count;
-        LOG_WARN("tcp thread idx: " << conn->GetConnGUID()->io_thread_idx << ", max online tcp conn count: "
+        LOG_WARN("ws thread idx: " << conn->GetConnGUID()->io_thread_idx << ", max online ws conn count: "
                  << max_online_conn_count_);
     }
 
-    LOG_TRACE("tcp thread idx: " << conn->GetConnGUID()->io_thread_idx
+    LOG_TRACE("ws thread idx: " << conn->GetConnGUID()->io_thread_idx
               << ", create conn ok, socket fd: " << sock_fd << ", conn id: " << conn_id);
     return conn;
 }
@@ -175,11 +175,11 @@ void ConnMgr::DestroyConn(int sock_fd)
         }
 
         Clear(it->second.conn);
-        LOG_TRACE("destroy tcp conn ok, socket fd: " << sock_fd << ", conn id: " << conn_id);
+        LOG_TRACE("destroy ws conn ok, socket fd: " << sock_fd << ", conn id: " << conn_id);
     }
     else
     {
-        LOG_ERROR("failed to get tcp conn by socket fd: " << sock_fd);
+        LOG_ERROR("failed to get ws conn by socket fd: " << sock_fd);
     }
 }
 
@@ -227,6 +227,7 @@ int ConnMgr::UpdateConnStatus(ConnID conn_id)
         {
             if (conn_hash_map_[sock_fd].recv_count >= conn_mgr_ctx_.storm_threshold)
             {
+                // TODO 网络风暴测试
                 LOG_WARN("net storm! conn id: " << conn_id << ", now: " << now << ", start time: "
                          << conn_hash_map_[sock_fd].start_time << ", recv count: " << conn_hash_map_[sock_fd].recv_count);
                 return -1;

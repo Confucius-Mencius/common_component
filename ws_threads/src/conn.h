@@ -16,7 +16,7 @@ public:
     Conn();
     virtual ~Conn();
 
-    void SetWsi(struct lws* wsi)
+    void SetWSI(struct lws* wsi)
     {
         wsi_ = wsi;
     }
@@ -27,15 +27,24 @@ public:
     int Activate() override;
     void Freeze() override;
 
-    int Send(const void* data, size_t len) override;
+    std::string& AppendData(const void* data, size_t len)
+    {
+        return data_.append((const char*) data, len);
+    }
 
-    int SendListData();
+    void EraseData()
+    {
+        data_.clear();
+    }
+
+    int Send(const void* data, size_t len) override;
+    int OnWrite();
 
 private:
     struct lws* wsi_; // 客户端连接句柄
-
-    typedef std::list<std::string> SendList; // data to send
-    SendList send_list_;
+    std::string data_; // received data
+    typedef std::list<std::string> DataList; // data to send
+    DataList data_list_;
 };
 }
 

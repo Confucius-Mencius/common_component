@@ -4,7 +4,7 @@
 
 namespace ws
 {
-Conn::Conn() : send_list_()
+Conn::Conn() : data_(), data_list_()
 {
     wsi_ = NULL;
 }
@@ -26,7 +26,7 @@ int Conn::Initialize(const void* ctx)
 
 void Conn::Finalize()
 {
-    send_list_.clear();
+    data_list_.clear();
 }
 
 int Conn::Activate()
@@ -45,46 +45,38 @@ int Conn::Send(const void* data, size_t len)
         return -1;
     }
 
-    char* buf = (char*) malloc(LWS_PRE + len + 1);
-    if (NULL == buf)
-    {
-        const int err = errno;
-        LOG_ERROR("failed to alloc memory, err: " << err << ", err msg: " << strerror(err));
-        return -1;
-    }
+    std::string d;
+    d.append(LWS_PRE, '\0');
+    d.append((const char*) data, len);
 
-    memcpy(buf + LWS_PRE, data, len);
-    buf[LWS_PRE + len] = '\0';
-
-    send_list_.push_back(std::string(buf, LWS_PRE + len));
+    data_list_.emplace_back(d);
     LOG_TRACE("push sending data into list, len: " << len);
 
-    free(buf);
-    buf = NULL;
-
-    lws_callback_on_writable(wsi_);
-
+    lws_callback_on_writable(wsi_); // 个调用会触发LWS_CALLBACK_SERVER_WRITEABLE，参数wsi_是这个客户端连接的wsi
     return 0;
 }
 
-int Conn::SendListData()
+int Conn::OnWrite()
 {
     if (NULL == wsi_)
     {
         return -1;
     }
 
-    for (SendList::const_iterator it = send_list_.begin(); it != send_list_.end(); ++it)
+    for (DataList::iterator it = data_list_.begin(); it != data_list_.end();)
     {
         const int n = lws_write(wsi_, (unsigned char*) it->data() + LWS_PRE, it->size() - LWS_PRE, LWS_WRITE_BINARY);
-        if (n < (int) (it->size() - LWS_PRE))
+        if (n == (int) (it->size() - LWS_PRE))
+        {
+            LOG_TRACE("send ok, n: " << n << ", " << conn_guid_);
+            it = data_list_.erase(it);
+        }
+        else
         {
             const int err = errno;
             LOG_ERROR("lws_write failed, err: " << err << ", err msg: " << strerror(err));
-            return -1;
+            ++it;
         }
-
-        LOG_TRACE("send ok, n: " << n << ", " << conn_guid_);
     }
 
     return 0;
