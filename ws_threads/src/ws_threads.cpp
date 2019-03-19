@@ -42,7 +42,7 @@ static void LogEmitFunction(int level, const char* msg)
     }
 }
 
-Threads::Threads() : threads_ctx_(), related_thread_groups_(), ws_controller_()
+Threads::Threads() : threads_ctx_(), related_thread_groups_(), controller_()
 {
     ws_thread_group_ = NULL;
 }
@@ -84,7 +84,7 @@ int Threads::Initialize(const void* ctx)
 
 void Threads::Finalize()
 {
-    ws_controller_.Finalize();
+    controller_.Finalize();
     SAFE_FINALIZE(ws_thread_group_);
 }
 
@@ -141,9 +141,9 @@ int Threads::CreateThreadGroup()
     }
     else
     {
-        ws_controller_.SetWSThreadGroup(ws_thread_group_);
+        controller_.SetWSThreadGroup(ws_thread_group_);
 
-        if (ws_controller_.Initialize(&threads_ctx_) != 0)
+        if (controller_.Initialize(&threads_ctx_) != 0)
         {
             return -1;
         }
