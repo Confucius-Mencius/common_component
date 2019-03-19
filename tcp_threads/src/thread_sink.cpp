@@ -238,7 +238,7 @@ bool ThreadSink::CanExit() const
     return (can_exit != 0);
 }
 
-void ThreadSink::OnClientClosed(const BaseConn* conn)
+void ThreadSink::OnClientClosed(const BaseConn* conn, int task_type)
 {
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
@@ -254,7 +254,7 @@ void ThreadSink::OnClientClosed(const BaseConn* conn)
     const int n = StrPrintf(client_ctx_buf, sizeof(client_ctx_buf), "%s:%u, socket fd: %d",
                             conn->GetClientIP(), conn->GetClientPort(), conn->GetSockFD());
 
-    ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_CONN_CLOSED, self_thread_, NULL, client_ctx_buf, n);
+    ThreadTask* task = new ThreadTask(task_type, self_thread_, NULL, client_ctx_buf, n);
     if (NULL == task)
     {
         LOG_ERROR("failed to create tcp conn closed task");
@@ -263,6 +263,19 @@ void ThreadSink::OnClientClosed(const BaseConn* conn)
 
     listen_thread_->PushTask(task);
     conn_mgr_.DestroyConn(conn->GetSockFD());
+}
+
+void ThreadSink::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
+{
+    if (common_logic_ != NULL)
+    {
+        common_logic_->OnRecvClientData(conn_guid, data, len);
+    }
+
+    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    {
+        (*it).logic->OnRecvClientData(conn_guid, data, len);
+    }
 }
 
 void ThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups)
@@ -433,18 +446,5 @@ int ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
     }
 
     return 0;
-}
-
-void ThreadSink::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
-{
-    if (common_logic_ != NULL)
-    {
-        common_logic_->OnRecvClientData(conn_guid, data, len);
-    }
-
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
-    {
-        (*it).logic->OnRecvClientData(conn_guid, data, len);
-    }
 }
 }

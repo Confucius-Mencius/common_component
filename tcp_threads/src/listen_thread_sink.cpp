@@ -221,15 +221,31 @@ void ListenThreadSink::OnTask(const ThreadTask* task)
         case TASK_TYPE_TCP_CONN_CLOSED:
         {
             LOG_TRACE("tcp conn closed: " << task->GetData()); // close by client self or server
-            --online_tcp_conn_count_;
+        }
+        break;
+
+        case TASK_TYPE_TCP_CONN_CLOSED_INACTIVE:
+        {
+            LOG_TRACE("tcp conn closed: " << task->GetData()); // close by server because of not active yet
+        }
+        break;
+
+        case TASK_TYPE_TCP_CONN_CLOSED_NET_STORM:
+        {
+            LOG_TRACE("tcp conn closed: " << task->GetData()); // close by server because of net storm
+
+            // TODO 将ip地址加入黑名单，在一定时间内拒绝连接
         }
         break;
 
         default:
         {
+            LOG_ERROR("invalid task type: " << task->GetType());
         }
         break;
     }
+
+    --online_tcp_conn_count_;
 }
 
 bool ListenThreadSink::CanExit() const

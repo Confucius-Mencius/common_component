@@ -4,6 +4,7 @@
 #include "mem_util.h"
 #include "buffer_event_conn.h"
 #include "normal_conn.h"
+#include "task_type.h"
 #include "thread_sink.h"
 
 namespace tcp
@@ -232,6 +233,7 @@ int ConnMgr::UpdateConnStatus(ConnID conn_id)
         {
             if (conn_hash_map_[sock_fd].recv_count >= conn_mgr_ctx_.storm_threshold)
             {
+                // TODO 网络风暴测试
                 LOG_WARN("net storm! conn id: " << conn_id << ", now: " << now << ", start time: "
                          << conn_hash_map_[sock_fd].start_time << ", recv count: " << conn_hash_map_[sock_fd].recv_count);
                 return -1;
@@ -264,7 +266,7 @@ void ConnMgr::Clear(BaseConn* conn)
 void ConnMgr::OnTimeout(const ConnID& k, BaseConn* const& v, int timeout_sec)
 {
     LOG_TRACE("ConnMgr::OnTimeout, key: " << k << ", val: " << v << ", timeout: " << timeout_sec);
-    thread_sink_->OnClientClosed(v);
+    thread_sink_->OnClientClosed(v, TASK_TYPE_TCP_CONN_CLOSED_INACTIVE);
     Clear(v);
 }
 }

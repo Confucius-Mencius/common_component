@@ -79,7 +79,7 @@ int Scheduler::CloseClient(const ConnGUID* conn_guid)
             return -1;
         }
 
-        thread_sink_->OnClientClosed(conn);
+        thread_sink_->OnClientClosed(conn, TASK_TYPE_TCP_CONN_CLOSED);
         return 0;
     }
 

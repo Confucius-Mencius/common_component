@@ -67,7 +67,7 @@ public:
         return &conn_mgr_;
     }
 
-    void OnClientClosed(const BaseConn* conn);
+    void OnClientClosed(const BaseConn* conn, int task_type);
     void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len);
 
 private:

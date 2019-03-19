@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <iomanip>
 #include "log_util.h"
+#include "task_type.h"
 #include "thread_sink.h"
 
 #if !defined(USE_BUFFEREVENT)
@@ -24,6 +25,7 @@ void NormalConn::ReadCallback(evutil_socket_t fd, short events, void* arg)
     }
 
     bool closed = false;
+    int task_type = TASK_TYPE_TCP_CONN_CLOSED;
 
     do
     {
@@ -45,6 +47,7 @@ void NormalConn::ReadCallback(evutil_socket_t fd, short events, void* arg)
             if (conn_mgr->UpdateConnStatus(conn->GetConnGUID()->conn_id) != 0)
             {
                 closed = true;
+                task_type = TASK_TYPE_TCP_CONN_CLOSED_NET_STORM;
                 break;
             }
 
@@ -106,7 +109,7 @@ void NormalConn::ReadCallback(evutil_socket_t fd, short events, void* arg)
 
     if (closed)
     {
-        thread_sink->OnClientClosed(conn);
+        thread_sink->OnClientClosed(conn, task_type);
     }
 }
 

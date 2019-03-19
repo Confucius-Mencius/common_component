@@ -4,6 +4,7 @@
 #include <event2/buffer.h>
 #include <event2/event.h>
 #include "log_util.h"
+#include "task_type.h"
 #include "thread_sink.h"
 
 #if defined(USE_BUFFEREVENT)
@@ -81,7 +82,7 @@ void BufferEventConn::EventCallback(struct bufferevent* buffer_event, short even
 
     if (closed)
     {
-        thread_sink->OnClientClosed(conn);
+        thread_sink->OnClientClosed(conn, TASK_TYPE_TCP_CONN_CLOSED);
     }
 }
 
@@ -109,7 +110,7 @@ void BufferEventConn::ReadCallback(struct bufferevent* buffer_event, void* arg)
 
     if (conn_mgr->UpdateConnStatus(conn->GetConnGUID()->conn_id) != 0)
     {
-        thread_sink->OnClientClosed(conn);
+        thread_sink->OnClientClosed(conn, TASK_TYPE_TCP_CONN_CLOSED_NET_STORM);
         return;
     }
 
