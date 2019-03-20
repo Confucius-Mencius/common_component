@@ -19,7 +19,7 @@ enum IOThreadType
 {
     IO_THREAD_TYPE_MIN = 0,
     IO_THREAD_TYPE_TCP = IO_THREAD_TYPE_MIN, // tcp服务
-    IO_THREAD_TYPE_WS,  // websocket服务
+    IO_THREAD_TYPE_WS,  // websocket服务，支持http
     IO_THREAD_TYPE_UDP, // udp服务
     IO_THREAD_TYPE_MAX,
 };

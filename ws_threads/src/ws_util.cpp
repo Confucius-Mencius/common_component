@@ -3,33 +3,33 @@
 
 namespace ws
 {
-void DumpRequestHeaders(struct lws* wsi)
+void DumpTokens(struct lws* wsi)
 {
-    int n = 0, len;
-    char buf[256];
-    const unsigned char* c;
-
-    do
+    for (int i = 0; i < WSI_TOKEN_COUNT; ++i)
     {
-        c = lws_token_to_string(lws_token_indexes(n));
-        if (!c)
+        const unsigned char* token = lws_token_to_string((lws_token_indexes) i);
+        if (NULL == token)
         {
-            n++;
             continue;
         }
 
-        len = lws_hdr_total_length(wsi, (lws_token_indexes) n);
-        if (!len || len > int(sizeof(buf) - 1))
+        const int len = lws_hdr_total_length(wsi, (lws_token_indexes) i);
+        if (len <= 0)
         {
-            n++;
             continue;
         }
 
-        lws_hdr_copy(wsi, buf, sizeof buf, (lws_token_indexes) n);
-        buf[sizeof(buf) - 1] = '\0';
+        std::unique_ptr<char[]> buf(new char[len + 1]);
+        if (nullptr == buf)
+        {
+            LOG_ERROR("failed to alloc memory");
+            continue;
+        }
 
-        LOG_DEBUG((char*) c << " = " << buf);
-        n++;
-    } while (c);
+        lws_hdr_copy(wsi, buf.get(), len + 1, (lws_token_indexes) i);
+        buf[len] = '\0';
+
+        LOG_DEBUG((char*) token << " = " << buf.get());
+    }
 }
 }

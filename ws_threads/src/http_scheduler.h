@@ -1,5 +1,5 @@
-#ifndef WS_THREADS_SRC_SCHEDULER_H_
-#define WS_THREADS_SRC_SCHEDULER_H_
+#ifndef WS_THREADS_SRC_HTTP_SCHEDULER_H_
+#define WS_THREADS_SRC_HTTP_SCHEDULER_H_
 
 #include "ws_scheduler_interface.h"
 #include "ws_threads_interface.h"
@@ -8,6 +8,8 @@ namespace ws
 {
 class ThreadSink;
 
+namespace http
+{
 class Scheduler : public SchedulerInterface
 {
 public:
@@ -44,5 +46,6 @@ private:
     int last_work_thread_idx_;
 };
 }
+}
 
-#endif // WS_THREADS_SRC_SCHEDULER_H_
+#endif // WS_THREADS_SRC_HTTP_SCHEDULER_H_

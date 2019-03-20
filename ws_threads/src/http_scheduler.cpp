@@ -1,10 +1,12 @@
-#include "scheduler.h"
+#include "http_scheduler.h"
 #include "app_frame_conf_mgr_interface.h"
 #include "num_util.h"
 #include "task_type.h"
 #include "thread_sink.h"
 
 namespace ws
+{
+namespace http
 {
 Scheduler::Scheduler()
 {
@@ -195,5 +197,6 @@ int Scheduler::GetScheduleWorkThreadIdx(int work_thread_idx)
     }
 
     return work_thread_idx;
+}
 }
 }

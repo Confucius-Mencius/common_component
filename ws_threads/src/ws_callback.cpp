@@ -1,13 +1,13 @@
 #include "ws_callback.h"
-#include "conn.h"
 #include "log_util.h"
 #include "thread_center_interface.h"
 #include "thread_sink.h"
+#include "ws_conn.h"
 #include "ws_util.h"
 
 namespace ws
 {
-int WSCallback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void* in, size_t len)
+int Callback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void* in, size_t len)
 {
     (void) user;
 
@@ -105,7 +105,7 @@ int WSCallback(struct lws* wsi, enum lws_callback_reasons reason, void* user, vo
             // 这里的wsi与init时的不一样。所有的LWS_CALLBACK_EVENT_WAIT_CANCELLED事件的wsi都是一个，是全局的
             LOG_TRACE("LWS_CALLBACK_EVENT_WAIT_CANCELLED");
             break;
-#endif
+
         // 在LWS_CALLBACK_ESTABLISHED之前，依次会收到下面2个事件，可以不用处理。这里打出来理解流程
         case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
         {
@@ -115,11 +115,10 @@ int WSCallback(struct lws* wsi, enum lws_callback_reasons reason, void* user, vo
              * to handle this callback
              */
             LOG_TRACE("LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION");
-            DumpRequestHeaders(wsi);
             /* you could return non-zero here and kill the connection */
         }
         break;
-#if 0
+
         case LWS_CALLBACK_ADD_HEADERS:
         {
             // TODO 添加额外的http头
@@ -133,6 +132,8 @@ int WSCallback(struct lws* wsi, enum lws_callback_reasons reason, void* user, vo
         case LWS_CALLBACK_ESTABLISHED:
         {
             LOG_TRACE("LWS_CALLBACK_ESTABLISHED");
+            DumpTokens(wsi);
+
             ThreadGroupInterface* ws_thread_group = static_cast<ThreadGroupInterface*>(lws_vhost_user(lws_get_vhost(wsi)));
             ThreadSink* thread_sink = static_cast<ThreadSink*>(ws_thread_group->GetThread(0)->GetThreadSink()); // TODO
 
@@ -159,6 +160,8 @@ int WSCallback(struct lws* wsi, enum lws_callback_reasons reason, void* user, vo
                 LOG_DEBUG("conn connected, client ip: " << new_conn_ctx.client_ip << ", port: " << new_conn_ctx.client_port
                           << ", socket fd: " << new_conn_ctx.client_sock_fd);
             }
+
+            new_conn_ctx.conn_type = lws_is_ssl(wsi) ? CONN_TYPE_WSS : CONN_TYPE_WS;
 
             if (thread_sink->OnClientConnected(&new_conn_ctx) != 0)
             {
@@ -282,6 +285,11 @@ int WSCallback(struct lws* wsi, enum lws_callback_reasons reason, void* user, vo
         }
         break;
 
+#if 0
+        case LWS_CALLBACK_RECEIVE_PONG:
+            LOG_TRACE("LWS_CALLBACK_RECEIVE_PONG");
+            break;
+#endif
         default:
         {
         }

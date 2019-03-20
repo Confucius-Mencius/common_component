@@ -1,8 +1,10 @@
-#include "conn.h"
+#include "http_conn.h"
 #include "log_util.h"
 #include "thread_sink.h"
 
 namespace ws
+{
+namespace http
 {
 Conn::Conn() : data_(), data_list_()
 {
@@ -80,5 +82,6 @@ int Conn::OnWrite()
     }
 
     return 0;
+}
 }
 }

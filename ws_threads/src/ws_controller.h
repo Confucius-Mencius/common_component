@@ -1,5 +1,5 @@
-#ifndef WS_THREADS_SRC_CONTROLLER_H_
-#define WS_THREADS_SRC_CONTROLLER_H_
+#ifndef WS_THREADS_SRC_WS_CONTROLLER_H_
+#define WS_THREADS_SRC_WS_CONTROLLER_H_
 
 #include <libwebsockets.h>
 #include "ws_threads_interface.h"
@@ -44,4 +44,4 @@ private:
 };
 }
 
-#endif // WS_THREADS_SRC_CONTROLLER_H_
+#endif // WS_THREADS_SRC_WS_CONTROLLER_H_

@@ -5,7 +5,7 @@
 
 namespace ws
 {
-void DumpRequestHeaders(struct lws* wsi);
+void DumpTokens(struct lws* wsi);
 }
 
 #endif // WS_THREADS_SRC_WS_UTIL_H_

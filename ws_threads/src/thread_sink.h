@@ -5,7 +5,7 @@
 #include "mem_util.h"
 #include "module_loader.h"
 #include "new_conn.h"
-#include "scheduler.h"
+#include "ws_scheduler.h"
 #include "ws_logic_interface.h"
 
 namespace ws
@@ -66,6 +66,9 @@ public:
     void OnClientClosed(const BaseConn* conn);
     void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len);
 
+    void OnGet(const ConnGUID* conn_guid);
+    void OnPost(const ConnGUID* conn_guid, const void* data, size_t len);
+
 private:
     int LoadCommonLogic();
     int LoadLogicGroup();
@@ -75,12 +78,12 @@ private:
     ThreadGroupInterface* ws_thread_group_;
     RelatedThreadGroups* related_thread_group_;
 
-    ModuleLoader common_logic_loader_;
-    CommonLogicInterface* common_logic_;
-    LogicItemVec logic_item_vec_;
+    ModuleLoader ws_common_logic_loader_;
+    CommonLogicInterface* ws_common_logic_;
+    LogicItemVec ws_logic_item_vec_;
 
     ConnMgr conn_mgr_;
-    Scheduler scheduler_;
+    Scheduler ws_scheduler_;
 };
 }
 

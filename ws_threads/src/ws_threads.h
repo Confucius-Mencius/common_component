@@ -1,7 +1,7 @@
 #ifndef WS_THREADS_SRC_WS_THREADS_H_
 #define WS_THREADS_SRC_WS_THREADS_H_
 
-#include "controller.h"
+#include "ws_controller.h"
 #include "ws_threads_interface.h"
 
 namespace ws

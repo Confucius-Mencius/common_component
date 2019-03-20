@@ -8,12 +8,12 @@
 namespace ws
 {
 ThreadSink::ThreadSink()
-    : common_logic_loader_(), logic_item_vec_(), conn_mgr_(), scheduler_()
+    : ws_common_logic_loader_(), ws_logic_item_vec_(), conn_mgr_(), ws_scheduler_()
 {
     threads_ctx_ = NULL;
     ws_thread_group_ = NULL;
     related_thread_group_ = NULL;
-    common_logic_ = NULL;
+    ws_common_logic_ = NULL;
 }
 
 ThreadSink::~ThreadSink()
@@ -22,13 +22,13 @@ ThreadSink::~ThreadSink()
 
 void ThreadSink::Release()
 {
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (LogicItemVec::iterator it = ws_logic_item_vec_.begin(); it != ws_logic_item_vec_.end(); ++it)
     {
         SAFE_RELEASE_MODULE(it->logic, it->logic_loader);
     }
 
-    logic_item_vec_.clear();
-    SAFE_RELEASE_MODULE(common_logic_, common_logic_loader_);
+    ws_logic_item_vec_.clear();
+    SAFE_RELEASE_MODULE(ws_common_logic_, ws_common_logic_loader_);
     conn_mgr_.Release();
 
     delete this;
@@ -43,7 +43,7 @@ int ThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 
     threads_ctx_ = static_cast<const ThreadsCtx*>(ctx);
     conn_mgr_.SetThreadSink(this);
-    scheduler_.SetThreadSink(this);
+    ws_scheduler_.SetThreadSink(this);
 
     ConnMgrCtx conn_mgr_ctx;
     conn_mgr_ctx.timer_axis = self_thread_->GetTimerAxis();
@@ -63,7 +63,7 @@ int ThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
         return -1;
     }
 
-    if (scheduler_.Initialize(threads_ctx_) != 0)
+    if (ws_scheduler_.Initialize(threads_ctx_) != 0)
     {
         return -1;
     }
@@ -83,13 +83,13 @@ int ThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 
 void ThreadSink::OnFinalize()
 {
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (LogicItemVec::iterator it = ws_logic_item_vec_.begin(); it != ws_logic_item_vec_.end(); ++it)
     {
         SAFE_FINALIZE(it->logic);
     }
 
-    SAFE_FINALIZE(common_logic_);
-    scheduler_.Finalize();
+    SAFE_FINALIZE(ws_common_logic_);
+    ws_scheduler_.Finalize();
     conn_mgr_.Finalize();
 
     ThreadSinkInterface::OnFinalize();
@@ -107,12 +107,12 @@ int ThreadSink::OnActivate()
         return -1;
     }
 
-    if (SAFE_ACTIVATE_FAILED(common_logic_))
+    if (SAFE_ACTIVATE_FAILED(ws_common_logic_))
     {
         return -1;
     }
 
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (LogicItemVec::iterator it = ws_logic_item_vec_.begin(); it != ws_logic_item_vec_.end(); ++it)
     {
         if (SAFE_ACTIVATE_FAILED(it->logic))
         {
@@ -125,12 +125,12 @@ int ThreadSink::OnActivate()
 
 void ThreadSink::OnFreeze()
 {
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (LogicItemVec::iterator it = ws_logic_item_vec_.begin(); it != ws_logic_item_vec_.end(); ++it)
     {
         SAFE_FREEZE(it->logic);
     }
 
-    SAFE_FREEZE(common_logic_);
+    SAFE_FREEZE(ws_common_logic_);
     conn_mgr_.Freeze();
     ThreadSinkInterface::OnFreeze();
 }
@@ -149,14 +149,14 @@ void ThreadSink::OnStop()
 {
     ThreadSinkInterface::OnStop();
 
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (LogicItemVec::iterator it = ws_logic_item_vec_.begin(); it != ws_logic_item_vec_.end(); ++it)
     {
         it->logic->OnStop();
     }
 
-    if (common_logic_ != NULL)
+    if (ws_common_logic_ != NULL)
     {
-        common_logic_->OnStop();
+        ws_common_logic_->OnStop();
     }
 }
 
@@ -164,14 +164,14 @@ void ThreadSink::OnReload()
 {
     ThreadSinkInterface::OnReload();
 
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (LogicItemVec::iterator it = ws_logic_item_vec_.begin(); it != ws_logic_item_vec_.end(); ++it)
     {
         it->logic->OnReload();
     }
 
-    if (common_logic_ != NULL)
+    if (ws_common_logic_ != NULL)
     {
-        common_logic_->OnReload();
+        ws_common_logic_->OnReload();
     }
 }
 
@@ -183,7 +183,7 @@ void ThreadSink::OnTask(const ThreadTask* task)
     {
         case TASK_TYPE_WS_SEND_TO_CLIENT:
         {
-            scheduler_.SendToClient(task->GetConnGUID(), task->GetData().data(), task->GetData().size());
+            ws_scheduler_.SendToClient(task->GetConnGUID(), task->GetData().data(), task->GetData().size());
         }
         break;
 
@@ -195,7 +195,7 @@ void ThreadSink::OnTask(const ThreadTask* task)
 
         case TASK_TYPE_NORMAL:
         {
-            for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+            for (LogicItemVec::iterator it = ws_logic_item_vec_.begin(); it != ws_logic_item_vec_.end(); ++it)
             {
                 it->logic->OnTask(task->GetConnGUID(), task->GetSourceThread(),
                                   task->GetData().data(), task->GetData().size());
@@ -215,14 +215,14 @@ bool ThreadSink::CanExit() const
 {
     int can_exit = 1;
 
-    for (LogicItemVec::const_iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (LogicItemVec::const_iterator it = ws_logic_item_vec_.begin(); it != ws_logic_item_vec_.end(); ++it)
     {
         can_exit &= (it->logic->CanExit() ? 1 : 0);
     }
 
-    if (common_logic_ != NULL)
+    if (ws_common_logic_ != NULL)
     {
-        can_exit &= (common_logic_->CanExit() ? 1 : 0);
+        can_exit &= (ws_common_logic_->CanExit() ? 1 : 0);
     }
 
     return (can_exit != 0);
@@ -230,14 +230,14 @@ bool ThreadSink::CanExit() const
 
 void ThreadSink::OnClientClosed(const BaseConn* conn)
 {
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (LogicItemVec::iterator it = ws_logic_item_vec_.begin(); it != ws_logic_item_vec_.end(); ++it)
     {
         (*it).logic->OnClientClosed(conn->GetConnGUID());
     }
 
-    if (common_logic_ != NULL)
+    if (ws_common_logic_ != NULL)
     {
-        common_logic_->OnClientClosed(conn->GetConnGUID());
+        ws_common_logic_->OnClientClosed(conn->GetConnGUID());
     }
 
     conn_mgr_.DestroyConn(conn->GetSockFD());
@@ -249,19 +249,19 @@ void ThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_grou
 
     if (related_thread_group_->global_logic != NULL)
     {
-        if (common_logic_ != NULL)
+        if (ws_common_logic_ != NULL)
         {
-            common_logic_->SetGlobalLogic(related_thread_group_->global_logic);
+            ws_common_logic_->SetGlobalLogic(related_thread_group_->global_logic);
         }
 
-        for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+        for (LogicItemVec::iterator it = ws_logic_item_vec_.begin(); it != ws_logic_item_vec_.end(); ++it)
         {
             LogicItem& logic_item = *it;
             logic_item.logic->SetGlobalLogic(related_thread_group_->global_logic);
         }
     }
 
-    scheduler_.SetRelatedThreadGroups(related_thread_groups);
+    ws_scheduler_.SetRelatedThreadGroups(related_thread_groups);
 }
 
 int ThreadSink::LoadCommonLogic()
@@ -277,17 +277,17 @@ int ThreadSink::LoadCommonLogic()
                     ws_common_logic_so.c_str(), threads_ctx_->cur_working_dir);
     LOG_TRACE("load common logic so " << common_logic_so_path << " begin");
 
-    if (common_logic_loader_.Load(common_logic_so_path) != 0)
+    if (ws_common_logic_loader_.Load(common_logic_so_path) != 0)
     {
         LOG_ERROR("failed to load common logic so " << common_logic_so_path
-                  << ", " << common_logic_loader_.GetLastErrMsg());
+                  << ", " << ws_common_logic_loader_.GetLastErrMsg());
         return -1;
     }
 
-    common_logic_ = static_cast<CommonLogicInterface*>(common_logic_loader_.GetModuleInterface());
-    if (NULL == common_logic_)
+    ws_common_logic_ = static_cast<CommonLogicInterface*>(ws_common_logic_loader_.GetModuleInterface());
+    if (NULL == ws_common_logic_)
     {
-        LOG_ERROR("failed to get common logic, " << common_logic_loader_.GetLastErrMsg());
+        LOG_ERROR("failed to get common logic, " << ws_common_logic_loader_.GetLastErrMsg());
         return -1;
     }
 
@@ -299,11 +299,11 @@ int ThreadSink::LoadCommonLogic()
     logic_ctx.app_name = threads_ctx_->app_name;
     logic_ctx.conf_center = threads_ctx_->conf_center;
     logic_ctx.timer_axis = self_thread_->GetTimerAxis();
-    logic_ctx.scheduler = &scheduler_;
-    logic_ctx.common_logic = common_logic_;
+    logic_ctx.scheduler = &ws_scheduler_;
+    logic_ctx.common_logic = ws_common_logic_;
     logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
 
-    if (common_logic_->Initialize(&logic_ctx) != 0)
+    if (ws_common_logic_->Initialize(&logic_ctx) != 0)
     {
         return -1;
     }
@@ -326,10 +326,10 @@ int ThreadSink::LoadLogicGroup()
         char logic_so_path[MAX_PATH_LEN] = "";
         GetAbsolutePath(logic_so_path, sizeof(logic_so_path), (*it).c_str(), threads_ctx_->cur_working_dir);
         logic_item.logic_so_path = logic_so_path;
-        logic_item_vec_.push_back(logic_item);
+        ws_logic_item_vec_.push_back(logic_item);
     }
 
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (LogicItemVec::iterator it = ws_logic_item_vec_.begin(); it != ws_logic_item_vec_.end(); ++it)
     {
         LogicItem& logic_item = *it;
         LOG_TRACE("load logic so " << logic_item.logic_so_path << " begin");
@@ -356,8 +356,8 @@ int ThreadSink::LoadLogicGroup()
         logic_ctx.app_name = threads_ctx_->app_name;
         logic_ctx.conf_center = threads_ctx_->conf_center;
         logic_ctx.timer_axis = self_thread_->GetTimerAxis();
-        logic_ctx.scheduler = &scheduler_;
-        logic_ctx.common_logic = common_logic_;
+        logic_ctx.scheduler = &ws_scheduler_;
+        logic_ctx.common_logic = ws_common_logic_;
         logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
 
         if (logic_item.logic->Initialize(&logic_ctx) != 0)
@@ -387,14 +387,17 @@ int ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
         return -1;
     }
 
-    if (common_logic_ != NULL)
+    if (CONN_TYPE_WS == new_conn_ctx->conn_type || CONN_TYPE_WSS == new_conn_ctx->conn_type)
     {
-        common_logic_->OnClientConnected(conn->GetConnGUID());
-    }
+        if (ws_common_logic_ != NULL)
+        {
+            ws_common_logic_->OnClientConnected(conn->GetConnGUID());
+        }
 
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
-    {
-        (*it).logic->OnClientConnected(conn->GetConnGUID());
+        for (LogicItemVec::iterator it = ws_logic_item_vec_.begin(); it != ws_logic_item_vec_.end(); ++it)
+        {
+            (*it).logic->OnClientConnected(conn->GetConnGUID());
+        }
     }
 
     return 0;
@@ -402,14 +405,26 @@ int ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
 
 void ThreadSink::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
 {
-    if (common_logic_ != NULL)
+    if (ws_common_logic_ != NULL)
     {
-        common_logic_->OnRecvClientData(conn_guid, data, len);
+        ws_common_logic_->OnRecvClientData(conn_guid, data, len);
     }
 
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (LogicItemVec::iterator it = ws_logic_item_vec_.begin(); it != ws_logic_item_vec_.end(); ++it)
     {
         (*it).logic->OnRecvClientData(conn_guid, data, len);
     }
+}
+
+void ThreadSink::OnGet(const ConnGUID* conn_guid)
+{
+    (void) conn_guid;
+}
+
+void ThreadSink::OnPost(const ConnGUID* conn_guid, const void* data, size_t len)
+{
+    (void) conn_guid;
+    (void) data;
+    (void) len;
 }
 }

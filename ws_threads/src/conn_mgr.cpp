@@ -1,6 +1,6 @@
 #include "conn_mgr.h"
 #include <string.h>
-#include "conn.h"
+#include "ws_conn.h"
 #include "log_util.h"
 #include "mem_util.h"
 #include "thread_sink.h"

@@ -2,6 +2,7 @@
 #define WS_THREADS_SRC_BASE_CONN_H_
 
 #include "conn_define.h"
+#include "new_conn.h"
 
 namespace ws
 {
@@ -73,6 +74,16 @@ public:
         thread_sink_ = sink;
     }
 
+    void SetConnType(ConnType conn_type)
+    {
+        conn_type_ = conn_type;
+    }
+
+    ConnType GetConnType() const
+    {
+        return conn_type_;
+    }
+
 protected:
     time_t created_time_;
     int sock_fd_;
@@ -80,6 +91,7 @@ protected:
     unsigned short client_port_;
     ConnGUID conn_guid_;
     ThreadSink* thread_sink_;
+    ConnType conn_type_;
 };
 }
 

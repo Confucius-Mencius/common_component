@@ -1,4 +1,4 @@
-#include "controller.h"
+#include "ws_controller.h"
 #include <sys/types.h>
 #include <ifaddrs.h>
 #include <sys/socket.h>
@@ -12,16 +12,16 @@ namespace ws
 {
 static struct lws_protocols protocols[] =
 {
-    {
-        "protocol-http",
-        HTTPCallback,
-        0,
-        0,
-        0, NULL, 0
-    },
+//    {
+//        "protocol-http",
+//        http::Callback,
+//        0,
+//        0,
+//        0, NULL, 0
+//    },
     {
         "protocol-ws",
-        WSCallback,
+        Callback,
         0, // 指定了回调时user指向的内存块的大小，这个内存由lws库管理
         0, // max frame size(recv buffer size)，超过这个大小的消息会分帧发送和接收，所以需要应用自己组包。设置为0是什么含义？不分帧吗？ TODO
         0, NULL, 0
@@ -209,6 +209,21 @@ int Controller::CreateWSContext(bool use_ssl)
 //        { NULL, NULL }
 //    };
 
+    struct lws_protocol_vhost_options content_type_header =
+    {
+        NULL, NULL, "Content-Type", "application/json; charset=UTF-8"
+    };
+
+    struct lws_protocol_vhost_options cache_control_header =
+    {
+        &content_type_header, NULL, "Cache-Control", "no-cache"
+    };
+
+    struct lws_protocol_vhost_options pragma_header =
+    {
+        &cache_control_header, NULL, "Pragma", "no-cache"
+    };
+
     info->protocols = protocols;
     info->extensions = exts;
 
@@ -241,6 +256,7 @@ int Controller::CreateWSContext(bool use_ssl)
     info->options = opts;
     info->max_http_header_data = 0;
     info->max_http_header_data2 = LWS_RECOMMENDED_MIN_HEADER_SPACE; // The max amount of header payload that can be handled in an http request TODO 配置
+    info->headers = &pragma_header;
     info->pt_serv_buf_size = 16384; // 0 = default of 4096. 如果为4096，超过会分帧。设置为16k提高吞吐
     info->ws_ping_pong_interval = 0; // 0 for none, else interval in seconds between sending PINGs on idle websocket connections.
     info->max_http_header_pool = 0; // The max number of connections with http headers that can be processed simultaneously. 0 = allow as many ah as number of availble fds for the process

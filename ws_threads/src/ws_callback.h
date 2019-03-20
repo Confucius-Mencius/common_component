@@ -13,7 +13,7 @@ struct per_vhost_data
     const struct lws_protocols* protocol;
 };
 
-int WSCallback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void* in, size_t len);
+int Callback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void* in, size_t len);
 }
 
 #endif // WS_THREADS_SRC_WS_CALLBACK_H_
