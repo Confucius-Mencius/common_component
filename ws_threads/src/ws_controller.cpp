@@ -12,13 +12,13 @@ namespace ws
 {
 static struct lws_protocols protocols[] =
 {
-//    {
-//        "protocol-http",
-//        http::Callback,
-//        0,
-//        0,
-//        0, NULL, 0
-//    },
+    {
+        "protocol-http",
+        http::Callback,
+        0,
+        0,
+        0, NULL, 0
+    },
     {
         "protocol-ws",
         Callback,
