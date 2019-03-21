@@ -35,10 +35,12 @@ int Callback(lws* wsi, lws_callback_reasons reason, void* user, void* in, size_t
                 goto try_to_reuse;
             }
 
-            DumpTokens(wsi); // TODO 这个接口移到conn中去，解析出headers，放map中传给logic
+            DumpAllToken(wsi); // TODO 这个接口移到conn中去，解析出headers，放map中传给logic
 
-            ThreadGroupInterface* ws_thread_group = static_cast<ThreadGroupInterface*>(lws_vhost_user(lws_get_vhost(wsi)));
-            ThreadSink* thread_sink = static_cast<ThreadSink*>(ws_thread_group->GetThread(0)->GetThreadSink()); // TODO
+            ThreadGroupInterface* thread_group = static_cast<ThreadGroupInterface*>(lws_vhost_user(lws_get_vhost(wsi)));
+            const int thread_idx = *((int*) pthread_getspecific(thread_group->GetSpecificDataKey()));
+            LOG_DEBUG("thread idx: " << thread_idx);
+            ThreadSink* thread_sink = static_cast<ThreadSink*>(thread_group->GetThread(thread_idx)->GetThreadSink());
 
             if (thread_sink->GetThread()->IsStopping())
             {

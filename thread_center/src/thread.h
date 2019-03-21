@@ -21,6 +21,7 @@ struct ThreadCtx
     int idx;
     ThreadSinkInterface* sink;
     const void* args;
+    ThreadGroup* thread_group;
 
     ThreadCtx() : name("")
     {
@@ -29,6 +30,7 @@ struct ThreadCtx
         idx = -1;
         sink = NULL;
         args = NULL;
+        thread_group = NULL;
     }
 };
 

@@ -172,6 +172,7 @@ public:
 
     virtual int GetThreadCount() const = 0;
     virtual ThreadInterface* GetThread(int thread_idx) const = 0;
+    virtual pthread_key_t& GetSpecificDataKey() = 0;
 
     virtual int Start() = 0;
     virtual void Join() = 0;

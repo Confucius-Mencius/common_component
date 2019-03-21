@@ -3,7 +3,7 @@
 
 namespace ws
 {
-void DumpTokens(struct lws* wsi)
+void DumpAllToken(struct lws* wsi)
 {
     for (int i = 0; i < WSI_TOKEN_COUNT; ++i)
     {

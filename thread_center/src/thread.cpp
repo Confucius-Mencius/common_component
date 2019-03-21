@@ -8,6 +8,7 @@
 
 #include "file_util.h"
 #include "str_util.h"
+#include "thread_group.h"
 
 //In Linux versions before 2.6.11, the capacity of a pipe was the same as the system page size (e.g., 4096 bytes on i386).
 //Since Linux 2.6.11, the pipe capacity is 65536 bytes.
@@ -312,6 +313,7 @@ void* Thread::WorkLoop()
     }
 #endif
 
+    pthread_setspecific(thread_ctx_.thread_group->GetSpecificDataKey(), &thread_ctx_.idx);
     thread_ctx_.sink->OnThreadStartOK();
     event_base_dispatch(thread_ev_base_);
     pthread_exit((void*) 0);

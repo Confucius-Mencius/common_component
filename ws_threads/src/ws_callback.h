@@ -6,12 +6,12 @@
 namespace ws
 {
 /* one of these is created for each vhost our protocol is used with */
-struct per_vhost_data
-{
-    struct lws_context* context;
-    struct lws_vhost* vhost;
-    const struct lws_protocols* protocol;
-};
+//struct per_vhost_data
+//{
+//    struct lws_context* context;
+//    struct lws_vhost* vhost;
+//    const struct lws_protocols* protocol;
+//};
 
 int Callback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void* in, size_t len);
 }

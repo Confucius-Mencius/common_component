@@ -17,7 +17,7 @@ int Callback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void
 //        (struct per_session_data*) user;
 
     // 由vhost与protocol获取通过lws_protocol_vh_priv_zalloc分配的结构
-    struct per_vhost_data* vhd = (struct per_vhost_data*) lws_protocol_vh_priv_get(lws_get_vhost(wsi), lws_get_protocol(wsi));
+//    struct per_vhost_data* vhd = (struct per_vhost_data*) lws_protocol_vh_priv_get(lws_get_vhost(wsi), lws_get_protocol(wsi));
 
 //    const struct lws_protocols* protocol = lws_get_protocol(wsi);
 //    if (protocol != NULL)
@@ -65,7 +65,7 @@ int Callback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void
         case LWS_CALLBACK_WSI_DESTROY:
             LOG_TRACE("LWS_CALLBACK_WSI_DESTROY");
             break;
-#endif
+
         case LWS_CALLBACK_PROTOCOL_DESTROY:
         {
             LOG_TRACE("LWS_CALLBACK_PROTOCOL_DESTROY");
@@ -73,11 +73,11 @@ int Callback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void
             // 销毁自己分配的一些资源
         }
         break;
-#if 0
+
         case LWS_CALLBACK_GET_THREAD_ID:
             LOG_TRACE("LWS_CALLBACK_GET_THREAD_ID");
             break;
-#endif
+
         // 初始化
         case LWS_CALLBACK_PROTOCOL_INIT:
         {
@@ -100,7 +100,7 @@ int Callback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void
             // 自己分配一些资源
         }
         break;
-#if 0
+
         case LWS_CALLBACK_EVENT_WAIT_CANCELLED: // 不用处理
             // 这里的wsi与init时的不一样。所有的LWS_CALLBACK_EVENT_WAIT_CANCELLED事件的wsi都是一个，是全局的
             LOG_TRACE("LWS_CALLBACK_EVENT_WAIT_CANCELLED");
@@ -132,10 +132,12 @@ int Callback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void
         case LWS_CALLBACK_ESTABLISHED:
         {
             LOG_TRACE("LWS_CALLBACK_ESTABLISHED");
-            DumpTokens(wsi);
+            DumpAllToken(wsi);
 
-            ThreadGroupInterface* ws_thread_group = static_cast<ThreadGroupInterface*>(lws_vhost_user(lws_get_vhost(wsi)));
-            ThreadSink* thread_sink = static_cast<ThreadSink*>(ws_thread_group->GetThread(0)->GetThreadSink()); // TODO
+            ThreadGroupInterface* thread_group = static_cast<ThreadGroupInterface*>(lws_vhost_user(lws_get_vhost(wsi)));
+            const int thread_idx = *((int*) pthread_getspecific(thread_group->GetSpecificDataKey()));
+            LOG_DEBUG("thread idx: " << thread_idx);
+            ThreadSink* thread_sink = static_cast<ThreadSink*>(thread_group->GetThread(thread_idx)->GetThreadSink());
 
             NewConnCtx new_conn_ctx;
             new_conn_ctx.client_sock_fd = lws_get_socket_fd(wsi);
@@ -146,7 +148,7 @@ int Callback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void
             {
                 const int err = errno;
                 LOG_ERROR("getpeername failed, socket fd: " << new_conn_ctx.client_sock_fd << ", errno: " << err << ", err msg: " << strerror((err)));
-                return -1;
+                return -1; // TODO 这些return -1可能不对
             }
 
             if (NULL == evutil_inet_ntop(AF_INET, &(client_addr.sin_addr),
@@ -202,9 +204,11 @@ int Callback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void
         case LWS_CALLBACK_CLOSED:
         {
             LOG_TRACE("LWS_CALLBACK_CLOSED");
-            ThreadGroupInterface* ws_thread_group = static_cast<ThreadGroupInterface*>(lws_vhost_user(lws_get_vhost(wsi)));
-            ThreadSink* thread_sink = static_cast<ThreadSink*>(ws_thread_group->GetThread(0)->GetThreadSink()); // TODO
 
+            ThreadGroupInterface* thread_group = static_cast<ThreadGroupInterface*>(lws_vhost_user(lws_get_vhost(wsi)));
+            const int thread_idx = *((int*) pthread_getspecific(thread_group->GetSpecificDataKey()));
+            LOG_DEBUG("thread idx: " << thread_idx);
+            ThreadSink* thread_sink = static_cast<ThreadSink*>(thread_group->GetThread(thread_idx)->GetThreadSink());
             const lws_sockfd_type sock_fd = lws_get_socket_fd(wsi);
 
             BaseConn* conn = thread_sink->GetConnMgr()->GetConn(sock_fd);
@@ -223,9 +227,10 @@ int Callback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void
             // 表示wsi对应的ws连接当前处于可写状态，可发送数据至客户端。
             LOG_TRACE("LWS_CALLBACK_SERVER_WRITEABLE");
 
-            ThreadGroupInterface* ws_thread_group = static_cast<ThreadGroupInterface*>(lws_vhost_user(lws_get_vhost(wsi)));
-            ThreadSink* thread_sink = static_cast<ThreadSink*>(ws_thread_group->GetThread(0)->GetThreadSink()); // TODO
-
+            ThreadGroupInterface* thread_group = static_cast<ThreadGroupInterface*>(lws_vhost_user(lws_get_vhost(wsi)));
+            const int thread_idx = *((int*) pthread_getspecific(thread_group->GetSpecificDataKey()));
+            LOG_DEBUG("thread idx: " << thread_idx);
+            ThreadSink* thread_sink = static_cast<ThreadSink*>(thread_group->GetThread(thread_idx)->GetThreadSink());
             const lws_sockfd_type sock_fd = lws_get_socket_fd(wsi);
 
             ConnMgr* conn_mgr = thread_sink->GetConnMgr();
@@ -249,8 +254,10 @@ int Callback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void
             LOG_TRACE("LWS_CALLBACK_RECEIVE");
             LOG_DEBUG("in: " << (char*) in << ", len: " << len << ", is final fragment: " << lws_is_final_fragment(wsi));
 
-            ThreadGroupInterface* ws_thread_group = static_cast<ThreadGroupInterface*>(lws_vhost_user(lws_get_vhost(wsi)));
-            ThreadSink* thread_sink = static_cast<ThreadSink*>(ws_thread_group->GetThread(0)->GetThreadSink()); // TODO
+            ThreadGroupInterface* thread_group = static_cast<ThreadGroupInterface*>(lws_vhost_user(lws_get_vhost(wsi)));
+            const int thread_idx = *((int*) pthread_getspecific(thread_group->GetSpecificDataKey()));
+            LOG_DEBUG("thread idx: " << thread_idx);
+            ThreadSink* thread_sink = static_cast<ThreadSink*>(thread_group->GetThread(thread_idx)->GetThreadSink());
 
             if (thread_sink->GetThread()->IsStopping())
             {
@@ -258,7 +265,6 @@ int Callback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void
                 return -1;
             }
 
-            // TODO 组帧，收到一个完整的帧才抛给应用层
             const lws_sockfd_type sock_fd = lws_get_socket_fd(wsi);
 
             ConnMgr* conn_mgr = thread_sink->GetConnMgr();
@@ -275,6 +281,7 @@ int Callback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void
                 return -1;
             }
 
+            // 组帧，收到一个完整的消息才抛给应用层
             std::string& data = conn->AppendData(in, len);
 
             if (lws_is_final_fragment(wsi))

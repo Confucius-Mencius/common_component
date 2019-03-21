@@ -2,6 +2,8 @@
 #include "str_util.h"
 #include "version.h"
 
+pthread_key_t g_tsd_key;
+
 namespace thread_center
 {
 ThreadCenter::ThreadCenter()
@@ -79,6 +81,7 @@ ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
             thread_ctx.idx = i;
             thread_ctx.sink = ctx->thread_sink_creator();
             thread_ctx.args = ctx->args;
+            thread_ctx.thread_group = thread_group;
 
             if (NULL == thread_group->CreateThread(&thread_ctx))
             {

@@ -33,6 +33,7 @@ public:
     }
 
     ThreadInterface* GetThread(int thread_idx) const override;
+    pthread_key_t& GetSpecificDataKey() override;
 
     int Start() override;
     void Join() override;
@@ -58,6 +59,8 @@ private:
 
     typedef std::vector<Thread*> ThreadVec;
     ThreadVec thread_vec_;
+
+    pthread_key_t tsd_key_;
 };
 } // namespace thread_center
 

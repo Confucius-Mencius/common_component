@@ -33,12 +33,21 @@ void ThreadGroup::Release()
 int ThreadGroup::Initialize(const void* ctx)
 {
     (void) ctx;
+
+    if (pthread_key_create(&tsd_key_, NULL) != 0)
+    {
+        const int err = errno;
+        LOG_ERROR("pthread_key_create failed, errno: " << err << ", err msg: " << strerror(err));
+        return -1;
+    }
+
     return 0;
 }
 
 void ThreadGroup::Finalize()
 {
     FINALIZE_CONTAINER(thread_vec_);
+    pthread_key_delete(tsd_key_);
 }
 
 int ThreadGroup::Activate()
@@ -60,6 +69,11 @@ ThreadInterface* ThreadGroup::GetThread(int thread_idx) const
     }
 
     return thread_vec_[thread_idx];
+}
+
+pthread_key_t& ThreadGroup::GetSpecificDataKey()
+{
+    return tsd_key_;
 }
 
 int ThreadGroup::Start()
