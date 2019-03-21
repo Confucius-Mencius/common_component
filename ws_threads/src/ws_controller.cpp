@@ -186,8 +186,7 @@ int Controller::CreateWSContext(bool use_ssl)
         LOG_ALWAYS(ws << " listen addr port: " << iface_ip_ << ":" << info->port);
     }
 
-//    /* 设置http服务器的配置 */
-//    http_mount_ =
+//    static const struct lws_http_mount mount =
 //    {
 //        /* .mount_next */             NULL,        /* linked-list "next" */
 //        /* .mountpoint */             "/",        /* mountpoint URL */
@@ -273,7 +272,6 @@ int Controller::CreateWSContext(bool use_ssl)
     info->client_ssl_cert_filepath = NULL;
     info->client_ssl_ca_filepath = NULL;
     info->client_ssl_cipher_list = NULL;
-
     info->foreign_loops = foreign_loops_;
 
     if (use_ssl)
@@ -285,6 +283,8 @@ int Controller::CreateWSContext(bool use_ssl)
             LOG_ERROR("lws_create_context failed, errno: " << err << ", err msg: " << strerror(err));
             return -1;
         }
+
+        LOG_ALWAYS("wss threads count: " << lws_get_count_threads(wss_ctx_));
     }
     else
     {
@@ -295,6 +295,8 @@ int Controller::CreateWSContext(bool use_ssl)
             LOG_ERROR("lws_create_context failed, errno: " << err << ", err msg: " << strerror(err));
             return -1;
         }
+
+        LOG_ALWAYS("ws threads count: " << lws_get_count_threads(ws_ctx_));
     }
 
     return 0;

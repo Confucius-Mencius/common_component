@@ -29,7 +29,6 @@ private:
 
     char iface_[128];
     char iface_ip_[INET_ADDRSTRLEN];
-//    struct lws_http_mount http_mount_;
     char cert_file_path_[1024];
     char private_key_file_path_[1024];
     void** foreign_loops_; // foreign loops是每个线程独立的
