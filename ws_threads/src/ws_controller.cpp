@@ -284,7 +284,7 @@ int Controller::CreateWSContext(bool use_ssl)
             return -1;
         }
 
-        LOG_ALWAYS("wss threads count: " << lws_get_count_threads(wss_ctx_));
+        LOG_DEBUG("wss threads count: " << lws_get_count_threads(wss_ctx_));
     }
     else
     {
@@ -296,7 +296,7 @@ int Controller::CreateWSContext(bool use_ssl)
             return -1;
         }
 
-        LOG_ALWAYS("ws threads count: " << lws_get_count_threads(ws_ctx_));
+        LOG_DEBUG("ws threads count: " << lws_get_count_threads(ws_ctx_));
     }
 
     return 0;
