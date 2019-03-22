@@ -1,8 +1,0 @@
-#ifndef TCP_CONN_CENTER_SRC_EXPORTER_H_
-#define TCP_CONN_CENTER_SRC_EXPORTER_H_
-
-#include "module_util.h"
-
-MODULE_EXPORTER_DECL();
-
-#endif // TCP_CONN_CENTER_MGR_SRC_EXPORTER_H_

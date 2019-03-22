@@ -1,8 +1,0 @@
-#ifndef WS_THREADS_SRC_EXPORTER_H_
-#define WS_THREADS_SRC_EXPORTER_H_
-
-#include "module_util.h"
-
-MODULE_EXPORTER_DECL();
-
-#endif // WS_THREADS_SRC_EXPORTER_H_
