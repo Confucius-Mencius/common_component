@@ -30,10 +30,6 @@ int Callback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void
     switch (reason)
     {
 #if 0
-        case LWS_CALLBACK_FILTER_NETWORK_CONNECTION:
-            LOG_TRACE("LWS_CALLBACK_FILTER_NETWORK_CONNECTION");
-            break;
-
         case LWS_CALLBACK_SERVER_NEW_CLIENT_INSTANTIATED:
             LOG_TRACE("LWS_CALLBACK_SERVER_NEW_CLIENT_INSTANTIATED");
             break;
@@ -252,7 +248,7 @@ int Callback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void
         case LWS_CALLBACK_RECEIVE:
         {
             LOG_TRACE("LWS_CALLBACK_RECEIVE");
-            LOG_DEBUG("in: " << (char*) in << ", len: " << len << ", is final fragment: " << lws_is_final_fragment(wsi));
+            LOG_DEBUG("len: " << len << ", is final fragment: " << lws_is_final_fragment(wsi));
 
             ThreadGroupInterface* thread_group = static_cast<ThreadGroupInterface*>(lws_vhost_user(lws_get_vhost(wsi)));
             const int thread_idx = *((int*) pthread_getspecific(thread_group->GetSpecificDataKey()));

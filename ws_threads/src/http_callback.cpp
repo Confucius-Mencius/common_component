@@ -293,7 +293,6 @@ int Callback(lws* wsi, lws_callback_reasons reason, void* user, void* in, size_t
 
         default:
         {
-            return lws_callback_http_dummy(wsi, reason, user, in, len);
         }
         break;
     }

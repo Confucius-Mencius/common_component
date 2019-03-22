@@ -29,9 +29,11 @@ public:
     virtual StrGroup GetTCPLogicSoGroup() = 0;
     virtual std::string GetWSIface() = 0;
     virtual int GetWSPort() = 0;
-    virtual int GetWSSPort() = 0;
-    virtual std::string GetWSSCertificateChainFilePath() = 0;
-    virtual std::string GetWSSPrivateKeyFilePath() = 0;
+    virtual int GetWSSecurityPort() = 0;
+    virtual std::string GetWSCertificateChainFilePath() = 0;
+    virtual std::string GetWSPrivateKeyFilePath() = 0;
+    virtual int GetWSNetworkRoundtripTimeout() = 0;
+    virtual int GetWSPingPongInterval() = 0;
     virtual int GetWSConnCountLimit() = 0;
     virtual int GetWSInactiveConnCheckIntervalSec() = 0;
     virtual int GetWSInactiveConnCheckIntervalUsec() = 0;
@@ -41,6 +43,9 @@ public:
     virtual int GetWSThreadCount() = 0;
     virtual std::string GetWSCommonLogicSo() = 0;
     virtual StrGroup GetWSLogicSoGroup() = 0;
+    virtual int GetHTTPKeepaliveTimeout() = 0;
+    virtual std::string GetHTTPCommonLogicSo() = 0;
+    virtual StrGroup GetHTTPLogicSoGroup() = 0;
     virtual std::string GetUDPAddrPort() = 0;
     virtual int GetUDPInactiveConnCheckIntervalSec() = 0;
     virtual int GetUDPInactiveConnCheckIntervalUsec() = 0;

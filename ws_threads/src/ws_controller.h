@@ -21,7 +21,7 @@ public:
     void Finalize();
 
 private:
-    int CreateWSContext(bool use_ssl);
+    int CreateWSContext(bool security);
 
 private:
     const ThreadsCtx* threads_ctx_;

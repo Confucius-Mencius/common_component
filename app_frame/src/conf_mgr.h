@@ -128,22 +128,34 @@ public:
         return ws_port_;
     }
 
-    int GetWSSPort() override
+    int GetWSSecurityPort() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return wss_port_;
+        return ws_security_port_;
     }
 
-    std::string GetWSSCertificateChainFilePath() override
+    std::string GetWSCertificateChainFilePath() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return wss_certificate_chain_file_path_;
+        return ws_certificate_chain_file_path_;
     }
 
-    std::string GetWSSPrivateKeyFilePath() override
+    std::string GetWSPrivateKeyFilePath() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return wss_private_key_file_path_;
+        return ws_private_key_file_path_;
+    }
+
+    int GetWSNetworkRoundtripTimeout() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return ws_network_roundtrip_timeout_;
+    }
+
+    int GetWSPingPongInterval() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return ws_ping_pong_interval_;
     }
 
     int GetWSConnCountLimit() override
@@ -198,6 +210,24 @@ public:
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return ws_logic_so_group_;
+    }
+
+    int GetHTTPKeepaliveTimeout() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return http_keepalive_timeout_;
+    }
+
+    std::string GetHTTPCommonLogicSo() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return http_common_logic_so_;
+    }
+
+    StrGroup GetHTTPLogicSoGroup() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return http_logic_so_group_;
     }
 
     std::string GetUDPAddrPort() override
@@ -499,41 +529,61 @@ private:
         return 0;
     }
 
-    int LoadWSSPort()
+    int LoadWSSecurityPort()
     {
-        if (conf_center_->GetConf(wss_port_, WSS_PORT_XPATH, true, 0) != 0)
+        if (conf_center_->GetConf(ws_security_port_, WS_SECURITY_PORT_XPATH, true, 0) != 0)
         {
-            LOG_ERROR("failed to get " << WSS_PORT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            LOG_ERROR("failed to get " << WS_SECURITY_PORT_XPATH << ": " << conf_center_->GetLastErrMsg());
             return -1;
         }
         return 0;
     }
 
-    int LoadWSSCertificateChainFilePath()
+    int LoadWSCertificateChainFilePath()
     {
-        char* wss_certificate_chain_file_path = NULL;
-        if (conf_center_->GetConf(&wss_certificate_chain_file_path, WSS_CERTIFICATE_CHAIN_FILE_PATH_XPATH, true, "") != 0)
+        char* ws_certificate_chain_file_path = NULL;
+        if (conf_center_->GetConf(&ws_certificate_chain_file_path, WS_CERTIFICATE_CHAIN_FILE_PATH_XPATH, true, "") != 0)
         {
-            LOG_ERROR("failed to get " << WSS_CERTIFICATE_CHAIN_FILE_PATH_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&wss_certificate_chain_file_path);
+            LOG_ERROR("failed to get " << WS_CERTIFICATE_CHAIN_FILE_PATH_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&ws_certificate_chain_file_path);
             return -1;
         }
-        wss_certificate_chain_file_path_ = wss_certificate_chain_file_path;
-        conf_center_->ReleaseConf(&wss_certificate_chain_file_path);
+        ws_certificate_chain_file_path_ = ws_certificate_chain_file_path;
+        conf_center_->ReleaseConf(&ws_certificate_chain_file_path);
         return 0;
     }
 
-    int LoadWSSPrivateKeyFilePath()
+    int LoadWSPrivateKeyFilePath()
     {
-        char* wss_private_key_file_path = NULL;
-        if (conf_center_->GetConf(&wss_private_key_file_path, WSS_PRIVATE_KEY_FILE_PATH_XPATH, true, "") != 0)
+        char* ws_private_key_file_path = NULL;
+        if (conf_center_->GetConf(&ws_private_key_file_path, WS_PRIVATE_KEY_FILE_PATH_XPATH, true, "") != 0)
         {
-            LOG_ERROR("failed to get " << WSS_PRIVATE_KEY_FILE_PATH_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&wss_private_key_file_path);
+            LOG_ERROR("failed to get " << WS_PRIVATE_KEY_FILE_PATH_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&ws_private_key_file_path);
             return -1;
         }
-        wss_private_key_file_path_ = wss_private_key_file_path;
-        conf_center_->ReleaseConf(&wss_private_key_file_path);
+        ws_private_key_file_path_ = ws_private_key_file_path;
+        conf_center_->ReleaseConf(&ws_private_key_file_path);
+        return 0;
+    }
+
+    int LoadWSNetworkRoundtripTimeout()
+    {
+        if (conf_center_->GetConf(ws_network_roundtrip_timeout_, WS_NETWORK_ROUNDTRIP_TIMEOUT_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << WS_NETWORK_ROUNDTRIP_TIMEOUT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadWSPingPongInterval()
+    {
+        if (conf_center_->GetConf(ws_ping_pong_interval_, WS_PING_PONG_INTERVAL_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << WS_PING_PONG_INTERVAL_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
         return 0;
     }
 
@@ -639,6 +689,51 @@ private:
             }
         }
         conf_center_->ReleaseConf(&ws_logic_so, n);
+        return 0;
+    }
+
+    int LoadHTTPKeepaliveTimeout()
+    {
+        if (conf_center_->GetConf(http_keepalive_timeout_, HTTP_KEEPALIVE_TIMEOUT_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << HTTP_KEEPALIVE_TIMEOUT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadHTTPCommonLogicSo()
+    {
+        char* http_common_logic_so = NULL;
+        if (conf_center_->GetConf(&http_common_logic_so, HTTP_COMMON_LOGIC_SO_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << HTTP_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&http_common_logic_so);
+            return -1;
+        }
+        http_common_logic_so_ = http_common_logic_so;
+        conf_center_->ReleaseConf(&http_common_logic_so);
+        return 0;
+    }
+
+    int LoadHTTPLogicSoGroup()
+    {
+        char** http_logic_so = NULL;
+        int n = 0;
+        if (conf_center_->GetConf(&http_logic_so, n, HTTP_LOGIC_SO_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << HTTP_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&http_logic_so, n);
+            return -1;
+        }
+        for (int i = 0; i < n; ++i)
+        {
+            if (strlen(http_logic_so[i]) > 0)
+            {
+                http_logic_so_group_.push_back(http_logic_so[i]);
+            }
+        }
+        conf_center_->ReleaseConf(&http_logic_so, n);
         return 0;
     }
 
@@ -850,9 +945,11 @@ private:
     StrGroup tcp_logic_so_group_;
     std::string ws_iface_;
     int ws_port_;
-    int wss_port_;
-    std::string wss_certificate_chain_file_path_;
-    std::string wss_private_key_file_path_;
+    int ws_security_port_;
+    std::string ws_certificate_chain_file_path_;
+    std::string ws_private_key_file_path_;
+    int ws_network_roundtrip_timeout_;
+    int ws_ping_pong_interval_;
     int ws_conn_count_limit_;
     int ws_inactive_conn_check_interval_sec_;
     int ws_inactive_conn_check_interval_usec_;
@@ -862,6 +959,9 @@ private:
     int ws_thread_count_;
     std::string ws_common_logic_so_;
     StrGroup ws_logic_so_group_;
+    int http_keepalive_timeout_;
+    std::string http_common_logic_so_;
+    StrGroup http_logic_so_group_;
     std::string udp_addr_port_;
     int udp_inactive_conn_check_interval_sec_;
     int udp_inactive_conn_check_interval_usec_;

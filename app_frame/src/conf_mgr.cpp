@@ -31,9 +31,11 @@ int ConfMgr::Load()
     tcp_logic_so_group_.clear();
     ws_iface_ = "";
     ws_port_ = 0;
-    wss_port_ = 0;
-    wss_certificate_chain_file_path_ = "";
-    wss_private_key_file_path_ = "";
+    ws_security_port_ = 0;
+    ws_certificate_chain_file_path_ = "";
+    ws_private_key_file_path_ = "";
+    ws_network_roundtrip_timeout_ = 0;
+    ws_ping_pong_interval_ = 0;
     ws_conn_count_limit_ = 0;
     ws_inactive_conn_check_interval_sec_ = 0;
     ws_inactive_conn_check_interval_usec_ = 0;
@@ -43,6 +45,9 @@ int ConfMgr::Load()
     ws_thread_count_ = 0;
     ws_common_logic_so_ = "";
     ws_logic_so_group_.clear();
+    http_keepalive_timeout_ = 0;
+    http_common_logic_so_ = "";
+    http_logic_so_group_.clear();
     udp_addr_port_ = "";
     udp_inactive_conn_check_interval_sec_ = 0;
     udp_inactive_conn_check_interval_usec_ = 0;
@@ -143,17 +148,27 @@ int ConfMgr::Load()
         return -1;
     }
 
-    if (LoadWSSPort() != 0)
+    if (LoadWSSecurityPort() != 0)
     {
         return -1;
     }
 
-    if (LoadWSSCertificateChainFilePath() != 0)
+    if (LoadWSCertificateChainFilePath() != 0)
     {
         return -1;
     }
 
-    if (LoadWSSPrivateKeyFilePath() != 0)
+    if (LoadWSPrivateKeyFilePath() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadWSNetworkRoundtripTimeout() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadWSPingPongInterval() != 0)
     {
         return -1;
     }
@@ -199,6 +214,21 @@ int ConfMgr::Load()
     }
 
     if (LoadWSLogicSoGroup() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPKeepaliveTimeout() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPCommonLogicSo() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPLogicSoGroup() != 0)
     {
         return -1;
     }
