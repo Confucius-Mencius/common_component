@@ -1,12 +1,12 @@
 # common_component
-common components used in Linux server programming, including framework components
+C++ common components used in Linux server programming, including framework components
 
 verified in CentOS7/LinuxMint18/Ubuntu16.04 and above
 
-公共组件，包括基础库、日志引擎、配置中心、定时器、线程管理、网络通信、异步管理、app launcher、app frame等，每个组件都是一个独立的工程。
+公共组件，包括基础库(base)、日志引擎(log_engine)、配置中心(conf_center)、定时器(timer_axis)、线程管理(thread_center、tcp_threads、 ws_threads、udp_threads、global_thread、work_threads、burden_threads)、网络通信(tcp、websocket、http、udp)、app launcher、app frame等，每个组件都是一个独立的工程。
 
 ## app_frame
-app框架，根据配置启动tcp、udp、http、work、burden线程组。
+app框架，根据配置启动tcp、websocket(含http)、udp、global、work、burden线程组。
 
 ## burden_threads
 burden线程组，是第三级线程组。app_frame通过dlopen的方式加载burden_threads。burden_theads对thread_center进行了包装，是一种类型的thread_center，其他线程组也是这样。可以调度任务给所有的线程组，包括burden_threads。
