@@ -48,7 +48,7 @@ void AppFrame::Release()
         ProfilerStop();
     }
 
-    if (conf_mgr_.EnableMemProfiling())
+    if (conf_mgr_.EnableHeapProfiling())
     {
         HeapProfilerStop();
     }
@@ -94,9 +94,9 @@ int AppFrame::Initialize(const void* ctx)
         ProfilerStart("cpu_profiling.prof"); // 程序启动目录下
     }
 
-    if (conf_mgr_.EnableMemProfiling())
+    if (conf_mgr_.EnableHeapProfiling())
     {
-        LOG_ALWAYS("enable mem profiling");
+        LOG_ALWAYS("enable heap profiling");
         HeapProfilerStart("mem_profiling"); // prefix，程序启动目录下
     }
 
