@@ -32,34 +32,16 @@ public:
         return enable_cpu_profiling_;
     }
 
-    bool EnableMemProfiling() override
+    bool EnableHeapProfiling() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return enable_mem_profiling_;
+        return enable_heap_profiling_;
     }
 
     bool ReleaseFreeMem() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return release_free_mem_;
-    }
-
-    std::string GetGlobalCommonLogicSo() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return global_common_logic_so_;
-    }
-
-    StrGroup GetGlobalLogicSoGroup() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return global_logic_so_group_;
-    }
-
-    std::string GetTCPAddrPort() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return tcp_addr_port_;
     }
 
     int GetTCPConnCountLimit() override
@@ -98,28 +80,106 @@ public:
         return tcp_storm_threshold_;
     }
 
-    int GetTCPThreadCount() override
+    std::string GetRawTCPAddr() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return tcp_thread_count_;
+        return raw_tcp_addr_;
     }
 
-    std::string GetTCPCommonLogicSo() override
+    int GetRawTCPPort() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return tcp_common_logic_so_;
+        return raw_tcp_port_;
     }
 
-    StrGroup GetTCPLogicSoGroup() override
+    int GetRawTCPThreadCount() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return tcp_logic_so_group_;
+        return raw_tcp_thread_count_;
     }
 
-    std::string GetWSIface() override
+    std::string GetRawTCPCommonLogicSo() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return ws_iface_;
+        return raw_tcp_common_logic_so_;
+    }
+
+    StrGroup GetRawTCPLogicSoGroup() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return raw_tcp_logic_so_group_;
+    }
+
+    bool ProtoDoChecksum() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return proto_do_checksum_;
+    }
+
+    int GetProtoMaxMsgBodyLen() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return proto_max_msg_body_len_;
+    }
+
+    int GetProtoPartMsgCheckInterval() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return proto_part_msg_check_interval_;
+    }
+
+    int GetProtoPartMsgConnLife() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return proto_part_msg_conn_life_;
+    }
+
+    std::string GetProtoTCPAddr() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return proto_tcp_addr_;
+    }
+
+    int GetProtoTCPPort() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return proto_tcp_port_;
+    }
+
+    int GetProtoTCPThreadCount() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return proto_tcp_thread_count_;
+    }
+
+    std::string GetProtoTCPCommonLogicSo() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return proto_tcp_common_logic_so_;
+    }
+
+    StrGroup GetProtoTCPLogicSoGroup() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return proto_tcp_logic_so_group_;
+    }
+
+    int GetWSPartMsgCheckInterval() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return ws_part_msg_check_interval_;
+    }
+
+    int GetWSPartMsgConnLife() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return ws_part_msg_conn_life_;
+    }
+
+    std::string GetWSAddr() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return ws_addr_;
     }
 
     int GetWSPort() override
@@ -146,54 +206,6 @@ public:
         return ws_private_key_file_path_;
     }
 
-    int GetWSNetworkRoundtripTimeout() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return ws_network_roundtrip_timeout_;
-    }
-
-    int GetWSPingPongInterval() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return ws_ping_pong_interval_;
-    }
-
-    int GetWSConnCountLimit() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return ws_conn_count_limit_;
-    }
-
-    int GetWSInactiveConnCheckIntervalSec() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return ws_inactive_conn_check_interval_sec_;
-    }
-
-    int GetWSInactiveConnCheckIntervalUsec() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return ws_inactive_conn_check_interval_usec_;
-    }
-
-    int GetWSInactiveConnLife() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return ws_inactive_conn_life_;
-    }
-
-    int GetWSStormInterval() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return ws_storm_interval_;
-    }
-
-    int GetWSStormThreshold() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return ws_storm_threshold_;
-    }
-
     int GetWSThreadCount() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
@@ -210,30 +222,6 @@ public:
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return ws_logic_so_group_;
-    }
-
-    int GetHTTPKeepaliveTimeout() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return http_keepalive_timeout_;
-    }
-
-    std::string GetHTTPCommonLogicSo() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return http_common_logic_so_;
-    }
-
-    StrGroup GetHTTPLogicSoGroup() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return http_logic_so_group_;
-    }
-
-    std::string GetUDPAddrPort() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return udp_addr_port_;
     }
 
     int GetUDPInactiveConnCheckIntervalSec() override
@@ -254,6 +242,18 @@ public:
         return udp_inactive_conn_life_;
     }
 
+    std::string GetUDPAddr() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return udp_addr_;
+    }
+
+    int GetUDPPort() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return udp_port_;
+    }
+
     int GetUDPThreadCount() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
@@ -272,6 +272,18 @@ public:
         return udp_logic_so_group_;
     }
 
+    std::string GetGlobalCommonLogicSo() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return global_common_logic_so_;
+    }
+
+    StrGroup GetGlobalLogicSoGroup() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return global_logic_so_group_;
+    }
+
     int GetWorkThreadCount() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
@@ -288,12 +300,6 @@ public:
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return work_logic_so_group_;
-    }
-
-    int GetIOToWorkTQSizeLimit() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return io_to_work_tq_size_limit_;
     }
 
     int GetBurdenThreadCount() override
@@ -327,15 +333,15 @@ private:
         return 0;
     }
 
-    int LoadEnableMemProfiling()
+    int LoadEnableHeapProfiling()
     {
-        int enable_mem_profiling = 0;
-        if (conf_center_->GetConf(enable_mem_profiling, ENABLE_MEM_PROFILING_XPATH, true, 0) != 0)
+        int enable_heap_profiling = 0;
+        if (conf_center_->GetConf(enable_heap_profiling, ENABLE_HEAP_PROFILING_XPATH, true, 0) != 0)
         {
-            LOG_ERROR("failed to get " << ENABLE_MEM_PROFILING_XPATH << ": " << conf_center_->GetLastErrMsg());
+            LOG_ERROR("failed to get " << ENABLE_HEAP_PROFILING_XPATH << ": " << conf_center_->GetLastErrMsg());
             return -1;
         }
-        enable_mem_profiling_ = (enable_mem_profiling != 0);
+        enable_heap_profiling_ = (enable_heap_profiling != 0);
         return 0;
     }
 
@@ -348,55 +354,6 @@ private:
             return -1;
         }
         release_free_mem_ = (release_free_mem != 0);
-        return 0;
-    }
-
-    int LoadGlobalCommonLogicSo()
-    {
-        char* global_common_logic_so = NULL;
-        if (conf_center_->GetConf(&global_common_logic_so, GLOBAL_COMMON_LOGIC_SO_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << GLOBAL_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&global_common_logic_so);
-            return -1;
-        }
-        global_common_logic_so_ = global_common_logic_so;
-        conf_center_->ReleaseConf(&global_common_logic_so);
-        return 0;
-    }
-
-    int LoadGlobalLogicSoGroup()
-    {
-        char** global_logic_so = NULL;
-        int n = 0;
-        if (conf_center_->GetConf(&global_logic_so, n, GLOBAL_LOGIC_SO_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << GLOBAL_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&global_logic_so, n);
-            return -1;
-        }
-        for (int i = 0; i < n; ++i)
-        {
-            if (strlen(global_logic_so[i]) > 0)
-            {
-                global_logic_so_group_.push_back(global_logic_so[i]);
-            }
-        }
-        conf_center_->ReleaseConf(&global_logic_so, n);
-        return 0;
-    }
-
-    int LoadTCPAddrPort()
-    {
-        char* tcp_addr_port = NULL;
-        if (conf_center_->GetConf(&tcp_addr_port, TCP_ADDR_PORT_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << TCP_ADDR_PORT_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&tcp_addr_port);
-            return -1;
-        }
-        tcp_addr_port_ = tcp_addr_port;
-        conf_center_->ReleaseConf(&tcp_addr_port);
         return 0;
     }
 
@@ -460,62 +417,217 @@ private:
         return 0;
     }
 
-    int LoadTCPThreadCount()
+    int LoadRawTCPAddr()
     {
-        if (conf_center_->GetConf(tcp_thread_count_, TCP_THREAD_COUNT_XPATH, true, 0) != 0)
+        char* raw_tcp_addr = NULL;
+        if (conf_center_->GetConf(&raw_tcp_addr, RAW_TCP_ADDR_XPATH, true, "") != 0)
         {
-            LOG_ERROR("failed to get " << TCP_THREAD_COUNT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            LOG_ERROR("failed to get " << RAW_TCP_ADDR_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&raw_tcp_addr);
+            return -1;
+        }
+        raw_tcp_addr_ = raw_tcp_addr;
+        conf_center_->ReleaseConf(&raw_tcp_addr);
+        return 0;
+    }
+
+    int LoadRawTCPPort()
+    {
+        if (conf_center_->GetConf(raw_tcp_port_, RAW_TCP_PORT_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << RAW_TCP_PORT_XPATH << ": " << conf_center_->GetLastErrMsg());
             return -1;
         }
         return 0;
     }
 
-    int LoadTCPCommonLogicSo()
+    int LoadRawTCPThreadCount()
     {
-        char* tcp_common_logic_so = NULL;
-        if (conf_center_->GetConf(&tcp_common_logic_so, TCP_COMMON_LOGIC_SO_XPATH, true, "") != 0)
+        if (conf_center_->GetConf(raw_tcp_thread_count_, RAW_TCP_THREAD_COUNT_XPATH, true, 0) != 0)
         {
-            LOG_ERROR("failed to get " << TCP_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&tcp_common_logic_so);
+            LOG_ERROR("failed to get " << RAW_TCP_THREAD_COUNT_XPATH << ": " << conf_center_->GetLastErrMsg());
             return -1;
         }
-        tcp_common_logic_so_ = tcp_common_logic_so;
-        conf_center_->ReleaseConf(&tcp_common_logic_so);
         return 0;
     }
 
-    int LoadTCPLogicSoGroup()
+    int LoadRawTCPCommonLogicSo()
     {
-        char** tcp_logic_so = NULL;
+        char* raw_tcp_common_logic_so = NULL;
+        if (conf_center_->GetConf(&raw_tcp_common_logic_so, RAW_TCP_COMMON_LOGIC_SO_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << RAW_TCP_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&raw_tcp_common_logic_so);
+            return -1;
+        }
+        raw_tcp_common_logic_so_ = raw_tcp_common_logic_so;
+        conf_center_->ReleaseConf(&raw_tcp_common_logic_so);
+        return 0;
+    }
+
+    int LoadRawTCPLogicSoGroup()
+    {
+        char** raw_tcp_logic_so = NULL;
         int n = 0;
-        if (conf_center_->GetConf(&tcp_logic_so, n, TCP_LOGIC_SO_XPATH, true, "") != 0)
+        if (conf_center_->GetConf(&raw_tcp_logic_so, n, RAW_TCP_LOGIC_SO_XPATH, true, "") != 0)
         {
-            LOG_ERROR("failed to get " << TCP_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&tcp_logic_so, n);
+            LOG_ERROR("failed to get " << RAW_TCP_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&raw_tcp_logic_so, n);
             return -1;
         }
         for (int i = 0; i < n; ++i)
         {
-            if (strlen(tcp_logic_so[i]) > 0)
+            if (strlen(raw_tcp_logic_so[i]) > 0)
             {
-                tcp_logic_so_group_.push_back(tcp_logic_so[i]);
+                raw_tcp_logic_so_group_.push_back(raw_tcp_logic_so[i]);
             }
         }
-        conf_center_->ReleaseConf(&tcp_logic_so, n);
+        conf_center_->ReleaseConf(&raw_tcp_logic_so, n);
         return 0;
     }
 
-    int LoadWSIface()
+    int LoadProtoDoChecksum()
     {
-        char* ws_iface = NULL;
-        if (conf_center_->GetConf(&ws_iface, WS_IFACE_XPATH, true, "") != 0)
+        int proto_do_checksum = 0;
+        if (conf_center_->GetConf(proto_do_checksum, PROTO_DO_CHECKSUM_XPATH, true, 1) != 0)
         {
-            LOG_ERROR("failed to get " << WS_IFACE_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&ws_iface);
+            LOG_ERROR("failed to get " << PROTO_DO_CHECKSUM_XPATH << ": " << conf_center_->GetLastErrMsg());
             return -1;
         }
-        ws_iface_ = ws_iface;
-        conf_center_->ReleaseConf(&ws_iface);
+        proto_do_checksum_ = (proto_do_checksum != 0);
+        return 0;
+    }
+
+    int LoadProtoMaxMsgBodyLen()
+    {
+        if (conf_center_->GetConf(proto_max_msg_body_len_, PROTO_MAX_MSG_BODY_LEN_XPATH, true, 1048576) != 0)
+        {
+            LOG_ERROR("failed to get " << PROTO_MAX_MSG_BODY_LEN_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadProtoPartMsgCheckInterval()
+    {
+        if (conf_center_->GetConf(proto_part_msg_check_interval_, PROTO_PART_MSG_CHECK_INTERVAL_XPATH, true, 5) != 0)
+        {
+            LOG_ERROR("failed to get " << PROTO_PART_MSG_CHECK_INTERVAL_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadProtoPartMsgConnLife()
+    {
+        if (conf_center_->GetConf(proto_part_msg_conn_life_, PROTO_PART_MSG_CONN_LIFE_XPATH, true, 60) != 0)
+        {
+            LOG_ERROR("failed to get " << PROTO_PART_MSG_CONN_LIFE_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadProtoTCPAddr()
+    {
+        char* proto_tcp_addr = NULL;
+        if (conf_center_->GetConf(&proto_tcp_addr, PROTO_TCP_ADDR_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << PROTO_TCP_ADDR_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&proto_tcp_addr);
+            return -1;
+        }
+        proto_tcp_addr_ = proto_tcp_addr;
+        conf_center_->ReleaseConf(&proto_tcp_addr);
+        return 0;
+    }
+
+    int LoadProtoTCPPort()
+    {
+        if (conf_center_->GetConf(proto_tcp_port_, PROTO_TCP_PORT_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << PROTO_TCP_PORT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadProtoTCPThreadCount()
+    {
+        if (conf_center_->GetConf(proto_tcp_thread_count_, PROTO_TCP_THREAD_COUNT_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << PROTO_TCP_THREAD_COUNT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadProtoTCPCommonLogicSo()
+    {
+        char* proto_tcp_common_logic_so = NULL;
+        if (conf_center_->GetConf(&proto_tcp_common_logic_so, PROTO_TCP_COMMON_LOGIC_SO_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << PROTO_TCP_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&proto_tcp_common_logic_so);
+            return -1;
+        }
+        proto_tcp_common_logic_so_ = proto_tcp_common_logic_so;
+        conf_center_->ReleaseConf(&proto_tcp_common_logic_so);
+        return 0;
+    }
+
+    int LoadProtoTCPLogicSoGroup()
+    {
+        char** proto_tcp_logic_so = NULL;
+        int n = 0;
+        if (conf_center_->GetConf(&proto_tcp_logic_so, n, PROTO_TCP_LOGIC_SO_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << PROTO_TCP_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&proto_tcp_logic_so, n);
+            return -1;
+        }
+        for (int i = 0; i < n; ++i)
+        {
+            if (strlen(proto_tcp_logic_so[i]) > 0)
+            {
+                proto_tcp_logic_so_group_.push_back(proto_tcp_logic_so[i]);
+            }
+        }
+        conf_center_->ReleaseConf(&proto_tcp_logic_so, n);
+        return 0;
+    }
+
+    int LoadWSPartMsgCheckInterval()
+    {
+        if (conf_center_->GetConf(ws_part_msg_check_interval_, WS_PART_MSG_CHECK_INTERVAL_XPATH, true, 5) != 0)
+        {
+            LOG_ERROR("failed to get " << WS_PART_MSG_CHECK_INTERVAL_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadWSPartMsgConnLife()
+    {
+        if (conf_center_->GetConf(ws_part_msg_conn_life_, WS_PART_MSG_CONN_LIFE_XPATH, true, 60) != 0)
+        {
+            LOG_ERROR("failed to get " << WS_PART_MSG_CONN_LIFE_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadWSAddr()
+    {
+        char* ws_addr = NULL;
+        if (conf_center_->GetConf(&ws_addr, WS_ADDR_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << WS_ADDR_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&ws_addr);
+            return -1;
+        }
+        ws_addr_ = ws_addr;
+        conf_center_->ReleaseConf(&ws_addr);
         return 0;
     }
 
@@ -567,86 +679,6 @@ private:
         return 0;
     }
 
-    int LoadWSNetworkRoundtripTimeout()
-    {
-        if (conf_center_->GetConf(ws_network_roundtrip_timeout_, WS_NETWORK_ROUNDTRIP_TIMEOUT_XPATH, true, 0) != 0)
-        {
-            LOG_ERROR("failed to get " << WS_NETWORK_ROUNDTRIP_TIMEOUT_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadWSPingPongInterval()
-    {
-        if (conf_center_->GetConf(ws_ping_pong_interval_, WS_PING_PONG_INTERVAL_XPATH, true, 0) != 0)
-        {
-            LOG_ERROR("failed to get " << WS_PING_PONG_INTERVAL_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadWSConnCountLimit()
-    {
-        if (conf_center_->GetConf(ws_conn_count_limit_, WS_CONN_COUNT_LIMIT_XPATH, true, 0) != 0)
-        {
-            LOG_ERROR("failed to get " << WS_CONN_COUNT_LIMIT_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadWSInactiveConnCheckIntervalSec()
-    {
-        if (conf_center_->GetConf(ws_inactive_conn_check_interval_sec_, WS_INACTIVE_CONN_CHECK_INTERVAL_SEC_XPATH, true, 60) != 0)
-        {
-            LOG_ERROR("failed to get " << WS_INACTIVE_CONN_CHECK_INTERVAL_SEC_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadWSInactiveConnCheckIntervalUsec()
-    {
-        if (conf_center_->GetConf(ws_inactive_conn_check_interval_usec_, WS_INACTIVE_CONN_CHECK_INTERVAL_USEC_XPATH, true, 0) != 0)
-        {
-            LOG_ERROR("failed to get " << WS_INACTIVE_CONN_CHECK_INTERVAL_USEC_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadWSInactiveConnLife()
-    {
-        if (conf_center_->GetConf(ws_inactive_conn_life_, WS_INACTIVE_CONN_LIFE_XPATH, true, 1800) != 0)
-        {
-            LOG_ERROR("failed to get " << WS_INACTIVE_CONN_LIFE_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadWSStormInterval()
-    {
-        if (conf_center_->GetConf(ws_storm_interval_, WS_STORM_INTERVAL_XPATH, true, 10) != 0)
-        {
-            LOG_ERROR("failed to get " << WS_STORM_INTERVAL_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadWSStormThreshold()
-    {
-        if (conf_center_->GetConf(ws_storm_threshold_, WS_STORM_THRESHOLD_XPATH, true, 1000) != 0)
-        {
-            LOG_ERROR("failed to get " << WS_STORM_THRESHOLD_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
     int LoadWSThreadCount()
     {
         if (conf_center_->GetConf(ws_thread_count_, WS_THREAD_COUNT_XPATH, true, 0) != 0)
@@ -692,65 +724,6 @@ private:
         return 0;
     }
 
-    int LoadHTTPKeepaliveTimeout()
-    {
-        if (conf_center_->GetConf(http_keepalive_timeout_, HTTP_KEEPALIVE_TIMEOUT_XPATH, true, 0) != 0)
-        {
-            LOG_ERROR("failed to get " << HTTP_KEEPALIVE_TIMEOUT_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadHTTPCommonLogicSo()
-    {
-        char* http_common_logic_so = NULL;
-        if (conf_center_->GetConf(&http_common_logic_so, HTTP_COMMON_LOGIC_SO_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << HTTP_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&http_common_logic_so);
-            return -1;
-        }
-        http_common_logic_so_ = http_common_logic_so;
-        conf_center_->ReleaseConf(&http_common_logic_so);
-        return 0;
-    }
-
-    int LoadHTTPLogicSoGroup()
-    {
-        char** http_logic_so = NULL;
-        int n = 0;
-        if (conf_center_->GetConf(&http_logic_so, n, HTTP_LOGIC_SO_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << HTTP_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&http_logic_so, n);
-            return -1;
-        }
-        for (int i = 0; i < n; ++i)
-        {
-            if (strlen(http_logic_so[i]) > 0)
-            {
-                http_logic_so_group_.push_back(http_logic_so[i]);
-            }
-        }
-        conf_center_->ReleaseConf(&http_logic_so, n);
-        return 0;
-    }
-
-    int LoadUDPAddrPort()
-    {
-        char* udp_addr_port = NULL;
-        if (conf_center_->GetConf(&udp_addr_port, UDP_ADDR_PORT_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << UDP_ADDR_PORT_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&udp_addr_port);
-            return -1;
-        }
-        udp_addr_port_ = udp_addr_port;
-        conf_center_->ReleaseConf(&udp_addr_port);
-        return 0;
-    }
-
     int LoadUDPInactiveConnCheckIntervalSec()
     {
         if (conf_center_->GetConf(udp_inactive_conn_check_interval_sec_, UDP_INACTIVE_CONN_CHECK_INTERVAL_SEC_XPATH, true, 60) != 0)
@@ -776,6 +749,30 @@ private:
         if (conf_center_->GetConf(udp_inactive_conn_life_, UDP_INACTIVE_CONN_LIFE_XPATH, true, 1800) != 0)
         {
             LOG_ERROR("failed to get " << UDP_INACTIVE_CONN_LIFE_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadUDPAddr()
+    {
+        char* udp_addr = NULL;
+        if (conf_center_->GetConf(&udp_addr, UDP_ADDR_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << UDP_ADDR_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&udp_addr);
+            return -1;
+        }
+        udp_addr_ = udp_addr;
+        conf_center_->ReleaseConf(&udp_addr);
+        return 0;
+    }
+
+    int LoadUDPPort()
+    {
+        if (conf_center_->GetConf(udp_port_, UDP_PORT_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << UDP_PORT_XPATH << ": " << conf_center_->GetLastErrMsg());
             return -1;
         }
         return 0;
@@ -826,6 +823,41 @@ private:
         return 0;
     }
 
+    int LoadGlobalCommonLogicSo()
+    {
+        char* global_common_logic_so = NULL;
+        if (conf_center_->GetConf(&global_common_logic_so, GLOBAL_COMMON_LOGIC_SO_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << GLOBAL_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&global_common_logic_so);
+            return -1;
+        }
+        global_common_logic_so_ = global_common_logic_so;
+        conf_center_->ReleaseConf(&global_common_logic_so);
+        return 0;
+    }
+
+    int LoadGlobalLogicSoGroup()
+    {
+        char** global_logic_so = NULL;
+        int n = 0;
+        if (conf_center_->GetConf(&global_logic_so, n, GLOBAL_LOGIC_SO_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << GLOBAL_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&global_logic_so, n);
+            return -1;
+        }
+        for (int i = 0; i < n; ++i)
+        {
+            if (strlen(global_logic_so[i]) > 0)
+            {
+                global_logic_so_group_.push_back(global_logic_so[i]);
+            }
+        }
+        conf_center_->ReleaseConf(&global_logic_so, n);
+        return 0;
+    }
+
     int LoadWorkThreadCount()
     {
         if (conf_center_->GetConf(work_thread_count_, WORK_THREAD_COUNT_XPATH, true, 0) != 0)
@@ -868,16 +900,6 @@ private:
             }
         }
         conf_center_->ReleaseConf(&work_logic_so, n);
-        return 0;
-    }
-
-    int LoadIOToWorkTQSizeLimit()
-    {
-        if (conf_center_->GetConf(io_to_work_tq_size_limit_, IO_TO_WORK_TQ_SIZE_LIMIT_XPATH, true, 50000) != 0)
-        {
-            LOG_ERROR("failed to get " << IO_TO_WORK_TQ_SIZE_LIMIT_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
         return 0;
     }
 
@@ -929,50 +951,51 @@ private:
 private:
     ThreadRWLock rwlock_;
     bool enable_cpu_profiling_;
-    bool enable_mem_profiling_;
+    bool enable_heap_profiling_;
     bool release_free_mem_;
-    std::string global_common_logic_so_;
-    StrGroup global_logic_so_group_;
-    std::string tcp_addr_port_;
     int tcp_conn_count_limit_;
     int tcp_inactive_conn_check_interval_sec_;
     int tcp_inactive_conn_check_interval_usec_;
     int tcp_inactive_conn_life_;
     int tcp_storm_interval_;
     int tcp_storm_threshold_;
-    int tcp_thread_count_;
-    std::string tcp_common_logic_so_;
-    StrGroup tcp_logic_so_group_;
-    std::string ws_iface_;
+    std::string raw_tcp_addr_;
+    int raw_tcp_port_;
+    int raw_tcp_thread_count_;
+    std::string raw_tcp_common_logic_so_;
+    StrGroup raw_tcp_logic_so_group_;
+    bool proto_do_checksum_;
+    int proto_max_msg_body_len_;
+    int proto_part_msg_check_interval_;
+    int proto_part_msg_conn_life_;
+    std::string proto_tcp_addr_;
+    int proto_tcp_port_;
+    int proto_tcp_thread_count_;
+    std::string proto_tcp_common_logic_so_;
+    StrGroup proto_tcp_logic_so_group_;
+    int ws_part_msg_check_interval_;
+    int ws_part_msg_conn_life_;
+    std::string ws_addr_;
     int ws_port_;
     int ws_security_port_;
     std::string ws_certificate_chain_file_path_;
     std::string ws_private_key_file_path_;
-    int ws_network_roundtrip_timeout_;
-    int ws_ping_pong_interval_;
-    int ws_conn_count_limit_;
-    int ws_inactive_conn_check_interval_sec_;
-    int ws_inactive_conn_check_interval_usec_;
-    int ws_inactive_conn_life_;
-    int ws_storm_interval_;
-    int ws_storm_threshold_;
     int ws_thread_count_;
     std::string ws_common_logic_so_;
     StrGroup ws_logic_so_group_;
-    int http_keepalive_timeout_;
-    std::string http_common_logic_so_;
-    StrGroup http_logic_so_group_;
-    std::string udp_addr_port_;
     int udp_inactive_conn_check_interval_sec_;
     int udp_inactive_conn_check_interval_usec_;
     int udp_inactive_conn_life_;
+    std::string udp_addr_;
+    int udp_port_;
     int udp_thread_count_;
     std::string udp_common_logic_so_;
     StrGroup udp_logic_so_group_;
+    std::string global_common_logic_so_;
+    StrGroup global_logic_so_group_;
     int work_thread_count_;
     std::string work_common_logic_so_;
     StrGroup work_logic_so_group_;
-    int io_to_work_tq_size_limit_;
     int burden_thread_count_;
     std::string burden_common_logic_so_;
     StrGroup burden_logic_so_group_;
