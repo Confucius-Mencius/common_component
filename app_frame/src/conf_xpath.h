@@ -1,5 +1,5 @@
-#ifndef APP_FRAME_SRC_CONF_XPATH_DEFINE_H_
-#define APP_FRAME_SRC_CONF_XPATH_DEFINE_H_
+#ifndef APP_FRAME_SRC_CONF_XPATH_H_
+#define APP_FRAME_SRC_CONF_XPATH_H_
 
 namespace app_frame
 {
@@ -54,4 +54,4 @@ const char UDP_COMMON_LOGIC_SO_XPATH[] = "/conf/udp/common_logic_so";
 const char UDP_LOGIC_SO_XPATH[] = "/conf/udp/logic_so_group/logic_so";
 }
 
-#endif // APP_FRAME_SRC_CONF_XPATH_DEFINE_H_
+#endif // APP_FRAME_SRC_CONF_XPATH_H_

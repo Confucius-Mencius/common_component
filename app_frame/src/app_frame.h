@@ -5,6 +5,7 @@
 #include "conf_mgr.h"
 #include "module_loader.h"
 #include "raw_tcp_threads_interface.h"
+#include "proto_tcp_threads_interface.h"
 
 namespace app_frame
 {
@@ -33,10 +34,11 @@ public:
 private:
     int LoadAndCheckConf();
     int GetDate() const;
-    int LoadRawTCPThreads();
 //    int LoadGlobalThread();
 //    int LoadWorkThreads();
 //    int LoadBurdenThreads();
+    int LoadRawTCPThreads();
+    int LoadProtoTCPThreads();
 
 //    int LoadWSThreads();
 //    int LoadHttpThreads();
@@ -59,6 +61,9 @@ private:
 //    burden::ThreadsInterface* burden_threads_;
     ModuleLoader raw_tcp_threads_loader_;
     tcp::raw::ThreadsInterface* raw_tcp_threads_;
+
+    ModuleLoader proto_tcp_threads_loader_;
+    tcp::proto::ThreadsInterface* proto_tcp_threads_;
 
 //    ModuleLoader ws_threads_loader_;
 //    ws::ThreadsInterface* ws_threads_;

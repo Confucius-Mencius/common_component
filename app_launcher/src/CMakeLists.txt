@@ -11,9 +11,9 @@ CreateVersionFile(${CMAKE_CURRENT_SOURCE_DIR} ${PROJ_NAME} ${EXE_NAME})
 
 ###############################################################################
 # include/link dir
-include_directories(${PROJ_INC_DIR} ${APP_FRAME_INC_DIR} ${MSG_CODEC_CENTER_INC_DIR} ${THREAD_CENTER_INC_DIR}
-        ${CONF_CENTER_INC_DIR} ${LOG_ENGINE_INC_DIR} ${BASE_INC_DIR} ${GFLAGS_INC_DIR} ${LIBEVENT_INC_DIR}
-        ${LOG4CPLUS_INC_DIR})
+include_directories(${PROJ_INC_DIR} ${LOG_ENGINE_INC_DIR} ${CONF_CENTER_INC_DIR}
+        ${THREAD_CENTER_INC_DIR} ${APP_FRAME_INC_DIR} ${BASE_INC_DIR} ${GFLAGS_INC_DIR}
+        ${LIBEVENT_INC_DIR} ${LOG4CPLUS_INC_DIR})
 link_directories(${BASE_LIB_DIR} ${GFLAGS_LIB_DIR} ${LIBEVENT_LIB_DIR} ${LOG4CPLUS_LIB_DIR} ${GPERFTOOLS_LIB_DIR})
 
 ###############################################################################

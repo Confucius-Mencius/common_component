@@ -2,6 +2,9 @@
 # author: BrentHuang (guang11cheng@qq.com)
 ###############################################################################
 
+# 定义USE_BUFFEREVENT宏，使用buffer event方式。注释掉则不使用buffer event方式。
+add_definitions(-DUSE_BUFFEREVENT)
+
 set(LIB_NAME ${PROJ_NAME})
 
 ###############################################################################
@@ -12,10 +15,11 @@ CreateVersionFile(${CMAKE_CURRENT_SOURCE_DIR} ${PROJ_NAME} ${LIB_NAME})
 ###############################################################################
 # include/link dir
 include_directories(${PROJ_INC_DIR} ${LOG_ENGINE_INC_DIR} ${CONF_CENTER_INC_DIR}
-        ${THREAD_CENTER_INC_DIR} ${RAW_TCP_THREADS_INC_DIR} ${PROTO_TCP_THREADS_INC_DIR}
-        ${BASE_INC_DIR} ${LIBEVENT_INC_DIR} ${OPENSSL_INC_DIR} ${LOG4CPLUS_INC_DIR}
+        ${TIMER_AXIS_INC_DIR} ${THREAD_CENTER_INC_DIR} ${APP_FRAME_INC_DIR} ${RAW_TCP_THREADS_INC_DIR}
+        ${PROTO_MSG_CODEC_INC_DIR} ${BASE_INC_DIR} ${LIBEVENT_INC_DIR} ${LOG4CPLUS_INC_DIR}
         ${GPERFTOOLS_INC_DIR})
-link_directories(${BASE_LIB_DIR} ${LIBEVENT_LIB_DIR} ${OPENSSL_LIB_DIR} ${GPERFTOOLS_LIB_DIR})
+link_directories(${BASE_LIB_DIR} ${LIBWEBSOCKETS_LIB_DIR} ${LIBEVENT_LIB_DIR} ${OPENSSL_LIB_DIR}
+        ${GPERFTOOLS_LIB_DIR})
 
 ###############################################################################
 # target
@@ -25,7 +29,8 @@ add_library(${LIB_NAME} SHARED ${HEADERS} ${CUR_DIR_SRCS})
 
 ###############################################################################
 # library dependence
-target_link_libraries(${LIB_NAME} ${BASE_LIB_NAME} ${LIBEVENT_LIB_NAME} ${OPENSSL_LIB_NAME} ${GPERFTOOLS_LIB_NAME})
+target_link_libraries(${LIB_NAME} ${BASE_LIB_NAME} ${LIBWEBSOCKETS_LIB_NAME} ${LIBEVENT_LIB_NAME}
+        ${OPENSSL_LIB_NAME} ${GPERFTOOLS_LIB_NAME})
 
 ###############################################################################
 # output dir

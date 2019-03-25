@@ -1,5 +1,5 @@
-#ifndef RAW_TCP_THREADS_INC_RAW_TCP_LOGIC_INTERFACE_H_
-#define RAW_TCP_THREADS_INC_RAW_TCP_LOGIC_INTERFACE_H_
+#ifndef PROTO_TCP_THREADS_INC_PROTO_TCP_LOGIC_INTERFACE_H_
+#define PROTO_TCP_THREADS_INC_PROTO_TCP_LOGIC_INTERFACE_H_
 
 #include "conn.h"
 #include "module_interface.h"
@@ -16,7 +16,7 @@ class LogicInterface;
 
 namespace tcp
 {
-namespace raw
+namespace proto
 {
 class SchedulerInterface;
 class CommonLogicInterface;
@@ -33,7 +33,6 @@ struct LogicCtx
     SchedulerInterface* scheduler;
     CommonLogicInterface* common_logic;
     struct event_base* thread_ev_base;
-    const void* logic_args;
 
     LogicCtx()
     {
@@ -47,7 +46,6 @@ struct LogicCtx
         scheduler = NULL;
         common_logic = NULL;
         thread_ev_base = NULL;
-        logic_args = NULL;
     }
 };
 
@@ -116,21 +114,6 @@ public:
         (void) conn_guid;
     }
 
-    virtual void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
-    {
-        (void) conn_guid;
-        (void) data;
-        (void) len;
-    }
-
-    virtual void OnTask(const ConnGUID* conn_guid, ThreadInterface* source_thread, const void* data, size_t len)
-    {
-        (void) conn_guid;
-        (void) source_thread;
-        (void) data;
-        (void) len;
-    }
-
 protected:
     LogicCtx logic_ctx_;
     bool can_exit_;
@@ -147,4 +130,4 @@ public:
 }
 }
 
-#endif // RAW_TCP_THREADS_INC_RAW_TCP_LOGIC_INTERFACE_H_
+#endif // PROTO_TCP_THREADS_INC_PROTO_TCP_LOGIC_INTERFACE_H_

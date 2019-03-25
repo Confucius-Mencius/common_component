@@ -6,7 +6,7 @@
 #include "app_frame_conf_mgr_interface.h"
 #include "conf_center_interface.h"
 #include "conf_mgr_interface.h"
-#include "conf_xpath_define.h"
+#include "conf_xpath.h"
 #include "log_util.h"
 #include "thread_lock.h"
 

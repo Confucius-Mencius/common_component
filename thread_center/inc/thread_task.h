@@ -3,7 +3,7 @@
 
 #include <errno.h>
 #include <string.h>
-#include "conn_define.h"
+#include "conn.h"
 #include "log_util.h"
 
 class ThreadInterface;

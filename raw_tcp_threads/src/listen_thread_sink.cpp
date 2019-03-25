@@ -35,7 +35,7 @@ void ListenThreadSink::OnAccept(struct evconnlistener* listener, evutil_socket_t
         return;
     }
 
-    const int tcp_conn_count_limit = sink->threads_ctx_->conf_mgr->GetTCPConnCountLimit();
+    const int tcp_conn_count_limit = sink->threads_ctx_->app_frame_conf_mgr->GetTCPConnCountLimit();
     if (tcp_conn_count_limit > 0 && sink->online_tcp_conn_count_ >= tcp_conn_count_limit)
     {
         LOG_ERROR("refuse new connection, online tcp conn count: " << sink->online_tcp_conn_count_

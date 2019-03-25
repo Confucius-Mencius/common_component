@@ -41,7 +41,8 @@ struct ThreadGroupCtx
     std::string thread_name;
     int thread_count;
     std::function<ThreadSinkInterface* ()> thread_sink_creator; // thread_sink必须是动态分配的，框架会自动释放
-    const void* args;
+    const void* threads_ctx; // 将具体的threads_ctx传递给具体的thread sink
+    const void* logic_args; // 将具体的logic参数传递给具体的logic so
 
     ThreadGroupCtx() : thread_name("")
     {
@@ -49,7 +50,8 @@ struct ThreadGroupCtx
         enable_cpu_profiling = false;
         thread_count = 0;
         thread_sink_creator = NULL;
-        args = NULL;
+        threads_ctx = NULL;
+        logic_args = NULL;
     }
 };
 

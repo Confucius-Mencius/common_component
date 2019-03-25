@@ -94,10 +94,10 @@ function(CreateVersionFile dir proj_name lib_name)
     STRING(TOUPPER ${lib_name} UPPER_LIB_NAME)
 
     FILE(WRITE ${dir}/version.h
-            "\#ifndef " ${UPPER_PROJ_NAME} "_SRC_VERSION_H_ \n"
-            "\#define " ${UPPER_PROJ_NAME} "_SRC_VERSION_H_\n\n"
-            "\#define " ${UPPER_PROJ_NAME} "_VERSION \"" ${BUILD_VERSION} "\"\n\n"
-            "\#endif // " ${UPPER_PROJ_NAME} "_SRC_VERSION_H_\n\n")
+            "\#ifndef " ${UPPER_PROJ_NAME} "_" ${UPPER_LIB_NAME} "_VERSION_H_ \n"
+            "\#define " ${UPPER_PROJ_NAME} "_" ${UPPER_LIB_NAME} "_VERSION_H_\n\n"
+            "\#define " ${UPPER_PROJ_NAME} "_" ${UPPER_LIB_NAME} "_VERSION \"" ${BUILD_VERSION} "\"\n\n"
+            "\#endif // " ${UPPER_PROJ_NAME} "_" ${UPPER_LIB_NAME} "_VERSION_H_\n")
 endfunction()
 
 ###############################################################################

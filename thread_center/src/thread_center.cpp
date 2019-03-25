@@ -16,7 +16,7 @@ ThreadCenter::~ThreadCenter()
 
 const char* ThreadCenter::GetVersion() const
 {
-    return THREAD_CENTER_VERSION;
+    return THREAD_CENTER_THREAD_CENTER_VERSION;
 }
 
 const char* ThreadCenter::GetLastErrMsg() const
@@ -80,7 +80,7 @@ ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
 
             thread_ctx.idx = i;
             thread_ctx.sink = ctx->thread_sink_creator();
-            thread_ctx.args = ctx->args;
+            thread_ctx.threads_ctx = ctx->args;
             thread_ctx.thread_group = thread_group;
 
             if (NULL == thread_group->CreateThread(&thread_ctx))

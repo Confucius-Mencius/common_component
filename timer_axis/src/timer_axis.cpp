@@ -67,7 +67,7 @@ TimerAxis::~TimerAxis()
 
 const char* TimerAxis::GetVersion() const
 {
-    return TIMER_AXIS_VERSION;
+    return TIMER_AXIS_TIMER_AXIS_VERSION;
 }
 
 const char* TimerAxis::GetLastErrMsg() const

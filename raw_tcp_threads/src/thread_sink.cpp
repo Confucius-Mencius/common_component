@@ -54,13 +54,13 @@ int ThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 
     conn_mgr_ctx.inactive_conn_check_interval =
     {
-        threads_ctx_->conf_mgr->GetTCPInactiveConnCheckIntervalSec(),
-        threads_ctx_->conf_mgr->GetTCPInactiveConnCheckIntervalUsec()
+        threads_ctx_->app_frame_conf_mgr->GetTCPInactiveConnCheckIntervalSec(),
+        threads_ctx_->app_frame_conf_mgr->GetTCPInactiveConnCheckIntervalUsec()
     };
 
-    conn_mgr_ctx.inactive_conn_life = threads_ctx_->conf_mgr->GetTCPInactiveConnLife();
-    conn_mgr_ctx.storm_interval = threads_ctx_->conf_mgr->GetTCPStormInterval();
-    conn_mgr_ctx.storm_threshold = threads_ctx_->conf_mgr->GetTCPStormThreshold();
+    conn_mgr_ctx.inactive_conn_life = threads_ctx_->app_frame_conf_mgr->GetTCPInactiveConnLife();
+    conn_mgr_ctx.storm_interval = threads_ctx_->app_frame_conf_mgr->GetTCPStormInterval();
+    conn_mgr_ctx.storm_threshold = threads_ctx_->app_frame_conf_mgr->GetTCPStormThreshold();
 
     if (conn_mgr_.Initialize(&conn_mgr_ctx) != 0)
     {
@@ -339,6 +339,7 @@ int ThreadSink::LoadCommonLogic()
     logic_ctx.scheduler = &scheduler_;
     logic_ctx.common_logic = common_logic_;
     logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
+    logic_ctx.logic_args = threads_ctx_->logic_args;
 
     if (common_logic_->Initialize(&logic_ctx) != 0)
     {
@@ -396,6 +397,7 @@ int ThreadSink::LoadLogicGroup()
         logic_ctx.scheduler = &scheduler_;
         logic_ctx.common_logic = common_logic_;
         logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
+        logic_ctx.logic_args = threads_ctx_->logic_args;
 
         if (logic_item.logic->Initialize(&logic_ctx) != 0)
         {

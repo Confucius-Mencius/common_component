@@ -21,7 +21,7 @@ Threads::~Threads()
 
 const char* Threads::GetVersion() const
 {
-    return RAW_TCP_THREADS_VERSION;
+    return RAW_TCP_THREADS_RAW_TCP_THREADS_VERSION;
 }
 
 const char* Threads::GetLastErrMsg() const
@@ -74,7 +74,7 @@ void Threads::Freeze()
     SAFE_FREEZE(listen_thread_group_);
 }
 
-int Threads::CreateThreadGroup()
+int Threads::CreateThreadGroup(const char* name_prefix)
 {
     int ret = -1;
 
@@ -82,8 +82,8 @@ int Threads::CreateThreadGroup()
     {
         ThreadGroupCtx listen_thread_group_ctx;
         listen_thread_group_ctx.common_component_dir = threads_ctx_.common_component_dir;
-        listen_thread_group_ctx.enable_cpu_profiling = threads_ctx_.conf_mgr->EnableCPUProfiling();
-        listen_thread_group_ctx.thread_name = "tcp listen thread";
+        listen_thread_group_ctx.enable_cpu_profiling = threads_ctx_.app_frame_conf_mgr->EnableCPUProfiling();
+        listen_thread_group_ctx.thread_name = std::string(name_prefix) + " listen thread";
         listen_thread_group_ctx.thread_count = 1;
         listen_thread_group_ctx.thread_sink_creator = ListenThreadSink::Create;
         listen_thread_group_ctx.args = &threads_ctx_;
@@ -96,8 +96,8 @@ int Threads::CreateThreadGroup()
 
         ThreadGroupCtx tcp_thread_group_ctx;
         tcp_thread_group_ctx.common_component_dir = threads_ctx_.common_component_dir;
-        tcp_thread_group_ctx.enable_cpu_profiling = threads_ctx_.conf_mgr->EnableCPUProfiling();
-        tcp_thread_group_ctx.thread_name = "tcp thread";
+        tcp_thread_group_ctx.enable_cpu_profiling = threads_ctx_.app_frame_conf_mgr->EnableCPUProfiling();
+        tcp_thread_group_ctx.thread_name = std::string(name_prefix) + " thread";
         tcp_thread_group_ctx.thread_count = threads_ctx_.conf.thread_count;
         tcp_thread_group_ctx.thread_sink_creator = ThreadSink::Create;
         tcp_thread_group_ctx.args = &threads_ctx_;

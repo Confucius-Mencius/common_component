@@ -20,7 +20,7 @@ struct ThreadCtx
     std::string name;
     int idx;
     ThreadSinkInterface* sink;
-    const void* args;
+    const void* threads_ctx;
     ThreadGroup* thread_group;
 
     ThreadCtx() : name("")
@@ -29,7 +29,7 @@ struct ThreadCtx
         enable_cpu_profiling = false;
         idx = -1;
         sink = NULL;
-        args = NULL;
+        threads_ctx = NULL;
         thread_group = NULL;
     }
 };

@@ -1,7 +1,7 @@
 #ifndef RAW_TCP_THREADS_INC_RAW_TCP_SCHEDULER_INTERFACE_H_
 #define RAW_TCP_THREADS_INC_RAW_TCP_SCHEDULER_INTERFACE_H_
 
-#include "conn_define.h"
+#include "conn.h"
 
 namespace tcp
 {

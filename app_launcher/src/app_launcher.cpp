@@ -67,7 +67,7 @@ int AppLauncher::Initialize(const AppLauncherCtx* app_launcher_ctx)
     // !!!此后就可以用LOG_XXX打印日志了!!!
     ////////////////////////////////////////////////////////////////////////////////
 
-    LOG_ALWAYS("app launcher version: " << APP_LAUNCHER_VERSION);
+    LOG_ALWAYS("app launcher version: " << APP_LAUNCHER_APP_LAUNCHER_VERSION);
     LOG_DEBUG("argc: " << app_launcher_ctx_->argc);
 
     for (int i = 0; i < app_launcher_ctx_->argc; ++i)

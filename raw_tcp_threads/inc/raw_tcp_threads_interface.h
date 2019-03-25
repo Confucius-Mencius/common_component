@@ -25,6 +25,12 @@ struct Conf
     int thread_count;
     std::string common_logic_so;
     StrGroup logic_so_group;
+
+    Conf() : addr(), common_logic_so(), logic_so_group()
+    {
+        port = 0;
+        thread_count = 0;
+    }
 };
 
 struct ThreadsCtx
@@ -36,13 +42,14 @@ struct ThreadsCtx
     const char* app_name;
     ConfCenterInterface* conf_center;
     ThreadCenterInterface* thread_center;
-    app_frame::ConfMgrInterface* conf_mgr;
+    app_frame::ConfMgrInterface* app_frame_conf_mgr;
     int* app_frame_threads_count;
     pthread_mutex_t* app_frame_threads_sync_mutex;
     pthread_cond_t* app_frame_threads_sync_cond;
     Conf conf;
+    const void* logic_args;
 
-    ThreadsCtx()
+    ThreadsCtx() : conf()
     {
         argc = 0;
         argv = NULL;
@@ -51,10 +58,11 @@ struct ThreadsCtx
         app_name = NULL;
         conf_center = NULL;
         thread_center = NULL;
-        conf_mgr = NULL;
+        app_frame_conf_mgr = NULL;
         app_frame_threads_count = NULL;
         app_frame_threads_sync_mutex = NULL;
         app_frame_threads_sync_cond = NULL;
+        logic_args = NULL;
     }
 };
 
@@ -81,7 +89,7 @@ public:
     {
     }
 
-    virtual int CreateThreadGroup() = 0;
+    virtual int CreateThreadGroup(const char* name_prefix) = 0;
     virtual void SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups) = 0;
     virtual ThreadGroupInterface* GetListenThreadGroup() const = 0;
     virtual ThreadGroupInterface* GetTCPThreadGroup() const = 0;

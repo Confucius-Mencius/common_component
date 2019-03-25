@@ -1,7 +1,7 @@
 #ifndef RAW_TCP_THREADS_SRC_BASE_CONN_H_
 #define RAW_TCP_THREADS_SRC_BASE_CONN_H_
 
-#include "conn_define.h"
+#include "conn.h"
 
 namespace tcp
 {
@@ -60,7 +60,7 @@ public:
 
     void SetConnGUID(int io_thread_idx, ConnID conn_id)
     {
-        conn_guid_.io_thread_type = IO_THREAD_TYPE_TCP;
+        conn_guid_.io_type = IO_TYPE_RAW_TCP;
         conn_guid_.io_thread_idx = io_thread_idx;
         conn_guid_.conn_id = conn_id;
     }

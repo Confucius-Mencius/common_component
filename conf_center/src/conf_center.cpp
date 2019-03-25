@@ -16,7 +16,7 @@ ConfCenter::~ConfCenter()
 
 const char* ConfCenter::GetVersion() const
 {
-    return CONF_CENTER_VERSION;
+    return CONF_CENTER_CONF_CENTER_VERSION;
 }
 
 const char* ConfCenter::GetLastErrMsg() const
