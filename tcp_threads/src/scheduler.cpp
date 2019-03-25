@@ -6,6 +6,8 @@
 
 namespace tcp
 {
+namespace raw
+{
 Scheduler::Scheduler()
 {
     threads_ctx_ = NULL;
@@ -28,7 +30,7 @@ int Scheduler::Initialize(const void* ctx)
 
     threads_ctx_ = static_cast<const ThreadsCtx*>(ctx);
 
-    const int tcp_thread_count = threads_ctx_->conf_mgr->GetTCPThreadCount();
+    const int tcp_thread_count = threads_ctx_->conf.thread_count;
     last_tcp_thread_idx_ = rand() % tcp_thread_count;
 
     return 0;
@@ -195,5 +197,6 @@ int Scheduler::GetScheduleWorkThreadIdx(int work_thread_idx)
     }
 
     return work_thread_idx;
+}
 }
 }

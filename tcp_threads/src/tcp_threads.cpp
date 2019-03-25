@@ -1,12 +1,13 @@
 #include "tcp_threads.h"
 #include "app_frame_conf_mgr_interface.h"
-#include "container_util.h"
 #include "listen_thread_sink.h"
 #include "str_util.h"
 #include "thread_sink.h"
 #include "version.h"
 
 namespace tcp
+{
+namespace raw
 {
 Threads::Threads() : threads_ctx_(), related_thread_groups_()
 {
@@ -20,7 +21,7 @@ Threads::~Threads()
 
 const char* Threads::GetVersion() const
 {
-    return TCP_THREADS_VERSION;
+    return RAW_TCP_THREADS_VERSION;
 }
 
 const char* Threads::GetLastErrMsg() const
@@ -97,7 +98,7 @@ int Threads::CreateThreadGroup()
         tcp_thread_group_ctx.common_component_dir = threads_ctx_.common_component_dir;
         tcp_thread_group_ctx.enable_cpu_profiling = threads_ctx_.conf_mgr->EnableCPUProfiling();
         tcp_thread_group_ctx.thread_name = "tcp thread";
-        tcp_thread_group_ctx.thread_count = threads_ctx_.conf_mgr->GetTCPThreadCount();
+        tcp_thread_group_ctx.thread_count = threads_ctx_.conf.thread_count;
         tcp_thread_group_ctx.thread_sink_creator = ThreadSink::Create;
         tcp_thread_group_ctx.args = &threads_ctx_;
 
@@ -113,9 +114,9 @@ int Threads::CreateThreadGroup()
 
         for (int i = 0; i < tcp_thread_group_->GetThreadCount(); ++i)
         {
-            ThreadSink* tcp_thread_sink = static_cast<ThreadSink*>(tcp_thread_group_->GetThread(i)->GetThreadSink());
-            tcp_thread_sink->SetListenThread(listen_thread);
-            tcp_thread_sink->SetTCPThreadGroup(tcp_thread_group_);
+            ThreadSink* thread_sink = static_cast<ThreadSink*>(tcp_thread_group_->GetThread(i)->GetThreadSink());
+            thread_sink->SetListenThread(listen_thread);
+            thread_sink->SetTCPThreadGroup(tcp_thread_group_);
         }
 
         ret = 0;
@@ -161,5 +162,6 @@ void Threads::SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_g
         ThreadSink* tcp_thread_sink = static_cast<ThreadSink*>(tcp_thread_group_->GetThread(i)->GetThreadSink());
         tcp_thread_sink->SetRelatedThreadGroups(&related_thread_groups_);
     }
+}
 }
 }

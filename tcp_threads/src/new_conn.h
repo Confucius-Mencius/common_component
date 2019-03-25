@@ -1,9 +1,11 @@
-#ifndef TCP_THREADS_SRC_NEW_CONN_H_
-#define TCP_THREADS_SRC_NEW_CONN_H_
+#ifndef RAW_TCP_THREADS_SRC_NEW_CONN_H_
+#define RAW_TCP_THREADS_SRC_NEW_CONN_H_
 
 #include <netinet/in.h>
 
 namespace tcp
+{
+namespace raw
 {
 struct NewConnCtx
 {
@@ -19,5 +21,6 @@ struct NewConnCtx
     }
 };
 }
+}
 
-#endif // TCP_THREADS_SRC_NEW_CONN_H_
+#endif // RAW_TCP_THREADS_SRC_NEW_CONN_H_

@@ -1,9 +1,11 @@
-#ifndef TCP_THREADS_SRC_TCP_THREADS_H_
-#define TCP_THREADS_SRC_TCP_THREADS_H_
+#ifndef RAW_TCP_THREADS_SRC_TCP_THREADS_H_
+#define RAW_TCP_THREADS_SRC_TCP_THREADS_H_
 
-#include "tcp_threads_interface.h"
+#include "raw_tcp_threads_interface.h"
 
 namespace tcp
+{
+namespace raw
 {
 class Threads : public ThreadsInterface
 {
@@ -33,5 +35,6 @@ private:
     RelatedThreadGroups related_thread_groups_;
 };
 }
+}
 
-#endif // TCP_THREADS_SRC_TCP_THREADS_H_
+#endif // RAW_TCP_THREADS_SRC_TCP_THREADS_H_

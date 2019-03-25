@@ -1,5 +1,5 @@
-#ifndef TCP_THREADS_SRC_BUFFER_EVENT_CONN_H_
-#define TCP_THREADS_SRC_BUFFER_EVENT_CONN_H_
+#ifndef RAW_TCP_THREADS_SRC_BUFFER_EVENT_CONN_H_
+#define RAW_TCP_THREADS_SRC_BUFFER_EVENT_CONN_H_
 
 #include <event2/bufferevent.h>
 #include "base_conn.h"
@@ -7,6 +7,8 @@
 
 #if defined(USE_BUFFEREVENT)
 namespace tcp
+{
+namespace raw
 {
 class BufferEventConn : public BaseConn
 {
@@ -32,6 +34,7 @@ private:
     struct bufferevent* buffer_event_;
 };
 }
+}
 #endif
 
-#endif // TCP_THREADS_SRC_BUFFER_EVENT_CONN_H_
+#endif // RAW_TCP_THREADS_SRC_BUFFER_EVENT_CONN_H_

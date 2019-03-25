@@ -1,9 +1,11 @@
-#ifndef TCP_THREADS_INC_TCP_SCHEDULER_INTERFACE_H_
-#define TCP_THREADS_INC_TCP_SCHEDULER_INTERFACE_H_
+#ifndef RAW_TCP_THREADS_INC_RAW_TCP_SCHEDULER_INTERFACE_H_
+#define RAW_TCP_THREADS_INC_RAW_TCP_SCHEDULER_INTERFACE_H_
 
 #include "conn_define.h"
 
 namespace tcp
+{
+namespace raw
 {
 class SchedulerInterface
 {
@@ -13,7 +15,7 @@ public:
     }
 
     /**
-     * @brief 可以发往其它io线程管理的客户端
+     * @brief send to client，可以发往其它io线程管理的客户端
      * @return
      */
     virtual int SendToClient(const ConnGUID* conn_guid, const void* data, size_t len) = 0;
@@ -44,5 +46,6 @@ public:
     virtual int SendToGlobalThread(const ConnGUID* conn_guid, const void* data, size_t len) = 0;
 };
 }
+}
 
-#endif // TCP_THREADS_INC_TCP_SCHEDULER_INTERFACE_H_
+#endif // RAW_TCP_THREADS_INC_RAW_TCP_SCHEDULER_INTERFACE_H_

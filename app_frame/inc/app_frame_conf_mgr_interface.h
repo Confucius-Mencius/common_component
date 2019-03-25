@@ -15,6 +15,14 @@ public:
     virtual bool EnableCPUProfiling() = 0;
     virtual bool EnableHeapProfiling() = 0;
     virtual bool ReleaseFreeMem() = 0;
+    virtual std::string GetGlobalCommonLogicSo() = 0;
+    virtual StrGroup GetGlobalLogicSoGroup() = 0;
+    virtual int GetWorkThreadCount() = 0;
+    virtual std::string GetWorkCommonLogicSo() = 0;
+    virtual StrGroup GetWorkLogicSoGroup() = 0;
+    virtual int GetBurdenThreadCount() = 0;
+    virtual std::string GetBurdenCommonLogicSo() = 0;
+    virtual StrGroup GetBurdenLogicSoGroup() = 0;
     virtual int GetTCPConnCountLimit() = 0;
     virtual int GetTCPInactiveConnCheckIntervalSec() = 0;
     virtual int GetTCPInactiveConnCheckIntervalUsec() = 0;
@@ -53,14 +61,6 @@ public:
     virtual int GetUDPThreadCount() = 0;
     virtual std::string GetUDPCommonLogicSo() = 0;
     virtual StrGroup GetUDPLogicSoGroup() = 0;
-    virtual std::string GetGlobalCommonLogicSo() = 0;
-    virtual StrGroup GetGlobalLogicSoGroup() = 0;
-    virtual int GetWorkThreadCount() = 0;
-    virtual std::string GetWorkCommonLogicSo() = 0;
-    virtual StrGroup GetWorkLogicSoGroup() = 0;
-    virtual int GetBurdenThreadCount() = 0;
-    virtual std::string GetBurdenCommonLogicSo() = 0;
-    virtual StrGroup GetBurdenLogicSoGroup() = 0;
 };
 }
 

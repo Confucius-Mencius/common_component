@@ -1,5 +1,5 @@
-#ifndef TCP_THREADS_SRC_NORMAL_CONN_H_
-#define TCP_THREADS_SRC_NORMAL_CONN_H_
+#ifndef RAW_TCP_THREADS_SRC_NORMAL_CONN_H_
+#define RAW_TCP_THREADS_SRC_NORMAL_CONN_H_
 
 #include <list>
 #include <event2/event.h>
@@ -8,6 +8,8 @@
 
 #if !defined(USE_BUFFEREVENT)
 namespace tcp
+{
+namespace raw
 {
 class NormalConn : public BaseConn
 {
@@ -38,6 +40,7 @@ private:
     struct event* write_event_;
 };
 }
+}
 #endif
 
-#endif // TCP_THREADS_SRC_NORMAL_CONN_H_
+#endif // RAW_TCP_THREADS_SRC_NORMAL_CONN_H_

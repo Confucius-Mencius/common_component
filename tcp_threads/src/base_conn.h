@@ -1,9 +1,11 @@
-#ifndef TCP_THREADS_SRC_BASE_CONN_H_
-#define TCP_THREADS_SRC_BASE_CONN_H_
+#ifndef RAW_TCP_THREADS_SRC_BASE_CONN_H_
+#define RAW_TCP_THREADS_SRC_BASE_CONN_H_
 
 #include "conn_define.h"
 
 namespace tcp
+{
+namespace raw
 {
 class ThreadSink;
 
@@ -82,5 +84,6 @@ protected:
     ThreadSink* thread_sink_;
 };
 }
+}
 
-#endif // TCP_THREADS_SRC_BASE_CONN_H_
+#endif // RAW_TCP_THREADS_SRC_BASE_CONN_H_

@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 2.8)
 
 ###############################################################################
 # project name
-set(PROJ_NAME tcp_threads)
+set(PROJ_NAME raw_tcp_threads)
 project(${PROJ_NAME} CXX)
 
 set(CXX_LANGUAGE on CACHE INTERNAL "this is a cxx language project")

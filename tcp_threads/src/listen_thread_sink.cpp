@@ -6,6 +6,8 @@
 
 namespace tcp
 {
+namespace raw
+{
 void ListenThreadSink::ErrorCallback(struct evconnlistener* listener, void* arg)
 {
     // 当ulimit -n较低时会报错： errno: 24, err msg: Too many open files
@@ -91,7 +93,7 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 
     threads_ctx_ = static_cast<const ThreadsCtx*>(ctx);
 
-    const std::string tcp_addr_port = threads_ctx_->conf_mgr->GetTCPAddrPort();
+    const std::string tcp_addr_port = threads_ctx_->conf.addr + std::to_string(threads_ctx_->conf.port);
     LOG_ALWAYS("tcp listen addr port: " << tcp_addr_port);
 
 //    listen_sock_fd_ = socket(AF_INET, SOCK_STREAM, 0);
@@ -162,7 +164,7 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 
     evconnlistener_set_error_cb(listener_, ListenThreadSink::ErrorCallback);
 
-    tcp_thread_count_ = threads_ctx_->conf_mgr->GetTCPThreadCount();
+    tcp_thread_count_ = threads_ctx_->conf.thread_count;
     return 0;
 }
 
@@ -279,5 +281,6 @@ void ListenThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
         max_online_tcp_conn_count_ = online_tcp_conn_count_;
         LOG_WARN("max online tcp conn count: " << max_online_tcp_conn_count_);
     }
+}
 }
 }

@@ -17,6 +17,14 @@ int ConfMgr::Load()
     enable_cpu_profiling_ = false;
     enable_heap_profiling_ = false;
     release_free_mem_ = false;
+    global_common_logic_so_ = "";
+    global_logic_so_group_.clear();
+    work_thread_count_ = 0;
+    work_common_logic_so_ = "";
+    work_logic_so_group_.clear();
+    burden_thread_count_ = 0;
+    burden_common_logic_so_ = "";
+    burden_logic_so_group_.clear();
     tcp_conn_count_limit_ = 0;
     tcp_inactive_conn_check_interval_sec_ = 0;
     tcp_inactive_conn_check_interval_usec_ = 0;
@@ -55,14 +63,6 @@ int ConfMgr::Load()
     udp_thread_count_ = 0;
     udp_common_logic_so_ = "";
     udp_logic_so_group_.clear();
-    global_common_logic_so_ = "";
-    global_logic_so_group_.clear();
-    work_thread_count_ = 0;
-    work_common_logic_so_ = "";
-    work_logic_so_group_.clear();
-    burden_thread_count_ = 0;
-    burden_common_logic_so_ = "";
-    burden_logic_so_group_.clear();
 
     if (LoadEnableCPUProfiling() != 0)
     {
@@ -75,6 +75,46 @@ int ConfMgr::Load()
     }
 
     if (LoadReleaseFreeMem() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadGlobalCommonLogicSo() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadGlobalLogicSoGroup() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadWorkThreadCount() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadWorkCommonLogicSo() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadWorkLogicSoGroup() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadBurdenThreadCount() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadBurdenCommonLogicSo() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadBurdenLogicSoGroup() != 0)
     {
         return -1;
     }
@@ -265,46 +305,6 @@ int ConfMgr::Load()
     }
 
     if (LoadUDPLogicSoGroup() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadGlobalCommonLogicSo() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadGlobalLogicSoGroup() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadWorkThreadCount() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadWorkCommonLogicSo() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadWorkLogicSoGroup() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadBurdenThreadCount() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadBurdenCommonLogicSo() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadBurdenLogicSoGroup() != 0)
     {
         return -1;
     }

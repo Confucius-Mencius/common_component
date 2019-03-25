@@ -7,6 +7,8 @@
 
 namespace tcp
 {
+namespace raw
+{
 ThreadSink::ThreadSink()
     : common_logic_loader_(), logic_item_vec_(), conn_mgr_(), scheduler_()
 {
@@ -301,7 +303,7 @@ void ThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_grou
 
 int ThreadSink::LoadCommonLogic()
 {
-    const std::string tcp_common_logic_so = threads_ctx_->conf_mgr->GetTCPCommonLogicSo();
+    const std::string& tcp_common_logic_so = threads_ctx_->conf.common_logic_so;
     if (0 == tcp_common_logic_so.length())
     {
         return 0;
@@ -353,7 +355,7 @@ int ThreadSink::LoadLogicGroup()
     LogicItem logic_item;
     logic_item.logic = NULL;
 
-    const StrGroup logic_so_group = threads_ctx_->conf_mgr->GetTCPLogicSoGroup();
+    const StrGroup& logic_so_group = threads_ctx_->conf.logic_so_group;
 
     for (StrGroup::const_iterator it = logic_so_group.begin();
             it != logic_so_group.end(); ++it)
@@ -446,5 +448,6 @@ int ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
     }
 
     return 0;
+}
 }
 }

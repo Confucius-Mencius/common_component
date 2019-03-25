@@ -1,14 +1,16 @@
-#ifndef TCP_THREADS_SRC_LISTEN_THREAD_SINK_H_
-#define TCP_THREADS_SRC_LISTEN_THREAD_SINK_H_
+#ifndef RAW_TCP_THREADS_SRC_LISTEN_THREAD_SINK_H_
+#define RAW_TCP_THREADS_SRC_LISTEN_THREAD_SINK_H_
 
 // 单独的监听线程是有必要的，如果放在io线程中，一旦io处理逻辑慢了就会影响建立连接。
 
 #include <event2/listener.h>
 #include "new_conn.h"
 #include "mem_util.h"
-#include "tcp_threads_interface.h"
+#include "raw_tcp_threads_interface.h"
 
 namespace tcp
+{
+namespace raw
 {
 class ListenThreadSink : public ThreadSinkInterface
 {
@@ -52,5 +54,6 @@ private:
     int last_tcp_thread_idx_;
 };
 }
+}
 
-#endif // TCP_THREADS_SRC_LISTEN_THREAD_SINK_H_
+#endif // RAW_TCP_THREADS_SRC_LISTEN_THREAD_SINK_H_

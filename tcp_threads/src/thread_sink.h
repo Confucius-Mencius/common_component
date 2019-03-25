@@ -1,14 +1,16 @@
-#ifndef TCP_THREADS_SRC_THREAD_SINK_H_
-#define TCP_THREADS_SRC_THREAD_SINK_H_
+#ifndef RAW_TCP_THREADS_SRC_THREAD_SINK_H_
+#define RAW_TCP_THREADS_SRC_THREAD_SINK_H_
 
 #include "conn_mgr.h"
 #include "mem_util.h"
 #include "module_loader.h"
 #include "new_conn.h"
 #include "scheduler.h"
-#include "tcp_logic_interface.h"
+#include "raw_tcp_logic_interface.h"
 
 namespace tcp
+{
+namespace raw
 {
 struct LogicItem
 {
@@ -89,5 +91,6 @@ private:
     Scheduler scheduler_;
 };
 }
+}
 
-#endif // TCP_THREADS_SRC_THREAD_SINK_H_
+#endif // RAW_TCP_THREADS_SRC_THREAD_SINK_H_

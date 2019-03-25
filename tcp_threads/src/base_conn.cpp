@@ -3,6 +3,8 @@
 
 namespace tcp
 {
+namespace raw
+{
 BaseConn::BaseConn() : client_ip_(""), conn_guid_()
 {
     created_time_ = 0;
@@ -13,5 +15,6 @@ BaseConn::BaseConn() : client_ip_(""), conn_guid_()
 
 BaseConn::~BaseConn()
 {
+}
 }
 }

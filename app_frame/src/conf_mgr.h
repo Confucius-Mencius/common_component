@@ -44,6 +44,54 @@ public:
         return release_free_mem_;
     }
 
+    std::string GetGlobalCommonLogicSo() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return global_common_logic_so_;
+    }
+
+    StrGroup GetGlobalLogicSoGroup() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return global_logic_so_group_;
+    }
+
+    int GetWorkThreadCount() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return work_thread_count_;
+    }
+
+    std::string GetWorkCommonLogicSo() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return work_common_logic_so_;
+    }
+
+    StrGroup GetWorkLogicSoGroup() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return work_logic_so_group_;
+    }
+
+    int GetBurdenThreadCount() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return burden_thread_count_;
+    }
+
+    std::string GetBurdenCommonLogicSo() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return burden_common_logic_so_;
+    }
+
+    StrGroup GetBurdenLogicSoGroup() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return burden_logic_so_group_;
+    }
+
     int GetTCPConnCountLimit() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
@@ -272,54 +320,6 @@ public:
         return udp_logic_so_group_;
     }
 
-    std::string GetGlobalCommonLogicSo() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return global_common_logic_so_;
-    }
-
-    StrGroup GetGlobalLogicSoGroup() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return global_logic_so_group_;
-    }
-
-    int GetWorkThreadCount() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return work_thread_count_;
-    }
-
-    std::string GetWorkCommonLogicSo() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return work_common_logic_so_;
-    }
-
-    StrGroup GetWorkLogicSoGroup() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return work_logic_so_group_;
-    }
-
-    int GetBurdenThreadCount() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return burden_thread_count_;
-    }
-
-    std::string GetBurdenCommonLogicSo() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return burden_common_logic_so_;
-    }
-
-    StrGroup GetBurdenLogicSoGroup() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return burden_logic_so_group_;
-    }
-
 private:
     int LoadEnableCPUProfiling()
     {
@@ -354,6 +354,131 @@ private:
             return -1;
         }
         release_free_mem_ = (release_free_mem != 0);
+        return 0;
+    }
+
+    int LoadGlobalCommonLogicSo()
+    {
+        char* global_common_logic_so = NULL;
+        if (conf_center_->GetConf(&global_common_logic_so, GLOBAL_COMMON_LOGIC_SO_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << GLOBAL_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&global_common_logic_so);
+            return -1;
+        }
+        global_common_logic_so_ = global_common_logic_so;
+        conf_center_->ReleaseConf(&global_common_logic_so);
+        return 0;
+    }
+
+    int LoadGlobalLogicSoGroup()
+    {
+        char** global_logic_so = NULL;
+        int n = 0;
+        if (conf_center_->GetConf(&global_logic_so, n, GLOBAL_LOGIC_SO_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << GLOBAL_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&global_logic_so, n);
+            return -1;
+        }
+        for (int i = 0; i < n; ++i)
+        {
+            if (strlen(global_logic_so[i]) > 0)
+            {
+                global_logic_so_group_.push_back(global_logic_so[i]);
+            }
+        }
+        conf_center_->ReleaseConf(&global_logic_so, n);
+        return 0;
+    }
+
+    int LoadWorkThreadCount()
+    {
+        if (conf_center_->GetConf(work_thread_count_, WORK_THREAD_COUNT_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << WORK_THREAD_COUNT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadWorkCommonLogicSo()
+    {
+        char* work_common_logic_so = NULL;
+        if (conf_center_->GetConf(&work_common_logic_so, WORK_COMMON_LOGIC_SO_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << WORK_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&work_common_logic_so);
+            return -1;
+        }
+        work_common_logic_so_ = work_common_logic_so;
+        conf_center_->ReleaseConf(&work_common_logic_so);
+        return 0;
+    }
+
+    int LoadWorkLogicSoGroup()
+    {
+        char** work_logic_so = NULL;
+        int n = 0;
+        if (conf_center_->GetConf(&work_logic_so, n, WORK_LOGIC_SO_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << WORK_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&work_logic_so, n);
+            return -1;
+        }
+        for (int i = 0; i < n; ++i)
+        {
+            if (strlen(work_logic_so[i]) > 0)
+            {
+                work_logic_so_group_.push_back(work_logic_so[i]);
+            }
+        }
+        conf_center_->ReleaseConf(&work_logic_so, n);
+        return 0;
+    }
+
+    int LoadBurdenThreadCount()
+    {
+        if (conf_center_->GetConf(burden_thread_count_, BURDEN_THREAD_COUNT_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << BURDEN_THREAD_COUNT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadBurdenCommonLogicSo()
+    {
+        char* burden_common_logic_so = NULL;
+        if (conf_center_->GetConf(&burden_common_logic_so, BURDEN_COMMON_LOGIC_SO_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << BURDEN_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&burden_common_logic_so);
+            return -1;
+        }
+        burden_common_logic_so_ = burden_common_logic_so;
+        conf_center_->ReleaseConf(&burden_common_logic_so);
+        return 0;
+    }
+
+    int LoadBurdenLogicSoGroup()
+    {
+        char** burden_logic_so = NULL;
+        int n = 0;
+        if (conf_center_->GetConf(&burden_logic_so, n, BURDEN_LOGIC_SO_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << BURDEN_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&burden_logic_so, n);
+            return -1;
+        }
+        for (int i = 0; i < n; ++i)
+        {
+            if (strlen(burden_logic_so[i]) > 0)
+            {
+                burden_logic_so_group_.push_back(burden_logic_so[i]);
+            }
+        }
+        conf_center_->ReleaseConf(&burden_logic_so, n);
         return 0;
     }
 
@@ -823,136 +948,19 @@ private:
         return 0;
     }
 
-    int LoadGlobalCommonLogicSo()
-    {
-        char* global_common_logic_so = NULL;
-        if (conf_center_->GetConf(&global_common_logic_so, GLOBAL_COMMON_LOGIC_SO_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << GLOBAL_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&global_common_logic_so);
-            return -1;
-        }
-        global_common_logic_so_ = global_common_logic_so;
-        conf_center_->ReleaseConf(&global_common_logic_so);
-        return 0;
-    }
-
-    int LoadGlobalLogicSoGroup()
-    {
-        char** global_logic_so = NULL;
-        int n = 0;
-        if (conf_center_->GetConf(&global_logic_so, n, GLOBAL_LOGIC_SO_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << GLOBAL_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&global_logic_so, n);
-            return -1;
-        }
-        for (int i = 0; i < n; ++i)
-        {
-            if (strlen(global_logic_so[i]) > 0)
-            {
-                global_logic_so_group_.push_back(global_logic_so[i]);
-            }
-        }
-        conf_center_->ReleaseConf(&global_logic_so, n);
-        return 0;
-    }
-
-    int LoadWorkThreadCount()
-    {
-        if (conf_center_->GetConf(work_thread_count_, WORK_THREAD_COUNT_XPATH, true, 0) != 0)
-        {
-            LOG_ERROR("failed to get " << WORK_THREAD_COUNT_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadWorkCommonLogicSo()
-    {
-        char* work_common_logic_so = NULL;
-        if (conf_center_->GetConf(&work_common_logic_so, WORK_COMMON_LOGIC_SO_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << WORK_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&work_common_logic_so);
-            return -1;
-        }
-        work_common_logic_so_ = work_common_logic_so;
-        conf_center_->ReleaseConf(&work_common_logic_so);
-        return 0;
-    }
-
-    int LoadWorkLogicSoGroup()
-    {
-        char** work_logic_so = NULL;
-        int n = 0;
-        if (conf_center_->GetConf(&work_logic_so, n, WORK_LOGIC_SO_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << WORK_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&work_logic_so, n);
-            return -1;
-        }
-        for (int i = 0; i < n; ++i)
-        {
-            if (strlen(work_logic_so[i]) > 0)
-            {
-                work_logic_so_group_.push_back(work_logic_so[i]);
-            }
-        }
-        conf_center_->ReleaseConf(&work_logic_so, n);
-        return 0;
-    }
-
-    int LoadBurdenThreadCount()
-    {
-        if (conf_center_->GetConf(burden_thread_count_, BURDEN_THREAD_COUNT_XPATH, true, 0) != 0)
-        {
-            LOG_ERROR("failed to get " << BURDEN_THREAD_COUNT_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadBurdenCommonLogicSo()
-    {
-        char* burden_common_logic_so = NULL;
-        if (conf_center_->GetConf(&burden_common_logic_so, BURDEN_COMMON_LOGIC_SO_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << BURDEN_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&burden_common_logic_so);
-            return -1;
-        }
-        burden_common_logic_so_ = burden_common_logic_so;
-        conf_center_->ReleaseConf(&burden_common_logic_so);
-        return 0;
-    }
-
-    int LoadBurdenLogicSoGroup()
-    {
-        char** burden_logic_so = NULL;
-        int n = 0;
-        if (conf_center_->GetConf(&burden_logic_so, n, BURDEN_LOGIC_SO_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << BURDEN_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&burden_logic_so, n);
-            return -1;
-        }
-        for (int i = 0; i < n; ++i)
-        {
-            if (strlen(burden_logic_so[i]) > 0)
-            {
-                burden_logic_so_group_.push_back(burden_logic_so[i]);
-            }
-        }
-        conf_center_->ReleaseConf(&burden_logic_so, n);
-        return 0;
-    }
-
 private:
     ThreadRWLock rwlock_;
     bool enable_cpu_profiling_;
     bool enable_heap_profiling_;
     bool release_free_mem_;
+    std::string global_common_logic_so_;
+    StrGroup global_logic_so_group_;
+    int work_thread_count_;
+    std::string work_common_logic_so_;
+    StrGroup work_logic_so_group_;
+    int burden_thread_count_;
+    std::string burden_common_logic_so_;
+    StrGroup burden_logic_so_group_;
     int tcp_conn_count_limit_;
     int tcp_inactive_conn_check_interval_sec_;
     int tcp_inactive_conn_check_interval_usec_;
@@ -991,14 +999,6 @@ private:
     int udp_thread_count_;
     std::string udp_common_logic_so_;
     StrGroup udp_logic_so_group_;
-    std::string global_common_logic_so_;
-    StrGroup global_logic_so_group_;
-    int work_thread_count_;
-    std::string work_common_logic_so_;
-    StrGroup work_logic_so_group_;
-    int burden_thread_count_;
-    std::string burden_common_logic_so_;
-    StrGroup burden_logic_so_group_;
 };
 }
 

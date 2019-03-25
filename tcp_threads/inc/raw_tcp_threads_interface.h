@@ -1,7 +1,8 @@
-#ifndef TCP_THREADS_INC_TCP_THREADS_INTERFACE_H_
-#define TCP_THREADS_INC_TCP_THREADS_INTERFACE_H_
+#ifndef RAW_TCP_THREADS_INC_RAW_TCP_THREADS_INTERFACE_H_
+#define RAW_TCP_THREADS_INC_RAW_TCP_THREADS_INTERFACE_H_
 
 #include "thread_center_interface.h"
+#include "vector_types.h"
 
 class ConfCenterInterface;
 
@@ -17,6 +18,15 @@ class ConfMgrInterface;
 
 namespace tcp
 {
+struct Conf
+{
+    std::string addr;
+    unsigned int port;
+    int thread_count;
+    std::string common_logic_so;
+    StrGroup logic_so_group;
+};
+
 struct ThreadsCtx
 {
     int argc;
@@ -30,6 +40,7 @@ struct ThreadsCtx
     int* app_frame_threads_count;
     pthread_mutex_t* app_frame_threads_sync_mutex;
     pthread_cond_t* app_frame_threads_sync_cond;
+    Conf conf;
 
     ThreadsCtx()
     {
@@ -61,6 +72,8 @@ struct RelatedThreadGroups
     }
 };
 
+namespace raw
+{
 class ThreadsInterface : public ModuleInterface
 {
 public:
@@ -74,5 +87,6 @@ public:
     virtual ThreadGroupInterface* GetTCPThreadGroup() const = 0;
 };
 }
+}
 
-#endif // TCP_THREADS_INC_TCP_THREADS_INTERFACE_H_
+#endif // RAW_TCP_THREADS_INC_RAW_TCP_THREADS_INTERFACE_H_

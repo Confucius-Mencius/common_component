@@ -1,10 +1,12 @@
-#ifndef TCP_THREADS_SRC_CONN_MGR_H_
-#define TCP_THREADS_SRC_CONN_MGR_H_
+#ifndef RAW_TCP_THREADS_SRC_CONN_MGR_H_
+#define RAW_TCP_THREADS_SRC_CONN_MGR_H_
 
 #include "base_conn.h"
 #include "record_timeout_mgr.h"
 
 namespace tcp
+{
+namespace raw
 {
 class ThreadSink;
 
@@ -86,5 +88,6 @@ private:
     int max_online_conn_count_; // 每个负责IO的线程中同时在线的conn最大值，统计用
 };
 }
+}
 
-#endif // TCP_THREADS_SRC_CONN_MGR_H_
+#endif // RAW_TCP_THREADS_SRC_CONN_MGR_H_

@@ -9,6 +9,8 @@
 #if !defined(USE_BUFFEREVENT)
 namespace tcp
 {
+namespace raw
+{
 void NormalConn::ReadCallback(evutil_socket_t fd, short events, void* arg)
 {
     LOG_TRACE("events occured on socket, fd: " << fd << ", events: "
@@ -347,6 +349,7 @@ int NormalConn::Send(const void* data, size_t len)
 
     send_list_.push_back(std::string((const char*) data, len));
     return 0;
+}
 }
 }
 #endif

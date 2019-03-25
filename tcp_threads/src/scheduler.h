@@ -1,10 +1,12 @@
-#ifndef TCP_THREADS_SRC_SCHEDULER_H_
-#define TCP_THREADS_SRC_SCHEDULER_H_
+#ifndef RAW_TCP_THREADS_SRC_SCHEDULER_H_
+#define RAW_TCP_THREADS_SRC_SCHEDULER_H_
 
-#include "tcp_scheduler_interface.h"
-#include "tcp_threads_interface.h"
+#include "raw_tcp_scheduler_interface.h"
+#include "raw_tcp_threads_interface.h"
 
 namespace tcp
+{
+namespace raw
 {
 class ThreadSink;
 
@@ -44,5 +46,6 @@ private:
     int last_work_thread_idx_;
 };
 }
+}
 
-#endif // TCP_THREADS_SRC_SCHEDULER_H_
+#endif // RAW_TCP_THREADS_SRC_SCHEDULER_H_
