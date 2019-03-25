@@ -93,7 +93,7 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 
     threads_ctx_ = static_cast<const ThreadsCtx*>(ctx);
 
-    const std::string tcp_addr_port = threads_ctx_->conf.addr + std::to_string(threads_ctx_->conf.port);
+    const std::string tcp_addr_port = threads_ctx_->conf.addr + ":" + std::to_string(threads_ctx_->conf.port);
     LOG_ALWAYS("tcp listen addr port: " << tcp_addr_port);
 
 //    listen_sock_fd_ = socket(AF_INET, SOCK_STREAM, 0);
