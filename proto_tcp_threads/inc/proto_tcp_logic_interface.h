@@ -14,6 +14,11 @@ namespace global
 class LogicInterface;
 }
 
+namespace proto
+{
+class MsgDispatcherInterface;
+}
+
 namespace tcp
 {
 namespace proto
@@ -30,7 +35,9 @@ struct LogicCtx
     const char* app_name;
     ConfCenterInterface* conf_center;
     TimerAxisInterface* timer_axis;
+    ConnCenterInterface* conn_center;
     SchedulerInterface* scheduler;
+    ::proto::MsgDispatcherInterface* msg_dispatcher;
     CommonLogicInterface* common_logic;
     struct event_base* thread_ev_base;
 
@@ -43,7 +50,9 @@ struct LogicCtx
         app_name = NULL;
         conf_center = NULL;
         timer_axis = NULL;
+        conn_center = NULL;
         scheduler = NULL;
+        msg_dispatcher = NULL;
         common_logic = NULL;
         thread_ev_base = NULL;
     }

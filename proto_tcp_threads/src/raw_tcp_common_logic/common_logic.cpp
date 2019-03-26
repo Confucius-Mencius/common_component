@@ -2,8 +2,9 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
-#include "log_util.h"
 #include "file_util.h"
+#include "log_util.h"
+#include "mem_util.h"
 #include "raw_tcp_scheduler_interface.h"
 
 namespace tcp
@@ -32,6 +33,14 @@ const char* ProtoCommonLogic::GetLastErrMsg() const
 
 void ProtoCommonLogic::Release()
 {
+    for (LogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
+    {
+        SAFE_RELEASE_MODULE(it->logic, it->logic_loader);
+    }
+
+    proto_tcp_logic_item_vec_.clear();
+
+    SAFE_RELEASE_MODULE(proto_tcp_common_logic_, proto_tcp_common_logic_loader_);
     delete this;
 }
 
@@ -45,6 +54,11 @@ int ProtoCommonLogic::Initialize(const void* ctx)
     proto_tcp_logic_args_ = *(static_cast<const ProtoArgs*>(logic_ctx_.logic_args));
     scheduler_.SetRawTCPScheduler(logic_ctx_.scheduler);
     scheduler_.SetMsgCodec(proto_tcp_logic_args_.proto_msg_codec);
+
+    if (part_msg_mgr_.Initialize(logic_ctx_.timer_axis, { proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoPartMsgCheckInterval(), 0 }) != 0)
+    {
+        return -1;
+    }
 
     if (LoadProtoTCPCommonLogic() != 0)
     {
@@ -61,24 +75,75 @@ int ProtoCommonLogic::Initialize(const void* ctx)
 
 void ProtoCommonLogic::Finalize()
 {
+    for (LogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
+    {
+        SAFE_FINALIZE(it->logic);
+    }
+
+    SAFE_FINALIZE(proto_tcp_common_logic_);
+
+    part_msg_mgr_.Finalize();
 }
 
 int ProtoCommonLogic::Activate()
 {
+    if (part_msg_mgr_.Activate() != 0)
+    {
+        return -1;
+    }
+
+    if (SAFE_ACTIVATE_FAILED(proto_tcp_common_logic_))
+    {
+        return -1;
+    }
+
+    for (LogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
+    {
+        if (SAFE_ACTIVATE_FAILED(it->logic))
+        {
+            return -1;
+        }
+    }
+
     return 0;
 }
 
 void ProtoCommonLogic::Freeze()
 {
+    for (LogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
+    {
+        SAFE_FREEZE(it->logic);
+    }
+
+    SAFE_FREEZE(proto_tcp_common_logic_);
+
+    part_msg_mgr_.Freeze();
 }
 
 void ProtoCommonLogic::OnStop()
 {
-    can_exit_ = true;
+    if (proto_tcp_common_logic_ != NULL)
+    {
+        proto_tcp_common_logic_->OnStop();
+    }
+
+    for (LogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
+    {
+        it->logic->OnStop();
+    }
 }
 
 void ProtoCommonLogic::OnReload()
 {
+    if (proto_tcp_common_logic_ != NULL)
+    {
+        proto_tcp_common_logic_->OnReload();
+    }
+
+    for (LogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
+    {
+        it->logic->OnReload();
+    }
 }
 
 void ProtoCommonLogic::OnClientConnected(const ConnGUID* conn_guid)
@@ -168,7 +233,7 @@ void ProtoCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* d
         return;
     }
 
-//    OnRecvClientMsg(&conn->GetConnGuid(), msg_head, msg_body, msg_body_len);
+    OnRecvClientMsg(conn->GetConnGUID(), msg_head, msg_body, msg_body_len);
 
     const size_t left = dl - TOTAL_MSG_LEN_FIELD_LEN - total_msg_len;
     if (left > 0)
@@ -224,7 +289,9 @@ int ProtoCommonLogic::LoadProtoTCPCommonLogic()
     logic_ctx.app_name = logic_ctx_.app_name;
     logic_ctx.conf_center = logic_ctx_.conf_center;
     logic_ctx.timer_axis = logic_ctx_.timer_axis;
+    logic_ctx.conn_center = logic_ctx_.conn_center;
     logic_ctx.scheduler = &scheduler_;
+    logic_ctx.msg_dispatcher = &msg_dispatcher_;
     logic_ctx.common_logic = proto_tcp_common_logic_;
     logic_ctx.thread_ev_base = logic_ctx_.thread_ev_base;
 
@@ -285,7 +352,9 @@ int ProtoCommonLogic::LoadProtoTCPLogicGroup()
         logic_ctx.app_name = logic_ctx_.app_name;
         logic_ctx.conf_center = logic_ctx_.conf_center;
         logic_ctx.timer_axis = logic_ctx_.timer_axis;
+        logic_ctx.conn_center = logic_ctx_.conn_center;
         logic_ctx.scheduler = &scheduler_;
+        logic_ctx.msg_dispatcher = &msg_dispatcher_;
         logic_ctx.common_logic = proto_tcp_common_logic_;
         logic_ctx.thread_ev_base = logic_ctx_.thread_ev_base;
 
