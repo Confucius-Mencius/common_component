@@ -13,7 +13,7 @@ typedef int TaskType;
 class ThreadTask
 {
 public:
-    ThreadTask() : conn_guid_(), data_("")
+    ThreadTask() : conn_guid_(), data_()
     {
         task_type_ = -1;
         source_thread_ = NULL;

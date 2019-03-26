@@ -10,7 +10,7 @@ namespace tcp
 namespace raw
 {
 ThreadSink::ThreadSink()
-    : common_logic_loader_(), logic_item_vec_(), conn_mgr_(), scheduler_()
+    : common_logic_loader_(), logic_item_vec_(), conn_center_(), scheduler_()
 {
     threads_ctx_ = NULL;
     listen_thread_ = NULL;
@@ -32,7 +32,7 @@ void ThreadSink::Release()
 
     logic_item_vec_.clear();
     SAFE_RELEASE_MODULE(common_logic_, common_logic_loader_);
-    conn_mgr_.Release();
+    conn_center_.Release();
 
     delete this;
 }
@@ -46,10 +46,10 @@ int ThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 
     threads_ctx_ = static_cast<const ThreadsCtx*>(ctx);
 
-    conn_mgr_.SetThreadSink(this);
+    conn_center_.SetThreadSink(this);
     scheduler_.SetThreadSink(this);
 
-    ConnMgrCtx conn_mgr_ctx;
+    ConnCenterCtx conn_mgr_ctx;
     conn_mgr_ctx.timer_axis = self_thread_->GetTimerAxis();
 
     conn_mgr_ctx.inactive_conn_check_interval =
@@ -62,7 +62,7 @@ int ThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
     conn_mgr_ctx.storm_interval = threads_ctx_->app_frame_conf_mgr->GetTCPStormInterval();
     conn_mgr_ctx.storm_threshold = threads_ctx_->app_frame_conf_mgr->GetTCPStormThreshold();
 
-    if (conn_mgr_.Initialize(&conn_mgr_ctx) != 0)
+    if (conn_center_.Initialize(&conn_mgr_ctx) != 0)
     {
         return -1;
     }
@@ -94,7 +94,7 @@ void ThreadSink::OnFinalize()
 
     SAFE_FINALIZE(common_logic_);
     scheduler_.Finalize();
-    conn_mgr_.Finalize();
+    conn_center_.Finalize();
 
     ThreadSinkInterface::OnFinalize();
 }
@@ -106,7 +106,7 @@ int ThreadSink::OnActivate()
         return -1;
     }
 
-    if (conn_mgr_.Activate() != 0)
+    if (conn_center_.Activate() != 0)
     {
         return -1;
     }
@@ -135,7 +135,7 @@ void ThreadSink::OnFreeze()
     }
 
     SAFE_FREEZE(common_logic_);
-    conn_mgr_.Freeze();
+    conn_center_.Freeze();
     ThreadSinkInterface::OnFreeze();
 }
 
@@ -264,7 +264,7 @@ void ThreadSink::OnClientClosed(const BaseConn* conn, int task_type)
     }
 
     listen_thread_->PushTask(task);
-    conn_mgr_.DestroyConn(conn->GetSockFD());
+    conn_center_.DestroyConn(conn->GetSockFD());
 }
 
 void ThreadSink::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
@@ -316,8 +316,7 @@ int ThreadSink::LoadCommonLogic()
 
     if (common_logic_loader_.Load(common_logic_so_path) != 0)
     {
-        LOG_ERROR("failed to load common logic so " << common_logic_so_path
-                  << ", " << common_logic_loader_.GetLastErrMsg());
+        LOG_ERROR("failed to load common logic so, " << common_logic_loader_.GetLastErrMsg());
         return -1;
     }
 
@@ -336,6 +335,7 @@ int ThreadSink::LoadCommonLogic()
     logic_ctx.app_name = threads_ctx_->app_name;
     logic_ctx.conf_center = threads_ctx_->conf_center;
     logic_ctx.timer_axis = self_thread_->GetTimerAxis();
+    logic_ctx.conn_center = &conn_center_;
     logic_ctx.scheduler = &scheduler_;
     logic_ctx.common_logic = common_logic_;
     logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
@@ -374,8 +374,7 @@ int ThreadSink::LoadLogicGroup()
 
         if (logic_item.logic_loader.Load(logic_item.logic_so_path.c_str()) != 0)
         {
-            LOG_ERROR("failed to load logic so " << logic_item.logic_so_path << ", "
-                      << logic_item.logic_loader.GetLastErrMsg());
+            LOG_ERROR("failed to load logic so, " << logic_item.logic_loader.GetLastErrMsg());
             return -1;
         }
 
@@ -394,6 +393,7 @@ int ThreadSink::LoadLogicGroup()
         logic_ctx.app_name = threads_ctx_->app_name;
         logic_ctx.conf_center = threads_ctx_->conf_center;
         logic_ctx.timer_axis = self_thread_->GetTimerAxis();
+        logic_ctx.conn_center = &conn_center_;
         logic_ctx.scheduler = &scheduler_;
         logic_ctx.common_logic = common_logic_;
         logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
@@ -412,15 +412,15 @@ int ThreadSink::LoadLogicGroup()
 
 int ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
 {
-    BaseConn* conn = conn_mgr_.GetConn(new_conn_ctx->client_sock_fd);
+    BaseConn* conn = static_cast<BaseConn*>(conn_center_.GetConnBySockFD(new_conn_ctx->client_sock_fd));
     if (conn != NULL)
     {
         LOG_WARN("tcp conn already exist, socket fd: " << new_conn_ctx->client_sock_fd << ", destroy it first");
-        conn_mgr_.DestroyConn(conn->GetSockFD());
+        conn_center_.DestroyConn(conn->GetSockFD());
     }
 
-    conn = conn_mgr_.CreateConn(self_thread_->GetThreadIdx(), new_conn_ctx->client_ip,
-                                new_conn_ctx->client_port, new_conn_ctx->client_sock_fd);
+    conn = conn_center_.CreateConn(threads_ctx_->conf.io_type, self_thread_->GetThreadIdx(), new_conn_ctx->client_ip,
+                                   new_conn_ctx->client_port, new_conn_ctx->client_sock_fd);
     if (NULL == conn)
     {
         char client_ctx_buf[128] = "";

@@ -20,6 +20,7 @@ namespace tcp
 {
 struct Conf
 {
+    IOType io_type;
     std::string addr;
     unsigned int port;
     int thread_count;
@@ -28,6 +29,7 @@ struct Conf
 
     Conf() : addr(), common_logic_so(), logic_so_group()
     {
+        io_type = IO_TYPE_MIN;
         port = 0;
         thread_count = 0;
     }

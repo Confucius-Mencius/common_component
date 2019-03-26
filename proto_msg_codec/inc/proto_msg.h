@@ -18,14 +18,14 @@ typedef int32_t MsgID; /**< MsgId类型 */
 //#define MSG_ID_REMOVE_OUT_FAILED    -103 // 从libevent buffer中移出数据失败
 #define MSG_ID_INVALID_MSG_LEN      -104
 #define MSG_ID_CHECKSUM_MISMATCH    -105
-//#define MSG_ID_NONE_HANDLER_FOUND   -106
+#define MSG_ID_NONE_HANDLER_FOUND   -106
 //#define MSG_ID_IO_TO_WORK_TQ_FULL   -107
 //#define MSG_ID_ALLOC_MEM_FAILED     -108
 //#define MSG_ID_INIT_TASK_FAILED     -109
 //#define MSG_ID_WRITE_PIPE_FAILED    -110
-//#define MSG_ID_SCHEDULE_FAILED      -111
-//#define MSG_ID_HEARTBEAT_REQ        -200
-//#define MSG_ID_HEARTBEAT_RSP        -201
+#define MSG_ID_SCHEDULE_FAILED      -111
+#define MSG_ID_HEARTBEAT_REQ        -200
+#define MSG_ID_HEARTBEAT_RSP        -201
 
 // 消息结构
 // | total msg len(int32_t) | checksum(uint32_t) | passback(int32_t) | msg id(int32_t) | msg body() |
@@ -35,6 +35,9 @@ typedef int32_t MsgID; /**< MsgId类型 */
 #define MSG_ID_FIELD_LEN sizeof(int32_t)
 
 #define MSG_HEAD_LEN (PASSBACK_FIELD_LEN + MSG_ID_FIELD_LEN)
+#define MIN_TOTAL_MSG_LEN (CHECKSUM_FIELD_LEN + MSG_HEAD_LEN)
+#define MIN_DATA_LEN (TOTAL_MSG_LEN_FIELD_LEN + MIN_TOTAL_MSG_LEN)
+
 #define MSG_HEAD_INITIALIZER() passback = 0; msg_id = 0
 
 struct MsgHead

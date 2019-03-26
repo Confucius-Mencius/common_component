@@ -3,9 +3,12 @@
 
 #include <vector>
 #include "module_loader.h"
+#include "msg_dispatcher.h"
+#include "part_msg_mgr.h"
 #include "proto_args.h"
 #include "proto_tcp_logic_interface.h"
 #include "raw_tcp_logic_interface.h"
+#include "scheduler.h"
 
 namespace tcp
 {
@@ -51,33 +54,19 @@ public:
 private:
     int LoadProtoTCPCommonLogic();
     int LoadProtoTCPLogicGroup();
+    void OnRecvClientMsg(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                         const void* msg_body, size_t msg_body_len);
 
 private:
-    ProtoArgs proto_args_;
+    ProtoArgs proto_tcp_logic_args_;
 
     ModuleLoader proto_tcp_common_logic_loader_;
     tcp::proto::CommonLogicInterface* proto_tcp_common_logic_;
     LogicItemVec proto_tcp_logic_item_vec_;
 
-//    struct ConnRecvCtx
-//    {
-//        char total_msg_len_network_[TOTAL_MSG_LEN_FIELD_LEN];
-//        ssize_t total_msg_len_network_recved_len_;
-//        int32_t total_msg_len_;
-//        ssize_t total_msg_recved_len_;
-//        char* msg_recv_buf_;
-
-//        ConnRecvCtx()
-//        {
-//            total_msg_len_network_recved_len_ = 0;
-//            total_msg_len_ = 0;
-//            total_msg_recved_len_ = 0;
-//            msg_recv_buf_ = NULL;
-//        }
-//    };
-
-//    typedef __hash_map<int, ConnRecvCtx> ConnRecvCtxHashTable;
-//    ConnRecvCtxHashTable conn_recv_ctx_hash_table_;
+    tcp::proto::PartMsgMgr part_msg_mgr_;
+    tcp::proto::Scheduler scheduler_;
+    tcp::proto::MsgDispatcher msg_dispatcher_;
 };
 }
 }

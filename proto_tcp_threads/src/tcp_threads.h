@@ -4,6 +4,7 @@
 #include "module_loader.h"
 #include "proto_msg_codec_interface.h"
 #include "proto_tcp_threads_interface.h"
+#include "raw_tcp_common_logic/proto_args.h"
 
 namespace tcp
 {
@@ -36,12 +37,15 @@ private:
 
 private:
     ThreadsCtx threads_ctx_;
+    tcp::RelatedThreadGroups related_thread_groups_;
 
     ModuleLoader proto_msg_codec_loader_;
     ::proto::MsgCodecInterface* proto_msg_codec_;
 
     ModuleLoader raw_tcp_threads_loader_;
     tcp::raw::ThreadsInterface* raw_tcp_threads_;
+
+    tcp::raw::ProtoArgs proto_tcp_logic_args_;
 };
 }
 }

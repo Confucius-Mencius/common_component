@@ -46,7 +46,7 @@ int Scheduler::SendToClient(const ConnGUID* conn_guid, const void* data, size_t 
     if (tcp_thread == thread_sink_->GetThread())
     {
         // 是自己
-        BaseConn* conn = thread_sink_->GetConnMgr()->GetConnByID(conn_guid->conn_id);
+        BaseConn* conn = static_cast<BaseConn*>(thread_sink_->GetConnMgr()->GetConnByID(conn_guid->conn_id));
         if (NULL == conn)
         {
             LOG_ERROR("failed to get tcp conn by id: " << conn_guid->conn_id);
@@ -74,7 +74,7 @@ int Scheduler::CloseClient(const ConnGUID* conn_guid)
     ThreadInterface* tcp_thread = thread_sink_->GetTCPThreadGroup()->GetThread(conn_guid->io_thread_idx);
     if (tcp_thread == thread_sink_->GetThread())
     {
-        BaseConn* conn = thread_sink_->GetConnMgr()->GetConnByID(conn_guid->conn_id);
+        BaseConn* conn = static_cast<BaseConn*>(thread_sink_->GetConnMgr()->GetConnByID(conn_guid->conn_id));
         if (NULL == conn)
         {
             LOG_ERROR("failed to get tcp conn by id: " << conn_guid->conn_id);

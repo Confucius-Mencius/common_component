@@ -1,4 +1,4 @@
-#include "conn_mgr.h"
+#include "conn_center.h"
 #include <string.h>
 #include "log_util.h"
 #include "mem_util.h"
@@ -11,17 +11,17 @@ namespace tcp
 {
 namespace raw
 {
-ConnMgr::ConnMgr() : conn_mgr_ctx_(), conn_hash_map_(), conn_id_seq_(), conn_id_hash_map_()
+ConnCenter::ConnCenter() : conn_mgr_ctx_(), conn_hash_map_(), conn_id_seq_(), conn_id_hash_map_()
 {
     thread_sink_ = NULL;
     max_online_conn_count_ = 0;
 }
 
-ConnMgr::~ConnMgr()
+ConnCenter::~ConnCenter()
 {
 }
 
-void ConnMgr::Release()
+void ConnCenter::Release()
 {
     ConnIDHashMap tmp_conn_id_hash_map = conn_id_hash_map_;
 
@@ -36,14 +36,14 @@ void ConnMgr::Release()
     conn_hash_map_.clear();
 }
 
-int ConnMgr::Initialize(const ConnMgrCtx* ctx)
+int ConnCenter::Initialize(const ConnCenterCtx* ctx)
 {
     if (NULL == ctx)
     {
         return -1;
     }
 
-    conn_mgr_ctx_ = *(static_cast<const ConnMgrCtx*>(ctx));
+    conn_mgr_ctx_ = *(static_cast<const ConnCenterCtx*>(ctx));
 
     if (RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*>::Initialize(conn_mgr_ctx_.timer_axis,
             conn_mgr_ctx_.inactive_conn_check_interval) != 0)
@@ -54,7 +54,7 @@ int ConnMgr::Initialize(const ConnMgrCtx* ctx)
     return 0;
 }
 
-void ConnMgr::Finalize()
+void ConnCenter::Finalize()
 {
     RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*>::Finalize();
 
@@ -64,7 +64,7 @@ void ConnMgr::Finalize()
     }
 }
 
-int ConnMgr::Activate()
+int ConnCenter::Activate()
 {
     if (RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*>::Activate() != 0)
     {
@@ -74,7 +74,7 @@ int ConnMgr::Activate()
     return 0;
 }
 
-void ConnMgr::Freeze()
+void ConnCenter::Freeze()
 {
     RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*>::Freeze();
 
@@ -84,7 +84,7 @@ void ConnMgr::Freeze()
     }
 }
 
-BaseConn* ConnMgr::CreateConn(int io_thread_idx, const char* ip, unsigned short port, int sock_fd)
+BaseConn* ConnCenter::CreateConn(IOType io_type, int io_thread_idx, const char* ip, unsigned short port, int sock_fd)
 {
 #if defined(USE_BUFFEREVENT)
     BufferEventConn* conn = BufferEventConn::Create();
@@ -111,10 +111,10 @@ BaseConn* ConnMgr::CreateConn(int io_thread_idx, const char* ip, unsigned short 
     const time_t now = time(NULL);
 
     conn->SetCreatedTime(now);
-    conn->SetSockFD(sock_fd);
+    conn->SetConnGUID(io_type, io_thread_idx, conn_id);
     conn->SetClientIP(ip);
     conn->SetClientPort(port);
-    conn->SetConnGUID(io_thread_idx, conn_id);
+    conn->SetSockFD(sock_fd);
     conn->SetThreadSink(thread_sink_);
 
     int ret = -1;
@@ -170,7 +170,7 @@ BaseConn* ConnMgr::CreateConn(int io_thread_idx, const char* ip, unsigned short 
     return conn;
 }
 
-void ConnMgr::DestroyConn(int sock_fd)
+void ConnCenter::DestroyConn(int sock_fd)
 {
     ConnHashMap::iterator it = conn_hash_map_.find(sock_fd);
     if (it != conn_hash_map_.end())
@@ -191,29 +191,7 @@ void ConnMgr::DestroyConn(int sock_fd)
     }
 }
 
-BaseConn* ConnMgr::GetConn(int sock_fd) const
-{
-    ConnHashMap::const_iterator it = conn_hash_map_.find(sock_fd);
-    if (it != conn_hash_map_.end())
-    {
-        return it->second.conn;
-    }
-
-    return NULL;
-}
-
-BaseConn* ConnMgr::GetConnByID(ConnID conn_id) const
-{
-    ConnIDHashMap::const_iterator it = conn_id_hash_map_.find(conn_id);
-    if (it != conn_id_hash_map_.end())
-    {
-        return it->second;
-    }
-
-    return NULL;
-}
-
-int ConnMgr::UpdateConnStatus(ConnID conn_id)
+int ConnCenter::UpdateConnStatus(ConnID conn_id)
 {
     ConnIDHashMap::const_iterator it = conn_id_hash_map_.find(conn_id);
     if (it != conn_id_hash_map_.end())
@@ -254,7 +232,29 @@ int ConnMgr::UpdateConnStatus(ConnID conn_id)
     return 0;
 }
 
-void ConnMgr::Clear(BaseConn* conn)
+ConnInterface* ConnCenter::GetConnBySockFD(int sock_fd) const
+{
+    ConnHashMap::const_iterator it = conn_hash_map_.find(sock_fd);
+    if (it != conn_hash_map_.end())
+    {
+        return it->second.conn;
+    }
+
+    return NULL;
+}
+
+ConnInterface* ConnCenter::GetConnByID(ConnID conn_id) const
+{
+    ConnIDHashMap::const_iterator it = conn_id_hash_map_.find(conn_id);
+    if (it != conn_id_hash_map_.end())
+    {
+        return it->second;
+    }
+
+    return NULL;
+}
+
+void ConnCenter::Clear(BaseConn* conn)
 {
     conn_hash_map_.erase(conn->GetSockFD());
 
@@ -265,10 +265,10 @@ void ConnMgr::Clear(BaseConn* conn)
     conn_id_hash_map_.erase(conn_id);
 }
 
-void ConnMgr::OnTimeout(const ConnID& k, BaseConn* const& v, int timeout_sec)
+void ConnCenter::OnTimeout(const ConnID& k, BaseConn* const& v, int timeout_sec)
 {
     LOG_TRACE("ConnMgr::OnTimeout, key: " << k << ", val: " << v << ", timeout: " << timeout_sec);
-    thread_sink_->OnClientClosed(v, TASK_TYPE_TCP_CONN_CLOSED_INACTIVE);
+    thread_sink_->OnClientClosed(v, TASK_TYPE_TCP_CONN_CLOSED);
     Clear(v);
 }
 }

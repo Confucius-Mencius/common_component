@@ -3,7 +3,7 @@
 
 #include "app_frame_conf_mgr_interface.h"
 #include "proto_msg_codec_interface.h"
-#include "proto_tcp_scheduler_interface.h"
+#include "raw_tcp_threads_interface.h"
 
 namespace tcp
 {
@@ -13,13 +13,13 @@ struct ProtoArgs
 {
     app_frame::ConfMgrInterface* app_frame_conf_mgr;
     ::proto::MsgCodecInterface* proto_msg_codec;
-    tcp::proto::SchedulerInterface* scheduler;
+    tcp::RelatedThreadGroups* related_thread_groups;
 
     ProtoArgs()
     {
         app_frame_conf_mgr = NULL;
         proto_msg_codec = NULL;
-        scheduler = NULL;
+        related_thread_groups = NULL;
     }
 };
 }

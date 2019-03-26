@@ -5,11 +5,11 @@ namespace tcp
 {
 namespace raw
 {
-BaseConn::BaseConn() : client_ip_(""), conn_guid_()
+BaseConn::BaseConn() : conn_guid_(), client_ip_(), data_()
 {
     created_time_ = 0;
-    sock_fd_ = -1;
     client_port_ = 0;
+    sock_fd_ = -1;
     thread_sink_ = NULL;
 }
 

@@ -30,6 +30,7 @@ struct LogicCtx
     const char* app_name;
     ConfCenterInterface* conf_center;
     TimerAxisInterface* timer_axis;
+    ConnCenterInterface* conn_center;
     SchedulerInterface* scheduler;
     CommonLogicInterface* common_logic;
     struct event_base* thread_ev_base;
@@ -44,6 +45,7 @@ struct LogicCtx
         app_name = NULL;
         conf_center = NULL;
         timer_axis = NULL;
+        conn_center = NULL;
         scheduler = NULL;
         common_logic = NULL;
         thread_ev_base = NULL;

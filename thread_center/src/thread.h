@@ -23,7 +23,7 @@ struct ThreadCtx
     const void* threads_ctx;
     ThreadGroup* thread_group;
 
-    ThreadCtx() : name("")
+    ThreadCtx() : name()
     {
         common_component_dir = NULL;
         enable_cpu_profiling = false;

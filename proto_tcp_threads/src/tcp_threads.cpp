@@ -3,7 +3,6 @@
 #include "file_util.h"
 #include "log_util.h"
 #include "mem_util.h"
-#include "raw_tcp_common_logic/proto_args.h"
 #include "str_util.h"
 #include "version.h"
 
@@ -11,7 +10,8 @@ namespace tcp
 {
 namespace proto
 {
-Threads::Threads() : threads_ctx_(), proto_msg_codec_loader_(), raw_tcp_threads_loader_()
+Threads::Threads() : threads_ctx_(), related_thread_groups_(), proto_msg_codec_loader_(),
+    raw_tcp_threads_loader_(), proto_tcp_logic_args_()
 {
     proto_msg_codec_ = NULL;
     raw_tcp_threads_ = NULL;
@@ -105,6 +105,7 @@ void Threads::SetRelatedThreadGroups(const tcp::RelatedThreadGroups* related_thr
     }
 
     raw_tcp_threads_->SetRelatedThreadGroups(related_thread_groups);
+    related_thread_groups_ = *related_thread_groups;
 }
 
 ThreadGroupInterface* Threads::GetListenThreadGroup() const
@@ -168,17 +169,17 @@ int Threads::LoadRawTCPThreads()
     }
 
     tcp::ThreadsCtx raw_threads_ctx = threads_ctx_;
+    raw_threads_ctx.conf.io_type = IO_TYPE_PROTO_TCP;
     raw_threads_ctx.conf.addr = threads_ctx_.app_frame_conf_mgr->GetProtoTCPAddr();
     raw_threads_ctx.conf.port = threads_ctx_.app_frame_conf_mgr->GetProtoTCPPort();
     raw_threads_ctx.conf.thread_count = threads_ctx_.app_frame_conf_mgr->GetProtoTCPThreadCount();
     raw_threads_ctx.conf.common_logic_so = std::string(threads_ctx_.common_component_dir) + "/libproto_raw_tcp_common_logic.so";
 
-    tcp::raw::ProtoArgs proto_tcp_logic_args;
-    proto_tcp_logic_args.app_frame_conf_mgr = threads_ctx_.app_frame_conf_mgr;
-    proto_tcp_logic_args.proto_msg_codec = proto_msg_codec_;
-    proto_tcp_logic_args.scheduler = NULL;
+    proto_tcp_logic_args_.app_frame_conf_mgr = threads_ctx_.app_frame_conf_mgr;
+    proto_tcp_logic_args_.proto_msg_codec = proto_msg_codec_;
+    proto_tcp_logic_args_.related_thread_groups = &related_thread_groups_;
 
-    raw_threads_ctx.logic_args = &proto_tcp_logic_args;
+    raw_threads_ctx.logic_args = &proto_tcp_logic_args_;
 
     if (raw_tcp_threads_->Initialize(&raw_threads_ctx) != 0)
     {

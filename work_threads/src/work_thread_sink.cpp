@@ -333,8 +333,7 @@ int ThreadSink::LoadLocalLogic()
 
     if (local_logic_loader_.Load(local_logic_so_path.c_str()) != 0)
     {
-        LOG_ERROR("failed to load local logic so " << local_logic_so_path
-                  << ", " << local_logic_loader_.GetLastErrMsg());
+        LOG_ERROR("failed to load local logic so, " << local_logic_loader_.GetLastErrMsg());
         return -1;
     }
 
@@ -392,8 +391,7 @@ int ThreadSink::LoadLogicGroup()
 
         if (logic_item.logic_loader.Load(logic_item.logic_so_path.c_str()) != 0)
         {
-            LOG_ERROR("failed to load logic so " << logic_item.logic_so_path << ", "
-                      << logic_item.logic_loader.GetLastErrMsg());
+            LOG_ERROR("failed to load logic so, " << logic_item.logic_loader.GetLastErrMsg());
             return -1;
         }
 

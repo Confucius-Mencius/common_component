@@ -10,8 +10,10 @@ namespace tcp
 {
 namespace raw
 {
-ProtoCommonLogic::ProtoCommonLogic()
+ProtoCommonLogic::ProtoCommonLogic() : proto_tcp_logic_args_(), proto_tcp_common_logic_loader_(),
+    proto_tcp_logic_item_vec_(), part_msg_mgr_(), msg_dispatcher_()
 {
+    proto_tcp_common_logic_ = NULL;
 }
 
 ProtoCommonLogic::~ProtoCommonLogic()
@@ -40,7 +42,9 @@ int ProtoCommonLogic::Initialize(const void* ctx)
         return -1;
     }
 
-    proto_args_ = *(static_cast<ProtoArgs*>(logic_ctx_.logic_args));
+    proto_tcp_logic_args_ = *(static_cast<const ProtoArgs*>(logic_ctx_.logic_args));
+    scheduler_.SetRawTCPScheduler(logic_ctx_.scheduler);
+    scheduler_.SetMsgCodec(proto_tcp_logic_args_.proto_msg_codec);
 
     if (LoadProtoTCPCommonLogic() != 0)
     {
@@ -80,189 +84,97 @@ void ProtoCommonLogic::OnReload()
 void ProtoCommonLogic::OnClientConnected(const ConnGUID* conn_guid)
 {
     LOG_TRACE("conn connected, " << *conn_guid);
+
+    ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_guid->conn_id);
+    if (NULL == conn)
+    {
+        LOG_ERROR("failed to get conn by id: " << conn_guid);
+        return;
+    }
+
+    conn->ClearData();
 }
 
 void ProtoCommonLogic::OnClientClosed(const ConnGUID* conn_guid)
 {
     LOG_TRACE("conn closed, " << *conn_guid);
+
+    ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_guid->conn_id);
+    if (NULL == conn)
+    {
+        LOG_ERROR("failed to get conn by id: " << conn_guid);
+        return;
+    }
+
+    conn->ClearData();
 }
 
 void ProtoCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
 {
     LOG_DEBUG(*conn_guid << ", data: " << data << ", len: " << len);
 
-//    ConnRecvCtxHashTable::iterator it = conn_recv_ctx_hash_table_.find(sock_fd);
-//    if (it == conn_recv_ctx_hash_table_.end())
-//    {
-//        return;
-//    }
+    ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_guid->conn_id);
+    if (NULL == conn)
+    {
+        LOG_ERROR("failed to get conn by id, " << conn_guid);
+        return;
+    }
 
-//    ConnRecvCtx& conn_recv_ctx = it->second;
-//    MsgCodecInterface* msg_codec = tcp_msg_codec_;
+    std::string& d = conn->AppendData((const char*) data, len);
+    const char* dp = d.data();
+    const size_t dl = d.size();
 
-//    while (true)
-//    {
-//        MsgHead msg_head;
-//        MsgId err_msg_id = MSG_ID_OK;
+    ::proto::MsgCodecInterface* msg_codec = proto_tcp_logic_args_.proto_msg_codec;
 
-//        if (conn_recv_ctx.total_msg_len_network_recved_len_ < (ssize_t) TOTAL_MSG_LEN_FIELD_LEN)
-//        {
-//            // 继续读头
-//            ssize_t n = read(sock_fd,
-//                             &(conn_recv_ctx.total_msg_len_network_[conn_recv_ctx.total_msg_len_network_recved_len_]),
-//                             TOTAL_MSG_LEN_FIELD_LEN - conn_recv_ctx.total_msg_len_network_recved_len_);
-//            if (0 == n)
-//            {
-//                LOG_TRACE("read 0, fd: " << sock_fd);
-//                closed = true;
-//                return;
-//            }
-//            else if (n < 0)
-//            {
-//                const int err = errno;
-//                if (EINTR == err)
-//                {
-//                    // 被中断了，可以继续读
-//                    continue;
-//                }
-//                else if (EAGAIN == err)
-//                {
-//                    // 没有数据可读了
-//                    return;
-//                }
-//                else if (ECONNRESET == err)
-//                {
-//                    LOG_TRACE("conn reset by peer");
-//                    closed = true;
-//                    return;
-//                }
-//                else
-//                {
-//                    LOG_ERROR("read error, n: " << n << ", socked fd: " << sock_fd << ", errno: " << err
-//                              << ", err msg: " << evutil_socket_error_to_string(err));
-//                    return;
-//                }
-//            }
+    ::proto::MsgHead msg_head;
+    ::proto::MsgID err_msg_id = MSG_ID_OK;
+    size_t total_msg_len = 0;
 
-//            conn_recv_ctx.total_msg_len_network_recved_len_ += n;
+    if (!msg_codec->IsWholeMsg(err_msg_id, total_msg_len, dp, dl))
+    {
+        if (err_msg_id != MSG_ID_NOT_A_WHOLE_MSG)
+        {
+            conn->ClearData();
 
-//            if (conn_recv_ctx.total_msg_len_network_recved_len_ < (ssize_t) TOTAL_MSG_LEN_FIELD_LEN)
-//            {
-//                LOG_TRACE("total msg len field not recv complete, wait for next time, recv len: "
-//                          << conn_recv_ctx.total_msg_len_network_recved_len_);
+            msg_head.Reset();
+            msg_head.msg_id = err_msg_id;
 
-//                // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
-//                part_msg_mgr_.UpsertRecord(conn, sock_fd, threads_ctx_->conf_mgr->GetTcpPartMsgConnLife());
+            scheduler_.SendToClient(conn_guid, msg_head, NULL, 0);
 
-//                return;
-//            }
-//        }
+            LOG_INFO("close proto tcp conn, " << *conn_guid << ", err msg id: " << err_msg_id);
+            scheduler_.CloseClient(conn_guid); // 服务器主动关闭连接
 
-//        if (0 == conn_recv_ctx.total_msg_recved_len_)
-//        {
-//            // 4个字节的头读全了，看后面的数据有多长
-//            uint32_t n;
-//            memcpy(&n, conn_recv_ctx.total_msg_len_network_, TOTAL_MSG_LEN_FIELD_LEN);
+            return;
+        }
 
-//            conn_recv_ctx.total_msg_len_ = ntohl(n);
-//            if ((conn_recv_ctx.total_msg_len_ < (int32_t) MIN_TOTAL_MSG_LEN) ||
-//                    (conn_recv_ctx.total_msg_len_ > (int32_t) max_msg_recv_len_))
-//            {
-//                LOG_ERROR("invalid msg len: " << conn_recv_ctx.total_msg_len_ << ", throw away all bytes in the buf");
+        // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
+        part_msg_mgr_.UpsertRecord(conn, *conn_guid, proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoPartMsgConnLife());
+        return;
+    }
 
-//                // 把socket中的数据读完扔掉
-//                ExhaustSocketData(sock_fd);
+    part_msg_mgr_.RemoveRecord(conn);
 
-//                // 回复
-//                msg_head.Reset();
-//                msg_head.msg_id = MSG_ID_INVALID_MSG_LEN;
-//                conn->Send(msg_head, NULL, 0, -1);
+    char* msg_body = NULL;
+    size_t msg_body_len = 0;
 
-//                // 重置各个标记
-//                conn_recv_ctx.total_msg_len_network_recved_len_ = 0;
-//                conn_recv_ctx.total_msg_len_ = 0;
-//                conn_recv_ctx.total_msg_recved_len_ = 0;
+    msg_head.Reset();
 
-//                return;
-//            }
+    if (msg_codec->DecodeMsg(err_msg_id, &msg_head, &msg_body, msg_body_len, dp + TOTAL_MSG_LEN_FIELD_LEN, total_msg_len) != 0)
+    {
+        msg_head.Reset();
+        msg_head.msg_id = err_msg_id;
 
-//            LOG_TRACE("total msg len: " << conn_recv_ctx.total_msg_len_);
-//        }
+        scheduler_.SendToClient(conn_guid, msg_head, NULL, 0);
+        return;
+    }
 
-//        ssize_t n = read(sock_fd, &(conn_recv_ctx.msg_recv_buf_[conn_recv_ctx.total_msg_recved_len_]),
-//                         conn_recv_ctx.total_msg_len_ - conn_recv_ctx.total_msg_recved_len_);
-//        if (0 == n)
-//        {
-//            return;
-//        }
-//        else if (n < 0)
-//        {
-//            const int err = errno;
-//            if (EINTR == err)
-//            {
-//                // 被中断了，可以继续读
-//                continue;
-//            }
-//            else if (EAGAIN == err)
-//            {
-//                // 没有数据可读了
-//                return;
-//            }
-//            else
-//            {
-//                LOG_ERROR("read error, n: " << n << ", socked fd: " << sock_fd << ", errno: " << err << ", err msg: "
-//                          << evutil_socket_error_to_string(err));
-//                return;
-//            }
-//        }
+//    OnRecvClientMsg(&conn->GetConnGuid(), msg_head, msg_body, msg_body_len);
 
-//        conn_recv_ctx.total_msg_recved_len_ += n;
-
-//        if (conn_recv_ctx.total_msg_recved_len_ < conn_recv_ctx.total_msg_len_)
-//        {
-//            LOG_TRACE("not a whole msg, socket fd: " << sock_fd << ", total msg recved len: "
-//                      << conn_recv_ctx.total_msg_recved_len_ << ", total msg len: "
-//                      << conn_recv_ctx.total_msg_len_);
-
-//            // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
-//            part_msg_mgr_.UpsertRecord(conn, sock_fd, threads_ctx_->conf_mgr->GetTcpPartMsgConnLife());
-
-//            return;
-//        }
-
-//        conn_recv_ctx.msg_recv_buf_[conn_recv_ctx.total_msg_len_] = '\0';
-//        part_msg_mgr_.RemoveRecord(conn, false);
-
-//        char* msg_body = NULL;
-//        size_t msg_body_len = 0;
-
-//        msg_head.Reset();
-
-//        if (msg_codec->DecodeMsg(err_msg_id, &msg_head, &msg_body, msg_body_len, conn_recv_ctx.msg_recv_buf_,
-//                                 conn_recv_ctx.total_msg_len_) != 0)
-//        {
-//            msg_head.Reset();
-//            msg_head.msg_id = err_msg_id;
-//            conn->Send(msg_head, NULL, 0, -1);
-
-//            // 把socket中的数据读完扔掉
-//            ExhaustSocketData(sock_fd);
-
-//            // 重置各个标记
-//            conn_recv_ctx.total_msg_len_network_recved_len_ = 0;
-//            conn_recv_ctx.total_msg_len_ = 0;
-//            conn_recv_ctx.total_msg_recved_len_ = 0;
-
-//            return;
-//        }
-
-//        OnRecvClientMsg(&conn->GetConnGuid(), msg_head, msg_body, msg_body_len);
-
-//        // 重置各个标记
-//        conn_recv_ctx.total_msg_len_network_recved_len_ = 0;
-//        conn_recv_ctx.total_msg_len_ = 0;
-//        conn_recv_ctx.total_msg_recved_len_ = 0;
-//    }
+    const size_t left = dl - TOTAL_MSG_LEN_FIELD_LEN - total_msg_len;
+    if (left > 0)
+    {
+        d.assign(dp + total_msg_len + total_msg_len, left); // TODO 重叠assign是否安全？
+    }
 }
 
 void ProtoCommonLogic::OnTask(const ConnGUID* conn_guid, ThreadInterface* source_thread, const void* data, size_t len)
@@ -275,7 +187,12 @@ void ProtoCommonLogic::OnTask(const ConnGUID* conn_guid, ThreadInterface* source
 
 int ProtoCommonLogic::LoadProtoTCPCommonLogic()
 {
-    const std::string& proto_tcp_common_logic_so = proto_args_.app_frame_conf_mgr->GetProtoTCPCommonLogicSo();
+    if (0 == proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoTCPCommonLogicSo().length())
+    {
+        return 0;
+    }
+
+    const std::string& proto_tcp_common_logic_so = proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoTCPCommonLogicSo();
     if (0 == proto_tcp_common_logic_so.length())
     {
         return 0;
@@ -288,8 +205,7 @@ int ProtoCommonLogic::LoadProtoTCPCommonLogic()
 
     if (proto_tcp_common_logic_loader_.Load(proto_tcp_common_logic_so_path) != 0)
     {
-        LOG_ERROR("failed to load common logic so " << proto_tcp_common_logic_so_path
-                  << ", " << proto_tcp_common_logic_loader_.GetLastErrMsg());
+        LOG_ERROR("failed to load common logic so, " << proto_tcp_common_logic_loader_.GetLastErrMsg());
         return -1;
     }
 
@@ -308,7 +224,7 @@ int ProtoCommonLogic::LoadProtoTCPCommonLogic()
     logic_ctx.app_name = logic_ctx_.app_name;
     logic_ctx.conf_center = logic_ctx_.conf_center;
     logic_ctx.timer_axis = logic_ctx_.timer_axis;
-    logic_ctx.scheduler = proto_args_.scheduler;
+    logic_ctx.scheduler = &scheduler_;
     logic_ctx.common_logic = proto_tcp_common_logic_;
     logic_ctx.thread_ev_base = logic_ctx_.thread_ev_base;
 
@@ -324,10 +240,15 @@ int ProtoCommonLogic::LoadProtoTCPCommonLogic()
 int ProtoCommonLogic::LoadProtoTCPLogicGroup()
 {
     // logic so group
+    if (0 == proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoTCPLogicSoGroup().size())
+    {
+        return 0;
+    }
+
     LogicItem proto_tcp_logic_item;
     proto_tcp_logic_item.logic = NULL;
 
-    const StrGroup& proto_tcp_logic_so_group = proto_args_.app_frame_conf_mgr->GetProtoTCPLogicSoGroup();
+    const StrGroup& proto_tcp_logic_so_group = proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoTCPLogicSoGroup();
 
     for (StrGroup::const_iterator it = proto_tcp_logic_so_group.begin();
             it != proto_tcp_logic_so_group.end(); ++it)
@@ -345,8 +266,7 @@ int ProtoCommonLogic::LoadProtoTCPLogicGroup()
 
         if (logic_item.logic_loader.Load(logic_item.logic_so_path.c_str()) != 0)
         {
-            LOG_ERROR("failed to load logic so " << logic_item.logic_so_path << ", "
-                      << logic_item.logic_loader.GetLastErrMsg());
+            LOG_ERROR("failed to load logic so, " << logic_item.logic_loader.GetLastErrMsg());
             return -1;
         }
 
@@ -365,7 +285,7 @@ int ProtoCommonLogic::LoadProtoTCPLogicGroup()
         logic_ctx.app_name = logic_ctx_.app_name;
         logic_ctx.conf_center = logic_ctx_.conf_center;
         logic_ctx.timer_axis = logic_ctx_.timer_axis;
-        logic_ctx.scheduler = proto_args_.scheduler;
+        logic_ctx.scheduler = &scheduler_;
         logic_ctx.common_logic = proto_tcp_common_logic_;
         logic_ctx.thread_ev_base = logic_ctx_.thread_ev_base;
 
@@ -378,6 +298,52 @@ int ProtoCommonLogic::LoadProtoTCPLogicGroup()
     }
 
     return 0;
+}
+
+void ProtoCommonLogic::OnRecvClientMsg(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body, size_t msg_body_len)
+{
+    if (proto_tcp_logic_item_vec_.size() > 0)
+    {
+        // 内置心跳消息处理
+        if (MSG_ID_HEARTBEAT_REQ == msg_head.msg_id)
+        {
+            ::proto::MsgHead rsp_msg_head = msg_head;
+            rsp_msg_head.msg_id = MSG_ID_HEARTBEAT_RSP;
+
+            scheduler_.SendToClient(conn_guid, rsp_msg_head, NULL, 0);
+            return;
+        }
+
+        if (0 == msg_dispatcher_.DispatchMsg(conn_guid, msg_head, msg_body, msg_body_len))
+        {
+            LOG_TRACE("dispatch msg ok, " << conn_guid << ", msg id: " << msg_head.msg_id);
+            return;
+        }
+    }
+
+    // 没有io logic或者io logic派发失败，把任务均匀分配给work线程
+    if (NULL == proto_tcp_logic_args_.related_thread_groups->work_threads ||
+            0 == proto_tcp_logic_args_.related_thread_groups->work_threads->GetThreadCount())
+    {
+        LOG_ERROR("no work threads, failed to dispatch msg, " << conn_guid << ", msg id: " << msg_head.msg_id);
+
+        ::proto::MsgHead rsp_msg_head = msg_head;
+        rsp_msg_head.msg_id = MSG_ID_NONE_HANDLER_FOUND;
+
+        scheduler_.SendToClient(conn_guid, rsp_msg_head, NULL, 0);
+        return;
+    }
+
+    if (scheduler_.SendToWorkThread(conn_guid, msg_head, msg_body, msg_body_len, -1) != 0)
+    {
+        LOG_ERROR("failed to send to work thread");
+
+        ::proto::MsgHead rsp_msg_head = msg_head;
+        rsp_msg_head.msg_id = MSG_ID_SCHEDULE_FAILED;
+
+        scheduler_.SendToClient(conn_guid, rsp_msg_head, NULL, 0);
+        return;
+    }
 }
 }
 }

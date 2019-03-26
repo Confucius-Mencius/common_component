@@ -1,8 +1,9 @@
 #ifndef PROTO_MSG_CODEC_INC_PROTO_MSG_HANDLER_INTERFACE_H_
 #define PROTO_MSG_CODEC_INC_PROTO_MSG_HANDLER_INTERFACE_H_
 
-#include "conn.h"
 #include "proto_msg.h"
+
+struct ConnGUID;
 
 namespace proto
 {

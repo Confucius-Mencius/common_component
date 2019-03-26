@@ -80,7 +80,7 @@ ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
 
             thread_ctx.idx = i;
             thread_ctx.sink = ctx->thread_sink_creator();
-            thread_ctx.threads_ctx = ctx->args;
+            thread_ctx.threads_ctx = ctx->threads_ctx;
             thread_ctx.thread_group = thread_group;
 
             if (NULL == thread_group->CreateThread(&thread_ctx))

@@ -10,7 +10,6 @@
 
 #include <pthread.h>
 #include <functional>
-#include "log_util.h"
 #include "module_interface.h"
 #include "thread_task.h"
 
@@ -44,7 +43,7 @@ struct ThreadGroupCtx
     const void* threads_ctx; // 将具体的threads_ctx传递给具体的thread sink
     const void* logic_args; // 将具体的logic参数传递给具体的logic so
 
-    ThreadGroupCtx() : thread_name("")
+    ThreadGroupCtx() : thread_name()
     {
         common_component_dir = NULL;
         enable_cpu_profiling = false;

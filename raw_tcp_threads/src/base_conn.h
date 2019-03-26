@@ -9,7 +9,7 @@ namespace raw
 {
 class ThreadSink;
 
-class BaseConn
+class BaseConn : public ConnInterface
 {
 public:
     BaseConn();
@@ -23,19 +23,47 @@ public:
 
     virtual int Send(const void* data, size_t len) = 0;
 
+    ///////////////////////// ConnInterface /////////////////////////
+    const ConnGUID* GetConnGUID() const
+    {
+        return &conn_guid_;
+    }
+
+    const char* GetClientIP() const override
+    {
+        return client_ip_.c_str();
+    }
+
+    unsigned short GetClientPort() const override
+    {
+        return client_port_;
+    }
+
+    int GetSockFD() const override
+    {
+        return sock_fd_;
+    }
+
+    std::string& AppendData(const char* data, size_t len) override
+    {
+        return data_.append(data, len);
+    }
+
+    void ClearData() override
+    {
+        data_.clear();
+    }
+
     void SetCreatedTime(time_t t)
     {
         created_time_ = t;
     }
 
-    void SetSockFD(int sock_fd)
+    void SetConnGUID(IOType io_type, int io_thread_idx, ConnID conn_id)
     {
-        sock_fd_ = sock_fd;
-    }
-
-    int GetSockFD() const
-    {
-        return sock_fd_;
+        conn_guid_.io_type = io_type;
+        conn_guid_.io_thread_idx = io_thread_idx;
+        conn_guid_.conn_id = conn_id;
     }
 
     void SetClientIP(const char* ip)
@@ -43,31 +71,14 @@ public:
         client_ip_ = ip;
     }
 
-    const char* GetClientIP() const
-    {
-        return client_ip_.c_str();
-    }
-
     void SetClientPort(unsigned short port)
     {
         client_port_ = port;
     }
 
-    unsigned short GetClientPort() const
+    void SetSockFD(int sock_fd)
     {
-        return client_port_;
-    }
-
-    void SetConnGUID(int io_thread_idx, ConnID conn_id)
-    {
-        conn_guid_.io_type = IO_TYPE_RAW_TCP;
-        conn_guid_.io_thread_idx = io_thread_idx;
-        conn_guid_.conn_id = conn_id;
-    }
-
-    const ConnGUID* GetConnGUID() const
-    {
-        return &conn_guid_;
+        sock_fd_ = sock_fd;
     }
 
     void SetThreadSink(ThreadSink* sink)
@@ -77,11 +88,12 @@ public:
 
 protected:
     time_t created_time_;
-    int sock_fd_;
+    ConnGUID conn_guid_;
     std::string client_ip_;
     unsigned short client_port_;
-    ConnGUID conn_guid_;
+    int sock_fd_;
     ThreadSink* thread_sink_;
+    std::string data_;
 };
 }
 }

@@ -6,9 +6,6 @@
 
 namespace proto
 {
-static const int MIN_TOTAL_MSG_LEN = CHECKSUM_FIELD_LEN + MSG_HEAD_LEN;
-static const int MIN_DATA_LEN = TOTAL_MSG_LEN_FIELD_LEN + MIN_TOTAL_MSG_LEN;
-
 MsgCodec::MsgCodec() : msg_codec_ctx_()
 {
 }

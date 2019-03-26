@@ -1,5 +1,5 @@
-#ifndef RAW_TCP_THREADS_SRC_CONN_MGR_H_
-#define RAW_TCP_THREADS_SRC_CONN_MGR_H_
+#ifndef RAW_TCP_THREADS_SRC_CONN_CENTER_H_
+#define RAW_TCP_THREADS_SRC_CONN_CENTER_H_
 
 #include "base_conn.h"
 #include "record_timeout_mgr.h"
@@ -10,7 +10,7 @@ namespace raw
 {
 class ThreadSink;
 
-struct ConnMgrCtx
+struct ConnCenterCtx
 {
     TimerAxisInterface* timer_axis;
     struct timeval inactive_conn_check_interval;
@@ -18,7 +18,7 @@ struct ConnMgrCtx
     int storm_interval;
     int storm_threshold;
 
-    ConnMgrCtx()
+    ConnCenterCtx()
     {
         timer_axis = NULL;
         inactive_conn_check_interval.tv_sec = inactive_conn_check_interval.tv_usec = 0;
@@ -28,14 +28,14 @@ struct ConnMgrCtx
     }
 };
 
-class ConnMgr : public RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*>
+class ConnCenter : public RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*>, public ConnCenterInterface
 {
 public:
-    ConnMgr();
-    virtual ~ConnMgr();
+    ConnCenter();
+    virtual ~ConnCenter();
 
     void Release();
-    int Initialize(const ConnMgrCtx* ctx);
+    int Initialize(const ConnCenterCtx* ctx);
     void Finalize();
     int Activate();
     void Freeze();
@@ -45,13 +45,13 @@ public:
         thread_sink_ = sink;
     }
 
-    BaseConn* CreateConn(int io_thread_idx, const char* ip, unsigned short port, int sock_fd);
+    BaseConn* CreateConn(IOType io_type, int io_thread_idx, const char* ip, unsigned short port, int sock_fd);
     void DestroyConn(int sock_fd);
-
-    BaseConn* GetConn(int sock_fd) const;
-    BaseConn* GetConnByID(ConnID conn_id) const;
-
     int UpdateConnStatus(ConnID conn_id);
+
+    ///////////////////////// ConnCenterInterface /////////////////////////
+    ConnInterface* GetConnBySockFD(int sock_fd) const override;
+    ConnInterface* GetConnByID(ConnID conn_id) const override;
 
 private:
     ///////////////////////// RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*> /////////////////////////
@@ -61,7 +61,7 @@ private:
     void Clear(BaseConn* conn);
 
 private:
-    ConnMgrCtx conn_mgr_ctx_;
+    ConnCenterCtx conn_mgr_ctx_;
     ThreadSink* thread_sink_;
 
     struct ClientCtx
@@ -90,4 +90,4 @@ private:
 }
 }
 
-#endif // RAW_TCP_THREADS_SRC_CONN_MGR_H_
+#endif // RAW_TCP_THREADS_SRC_CONN_CENTER_H_

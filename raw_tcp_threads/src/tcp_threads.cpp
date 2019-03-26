@@ -86,7 +86,7 @@ int Threads::CreateThreadGroup(const char* name_prefix)
         listen_thread_group_ctx.thread_name = std::string(name_prefix) + " listen thread";
         listen_thread_group_ctx.thread_count = 1;
         listen_thread_group_ctx.thread_sink_creator = ListenThreadSink::Create;
-        listen_thread_group_ctx.args = &threads_ctx_;
+        listen_thread_group_ctx.threads_ctx = &threads_ctx_;
 
         listen_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup(&listen_thread_group_ctx);
         if (NULL == listen_thread_group_)
@@ -100,7 +100,7 @@ int Threads::CreateThreadGroup(const char* name_prefix)
         tcp_thread_group_ctx.thread_name = std::string(name_prefix) + " thread";
         tcp_thread_group_ctx.thread_count = threads_ctx_.conf.thread_count;
         tcp_thread_group_ctx.thread_sink_creator = ThreadSink::Create;
-        tcp_thread_group_ctx.args = &threads_ctx_;
+        tcp_thread_group_ctx.threads_ctx = &threads_ctx_;
 
         tcp_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup(&tcp_thread_group_ctx);
         if (NULL == tcp_thread_group_)

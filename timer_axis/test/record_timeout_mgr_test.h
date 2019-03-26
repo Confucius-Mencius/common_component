@@ -14,7 +14,7 @@ struct Key
 {
     std::string s;
 
-    Key() : s("")
+    Key() : s()
     {
     }
 

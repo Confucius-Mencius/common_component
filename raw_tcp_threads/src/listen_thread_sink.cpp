@@ -226,12 +226,6 @@ void ListenThreadSink::OnTask(const ThreadTask* task)
         }
         break;
 
-        case TASK_TYPE_TCP_CONN_CLOSED_INACTIVE:
-        {
-            LOG_TRACE("tcp conn closed: " << task->GetData()); // close by server because of not active yet
-        }
-        break;
-
         case TASK_TYPE_TCP_CONN_CLOSED_NET_STORM:
         {
             LOG_TRACE("tcp conn closed: " << task->GetData()); // close by server because of net storm

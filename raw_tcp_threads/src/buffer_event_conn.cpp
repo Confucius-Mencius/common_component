@@ -24,7 +24,7 @@ void BufferEventConn::EventCallback(struct bufferevent* buffer_event, short even
     LOG_TRACE("events occured on socket, fd: " << sock_fd << ", events: "
               << setiosflags(std::ios::showbase) << std::hex << events);
 
-    BaseConn* conn = thread_sink->GetConnMgr()->GetConn(sock_fd);
+    BaseConn* conn = static_cast<BaseConn*>(thread_sink->GetConnMgr()->GetConnBySockFD(sock_fd));
     if (NULL == conn)
     {
         LOG_ERROR("failed to get tcp conn by socket fd: " << sock_fd);
@@ -102,8 +102,8 @@ void BufferEventConn::ReadCallback(struct bufferevent* buffer_event, void* arg)
         return;
     }
 
-    ConnMgr* conn_mgr = thread_sink->GetConnMgr();
-    BaseConn* conn = conn_mgr->GetConn(sock_fd);
+    ConnCenter* conn_mgr = thread_sink->GetConnMgr();
+    BaseConn* conn = static_cast<BaseConn*>(conn_mgr->GetConnBySockFD(sock_fd));
     if (NULL == conn)
     {
         LOG_ERROR("failed to get tcp conn by socket fd: " << sock_fd);

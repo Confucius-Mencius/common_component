@@ -252,7 +252,7 @@ int ThreadSink::LoadLogic()
 
     if (logic_loader_.Load(logic_so_path.c_str()) != 0)
     {
-        LOG_ERROR("failed to load logic so " << logic_so_path << ", " << logic_loader_.GetLastErrMsg());
+        LOG_ERROR("failed to load logic so, " << logic_loader_.GetLastErrMsg());
         return -1;
     }
 

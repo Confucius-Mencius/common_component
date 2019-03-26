@@ -6,7 +6,7 @@
 
 #include <string.h>
 
-ModuleLoader::ModuleLoader() : module_file_path_(""), last_err_msg_()
+ModuleLoader::ModuleLoader() : module_file_path_(), last_err_msg_()
 {
     module_ = NULL;
     get_module_interface_func_ = NULL;

@@ -1,7 +1,7 @@
 #ifndef RAW_TCP_THREADS_SRC_THREAD_SINK_H_
 #define RAW_TCP_THREADS_SRC_THREAD_SINK_H_
 
-#include "conn_mgr.h"
+#include "conn_center.h"
 #include "mem_util.h"
 #include "module_loader.h"
 #include "new_conn.h"
@@ -64,9 +64,9 @@ public:
 
     void SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups);
 
-    ConnMgr* GetConnMgr()
+    ConnCenter* GetConnMgr()
     {
-        return &conn_mgr_;
+        return &conn_center_;
     }
 
     void OnClientClosed(const BaseConn* conn, int task_type);
@@ -87,7 +87,7 @@ private:
     CommonLogicInterface* common_logic_;
     LogicItemVec logic_item_vec_;
 
-    ConnMgr conn_mgr_;
+    ConnCenter conn_center_;
     Scheduler scheduler_;
 };
 }
