@@ -17,8 +17,7 @@ int ConfMgr::Load()
     enable_cpu_profiling_ = false;
     enable_heap_profiling_ = false;
     release_free_mem_ = false;
-    global_common_logic_so_ = "";
-    global_logic_so_group_.clear();
+    global_logic_so_ = "";
     work_thread_count_ = 0;
     work_common_logic_so_ = "";
     work_logic_so_group_.clear();
@@ -79,12 +78,7 @@ int ConfMgr::Load()
         return -1;
     }
 
-    if (LoadGlobalCommonLogicSo() != 0)
-    {
-        return -1;
-    }
-
-    if (LoadGlobalLogicSoGroup() != 0)
+    if (LoadGlobalLogicSo() != 0)
     {
         return -1;
     }

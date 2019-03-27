@@ -48,6 +48,8 @@ struct ThreadsCtx
     int* app_frame_threads_count;
     pthread_mutex_t* app_frame_threads_sync_mutex;
     pthread_cond_t* app_frame_threads_sync_cond;
+
+    // 下面两个字段是为了支持多种类型的tcp io
     Conf conf;
     const void* logic_args;
 

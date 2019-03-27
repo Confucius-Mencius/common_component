@@ -1,13 +1,15 @@
 #ifndef RAW_TCP_THREADS_INC_RAW_TCP_LOGIC_INTERFACE_H_
 #define RAW_TCP_THREADS_INC_RAW_TCP_LOGIC_INTERFACE_H_
 
-#include "conn.h"
+#include <stddef.h>
 #include "module_interface.h"
 
 class ConfCenterInterface;
 class TimerAxisInterface;
+class ConnCenterInterface;
 class ThreadInterface;
 struct event_base;
+struct ConnGUID;
 
 namespace global
 {

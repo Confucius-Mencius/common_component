@@ -57,7 +57,7 @@ int MsgHandlerMgrTemplate<MsgHandler>::Initialize(const void* ctx)
             return -1;
         }
 
-        if (msg_dispatcher_->AttachMsgHandler(msg_handler->GetMsgId(), msg_handler) != 0)
+        if (msg_dispatcher_->AttachMsgHandler(msg_handler->GetMsgID(), msg_handler) != 0)
         {
             return -1;
         }
@@ -72,7 +72,7 @@ void MsgHandlerMgrTemplate<MsgHandler>::Finalize()
     for (typename MsgHandlerVec::iterator it = msg_handler_vec_.begin(); it != msg_handler_vec_.end(); ++it)
     {
         MsgHandler* msg_handler = *it;
-        msg_dispatcher_->DetachMsgHandler(msg_handler->GetMsgId());
+        msg_dispatcher_->DetachMsgHandler(msg_handler->GetMsgID());
         msg_handler->Finalize();
     }
 

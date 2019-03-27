@@ -138,16 +138,6 @@ int Threads::CreateThreadGroup(const char* name_prefix)
     return ret;
 }
 
-ThreadGroupInterface* Threads::GetListenThreadGroup() const
-{
-    return listen_thread_group_;
-}
-
-ThreadGroupInterface* Threads::GetTCPThreadGroup() const
-{
-    return tcp_thread_group_;
-}
-
 void Threads::SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups)
 {
     if (NULL == related_thread_groups)
@@ -162,6 +152,16 @@ void Threads::SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_g
         ThreadSink* tcp_thread_sink = static_cast<ThreadSink*>(tcp_thread_group_->GetThread(i)->GetThreadSink());
         tcp_thread_sink->SetRelatedThreadGroups(&related_thread_groups_);
     }
+}
+
+ThreadGroupInterface* Threads::GetListenThreadGroup() const
+{
+    return listen_thread_group_;
+}
+
+ThreadGroupInterface* Threads::GetTCPThreadGroup() const
+{
+    return tcp_thread_group_;
 }
 }
 }

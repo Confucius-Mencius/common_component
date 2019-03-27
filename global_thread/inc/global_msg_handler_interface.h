@@ -1,13 +1,13 @@
 #ifndef GLOBAL_THREAD_INC_GLOBAL_MSG_HANDLER_INTERFACE_H_
 #define GLOBAL_THREAD_INC_GLOBAL_MSG_HANDLER_INTERFACE_H_
 
-#include "msg_handler_interface.h"
+#include "proto_msg_handler_interface.h"
 
 namespace global
 {
 class LogicCtx;
 
-class MsgHandlerInterface : public base::MsgHandlerInterface
+class MsgHandlerInterface : public ::proto::MsgHandlerInterface
 {
 public:
     MsgHandlerInterface()

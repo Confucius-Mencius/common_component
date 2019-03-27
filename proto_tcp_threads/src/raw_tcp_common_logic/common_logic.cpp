@@ -17,7 +17,7 @@ enum
 };
 
 ProtoCommonLogic::ProtoCommonLogic() : proto_tcp_logic_args_(), proto_tcp_common_logic_loader_(),
-    proto_tcp_logic_item_vec_(), part_msg_mgr_(), msg_dispatcher_()
+    proto_tcp_logic_item_vec_(), msg_codec_(), scheduler_(), msg_dispatcher_(), part_msg_mgr_()
 {
     proto_tcp_common_logic_ = NULL;
 }
@@ -57,8 +57,14 @@ int ProtoCommonLogic::Initialize(const void* ctx)
     }
 
     proto_tcp_logic_args_ = *(static_cast<const ProtoArgs*>(logic_ctx_.logic_args));
+
+    ::proto::MsgCodecCtx msg_codec_ctx;
+    msg_codec_ctx.max_msg_body_len = proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoMaxMsgBodyLen();
+    msg_codec_ctx.do_checksum = proto_tcp_logic_args_.app_frame_conf_mgr->ProtoDoChecksum();
+    msg_codec_.SetCtx(&msg_codec_ctx);
+
     scheduler_.SetRawTCPScheduler(logic_ctx_.scheduler);
-    scheduler_.SetMsgCodec(proto_tcp_logic_args_.proto_msg_codec);
+    scheduler_.SetMsgCodec(&msg_codec_);
 
     if (part_msg_mgr_.Initialize(logic_ctx_.timer_axis, { proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoPartMsgCheckInterval(), 0 }) != 0)
     {
@@ -202,13 +208,11 @@ void ProtoCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* d
     const char* dp = d.data();
     const size_t dl = d.size();
 
-    ::proto::MsgCodecInterface* msg_codec = proto_tcp_logic_args_.proto_msg_codec;
-
     ::proto::MsgHead msg_head;
     ::proto::MsgID err_msg_id = MSG_ID_OK;
     size_t total_msg_len = 0;
 
-    if (!msg_codec->IsWholeMsg(err_msg_id, total_msg_len, dp, dl))
+    if (!msg_codec_.IsWholeMsg(err_msg_id, total_msg_len, dp, dl))
     {
         if (err_msg_id != MSG_ID_NOT_A_WHOLE_MSG)
         {
@@ -237,7 +241,7 @@ void ProtoCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* d
 
     msg_head.Reset();
 
-    if (msg_codec->DecodeMsg(err_msg_id, &msg_head, &msg_body, msg_body_len, dp + TOTAL_MSG_LEN_FIELD_LEN, total_msg_len) != 0)
+    if (msg_codec_.DecodeMsg(err_msg_id, &msg_head, &msg_body, msg_body_len, dp + TOTAL_MSG_LEN_FIELD_LEN, total_msg_len) != 0)
     {
         msg_head.Reset();
         msg_head.msg_id = err_msg_id;
@@ -259,8 +263,28 @@ void ProtoCommonLogic::OnTask(const ConnGUID* conn_guid, ThreadInterface* source
 {
     (void) conn_guid;
     (void) source_thread;
-    (void) data;
-    (void) len;
+
+    if (NULL == data || 0 == len)
+    {
+        LOG_ERROR("invalid params");
+        return;
+    }
+
+    ::proto::MsgID err_msg_id;
+    ::proto::MsgHead msg_head;
+    char* msg_body = NULL;
+    size_t msg_body_len = 0;
+
+    if (msg_codec_.DecodeMsg(err_msg_id, &msg_head, &msg_body, msg_body_len, (const char*) data, len) != 0)
+    {
+        return;
+    }
+
+    if (0 == msg_dispatcher_.DispatchMsg(conn_guid, msg_head, msg_body, msg_body_len))
+    {
+        LOG_TRACE("dispatch msg ok, " << conn_guid << ", msg id: " << msg_head.msg_id);
+        return;
+    }
 }
 
 void ProtoCommonLogic::OnTimer(TimerID timer_id, void* data, size_t len, int times)
@@ -290,11 +314,6 @@ void ProtoCommonLogic::OnTimer(TimerID timer_id, void* data, size_t len, int tim
 
 int ProtoCommonLogic::LoadProtoTCPCommonLogic()
 {
-    if (0 == proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoTCPCommonLogicSo().length())
-    {
-        return 0;
-    }
-
     const std::string& proto_tcp_common_logic_so = proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoTCPCommonLogicSo();
     if (0 == proto_tcp_common_logic_so.length())
     {

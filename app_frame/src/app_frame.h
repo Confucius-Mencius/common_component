@@ -4,6 +4,7 @@
 #include "app_frame_interface.h"
 #include "conf_mgr.h"
 #include "module_loader.h"
+#include "global_threads_interface.h"
 #include "raw_tcp_threads_interface.h"
 #include "proto_tcp_threads_interface.h"
 
@@ -34,7 +35,7 @@ public:
 private:
     int LoadAndCheckConf();
     int GetDate() const;
-//    int LoadGlobalThread();
+    int LoadGlobalThread();
 //    int LoadWorkThreads();
 //    int LoadBurdenThreads();
     int LoadRawTCPThreads();
@@ -53,8 +54,8 @@ private:
     int release_free_mem_date_;
 
     int app_frame_threads_count_;
-//    ModuleLoader global_thread_loader_;
-//    global::ThreadsInterface* global_threads_;
+    ModuleLoader global_threads_loader_;
+    global::ThreadsInterface* global_threads_;
 //    ModuleLoader work_threads_loader_;
 //    work::ThreadsInterface* work_threads_;
 //    ModuleLoader burden_threads_loader_;

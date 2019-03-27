@@ -4,10 +4,9 @@
 
 namespace global
 {
-Threads::Threads() : threads_ctx_(), related_thread_group_()
+Threads::Threads() : threads_ctx_(), related_thread_groups_()
 {
     global_thread_group_ = NULL;
-    global_thread_ = NULL;
     global_thread_sink_ = NULL;
 }
 
@@ -27,7 +26,7 @@ const char* Threads::GetLastErrMsg() const
 
 void Threads::Release()
 {
-    SAFE_RELEASE(global_thread_sink_);
+    SAFE_RELEASE(global_thread_group_);
     delete this;
 }
 
@@ -38,18 +37,18 @@ int Threads::Initialize(const void* ctx)
         return -1;
     }
 
-    threads_ctx_ = *((ThreadsCtx*) ctx);
+    threads_ctx_ = *(static_cast<const ThreadsCtx*>(ctx));
     return 0;
 }
 
 void Threads::Finalize()
 {
-    // 由thread center集中管理
+    SAFE_FINALIZE(global_thread_group_);
 }
 
 int Threads::Activate()
 {
-    if (global_thread_group_->Activate() != 0)
+    if (SAFE_ACTIVATE_FAILED(global_thread_group_))
     {
         return -1;
     }
@@ -59,7 +58,7 @@ int Threads::Activate()
 
 void Threads::Freeze()
 {
-    // 由thread center集中管理
+    SAFE_FREEZE(global_thread_group_);
 }
 
 int Threads::CreateThreadGroup()
@@ -68,10 +67,21 @@ int Threads::CreateThreadGroup()
 
     do
     {
-        if (CreateGlobalThread() != 0)
+        ThreadGroupCtx thread_group_ctx;
+        thread_group_ctx.common_component_dir = threads_ctx_.common_component_dir;
+        thread_group_ctx.enable_cpu_profiling = threads_ctx_.app_frame_conf_mgr->EnableCPUProfiling();
+        thread_group_ctx.thread_name = "global thread";
+        thread_group_ctx.thread_count = 1;
+        thread_group_ctx.thread_sink_creator = ThreadSink::Create;
+        thread_group_ctx.threads_ctx = &threads_ctx_;
+
+        global_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup(&thread_group_ctx);
+        if (NULL == global_thread_group_)
         {
             break;
         }
+
+        global_thread_sink_ = static_cast<ThreadSink*>(global_thread_group_->GetThread(0)->GetThreadSink());
 
         ret = 0;
     } while (0);
@@ -87,6 +97,21 @@ int Threads::CreateThreadGroup()
     return ret;
 }
 
+void Threads::SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups)
+{
+    if (NULL == related_thread_groups)
+    {
+        return;
+    }
+
+    related_thread_groups_ = *related_thread_groups;
+
+    if (global_thread_sink_ != NULL)
+    {
+        global_thread_sink_->SetRelatedThreadGroups(&related_thread_groups_);
+    }
+}
+
 ThreadGroupInterface* Threads::GetGlobalThreadGroup() const
 {
     return global_thread_group_;
@@ -97,62 +122,9 @@ LogicInterface* Threads::GetLogic() const
     return global_thread_sink_->GetLogic();
 }
 
-void Threads::SetRelatedThreadGroup(const RelatedThreadGroup* related_thread_group)
+void Threads::SetReloadFinish(bool finished)
 {
-    if (NULL == related_thread_group)
-    {
-        return;
-    }
-
-    related_thread_group_ = *related_thread_group;
-
-    if (global_thread_sink_ != NULL)
-    {
-        global_thread_sink_->SetRelatedThreadGroup(&related_thread_group_);
-    }
-}
-
-int Threads::CreateGlobalThread()
-{
-    global_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup();
-    if (NULL == global_thread_group_)
-    {
-        return -1;
-    }
-
-    ThreadCtx thread_ctx;
-    ThreadSink* sink = NULL;
-
-    thread_ctx.common_component_dir = threads_ctx_.common_component_dir;
-    thread_ctx.need_reply_msg_check_interval = threads_ctx_.conf_mgr->GetPeerNeedReplyMsgCheckInterval();
-
-    thread_ctx.name = "global thread";
-    thread_ctx.idx = 0;
-
-    sink = ThreadSink::Create();
-    if (NULL == sink)
-    {
-        const int err = errno;
-        LOG_ERROR("failed to create global thread sink, errno: " << err << ", err msg: " << strerror(err));
-        return -1;
-    }
-
-    sink->SetThreadsCtx(&threads_ctx_);
-    thread_ctx.sink = sink;
-
-    global_thread_ = global_thread_group_->CreateThread(&thread_ctx);
-    if (NULL == global_thread_)
-    {
-        return -1;
-    }
-
-    global_thread_sink_ = sink;
-    return 0;
-}
-
-void Threads::SetReloadFinish(bool finish)
-{
-    global_thread_sink_->SetReloadFinish(finish);
+    global_thread_sink_->SetReloadFinish(finished);
 }
 
 bool Threads::ReloadFinished()

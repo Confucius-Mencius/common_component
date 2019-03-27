@@ -6,19 +6,16 @@
 
 class ConfCenterInterface;
 class TimerAxisInterface;
-class TimeServiceInterface;
-class RandomEngineInterface;
 
-namespace base
+namespace proto
 {
 class MsgDispatcherInterface;
 }
 
-struct ConnGuid;
+struct ConnGUID;
 
 namespace global
 {
-class ClientMgrInterface;
 class SchedulerInterface;
 class LogicInterface;
 
@@ -31,10 +28,8 @@ struct LogicCtx
     const char* app_name;
     ConfCenterInterface* conf_center;
     TimerAxisInterface* timer_axis;
-    TimeServiceInterface* time_service;
-    RandomEngineInterface* random_engine;
-    base::MsgDispatcherInterface* msg_dispatcher;
     SchedulerInterface* scheduler;
+    ::proto::MsgDispatcherInterface* msg_dispatcher;
     LogicInterface* global_logic;
 
     LogicCtx()
@@ -46,10 +41,8 @@ struct LogicCtx
         app_name = NULL;
         conf_center = NULL;
         timer_axis = NULL;
-        time_service = NULL;
-        random_engine = NULL;
-        msg_dispatcher = NULL;
         scheduler = NULL;
+        msg_dispatcher = NULL;
         global_logic = NULL;
     }
 };
@@ -73,7 +66,7 @@ public:
             return -1;
         }
 
-        logic_ctx_ = *((LogicCtx*) ctx);
+        logic_ctx_ = *(static_cast<const LogicCtx*>(ctx));
         return 0;
     }
 

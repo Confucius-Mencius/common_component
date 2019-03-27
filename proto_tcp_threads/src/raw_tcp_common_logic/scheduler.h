@@ -1,7 +1,7 @@
 #ifndef PROTO_TCP_THREADS_SRC_RAW_TCP_COMMON_LOGIC_SCHEDULER_H_
 #define PROTO_TCP_THREADS_SRC_RAW_TCP_COMMON_LOGIC_SCHEDULER_H_
 
-#include "proto_msg_codec_interface.h"
+#include "proto_msg_codec.h"
 #include "proto_tcp_scheduler_interface.h"
 #include "raw_tcp_scheduler_interface.h"
 
@@ -17,15 +17,12 @@ public:
     Scheduler();
     ~Scheduler();
 
-//    int Initialize(const void* ctx);
-//    void Finalize();
-
     void SetRawTCPScheduler(tcp::raw::SchedulerInterface* scheduler)
     {
         raw_tcp_scheduler_ = scheduler;
     }
 
-    void SetMsgCodec(::proto::MsgCodecInterface* msg_codec)
+    void SetMsgCodec(::proto::MsgCodec* msg_codec)
     {
         msg_codec_ = msg_codec;
     }
@@ -43,8 +40,19 @@ public:
                            size_t msg_body_len) override;
 
 private:
+    enum
+    {
+        THREAD_TYPE_TCP,
+        THREAD_TYPE_WORK,
+        THREAD_TYPE_GLOBAL,
+    };
+
+    int SendToThread(int thread_type, const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                     const void* msg_body, size_t msg_body_len, int thread_idx);
+
+private:
     tcp::raw::SchedulerInterface* raw_tcp_scheduler_;
-    ::proto::MsgCodecInterface* msg_codec_;
+    ::proto::MsgCodec* msg_codec_;
 };
 }
 }

@@ -6,8 +6,7 @@ namespace app_frame
 const char ENABLE_CPU_PROFILING_XPATH[] = "/conf/gperftools/enable_cpu_profiling";
 const char ENABLE_HEAP_PROFILING_XPATH[] = "/conf/gperftools/enable_heap_profiling";
 const char RELEASE_FREE_MEM_XPATH[] = "/conf/gperftools/release_free_mem";
-const char GLOBAL_COMMON_LOGIC_SO_XPATH[] = "/conf/global/common_logic_so";
-const char GLOBAL_LOGIC_SO_XPATH[] = "/conf/global/logic_so_group/logic_so";
+const char GLOBAL_LOGIC_SO_XPATH[] = "/conf/global_logic_so";
 const char WORK_THREAD_COUNT_XPATH[] = "/conf/work/thread_count";
 const char WORK_COMMON_LOGIC_SO_XPATH[] = "/conf/work/common_logic_so";
 const char WORK_LOGIC_SO_XPATH[] = "/conf/work/logic_so_group/logic_so";

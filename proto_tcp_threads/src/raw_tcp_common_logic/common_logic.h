@@ -6,6 +6,7 @@
 #include "msg_dispatcher.h"
 #include "part_msg_mgr.h"
 #include "proto_args.h"
+#include "proto_msg_codec.h"
 #include "proto_tcp_logic_interface.h"
 #include "raw_tcp_logic_interface.h"
 #include "scheduler.h"
@@ -67,9 +68,10 @@ private:
     tcp::proto::CommonLogicInterface* proto_tcp_common_logic_;
     LogicItemVec proto_tcp_logic_item_vec_;
 
-    tcp::proto::PartMsgMgr part_msg_mgr_;
+    ::proto::MsgCodec msg_codec_;
     tcp::proto::Scheduler scheduler_;
     tcp::proto::MsgDispatcher msg_dispatcher_;
+    tcp::proto::PartMsgMgr part_msg_mgr_;
 };
 }
 }

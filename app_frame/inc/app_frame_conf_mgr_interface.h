@@ -15,8 +15,7 @@ public:
     virtual bool EnableCPUProfiling() = 0;
     virtual bool EnableHeapProfiling() = 0;
     virtual bool ReleaseFreeMem() = 0;
-    virtual std::string GetGlobalCommonLogicSo() = 0;
-    virtual StrGroup GetGlobalLogicSoGroup() = 0;
+    virtual std::string GetGlobalLogicSo() = 0;
     virtual int GetWorkThreadCount() = 0;
     virtual std::string GetWorkCommonLogicSo() = 0;
     virtual StrGroup GetWorkLogicSoGroup() = 0;

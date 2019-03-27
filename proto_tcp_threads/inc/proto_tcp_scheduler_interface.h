@@ -1,8 +1,12 @@
 #ifndef PROTO_TCP_THREADS_INC_PROTO_TCP_SCHEDULER_INTERFACE_H_
 #define PROTO_TCP_THREADS_INC_PROTO_TCP_SCHEDULER_INTERFACE_H_
 
-#include "conn.h"
-#include "proto_msg.h"
+struct ConnGUID;
+
+namespace proto
+{
+struct MsgHead;
+}
 
 namespace tcp
 {

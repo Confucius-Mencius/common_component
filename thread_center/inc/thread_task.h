@@ -31,7 +31,7 @@ public:
 
         if (data != NULL && len > 0)
         {
-            data_.assign((char*) data, len);
+            data_.assign((const char*) data, len);
         }
     }
 

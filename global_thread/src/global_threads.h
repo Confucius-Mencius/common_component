@@ -1,9 +1,9 @@
 #ifndef GLOBAL_THREAD_SRC_GLOBAL_THREADS_H_
 #define GLOBAL_THREAD_SRC_GLOBAL_THREADS_H_
 
-#include "global_thread_sink.h"
 #include "global_threads_interface.h"
 #include "module_loader.h"
+#include "thread_sink.h"
 
 namespace global
 {
@@ -24,10 +24,10 @@ public:
 
     ///////////////////////// ThreadsInterface /////////////////////////
     int CreateThreadGroup() override;
+    void SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups) override;
     ThreadGroupInterface* GetGlobalThreadGroup() const override;
     LogicInterface* GetLogic() const override;
-    void SetRelatedThreadGroup(const RelatedThreadGroup* related_thread_group) override;
-    void SetReloadFinish(bool finish) override;
+    void SetReloadFinish(bool finished) override;
     bool ReloadFinished() override;
 
 private:
@@ -36,11 +36,8 @@ private:
 private:
     ThreadsCtx threads_ctx_;
     ThreadGroupInterface* global_thread_group_;
-
-    ThreadInterface* global_thread_;
     ThreadSink* global_thread_sink_;
-
-    RelatedThreadGroup related_thread_group_;
+    RelatedThreadGroups related_thread_groups_;
 };
 }
 

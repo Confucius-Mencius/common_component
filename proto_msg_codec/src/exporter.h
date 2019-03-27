@@ -1,8 +1,0 @@
-#ifndef PROTO_MSG_CODEC_SRC_EXPORTER_H_
-#define PROTO_MSG_CODEC_SRC_EXPORTER_H_
-
-#include "module_util.h"
-
-MODULE_EXPORTER_DECL();
-
-#endif // PROTO_MSG_CODEC_SRC_EXPORTER_H_

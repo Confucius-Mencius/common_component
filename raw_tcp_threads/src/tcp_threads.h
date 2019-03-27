@@ -30,9 +30,9 @@ public:
 
 private:
     ThreadsCtx threads_ctx_;
+    RelatedThreadGroups related_thread_groups_;
     ThreadGroupInterface* listen_thread_group_;
     ThreadGroupInterface* tcp_thread_group_;
-    RelatedThreadGroups related_thread_groups_;
 };
 }
 }

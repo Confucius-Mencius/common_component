@@ -2,9 +2,8 @@ type,name,xpath,group,virtual,with_default,default,,支持int，int64，float，
 bool,enable_cpu_profiling,/conf/gperftools/enable_cpu_profiling,0,1,1,,,xpath用于生成xml配置文件的内容
 bool,enable_heap_profiling,/conf/gperftools/enable_heap_profiling,0,1,1,,,virtual表示是否生成接口文件的内容(纯虚函数)
 bool,release_free_mem,/conf/gperftools/release_free_mem,0,1,1,,,with_default表示是否在未配置时有默认值
-string,global_common_logic_so,/conf/global/common_logic_so,0,1,1,,,"default是未配置时的默认值，如果不指定，则bool类型的默认值为false，int类型的默认值为0，string类型的默认值为"""""
-string,global_logic_so,/conf/global/logic_so_group/logic_so,1,1,1,,,group表示一组
-int,work_thread_count,/conf/work/thread_count,0,1,1,,,
+string,global_logic_so,/conf/global_logic_so,0,1,1,,,"default是未配置时的默认值，如果不指定，则bool类型的默认值为false，int类型的默认值为0，string类型的默认值为"""""
+int,work_thread_count,/conf/work/thread_count,0,1,1,,,group表示一组
 string,work_common_logic_so,/conf/work/common_logic_so,0,1,1,,,
 string,work_logic_so,/conf/work/logic_so_group/logic_so,1,1,1,,,
 int,burden_thread_count,/conf/burden/thread_count,0,1,1,,,

@@ -44,16 +44,10 @@ public:
         return release_free_mem_;
     }
 
-    std::string GetGlobalCommonLogicSo() override
+    std::string GetGlobalLogicSo() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return global_common_logic_so_;
-    }
-
-    StrGroup GetGlobalLogicSoGroup() override
-    {
-        AUTO_THREAD_RLOCK(rwlock_);
-        return global_logic_so_group_;
+        return global_logic_so_;
     }
 
     int GetWorkThreadCount() override
@@ -357,38 +351,17 @@ private:
         return 0;
     }
 
-    int LoadGlobalCommonLogicSo()
+    int LoadGlobalLogicSo()
     {
-        char* global_common_logic_so = NULL;
-        if (conf_center_->GetConf(&global_common_logic_so, GLOBAL_COMMON_LOGIC_SO_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << GLOBAL_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&global_common_logic_so);
-            return -1;
-        }
-        global_common_logic_so_ = global_common_logic_so;
-        conf_center_->ReleaseConf(&global_common_logic_so);
-        return 0;
-    }
-
-    int LoadGlobalLogicSoGroup()
-    {
-        char** global_logic_so = NULL;
-        int n = 0;
-        if (conf_center_->GetConf(&global_logic_so, n, GLOBAL_LOGIC_SO_XPATH, true, "") != 0)
+        char* global_logic_so = NULL;
+        if (conf_center_->GetConf(&global_logic_so, GLOBAL_LOGIC_SO_XPATH, true, "") != 0)
         {
             LOG_ERROR("failed to get " << GLOBAL_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&global_logic_so, n);
+            conf_center_->ReleaseConf(&global_logic_so);
             return -1;
         }
-        for (int i = 0; i < n; ++i)
-        {
-            if (strlen(global_logic_so[i]) > 0)
-            {
-                global_logic_so_group_.push_back(global_logic_so[i]);
-            }
-        }
-        conf_center_->ReleaseConf(&global_logic_so, n);
+        global_logic_so_ = global_logic_so;
+        conf_center_->ReleaseConf(&global_logic_so);
         return 0;
     }
 
@@ -953,8 +926,7 @@ private:
     bool enable_cpu_profiling_;
     bool enable_heap_profiling_;
     bool release_free_mem_;
-    std::string global_common_logic_so_;
-    StrGroup global_logic_so_group_;
+    std::string global_logic_so_;
     int work_thread_count_;
     std::string work_common_logic_so_;
     StrGroup work_logic_so_group_;
