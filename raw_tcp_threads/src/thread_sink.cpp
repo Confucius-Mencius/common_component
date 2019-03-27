@@ -153,14 +153,14 @@ void ThreadSink::OnStop()
 {
     ThreadSinkInterface::OnStop();
 
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
-    {
-        it->logic->OnStop();
-    }
-
     if (common_logic_ != NULL)
     {
         common_logic_->OnStop();
+    }
+
+    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    {
+        it->logic->OnStop();
     }
 }
 
@@ -168,14 +168,14 @@ void ThreadSink::OnReload()
 {
     ThreadSinkInterface::OnReload();
 
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
-    {
-        it->logic->OnReload();
-    }
-
     if (common_logic_ != NULL)
     {
         common_logic_->OnReload();
+    }
+
+    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    {
+        it->logic->OnReload();
     }
 }
 
@@ -227,14 +227,14 @@ bool ThreadSink::CanExit() const
 {
     int can_exit = 1;
 
-    for (LogicItemVec::const_iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
-    {
-        can_exit &= (it->logic->CanExit() ? 1 : 0);
-    }
-
     if (common_logic_ != NULL)
     {
         can_exit &= (common_logic_->CanExit() ? 1 : 0);
+    }
+
+    for (LogicItemVec::const_iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    {
+        can_exit &= (it->logic->CanExit() ? 1 : 0);
     }
 
     return (can_exit != 0);
@@ -242,14 +242,14 @@ bool ThreadSink::CanExit() const
 
 void ThreadSink::OnClientClosed(const BaseConn* conn, int task_type)
 {
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
-    {
-        (*it).logic->OnClientClosed(conn->GetConnGUID());
-    }
-
     if (common_logic_ != NULL)
     {
         common_logic_->OnClientClosed(conn->GetConnGUID());
+    }
+
+    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    {
+        (*it).logic->OnClientClosed(conn->GetConnGUID());
     }
 
     char client_ctx_buf[128] = "";

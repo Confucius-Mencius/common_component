@@ -28,7 +28,7 @@ struct LogicItem
 
 typedef std::vector<LogicItem> LogicItemVec;
 
-class ProtoCommonLogic : public CommonLogicInterface
+class ProtoCommonLogic : public CommonLogicInterface, public TimerSinkInterface
 {
 public:
     ProtoCommonLogic();
@@ -50,6 +50,9 @@ public:
     void OnClientClosed(const ConnGUID* conn_guid) override;
     void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len) override;
     void OnTask(const ConnGUID* conn_guid, ThreadInterface* source_thread, const void* data, size_t len) override;
+
+    ///////////////////////// TimerSinkInterface /////////////////////////
+    void OnTimer(TimerID timer_id, void* data, size_t len, int times);
 
 private:
     int LoadProtoTCPCommonLogic();

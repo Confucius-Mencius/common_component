@@ -11,6 +11,11 @@ namespace tcp
 {
 namespace raw
 {
+enum
+{
+    EXIT_CHECK_TIMER_ID = 1,
+};
+
 ProtoCommonLogic::ProtoCommonLogic() : proto_tcp_logic_args_(), proto_tcp_common_logic_loader_(),
     proto_tcp_logic_item_vec_(), part_msg_mgr_(), msg_dispatcher_()
 {
@@ -39,8 +44,8 @@ void ProtoCommonLogic::Release()
     }
 
     proto_tcp_logic_item_vec_.clear();
-
     SAFE_RELEASE_MODULE(proto_tcp_common_logic_, proto_tcp_common_logic_loader_);
+
     delete this;
 }
 
@@ -81,7 +86,6 @@ void ProtoCommonLogic::Finalize()
     }
 
     SAFE_FINALIZE(proto_tcp_common_logic_);
-
     part_msg_mgr_.Finalize();
 }
 
@@ -130,6 +134,15 @@ void ProtoCommonLogic::OnStop()
     for (LogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
     {
         it->logic->OnStop();
+    }
+
+    // 启动定时器，检查proto tcp logics是否都可以退出了。100毫秒检查一次
+    struct timeval tv = { 0, 100000 };
+
+    if (logic_ctx_.timer_axis->SetTimer(this, EXIT_CHECK_TIMER_ID, tv, NULL, 0) != 0)
+    {
+        LOG_ERROR("failed to start exit check timer");
+        return;
     }
 }
 
@@ -248,6 +261,31 @@ void ProtoCommonLogic::OnTask(const ConnGUID* conn_guid, ThreadInterface* source
     (void) source_thread;
     (void) data;
     (void) len;
+}
+
+void ProtoCommonLogic::OnTimer(TimerID timer_id, void* data, size_t len, int times)
+{
+    (void) timer_id;
+    (void) data;
+    (void) len;
+    (void) times;
+
+    int can_exit = 1;
+
+    if (proto_tcp_common_logic_ != NULL)
+    {
+        can_exit &= (proto_tcp_common_logic_->CanExit() ? 1 : 0);
+    }
+
+    for (LogicItemVec::const_iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
+    {
+        can_exit &= (it->logic->CanExit() ? 1 : 0);
+    }
+
+    if (can_exit != 0)
+    {
+        can_exit_ = true;
+    }
 }
 
 int ProtoCommonLogic::LoadProtoTCPCommonLogic()
