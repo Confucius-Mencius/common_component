@@ -14,7 +14,7 @@ class MsgHandlerInterface : public ::proto::MsgHandlerInterface
 public:
     MsgHandlerInterface()
     {
-        logic_ctx_ = NULL;
+        logic_ctx_ = nullptr;
     }
 
     virtual ~MsgHandlerInterface()
@@ -28,7 +28,7 @@ public:
 
     virtual int Initialize(const void* ctx)
     {
-        if (NULL == ctx)
+        if (nullptr == ctx)
         {
             return -1;
         }

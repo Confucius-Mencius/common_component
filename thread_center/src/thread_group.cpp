@@ -7,7 +7,7 @@ namespace thread_center
 {
 ThreadGroup::ThreadGroup() : thread_vec_()
 {
-    thread_center_ = NULL;
+    thread_center_ = nullptr;
 }
 
 ThreadGroup::~ThreadGroup()
@@ -32,8 +32,6 @@ void ThreadGroup::Release()
 
 int ThreadGroup::Initialize(const void* ctx)
 {
-    (void) ctx;
-
     if (pthread_key_create(&tsd_key_, NULL) != 0)
     {
         const int err = errno;
@@ -135,7 +133,7 @@ void ThreadGroup::NotifyExit()
 
 int ThreadGroup::PushTaskToThread(ThreadTask* task, int thread_idx)
 {
-    if (NULL == task)
+    if (nullptr == task)
     {
         return -1;
     }
@@ -165,7 +163,7 @@ int ThreadGroup::PushTaskToThread(ThreadTask* task, int thread_idx)
 ThreadInterface* ThreadGroup::CreateThread(const ThreadCtx* thread_ctx)
 {
     Thread* thread = Thread::Create();
-    if (NULL == thread)
+    if (nullptr == thread)
     {
         const int err = errno;
         LOG_ERROR("failed to create thread, errno: " << err << ", err msg: " << strerror(err));

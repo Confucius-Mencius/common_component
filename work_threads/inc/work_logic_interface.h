@@ -1,20 +1,18 @@
 #ifndef WORK_THREADS_INC_WORK_LOGIC_INTERFACE_H_
 #define WORK_THREADS_INC_WORK_LOGIC_INTERFACE_H_
 
-#include <stddef.h>
+#include <atomic>
 #include "module_interface.h"
 
 class ConfCenterInterface;
 class TimerAxisInterface;
-class TimeServiceInterface;
-class RandomEngineInterface;
 
-namespace base
+namespace proto
 {
 class MsgDispatcherInterface;
 }
 
-struct ConnGuid;
+struct ConnGUID;
 
 namespace global
 {
@@ -23,39 +21,34 @@ class LogicInterface;
 
 namespace work
 {
-class ClientMgrInterface;
 class SchedulerInterface;
-class LocalLogicInterface;
+class CommonLogicInterface;
 
 struct LogicCtx
 {
     int argc;
     char** argv;
     const char* common_component_dir;
-    const char* cur_work_dir;
+    const char* cur_working_dir;
     const char* app_name;
     ConfCenterInterface* conf_center;
     TimerAxisInterface* timer_axis;
-    TimeServiceInterface* time_service;
-    RandomEngineInterface* random_engine;
-    base::MsgDispatcherInterface* msg_dispatcher;
     SchedulerInterface* scheduler;
-    LocalLogicInterface* local_logic;
+    ::proto::MsgDispatcherInterface* msg_dispatcher;
+    CommonLogicInterface* common_logic;
 
     LogicCtx()
     {
         argc = 0;
-        argv = NULL;
-        common_component_dir = NULL;
-        cur_work_dir = NULL;
-        app_name = NULL;
-        conf_center = NULL;
-        timer_axis = NULL;
-        time_service = NULL;
-        random_engine = NULL;
-        msg_dispatcher = NULL;
-        scheduler = NULL;
-        local_logic = NULL;
+        argv = nullptr;
+        common_component_dir = nullptr;
+        cur_working_dir = nullptr;
+        app_name = nullptr;
+        conf_center = nullptr;
+        timer_axis = nullptr;
+        scheduler = nullptr;
+        msg_dispatcher = nullptr;
+        common_logic = nullptr;
     }
 };
 
@@ -65,7 +58,7 @@ public:
     LogicInterface() : logic_ctx_()
     {
         can_exit_ = false;
-        global_logic_ = NULL;
+        global_logic_ = nullptr;
     }
 
     virtual ~LogicInterface()
@@ -79,7 +72,7 @@ public:
 
     virtual int Initialize(const void* ctx)
     {
-        if (NULL == ctx)
+        if (nullptr == ctx)
         {
             return -1;
         }
@@ -108,14 +101,14 @@ public:
 
 protected:
     LogicCtx logic_ctx_;
-    bool can_exit_;
+    std::atomic_bool can_exit_;
     global::LogicInterface* global_logic_;
 };
 
-class LocalLogicInterface : public LogicInterface
+class CommonLogicInterface : public LogicInterface
 {
 public:
-    virtual ~LocalLogicInterface()
+    virtual ~CommonLogicInterface()
     {
     }
 };

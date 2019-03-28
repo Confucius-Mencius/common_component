@@ -55,7 +55,7 @@ public:
 private:
     static void Init()
     {
-        if (NULL == instance_)
+        if (nullptr == instance_)
         {
             instance_ = new T();
             ::atexit(Release);
@@ -69,10 +69,10 @@ private:
         T_must_be_complete_type dummy;
         (void) dummy;
 
-        if (instance_ != NULL)
+        if (instance_ != nullptr)
         {
             delete instance_;
-            instance_ = NULL;
+            instance_ = nullptr;
         }
     }
 
@@ -85,7 +85,7 @@ template<typename T>
 pthread_once_t Singleton<T>::once_control_ = PTHREAD_ONCE_INIT;
 
 template<typename T>
-T* volatile Singleton<T>::instance_ = NULL;
+T* volatile Singleton<T>::instance_ = nullptr;
 
 /** @} Module_Singleton */
 /** @} Module_Base */

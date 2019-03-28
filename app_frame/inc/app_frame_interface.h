@@ -1,7 +1,6 @@
 #ifndef APP_FRAME_INC_APP_FRAME_INTERFACE_H_
 #define APP_FRAME_INC_APP_FRAME_INTERFACE_H_
 
-#include <stddef.h>
 #include "module_interface.h"
 
 class ConfCenterInterface;
@@ -20,12 +19,12 @@ struct AppFrameCtx
     AppFrameCtx()
     {
         argc = 0;
-        argv = NULL;
-        common_component_dir = NULL;
-        cur_working_dir = NULL;
-        app_name = NULL;
-        conf_center = NULL;
-        thread_center = NULL;
+        argv = nullptr;
+        common_component_dir = nullptr;
+        cur_working_dir = nullptr;
+        app_name = nullptr;
+        conf_center = nullptr;
+        thread_center = nullptr;
     }
 };
 

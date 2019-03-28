@@ -16,8 +16,8 @@ struct ProtoArgs
 
     ProtoArgs()
     {
-        app_frame_conf_mgr = NULL;
-        related_thread_groups = NULL;
+        app_frame_conf_mgr = nullptr;
+        related_thread_groups = nullptr;
     }
 };
 }

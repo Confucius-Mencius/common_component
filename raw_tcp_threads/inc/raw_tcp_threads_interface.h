@@ -56,17 +56,17 @@ struct ThreadsCtx
     ThreadsCtx() : conf()
     {
         argc = 0;
-        argv = NULL;
-        common_component_dir = NULL;
-        cur_working_dir = NULL;
-        app_name = NULL;
-        conf_center = NULL;
-        thread_center = NULL;
-        app_frame_conf_mgr = NULL;
-        app_frame_threads_count = NULL;
-        app_frame_threads_sync_mutex = NULL;
-        app_frame_threads_sync_cond = NULL;
-        logic_args = NULL;
+        argv = nullptr;
+        common_component_dir = nullptr;
+        cur_working_dir = nullptr;
+        app_name = nullptr;
+        conf_center = nullptr;
+        thread_center = nullptr;
+        app_frame_conf_mgr = nullptr;
+        app_frame_threads_count = nullptr;
+        app_frame_threads_sync_mutex = nullptr;
+        app_frame_threads_sync_cond = nullptr;
+        logic_args = nullptr;
     }
 };
 
@@ -74,13 +74,13 @@ struct RelatedThreadGroups
 {
     ThreadInterface* global_thread;
     global::LogicInterface* global_logic;
-    ThreadGroupInterface* work_threads;
+    ThreadGroupInterface* work_thread_group;
 
     RelatedThreadGroups()
     {
-        global_thread = NULL;
-        global_logic = NULL;
-        work_threads = NULL;
+        global_thread = nullptr;
+        global_logic = nullptr;
+        work_thread_group = nullptr;
     }
 };
 
@@ -96,7 +96,7 @@ public:
     virtual int CreateThreadGroup(const char* name_prefix) = 0;
     virtual void SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups) = 0;
     virtual ThreadGroupInterface* GetListenThreadGroup() const = 0;
-    virtual ThreadGroupInterface* GetTCPThreadGroup() const = 0;
+    virtual ThreadGroupInterface* GetIOThreadGroup() const = 0;
 };
 }
 }

@@ -1,18 +1,18 @@
 #ifndef WORK_THREADS_INC_WORK_MSG_HANDLER_INTERFACE_H_
 #define WORK_THREADS_INC_WORK_MSG_HANDLER_INTERFACE_H_
 
-#include "msg_handler_interface.h"
+#include "proto_msg_handler_interface.h"
 
 namespace work
 {
 class LogicCtx;
 
-class MsgHandlerInterface : public base::MsgHandlerInterface
+class MsgHandlerInterface : public ::proto::MsgHandlerInterface
 {
 public:
     MsgHandlerInterface()
     {
-        logic_ctx_ = NULL;
+        logic_ctx_ = nullptr;
     }
 
     virtual ~MsgHandlerInterface()
@@ -26,7 +26,7 @@ public:
 
     virtual int Initialize(const void* ctx)
     {
-        if (NULL == ctx)
+        if (nullptr == ctx)
         {
             return -1;
         }

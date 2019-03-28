@@ -8,8 +8,8 @@ namespace global
 {
 ThreadSink::ThreadSink() : logic_loader_(), msg_codec_(), scheduler_(), msg_dispatcher_()
 {
-    threads_ctx_ = NULL;
-    logic_ = NULL;
+    threads_ctx_ = nullptr;
+    logic_ = nullptr;
     reload_finished_ = false;
 }
 
@@ -89,7 +89,7 @@ void ThreadSink::OnStop()
 {
     ThreadSinkInterface::OnStop();
 
-    if (logic_ != NULL)
+    if (logic_ != nullptr)
     {
         logic_->OnStop();
     }
@@ -99,7 +99,7 @@ void ThreadSink::OnReload()
 {
     ThreadSinkInterface::OnReload();
 
-    if (logic_ != NULL)
+    if (logic_ != nullptr)
     {
         logic_->OnReload();
     }
@@ -118,7 +118,7 @@ void ThreadSink::OnTask(const ThreadTask* task)
             const char* data = task->GetData().data();
             size_t len = task->GetData().size();
 
-            if (NULL == data || 0 == len)
+            if (nullptr == data || 0 == len)
             {
                 LOG_ERROR("invalid params");
                 return;
@@ -126,7 +126,7 @@ void ThreadSink::OnTask(const ThreadTask* task)
 
             ::proto::MsgID err_msg_id;
             ::proto::MsgHead msg_head;
-            char* msg_body = NULL;
+            char* msg_body = nullptr;
             size_t msg_body_len = 0;
 
             if (msg_codec_.DecodeMsg(err_msg_id, &msg_head, &msg_body, msg_body_len, (const char*) data, len) != 0)
@@ -137,7 +137,7 @@ void ThreadSink::OnTask(const ThreadTask* task)
             const ConnGUID* conn_guid = task->GetConnGUID();
             if (0 == msg_dispatcher_.DispatchMsg(conn_guid, msg_head, msg_body, msg_body_len))
             {
-                if (conn_guid != NULL)
+                if (conn_guid != nullptr)
                 {
                     LOG_TRACE("dispatch msg ok, " << *conn_guid << ", msg id: " << msg_head.msg_id);
                 }
@@ -163,7 +163,7 @@ void ThreadSink::OnTask(const ThreadTask* task)
 
 bool ThreadSink::CanExit() const
 {
-    if (logic_ != NULL)
+    if (logic_ != nullptr)
     {
         return logic_->CanExit();
     }
@@ -173,7 +173,7 @@ bool ThreadSink::CanExit() const
 
 int ThreadSink::LoadLogic()
 {
-    const std::string& logic_so = threads_ctx_->app_frame_conf_mgr->GetGlobalLogicSo();
+    const std::string logic_so = threads_ctx_->app_frame_conf_mgr->GetGlobalLogicSo();
     if (0 == logic_so.length())
     {
         return 0;
@@ -191,7 +191,7 @@ int ThreadSink::LoadLogic()
     }
 
     logic_ = static_cast<LogicInterface*>(logic_loader_.GetModuleInterface(0));
-    if (NULL == logic_)
+    if (nullptr == logic_)
     {
         LOG_ERROR("failed to get logic interface, " << logic_loader_.GetLastErrMsg());
         return -1;

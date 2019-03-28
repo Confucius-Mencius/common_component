@@ -8,7 +8,7 @@ namespace timer_axis_test
 MyRecordTimeoutMgr::MyRecordTimeoutMgr()
 {
     i_ = 0;
-    thread_ev_base_ = NULL;
+    thread_ev_base_ = nullptr;
 }
 
 MyRecordTimeoutMgr::~MyRecordTimeoutMgr()
@@ -17,10 +17,6 @@ MyRecordTimeoutMgr::~MyRecordTimeoutMgr()
 
 void MyRecordTimeoutMgr::OnTimeout(const Key& k, const Value& v, int timeout_sec)
 {
-    (void) k;
-    (void) v;
-    (void) timeout_sec;
-
 #if !defined(NDEBUG)
     LOG_DEBUG("OnTimeout, key: " << k);
 
@@ -35,8 +31,8 @@ void MyRecordTimeoutMgr::OnTimeout(const Key& k, const Value& v, int timeout_sec
 
 RecordTimeoutMgrTest::RecordTimeoutMgrTest() : loader_(), record_timeout_mgr_()
 {
-    thread_ev_base_ = NULL;
-    timer_axis_ = NULL;
+    thread_ev_base_ = nullptr;
+    timer_axis_ = nullptr;
 }
 
 RecordTimeoutMgrTest::~RecordTimeoutMgrTest()
@@ -46,7 +42,7 @@ RecordTimeoutMgrTest::~RecordTimeoutMgrTest()
 void RecordTimeoutMgrTest::SetUp()
 {
     thread_ev_base_ = event_base_new();
-    if (NULL == thread_ev_base_)
+    if (nullptr == thread_ev_base_)
     {
         FAIL() << "failed to create event base";
     }
@@ -57,7 +53,7 @@ void RecordTimeoutMgrTest::SetUp()
     }
 
     timer_axis_ = static_cast<TimerAxisInterface*>(loader_.GetModuleInterface());
-    if (NULL == timer_axis_)
+    if (nullptr == timer_axis_)
     {
         FAIL() << loader_.GetLastErrMsg();
     }
@@ -90,10 +86,10 @@ void RecordTimeoutMgrTest::TearDown()
 
     SAFE_DESTROY_MODULE(timer_axis_, loader_);
 
-    if (thread_ev_base_ != NULL)
+    if (thread_ev_base_ != nullptr)
     {
         event_base_free(thread_ev_base_);
-        thread_ev_base_ = NULL;
+        thread_ev_base_ = nullptr;
     }
 }
 

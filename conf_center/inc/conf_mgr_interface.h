@@ -1,8 +1,6 @@
 #ifndef CONF_CENTER_INC_CONF_MGR_INTERFACE_H_
 #define CONF_CENTER_INC_CONF_MGR_INTERFACE_H_
 
-#include <stddef.h>
-
 class ConfCenterInterface;
 
 namespace base
@@ -12,7 +10,7 @@ class ConfMgrInterface
 public:
     ConfMgrInterface()
     {
-        conf_center_ = NULL;
+        conf_center_ = nullptr;
     }
 
     virtual ~ConfMgrInterface()
@@ -21,7 +19,7 @@ public:
 
     int Initialize(ConfCenterInterface* conf_center)
     {
-        if (NULL == conf_center)
+        if (nullptr == conf_center)
         {
             return -1;
         }

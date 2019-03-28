@@ -27,7 +27,7 @@ namespace mem_util_test
   */
 void Test001()
 {
-    int* p = NULL;
+    int* p = nullptr;
 
     for (int i = 0; i < 10; ++i)
     {
@@ -37,7 +37,7 @@ void Test001()
 
         LOG_C("%p", p);
         delete p; // 或者delete[] p;亦可，不会有内存泄露
-        p = NULL;
+        p = nullptr;
     }
 }
 
@@ -84,7 +84,7 @@ private:
  */
 void Test002()
 {
-    T* p = NULL;
+    T* p = nullptr;
 
     for (int i = 0; i < 10; ++i)
     {
@@ -94,7 +94,7 @@ void Test002()
 
         LOG_C("%p", p);
         delete[] p; // 换做delete p;直接段错误。在windows上未验证，可能不会段错误，可能只会调用p[0]的析构函数
-        p = NULL;
+        p = nullptr;
     }
 }
 
@@ -121,12 +121,12 @@ void Release(char*** p, int n)
     }
 
     delete[] p1;
-    *p = NULL;
+    *p = nullptr;
 }
 
 void Test003()
 {
-    char** p = NULL;
+    char** p = nullptr;
     int n;
 
     Func(&p, n);

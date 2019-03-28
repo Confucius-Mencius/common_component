@@ -2,6 +2,7 @@
 #define RAW_TCP_THREADS_INC_RAW_TCP_LOGIC_INTERFACE_H_
 
 #include <stddef.h>
+#include <atomic>
 #include "module_interface.h"
 
 class ConfCenterInterface;
@@ -41,17 +42,17 @@ struct LogicCtx
     LogicCtx()
     {
         argc = 0;
-        argv = NULL;
-        common_component_dir = NULL;
-        cur_working_dir = NULL;
-        app_name = NULL;
-        conf_center = NULL;
-        timer_axis = NULL;
-        conn_center = NULL;
-        scheduler = NULL;
-        common_logic = NULL;
-        thread_ev_base = NULL;
-        logic_args = NULL;
+        argv = nullptr;
+        common_component_dir = nullptr;
+        cur_working_dir = nullptr;
+        app_name = nullptr;
+        conf_center = nullptr;
+        timer_axis = nullptr;
+        conn_center = nullptr;
+        scheduler = nullptr;
+        common_logic = nullptr;
+        thread_ev_base = nullptr;
+        logic_args = nullptr;
     }
 };
 
@@ -61,7 +62,7 @@ public:
     LogicInterface() : logic_ctx_()
     {
         can_exit_ = false;
-        global_logic_ = NULL;
+        global_logic_ = nullptr;
     }
 
     virtual ~LogicInterface()
@@ -75,7 +76,7 @@ public:
 
     virtual int Initialize(const void* ctx)
     {
-        if (NULL == ctx)
+        if (nullptr == ctx)
         {
             return -1;
         }
@@ -108,7 +109,6 @@ public:
      */
     virtual void OnClientConnected(const ConnGUID* conn_guid)
     {
-        (void) conn_guid;
     }
 
     /**
@@ -117,27 +117,19 @@ public:
      */
     virtual void OnClientClosed(const ConnGUID* conn_guid)
     {
-        (void) conn_guid;
     }
 
     virtual void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
     {
-        (void) conn_guid;
-        (void) data;
-        (void) len;
     }
 
     virtual void OnTask(const ConnGUID* conn_guid, ThreadInterface* source_thread, const void* data, size_t len)
     {
-        (void) conn_guid;
-        (void) source_thread;
-        (void) data;
-        (void) len;
     }
 
 protected:
     LogicCtx logic_ctx_;
-    bool can_exit_;
+    std::atomic_bool can_exit_;
     global::LogicInterface* global_logic_;
 };
 

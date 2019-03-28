@@ -25,7 +25,7 @@ public:
      * @param msg_head
      * @param msg_body
      * @param msg_body_len
-     * @param work_thread_idx -1表示广播，为广播时返回值无效，不用判断
+     * @param work_thread_idx 为-1表示广播
      * @return
      */
     virtual int SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
@@ -37,7 +37,7 @@ public:
      * @param msg_head
      * @param msg_body
      * @param msg_body_len
-     * @param burden_thread_idx -1表示广播，为广播时返回值无效，不用判断
+     * @param burden_thread_idx 为-1表示广播
      * @return
      */
     virtual int SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
@@ -49,7 +49,7 @@ public:
      * @param msg_head
      * @param msg_body
      * @param msg_body_len
-     * @param tcp_thread_idx -1表示广播，为广播时返回值无效，不用判断
+     * @param tcp_thread_idx 为-1表示广播
      * @return
      */
     virtual int SendToProtoTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,

@@ -26,13 +26,13 @@ public:
     int CreateThreadGroup(const char* name_prefix) override;
     void SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups) override;
     ThreadGroupInterface* GetListenThreadGroup() const override;
-    ThreadGroupInterface* GetTCPThreadGroup() const override;
+    ThreadGroupInterface* GetIOThreadGroup() const override;
 
 private:
     ThreadsCtx threads_ctx_;
     RelatedThreadGroups related_thread_groups_;
     ThreadGroupInterface* listen_thread_group_;
-    ThreadGroupInterface* tcp_thread_group_;
+    ThreadGroupInterface* io_thread_group_;
 };
 }
 }

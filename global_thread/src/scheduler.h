@@ -37,7 +37,7 @@ public:
     int SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
                            size_t msg_body_len, int burden_thread_idx) override;
     int SendToProtoTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
-                             size_t msg_body_len, int proto_tcp_thread_idx) override;
+                             size_t msg_body_len, int tcp_thread_idx) override;
 
 private:
     enum

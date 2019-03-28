@@ -6,8 +6,8 @@ namespace global
 {
 Threads::Threads() : threads_ctx_(), related_thread_groups_()
 {
-    global_thread_group_ = NULL;
-    global_thread_sink_ = NULL;
+    global_thread_group_ = nullptr;
+    global_thread_sink_ = nullptr;
 }
 
 Threads::~Threads()
@@ -32,7 +32,7 @@ void Threads::Release()
 
 int Threads::Initialize(const void* ctx)
 {
-    if (NULL == ctx)
+    if (nullptr == ctx)
     {
         return -1;
     }
@@ -76,7 +76,7 @@ int Threads::CreateThreadGroup()
         thread_group_ctx.threads_ctx = &threads_ctx_;
 
         global_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup(&thread_group_ctx);
-        if (NULL == global_thread_group_)
+        if (nullptr == global_thread_group_)
         {
             break;
         }
@@ -88,7 +88,7 @@ int Threads::CreateThreadGroup()
 
     if (ret != 0)
     {
-        if (global_thread_group_ != NULL)
+        if (global_thread_group_ != nullptr)
         {
             SAFE_DESTROY(global_thread_group_);
         }
@@ -99,14 +99,14 @@ int Threads::CreateThreadGroup()
 
 void Threads::SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups)
 {
-    if (NULL == related_thread_groups)
+    if (nullptr == related_thread_groups)
     {
         return;
     }
 
     related_thread_groups_ = *related_thread_groups;
 
-    if (global_thread_sink_ != NULL)
+    if (global_thread_sink_ != nullptr)
     {
         global_thread_sink_->SetRelatedThreadGroups(&related_thread_groups_);
     }

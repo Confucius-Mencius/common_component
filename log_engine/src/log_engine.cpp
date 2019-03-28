@@ -33,7 +33,7 @@ void LogEngine::Release()
 
 int LogEngine::Initialize(const void* ctx)
 {
-    if (NULL == ctx)
+    if (nullptr == ctx)
     {
         return -1;
     }

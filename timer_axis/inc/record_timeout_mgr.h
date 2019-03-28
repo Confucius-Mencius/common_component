@@ -68,11 +68,6 @@ public:
     ///////////////////////// TimerSinkInterface /////////////////////////
     void OnTimer(TimerID timer_id, void* data, size_t len, int times) override
     {
-        (void) timer_id;
-        (void) data;
-        (void) len;
-        (void) times;
-
         const time_t now = time(NULL);
 
 #if !defined(NDEBUG) && RECORD_TIMEOUT_DEBUG
@@ -219,7 +214,7 @@ private:
 template<typename Key, typename KeyHash, typename Value>
 RecordTimeoutMgr<Key, KeyHash, Value>::RecordTimeoutMgr() : record_hash_map_(), timeout_multimap_()
 {
-    timer_axis_ = NULL;
+    timer_axis_ = nullptr;
     expire_check_interval_.tv_sec = expire_check_interval_.tv_usec = 0;
 }
 

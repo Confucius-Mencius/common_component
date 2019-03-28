@@ -7,7 +7,7 @@ namespace tcp
 {
 namespace raw
 {
-class ThreadSink;
+class IOThreadSink;
 
 class BaseConn : public ConnInterface
 {
@@ -81,7 +81,7 @@ public:
         sock_fd_ = sock_fd;
     }
 
-    void SetThreadSink(ThreadSink* sink)
+    void SetThreadSink(IOThreadSink* sink)
     {
         thread_sink_ = sink;
     }
@@ -92,7 +92,7 @@ protected:
     std::string client_ip_;
     unsigned short client_port_;
     int sock_fd_;
-    ThreadSink* thread_sink_;
+    IOThreadSink* thread_sink_;
     std::string data_;
 };
 }

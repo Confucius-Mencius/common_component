@@ -8,8 +8,8 @@
 
 ModuleLoader::ModuleLoader() : module_file_path_(), last_err_msg_()
 {
-    module_ = NULL;
-    get_module_interface_func_ = NULL;
+    module_ = nullptr;
+    get_module_interface_func_ = nullptr;
 }
 
 ModuleLoader::~ModuleLoader()
@@ -24,7 +24,7 @@ const char* ModuleLoader::GetLastErrMsg() const
 #if (defined(__linux__))
 int ModuleLoader::Load(const char* module_file_path)
 {
-    if (NULL == module_file_path || strlen(module_file_path) < 1)
+    if (nullptr == module_file_path || strlen(module_file_path) < 1)
     {
         return -1;
     }
@@ -32,7 +32,7 @@ int ModuleLoader::Load(const char* module_file_path)
     module_file_path_ = module_file_path;
 
     module_ = dlopen(module_file_path, RTLD_NOW);
-    if (NULL == module_)
+    if (nullptr == module_)
     {
         char* err = dlerror();
         SetOpenFailedErrMsg(module_file_path, err);
@@ -45,7 +45,7 @@ int ModuleLoader::Load(const char* module_file_path)
     do
     {
         get_module_interface_func_ = (GetModuleInterfaceFunc) dlsym(module_, GET_MODULE_INTERFACE_NAME);
-        if (NULL == get_module_interface_func_)
+        if (nullptr == get_module_interface_func_)
         {
             char* err = dlerror();
             SetFindSymFailedErrMsg(module_file_path, err);
@@ -54,7 +54,7 @@ int ModuleLoader::Load(const char* module_file_path)
         else
         {
             char* err = dlerror();
-            if (err != NULL)
+            if (err != nullptr)
             {
                 SetFindSymFailedErrMsg(module_file_path, err);
                 break;
@@ -67,8 +67,8 @@ int ModuleLoader::Load(const char* module_file_path)
     if (ret != 0)
     {
         dlclose(module_);
-        module_ = NULL;
-        get_module_interface_func_ = NULL;
+        module_ = nullptr;
+        get_module_interface_func_ = nullptr;
     }
 
     return ret;
@@ -76,7 +76,7 @@ int ModuleLoader::Load(const char* module_file_path)
 
 int ModuleLoader::Unload()
 {
-    if (module_ != NULL)
+    if (module_ != nullptr)
     {
         if (dlclose(module_) != 0)
         {
@@ -84,16 +84,16 @@ int ModuleLoader::Unload()
             SetCloseFailedErrMsg(module_file_path_.c_str(), err);
         }
 
-        module_ = NULL;
+        module_ = nullptr;
     }
 
-    get_module_interface_func_ = NULL;
+    get_module_interface_func_ = nullptr;
     return 0;
 }
 #elif (defined(_WIN32) || defined(_WIN64))
 int ModuleLoader::Load(const char* module_file_path)
 {
-    if (NULL == module_file_path || strlen(module_file_path) < 1)
+    if (nullptr == module_file_path || strlen(module_file_path) < 1)
     {
         return -1;
     }
@@ -101,20 +101,20 @@ int ModuleLoader::Load(const char* module_file_path)
     char* err = "";
 
     module_ = LoadLibrary(module_file_path);
-    if (NULL == module_)
+    if (nullptr == module_)
     {
         SetOpenFailedErrMsg(module_file_path, err);
         return -1;
     }
 
     get_module_interface_func_ = (GetModuleInterfaceFunc) GetProcAddress(module_, GET_MODULE_INTERFACE_NAME);
-    if (NULL == get_module_interface_func_)
+    if (nullptr == get_module_interface_func_)
     {
         SetFindSymFailedErrMsg(module_file_path, err);
 
         FreeLibrary(module_);
-        module_ = NULL;
-        get_module_interface_func_ = NULL;
+        module_ = nullptr;
+        get_module_interface_func_ = nullptr;
 
         return -1;
     }
@@ -124,20 +124,20 @@ int ModuleLoader::Load(const char* module_file_path)
 
 int ModuleLoader::Unload()
 {
-    if (module_ != NULL)
+    if (module_ != nullptr)
     {
         FreeLibrary(module_);
-        module_ = NULL;
+        module_ = nullptr;
     }
 
-    get_module_interface_func_ = NULL;
+    get_module_interface_func_ = nullptr;
     return 0;
 }
 #endif
 
 void* ModuleLoader::GET_MODULE_INTERFACE(int type)
 {
-    if (NULL == get_module_interface_func_)
+    if (nullptr == get_module_interface_func_)
     {
         return NULL;
     }

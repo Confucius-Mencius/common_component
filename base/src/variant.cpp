@@ -304,7 +304,7 @@ void Variant::SetValue(f64 val)
 
 void Variant::SetValue(Type type, const char* val, int len)
 {
-    if (NULL == val || len < 0)
+    if (nullptr == val || len < 0)
     {
         return;
     }
@@ -324,7 +324,7 @@ void Variant::SetValue(Type type, const char* val, int len)
     else
     {
         u_.chunk.data = new char[len + 1];
-        if (NULL == u_.chunk.data)
+        if (nullptr == u_.chunk.data)
         {
             return;
         }
@@ -346,10 +346,10 @@ void Variant::Release()
 {
     if (TYPE_STR == type_ || TYPE_BIN == type_)
     {
-        if (u_.chunk.data != NULL && u_.chunk.len > 0) // 因为可能为EMPTY_STR，必须判断长度>0
+        if (u_.chunk.data != nullptr && u_.chunk.len > 0) // 因为可能为EMPTY_STR，必须判断长度>0
         {
             delete[] u_.chunk.data;
-            u_.chunk.data = NULL;
+            u_.chunk.data = nullptr;
             u_.chunk.len = 0;
         }
     }

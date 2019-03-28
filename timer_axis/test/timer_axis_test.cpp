@@ -16,7 +16,7 @@ class TimerSink : public TimerSinkInterface
 public:
     TimerSink()
     {
-        thread_ev_base_ = NULL;
+        thread_ev_base_ = nullptr;
     }
 
     virtual ~TimerSink()
@@ -31,10 +31,6 @@ public:
     ///////////////////////// TimerSinkInterface /////////////////////////
     void OnTimer(TimerID timer_id, void* data, size_t len, int times) override
     {
-        (void) timer_id;
-        (void) data;
-        (void) len;
-
         LOG_DEBUG("on timer, times: " << times);
         LOG_DEBUG("n: " << n);
 
@@ -53,8 +49,8 @@ private:
 
 TimerAxisTest::TimerAxisTest() : loader_()
 {
-    thread_ev_base_ = NULL;
-    timer_axis_ = NULL;
+    thread_ev_base_ = nullptr;
+    timer_axis_ = nullptr;
 }
 
 TimerAxisTest::~TimerAxisTest()
@@ -64,7 +60,7 @@ TimerAxisTest::~TimerAxisTest()
 void TimerAxisTest::SetUp()
 {
     thread_ev_base_ = event_base_new();
-    if (NULL == thread_ev_base_)
+    if (nullptr == thread_ev_base_)
     {
         FAIL() << "failed to create event base";
     }
@@ -75,7 +71,7 @@ void TimerAxisTest::SetUp()
     }
 
     timer_axis_ = static_cast<TimerAxisInterface*>(loader_.GetModuleInterface());
-    if (NULL == timer_axis_)
+    if (nullptr == timer_axis_)
     {
         FAIL() << loader_.GetLastErrMsg();
     }
@@ -98,10 +94,10 @@ void TimerAxisTest::TearDown()
 {
     SAFE_DESTROY_MODULE(timer_axis_, loader_);
 
-    if (thread_ev_base_ != NULL)
+    if (thread_ev_base_ != nullptr)
     {
         event_base_free(thread_ev_base_);
-        thread_ev_base_ = NULL;
+        thread_ev_base_ = nullptr;
     }
 }
 

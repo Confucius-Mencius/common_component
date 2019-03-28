@@ -5,7 +5,7 @@
 
 int ExecShellCmd(char* buf, int buf_size, const char* cmd)
 {
-    if (NULL == cmd)
+    if (nullptr == cmd)
     {
         return -1;
     }
@@ -14,12 +14,12 @@ int ExecShellCmd(char* buf, int buf_size, const char* cmd)
     // 参数type: "r"代表读取，"w"代表写入。
     // popen()会建立管道连到子进程的标准输出设备或标准输入设备，然后返回一个文件指针。随后进程便可利用此文件指针来读取子进程的标准输出设备或是写入到子进程的标准输入设备中。
     FILE* fp = popen(cmd, "r");
-    if (NULL == fp)
+    if (nullptr == fp)
     {
         return -1;
     }
 
-    if (buf != NULL && buf_size > 1)
+    if (buf != nullptr && buf_size > 1)
     {
         char tmp_buf[4096];
         std::string result = "";
@@ -28,7 +28,7 @@ int ExecShellCmd(char* buf, int buf_size, const char* cmd)
         {
             memset(tmp_buf, 0, sizeof(tmp_buf));
 
-            if (fgets(tmp_buf, sizeof(tmp_buf), fp) != NULL)
+            if (fgets(tmp_buf, sizeof(tmp_buf), fp) != nullptr)
             {
                 result += tmp_buf;
             }

@@ -12,7 +12,7 @@ LogEngineInterface* g_log_engine;
 
 LogEngineTest::LogEngineTest() : loader_()
 {
-    log_engine_ = NULL;
+    log_engine_ = nullptr;
 }
 
 LogEngineTest::~LogEngineTest()
@@ -27,7 +27,7 @@ void LogEngineTest::SetUp()
     }
 
     log_engine_ = static_cast<LogEngineInterface*>(loader_.GetModuleInterface(0));
-    if (NULL == log_engine_)
+    if (nullptr == log_engine_)
     {
         FAIL() << loader_.GetLastErrMsg();
     }

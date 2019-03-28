@@ -3,7 +3,7 @@
 
 int HexDump(char* buf, size_t buf_size, const void* data, size_t len)
 {
-    if (NULL == buf || buf_size < 2 || NULL == data || len < 1)
+    if (nullptr == buf || buf_size < 2 || nullptr == data || len < 1)
     {
         return -1;
     }

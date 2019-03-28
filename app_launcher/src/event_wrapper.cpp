@@ -157,9 +157,6 @@ void EventWrapper::OnInotifyReadEvent(evutil_socket_t fd, short events, void* ar
 
 void EventWrapper::OnStopSignal(evutil_socket_t fd, short events, void* arg)
 {
-    (void) fd;
-    (void) events;
-
     LOG_ALWAYS("receive stop signal");
     EventWrapper* event_wrapper = static_cast<EventWrapper*>(arg);
     event_wrapper->OnStop();
@@ -167,9 +164,6 @@ void EventWrapper::OnStopSignal(evutil_socket_t fd, short events, void* arg)
 
 void EventWrapper::OnExitCheckTimer(evutil_socket_t fd, short events, void* arg)
 {
-    (void) fd;
-    (void) events;
-
     LOG_TRACE("in exit check timer");
     AppLauncher* app_launcher = static_cast<AppLauncher*>(arg);
     app_launcher->OnExitCheck();
@@ -177,14 +171,14 @@ void EventWrapper::OnExitCheckTimer(evutil_socket_t fd, short events, void* arg)
 
 EventWrapper::EventWrapper() : last_err_msg_(), app_conf_filestat_(), log_conf_filestat_()
 {
-    app_launcher_ = NULL;
+    app_launcher_ = nullptr;
     inotify_fd_ = -1;
     inotify_wd_app_conf_ = -1;
     inotify_wd_log_conf_ = -1;
-    inotify_read_event_ = NULL;
-    stop_event_ = NULL;
+    inotify_read_event_ = nullptr;
+    stop_event_ = nullptr;
     stopping_ = false;
-    exit_check_timer_event_ = NULL;
+    exit_check_timer_event_ = nullptr;
 }
 
 EventWrapper::~EventWrapper()
@@ -226,18 +220,18 @@ int EventWrapper::Initialize()
 
 void EventWrapper::Finalize()
 {
-    if (exit_check_timer_event_ != NULL)
+    if (exit_check_timer_event_ != nullptr)
     {
         event_del(exit_check_timer_event_);
         event_free(exit_check_timer_event_);
-        exit_check_timer_event_ = NULL;
+        exit_check_timer_event_ = nullptr;
     }
 
-    if (inotify_read_event_ != NULL)
+    if (inotify_read_event_ != nullptr)
     {
         event_del(inotify_read_event_);
         event_free(inotify_read_event_);
-        inotify_read_event_ = NULL;
+        inotify_read_event_ = nullptr;
     }
 
     if (inotify_fd_ != -1)
@@ -258,17 +252,17 @@ void EventWrapper::Finalize()
         inotify_fd_ = -1;
     }
 
-    if (stop_event_ != NULL)
+    if (stop_event_ != nullptr)
     {
         event_del(stop_event_);
         event_free(stop_event_);
-        stop_event_ = NULL;
+        stop_event_ = nullptr;
     }
 }
 
 void EventWrapper::OnStop()
 {
-    if (stopping_ || NULL == app_launcher_->GetThreadEvBase())
+    if (stopping_ || nullptr == app_launcher_->GetThreadEvBase())
     {
         return;
     }
@@ -276,14 +270,14 @@ void EventWrapper::OnStop()
     stopping_ = true;
 
     AppFrameInterface* app_frame = app_launcher_->GetAppFrame();
-    if (app_frame != NULL)
+    if (app_frame != nullptr)
     {
         app_frame->NotifyStop();
     }
 
     exit_check_timer_event_ = event_new(app_launcher_->GetThreadEvBase(), -1, EV_PERSIST,
                                         EventWrapper::OnExitCheckTimer, app_launcher_);
-    if (NULL == exit_check_timer_event_)
+    if (nullptr == exit_check_timer_event_)
     {
         const int err = errno;
         LOG_ERROR("failed to create exit check timer event, errno: " << err
@@ -339,7 +333,7 @@ int EventWrapper::WatchConfFiles()
 
     inotify_read_event_ = event_new(app_launcher_->GetThreadEvBase(), inotify_fd_, EV_READ | EV_PERSIST,
                                     EventWrapper::OnInotifyReadEvent, this);
-    if (NULL == inotify_read_event_)
+    if (nullptr == inotify_read_event_)
     {
         const int err = errno;
         LOG_ERROR("failed to create inotify event, errno: " << err << ", err msg: " << strerror(err));
@@ -363,7 +357,7 @@ int EventWrapper::SetStopSignal(int signo)
 {
     stop_event_ = event_new(app_launcher_->GetThreadEvBase(), signo, EV_SIGNAL | EV_PERSIST,
                             EventWrapper::OnStopSignal, this);
-    if (NULL == stop_event_)
+    if (nullptr == stop_event_)
     {
         const int err = errno;
         SET_LAST_ERR_MSG(&last_err_msg_, "failed to create stop signal event, errno: "

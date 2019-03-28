@@ -29,7 +29,7 @@ public:
     virtual int CreateThreadGroup(const char* name_prefix) = 0;
     virtual void SetRelatedThreadGroups(const tcp::RelatedThreadGroups* related_thread_groups) = 0;
     virtual ThreadGroupInterface* GetListenThreadGroup() const = 0;
-    virtual ThreadGroupInterface* GetTCPThreadGroup() const = 0;
+    virtual ThreadGroupInterface* GetIOThreadGroup() const = 0;
 };
 }
 }

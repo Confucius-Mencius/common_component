@@ -19,7 +19,7 @@ enum
 ProtoCommonLogic::ProtoCommonLogic() : proto_tcp_logic_args_(), proto_tcp_common_logic_loader_(),
     proto_tcp_logic_item_vec_(), msg_codec_(), scheduler_(), msg_dispatcher_(), part_msg_mgr_()
 {
-    proto_tcp_common_logic_ = NULL;
+    proto_tcp_common_logic_ = nullptr;
 }
 
 ProtoCommonLogic::~ProtoCommonLogic()
@@ -132,7 +132,7 @@ void ProtoCommonLogic::Freeze()
 
 void ProtoCommonLogic::OnStop()
 {
-    if (proto_tcp_common_logic_ != NULL)
+    if (proto_tcp_common_logic_ != nullptr)
     {
         proto_tcp_common_logic_->OnStop();
     }
@@ -154,7 +154,7 @@ void ProtoCommonLogic::OnStop()
 
 void ProtoCommonLogic::OnReload()
 {
-    if (proto_tcp_common_logic_ != NULL)
+    if (proto_tcp_common_logic_ != nullptr)
     {
         proto_tcp_common_logic_->OnReload();
     }
@@ -170,7 +170,7 @@ void ProtoCommonLogic::OnClientConnected(const ConnGUID* conn_guid)
     LOG_TRACE("conn connected, " << *conn_guid);
 
     ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_guid->conn_id);
-    if (NULL == conn)
+    if (nullptr == conn)
     {
         LOG_ERROR("failed to get conn by id: " << conn_guid);
         return;
@@ -184,7 +184,7 @@ void ProtoCommonLogic::OnClientClosed(const ConnGUID* conn_guid)
     LOG_TRACE("conn closed, " << *conn_guid);
 
     ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_guid->conn_id);
-    if (NULL == conn)
+    if (nullptr == conn)
     {
         LOG_ERROR("failed to get conn by id: " << conn_guid);
         return;
@@ -198,7 +198,7 @@ void ProtoCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* d
     LOG_DEBUG(*conn_guid << ", data: " << data << ", len: " << len);
 
     ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_guid->conn_id);
-    if (NULL == conn)
+    if (nullptr == conn)
     {
         LOG_ERROR("failed to get conn by id, " << conn_guid);
         return;
@@ -236,7 +236,7 @@ void ProtoCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* d
 
     part_msg_mgr_.RemoveRecord(conn);
 
-    char* msg_body = NULL;
+    char* msg_body = nullptr;
     size_t msg_body_len = 0;
 
     msg_head.Reset();
@@ -261,10 +261,7 @@ void ProtoCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* d
 
 void ProtoCommonLogic::OnTask(const ConnGUID* conn_guid, ThreadInterface* source_thread, const void* data, size_t len)
 {
-    (void) conn_guid;
-    (void) source_thread;
-
-    if (NULL == data || 0 == len)
+    if (nullptr == data || 0 == len)
     {
         LOG_ERROR("invalid params");
         return;
@@ -272,7 +269,7 @@ void ProtoCommonLogic::OnTask(const ConnGUID* conn_guid, ThreadInterface* source
 
     ::proto::MsgID err_msg_id;
     ::proto::MsgHead msg_head;
-    char* msg_body = NULL;
+    char* msg_body = nullptr;
     size_t msg_body_len = 0;
 
     if (msg_codec_.DecodeMsg(err_msg_id, &msg_head, &msg_body, msg_body_len, (const char*) data, len) != 0)
@@ -289,14 +286,9 @@ void ProtoCommonLogic::OnTask(const ConnGUID* conn_guid, ThreadInterface* source
 
 void ProtoCommonLogic::OnTimer(TimerID timer_id, void* data, size_t len, int times)
 {
-    (void) timer_id;
-    (void) data;
-    (void) len;
-    (void) times;
-
     int can_exit = 1;
 
-    if (proto_tcp_common_logic_ != NULL)
+    if (proto_tcp_common_logic_ != nullptr)
     {
         can_exit &= (proto_tcp_common_logic_->CanExit() ? 1 : 0);
     }
@@ -314,7 +306,7 @@ void ProtoCommonLogic::OnTimer(TimerID timer_id, void* data, size_t len, int tim
 
 int ProtoCommonLogic::LoadProtoTCPCommonLogic()
 {
-    const std::string& proto_tcp_common_logic_so = proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoTCPCommonLogicSo();
+    const std::string proto_tcp_common_logic_so = proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoTCPCommonLogicSo();
     if (0 == proto_tcp_common_logic_so.length())
     {
         return 0;
@@ -332,7 +324,7 @@ int ProtoCommonLogic::LoadProtoTCPCommonLogic()
     }
 
     proto_tcp_common_logic_ = static_cast<tcp::proto::CommonLogicInterface*>(proto_tcp_common_logic_loader_.GetModuleInterface());
-    if (NULL == proto_tcp_common_logic_)
+    if (nullptr == proto_tcp_common_logic_)
     {
         LOG_ERROR("failed to get common logic, " << proto_tcp_common_logic_loader_.GetLastErrMsg());
         return -1;
@@ -370,9 +362,9 @@ int ProtoCommonLogic::LoadProtoTCPLogicGroup()
     }
 
     LogicItem proto_tcp_logic_item;
-    proto_tcp_logic_item.logic = NULL;
+    proto_tcp_logic_item.logic = nullptr;
 
-    const StrGroup& proto_tcp_logic_so_group = proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoTCPLogicSoGroup();
+    const StrGroup proto_tcp_logic_so_group = proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoTCPLogicSoGroup();
 
     for (StrGroup::const_iterator it = proto_tcp_logic_so_group.begin();
             it != proto_tcp_logic_so_group.end(); ++it)
@@ -395,7 +387,7 @@ int ProtoCommonLogic::LoadProtoTCPLogicGroup()
         }
 
         logic_item.logic = static_cast<tcp::proto::LogicInterface*>(logic_item.logic_loader.GetModuleInterface());
-        if (NULL == logic_item.logic)
+        if (nullptr == logic_item.logic)
         {
             LOG_ERROR("failed to get logic, " << logic_item.logic_loader.GetLastErrMsg());
             return -1;
@@ -448,8 +440,8 @@ void ProtoCommonLogic::OnRecvClientMsg(const ConnGUID* conn_guid, const ::proto:
     }
 
     // 没有io logic或者io logic派发失败，把任务均匀分配给work线程
-    if (NULL == proto_tcp_logic_args_.related_thread_groups->work_threads ||
-            0 == proto_tcp_logic_args_.related_thread_groups->work_threads->GetThreadCount())
+    if (nullptr == proto_tcp_logic_args_.related_thread_groups->work_thread_group ||
+            0 == proto_tcp_logic_args_.related_thread_groups->work_thread_group->GetThreadCount())
     {
         LOG_ERROR("no work threads, failed to dispatch msg, " << conn_guid << ", msg id: " << msg_head.msg_id);
 

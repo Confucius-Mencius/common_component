@@ -10,7 +10,7 @@ BaseConn::BaseConn() : conn_guid_(), client_ip_(), data_()
     created_time_ = 0;
     client_port_ = 0;
     sock_fd_ = -1;
-    thread_sink_ = NULL;
+    thread_sink_ = nullptr;
 }
 
 BaseConn::~BaseConn()

@@ -1,60 +1,50 @@
 #ifndef BURDEN_THREADS_INC_BURDEN_SCHEDULER_INTERFACE_H_
 #define BURDEN_THREADS_INC_BURDEN_SCHEDULER_INTERFACE_H_
 
-#include "scheduler_interface.h"
+#include <stddef.h>
+
+struct ConnGUID;
+
+namespace proto
+{
+struct MsgHead;
+}
 
 namespace burden
 {
-class SchedulerInterface : public base::SchedulerInterface
+class SchedulerInterface
 {
 public:
     virtual ~SchedulerInterface()
     {
     }
 
-    virtual int SendToWorkThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
-                                 size_t msg_body_len, int work_thread_idx) = 0;
-
-    virtual int SendToBurdenThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
-                                   size_t msg_body_len, int burden_thread_idx) = 0;
-
-    virtual int SendToGlobalThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
-                                   size_t msg_body_len) = 0;
+    virtual int SendToGlobalThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                                   const void* msg_body, size_t msg_body_len) = 0;
 
     /**
-     * @brief send msg to client
+     * @brief SendToBurdenThread
      * @param conn_guid
      * @param msg_head
      * @param msg_body
      * @param msg_body_len
+     * @param burden_thread_idx 为-1则由框架自行调度一个work线程
      * @return
      */
-    virtual int SendToTcpClient(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
-                                size_t msg_body_len) = 0;
-
-    virtual int SendRawToTcpClient(const ConnGuid* conn_guid, const void* msg, size_t msg_len) = 0;
+    virtual int SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                                   const void* msg_body, size_t msg_body_len, int burden_thread_idx) = 0;
 
     /**
-     * @brief 断开与客户端的连接
+     * @brief SendToWorkThread
      * @param conn_guid
+     * @param msg_head
+     * @param msg_body
+     * @param msg_body_len
+     * @param work_thread_idx 为-1则由框架自行调度一个work线程
      * @return
      */
-    virtual int CloseTcpClient(const ConnGuid* conn_guid) = 0;
-
-    virtual int SendToUdpClient(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
-                                size_t msg_body_len) = 0;
-
-    virtual int CloseUdpClient(const ConnGuid* conn_guid) = 0;
-
-    // 上一级线程组，自己这组线程
-    virtual int SendToTcpThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
-                                size_t msg_body_len, int tcp_thread_idx) = 0;
-
-    virtual int SendToHttpThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
-                                 size_t msg_body_len, int http_thread_idx) = 0;
-
-    virtual int SendToUdpThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
-                                size_t msg_body_len, int udp_thread_idx) = 0;
+    virtual int SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                                 const void* msg_body, size_t msg_body_len, int work_thread_idx) = 0;
 };
 }
 

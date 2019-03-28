@@ -7,7 +7,7 @@ namespace conf_center
 ConfCenter::ConfCenter() : last_err_msg_(), conf_center_ctx_(), mutex_(), i64_value_group_map_(),
     f64_value_group_map_(), str_value_group_map_()
 {
-    xml_doc_ptr_ = NULL;
+    xml_doc_ptr_ = nullptr;
 }
 
 ConfCenter::~ConfCenter()
@@ -31,7 +31,7 @@ void ConfCenter::Release()
 
 int ConfCenter::Initialize(const void* ctx)
 {
-    if (NULL == ctx)
+    if (nullptr == ctx)
     {
         return -1;
     }
@@ -42,10 +42,10 @@ int ConfCenter::Initialize(const void* ctx)
 
 void ConfCenter::Finalize()
 {
-    if (xml_doc_ptr_ != NULL)
+    if (xml_doc_ptr_ != nullptr)
     {
         xmlFreeDoc(xml_doc_ptr_);
-        xml_doc_ptr_ = NULL;
+        xml_doc_ptr_ = nullptr;
     }
 
     xmlCleanupParser();
@@ -62,7 +62,7 @@ void ConfCenter::Freeze()
 
 int ConfCenter::GetConf(i32& conf, const char* xpath, bool with_default, i32 value)
 {
-    if (NULL == xpath)
+    if (nullptr == xpath)
     {
         return -1;
     }
@@ -82,7 +82,7 @@ int ConfCenter::GetConf(i32& conf, const char* xpath, bool with_default, i32 val
 
 int ConfCenter::GetConf(i64& conf, const char* xpath, bool with_default, i64 value)
 {
-    if (NULL == xpath)
+    if (nullptr == xpath)
     {
         return -1;
     }
@@ -102,7 +102,7 @@ int ConfCenter::GetConf(i64& conf, const char* xpath, bool with_default, i64 val
 
 int ConfCenter::GetConf(f32& conf, const char* xpath, bool with_default, f32 value)
 {
-    if (NULL == xpath)
+    if (nullptr == xpath)
     {
         return -1;
     }
@@ -122,7 +122,7 @@ int ConfCenter::GetConf(f32& conf, const char* xpath, bool with_default, f32 val
 
 int ConfCenter::GetConf(f64& conf, const char* xpath, bool with_default, f64 value)
 {
-    if (NULL == xpath)
+    if (nullptr == xpath)
     {
         return -1;
     }
@@ -142,12 +142,12 @@ int ConfCenter::GetConf(f64& conf, const char* xpath, bool with_default, f64 val
 
 int ConfCenter::GetConf(char** conf, const char* xpath, bool with_default, const char* value)
 {
-    if (NULL == conf || NULL == xpath)
+    if (nullptr == conf || nullptr == xpath)
     {
         return -1;
     }
 
-    if (with_default && NULL == value)
+    if (with_default && nullptr == value)
     {
         return -1;
     }
@@ -163,7 +163,7 @@ int ConfCenter::GetConf(char** conf, const char* xpath, bool with_default, const
     const int size = (int) result[0].length() + 1;
 
     *conf = new char[size];
-    if (NULL == (*conf))
+    if (nullptr == (*conf))
     {
         const int err = errno;
         SET_LAST_ERR_MSG(&last_err_msg_, "failed to alloc memory, errno: " << err << ", err msg: " << strerror(err));
@@ -178,21 +178,21 @@ int ConfCenter::GetConf(char** conf, const char* xpath, bool with_default, const
 
 void ConfCenter::ReleaseConf(char** conf)
 {
-    if (NULL == conf)
+    if (nullptr == conf)
     {
         return;
     }
 
-    if ((*conf) != NULL)
+    if ((*conf) != nullptr)
     {
         delete[] (*conf);
-        *conf = NULL;
+        *conf = nullptr;
     }
 }
 
 int ConfCenter::GetConf(i32** conf_array, int& n, const char* xpath, bool with_default, i32 value)
 {
-    if (NULL == conf_array || NULL == xpath)
+    if (nullptr == conf_array || nullptr == xpath)
     {
         return -1;
     }
@@ -209,7 +209,7 @@ int ConfCenter::GetConf(i32** conf_array, int& n, const char* xpath, bool with_d
     }
 
     *conf_array = new i32[n];
-    if (NULL == (*conf_array))
+    if (nullptr == (*conf_array))
     {
         const int err = errno;
         SET_LAST_ERR_MSG(&last_err_msg_, "failed to alloc memory, errno: " << err << ", err msg: " << strerror(err));
@@ -226,21 +226,21 @@ int ConfCenter::GetConf(i32** conf_array, int& n, const char* xpath, bool with_d
 
 void ConfCenter::ReleaseConf(i32** conf_array)
 {
-    if (NULL == conf_array)
+    if (nullptr == conf_array)
     {
         return;
     }
 
-    if ((*conf_array) != NULL)
+    if ((*conf_array) != nullptr)
     {
         delete[] (*conf_array);
-        *conf_array = NULL;
+        *conf_array = nullptr;
     }
 }
 
 int ConfCenter::GetConf(i64** conf_array, int& n, const char* xpath, bool with_default, i64 value)
 {
-    if (NULL == conf_array || NULL == xpath)
+    if (nullptr == conf_array || nullptr == xpath)
     {
         return -1;
     }
@@ -257,7 +257,7 @@ int ConfCenter::GetConf(i64** conf_array, int& n, const char* xpath, bool with_d
     }
 
     *conf_array = new i64[n];
-    if (NULL == (*conf_array))
+    if (nullptr == (*conf_array))
     {
         const int err = errno;
         SET_LAST_ERR_MSG(&last_err_msg_, "failed to alloc memory, errno: " << err << ", err msg: " << strerror(err));
@@ -274,21 +274,21 @@ int ConfCenter::GetConf(i64** conf_array, int& n, const char* xpath, bool with_d
 
 void ConfCenter::ReleaseConf(i64** conf_array)
 {
-    if (NULL == conf_array)
+    if (nullptr == conf_array)
     {
         return;
     }
 
-    if ((*conf_array) != NULL)
+    if ((*conf_array) != nullptr)
     {
         delete[] (*conf_array);
-        *conf_array = NULL;
+        *conf_array = nullptr;
     }
 }
 
 int ConfCenter::GetConf(f32** conf_array, int& n, const char* xpath, bool with_default, f32 value)
 {
-    if (NULL == conf_array || NULL == xpath)
+    if (nullptr == conf_array || nullptr == xpath)
     {
         return -1;
     }
@@ -305,7 +305,7 @@ int ConfCenter::GetConf(f32** conf_array, int& n, const char* xpath, bool with_d
     }
 
     *conf_array = new f32[n];
-    if (NULL == (*conf_array))
+    if (nullptr == (*conf_array))
     {
         const int err = errno;
         SET_LAST_ERR_MSG(&last_err_msg_, "failed to alloc memory, errno: " << err << ", err msg: " << strerror(err));
@@ -322,21 +322,21 @@ int ConfCenter::GetConf(f32** conf_array, int& n, const char* xpath, bool with_d
 
 void ConfCenter::ReleaseConf(f32** conf_array)
 {
-    if (NULL == conf_array)
+    if (nullptr == conf_array)
     {
         return;
     }
 
-    if ((*conf_array) != NULL)
+    if ((*conf_array) != nullptr)
     {
         delete[] (*conf_array);
-        *conf_array = NULL;
+        *conf_array = nullptr;
     }
 }
 
 int ConfCenter::GetConf(f64** conf_array, int& n, const char* xpath, bool with_default, f64 value)
 {
-    if (NULL == conf_array || NULL == xpath)
+    if (nullptr == conf_array || nullptr == xpath)
     {
         return -1;
     }
@@ -353,7 +353,7 @@ int ConfCenter::GetConf(f64** conf_array, int& n, const char* xpath, bool with_d
     }
 
     *conf_array = new f64[n];
-    if (NULL == (*conf_array))
+    if (nullptr == (*conf_array))
     {
         const int err = errno;
         SET_LAST_ERR_MSG(&last_err_msg_, "failed to alloc memory, errno: " << err << ", err msg: " << strerror(err));
@@ -370,26 +370,26 @@ int ConfCenter::GetConf(f64** conf_array, int& n, const char* xpath, bool with_d
 
 void ConfCenter::ReleaseConf(f64** conf_array)
 {
-    if (NULL == conf_array)
+    if (nullptr == conf_array)
     {
         return;
     }
 
-    if ((*conf_array) != NULL)
+    if ((*conf_array) != nullptr)
     {
         delete[] (*conf_array);
-        *conf_array = NULL;
+        *conf_array = nullptr;
     }
 }
 
 int ConfCenter::GetConf(char*** conf_array, int& n, const char* xpath, bool with_default, const char* value)
 {
-    if (NULL == conf_array || NULL == xpath)
+    if (nullptr == conf_array || nullptr == xpath)
     {
         return -1;
     }
 
-    if (with_default && NULL == value)
+    if (with_default && nullptr == value)
     {
         return -1;
     }
@@ -405,7 +405,7 @@ int ConfCenter::GetConf(char*** conf_array, int& n, const char* xpath, bool with
     n = (int) result.size();
 
     *conf_array = new char* [n];
-    if (NULL == (*conf_array))
+    if (nullptr == (*conf_array))
     {
         const int err = errno;
         SET_LAST_ERR_MSG(&last_err_msg_, "failed to alloc memory, errno: " << err << ", err msg: " << strerror(err));
@@ -419,7 +419,7 @@ int ConfCenter::GetConf(char*** conf_array, int& n, const char* xpath, bool with
         const int size = (int) result[i].length() + 1;
 
         (*conf_array)[i] = new char[size];
-        if (NULL == ((*conf_array)[i]))
+        if (nullptr == ((*conf_array)[i]))
         {
             const int err = errno;
             SET_LAST_ERR_MSG(&last_err_msg_, "failed to alloc memory, errno: " << err
@@ -437,24 +437,24 @@ int ConfCenter::GetConf(char*** conf_array, int& n, const char* xpath, bool with
 
 void ConfCenter::ReleaseConf(char*** conf_array, int n)
 {
-    if (NULL == conf_array || n < 1)
+    if (nullptr == conf_array || n < 1)
     {
         return;
     }
 
-    if ((*conf_array) != NULL)
+    if ((*conf_array) != nullptr)
     {
         for (int i = 0; i < n; ++i)
         {
-            if ((*conf_array)[i] != NULL)
+            if ((*conf_array)[i] != nullptr)
             {
                 delete[] (*conf_array)[i];
-                (*conf_array)[i] = NULL;
+                (*conf_array)[i] = nullptr;
             }
         }
 
         delete[] (*conf_array);
-        *conf_array = NULL;
+        *conf_array = nullptr;
     }
 }
 
@@ -474,10 +474,10 @@ int ConfCenter::Load(const char* conf_file_path)
 
     std::lock_guard<std::mutex> lock(mutex_);
 
-    if (xml_doc_ptr_ != NULL)
+    if (xml_doc_ptr_ != nullptr)
     {
         xmlFreeDoc(xml_doc_ptr_);
-        xml_doc_ptr_ = NULL;
+        xml_doc_ptr_ = nullptr;
     }
 
     xmlCleanupParser();
@@ -491,21 +491,21 @@ int ConfCenter::Load(const char* conf_file_path)
     do
     {
         xml_doc_ptr_ = xmlReadFile(conf_file_path, "UTF-8", XML_PARSE_RECOVER);
-        if (NULL == xml_doc_ptr_)
+        if (nullptr == xml_doc_ptr_)
         {
             SET_LAST_ERR_MSG(&last_err_msg_, "failed to read xml file " << conf_file_path);
             break;
         }
 
         xmlErrorPtr xml_err = xmlGetLastError();
-        if (xml_err != NULL)
+        if (xml_err != nullptr)
         {
             SET_LAST_ERR_MSG(&last_err_msg_, "xml error, code: " << xml_err->code << ", msg: " << xml_err->message);
             break;
         }
 
         xmlNodePtr root_node = xmlDocGetRootElement(xml_doc_ptr_);
-        if (NULL == root_node)
+        if (nullptr == root_node)
         {
             SET_LAST_ERR_MSG(&last_err_msg_, "no root node found in xml file " << conf_file_path);
             break;
@@ -519,7 +519,7 @@ int ConfCenter::Load(const char* conf_file_path)
 
 int ConfCenter::GetEntries(const char* entry_xpath, VariantVec& entries, Variant::Type data_type)
 {
-    if (NULL == entry_xpath)
+    if (nullptr == entry_xpath)
     {
         return -1;
     }
@@ -548,7 +548,7 @@ int ConfCenter::GetEntries(const char* entry_xpath, VariantVec& entries, Variant
     for (XmlCharVec::iterator it = note_content_vec.begin(); it != note_content_vec.end(); ++it)
     {
         xmlChar* node_content = *it;
-        if (NULL == node_content)
+        if (nullptr == node_content)
         {
             continue;
         }
@@ -576,7 +576,7 @@ int ConfCenter::GetEntries(const char* entry_xpath, VariantVec& entries, Variant
             default:
             {
                 xmlFree(node_content);
-                *it = NULL;
+                *it = nullptr;
                 continue;
             }
             break;
@@ -585,7 +585,7 @@ int ConfCenter::GetEntries(const char* entry_xpath, VariantVec& entries, Variant
         entries.push_back(entry);
 
         xmlFree(node_content);
-        *it = NULL;
+        *it = nullptr;
     }
 
     return 0;
@@ -594,13 +594,13 @@ int ConfCenter::GetEntries(const char* entry_xpath, VariantVec& entries, Variant
 int ConfCenter::GetNodeContent(XmlCharVec& node_content_vec, const xmlChar* xpath) const
 {
     xmlXPathObjectPtr xpath_obj_ptr = GetObjPtr(xml_doc_ptr_, xpath);
-    if (NULL == xpath_obj_ptr)
+    if (nullptr == xpath_obj_ptr)
     {
         return -1;
     }
 
     xmlNodeSetPtr node_set_ptr = xpath_obj_ptr->nodesetval;
-    xmlChar* node_content = NULL;
+    xmlChar* node_content = nullptr;
 
     for (int i = 0; i < node_set_ptr->nodeNr; ++i)
     {
@@ -610,7 +610,7 @@ int ConfCenter::GetNodeContent(XmlCharVec& node_content_vec, const xmlChar* xpat
         while (node_ptr)
         {
             node_content = xmlNodeGetContent(node_ptr);
-            if (node_content != NULL)
+            if (node_content != nullptr)
             {
                 node_content_vec.push_back(node_content);
             }
@@ -626,7 +626,7 @@ int ConfCenter::GetNodeContent(XmlCharVec& node_content_vec, const xmlChar* xpat
 xmlXPathObjectPtr ConfCenter::GetObjPtr(xmlDocPtr xml_doc_ptr, const xmlChar* xpath) const
 {
     xmlXPathContextPtr xpath_ctx_ptr = xmlXPathNewContext(xml_doc_ptr);
-    if (NULL == xpath_ctx_ptr)
+    if (nullptr == xpath_ctx_ptr)
     {
         return NULL;
     }
@@ -634,7 +634,7 @@ xmlXPathObjectPtr ConfCenter::GetObjPtr(xmlDocPtr xml_doc_ptr, const xmlChar* xp
     xmlXPathObjectPtr xpath_obj_ptr = xmlXPathEvalExpression(xpath, xpath_ctx_ptr);
     xmlXPathFreeContext(xpath_ctx_ptr);
 
-    if (NULL == xpath_obj_ptr)
+    if (nullptr == xpath_obj_ptr)
     {
         return NULL;
     }

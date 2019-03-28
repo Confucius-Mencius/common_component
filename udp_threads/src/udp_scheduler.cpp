@@ -8,8 +8,8 @@ namespace udp
 {
 Scheduler::Scheduler()
 {
-    thread_sink_ = NULL;
-    related_thread_group_ = NULL;
+    thread_sink_ = nullptr;
+    related_thread_group_ = nullptr;
     last_udp_thread_idx_ = 0;
     last_work_thread_idx_ = 0;
 }
@@ -20,7 +20,7 @@ Scheduler::~Scheduler()
 
 int Scheduler::Initialize(const void* ctx)
 {
-    if (NULL == ctx)
+    if (nullptr == ctx)
     {
         return -1;
     }
@@ -58,10 +58,10 @@ TransId Scheduler::SendToServer(const Peer& peer, const MsgHead& msg_head, const
         case PEER_TYPE_TCP:
         {
             tcp::ClientInterface* tcp_client = thread_sink_->GetTcpClientCenter()->GetClient(peer);
-            if (NULL == tcp_client)
+            if (nullptr == tcp_client)
             {
                 tcp_client = thread_sink_->GetTcpClientCenter()->CreateClient(peer);
-                if (NULL == tcp_client)
+                if (nullptr == tcp_client)
                 {
                     return INVALID_TRANS_ID;
                 }
@@ -76,10 +76,10 @@ TransId Scheduler::SendToServer(const Peer& peer, const MsgHead& msg_head, const
         case PEER_TYPE_UDP:
         {
             udp::ClientInterface* udp_client = thread_sink_->GetUdpClientCenter()->GetClient(peer);
-            if (NULL == udp_client)
+            if (nullptr == udp_client)
             {
                 udp_client = thread_sink_->GetUdpClientCenter()->CreateClient(peer);
-                if (NULL == udp_client)
+                if (nullptr == udp_client)
                 {
                     return INVALID_TRANS_ID;
                 }
@@ -100,10 +100,10 @@ TransId Scheduler::SendToServer(const Peer& peer, const MsgHead& msg_head, const
 TransId Scheduler::HttpGet(const Peer& peer, const http::GetParams& params, const base::AsyncCtx* async_ctx)
 {
     http::ClientInterface* http_client = thread_sink_->GetHttpClientCenter()->GetClient(peer);
-    if (NULL == http_client)
+    if (nullptr == http_client)
     {
         http_client = thread_sink_->GetHttpClientCenter()->CreateClient(peer);
-        if (NULL == http_client)
+        if (nullptr == http_client)
         {
             return INVALID_TRANS_ID;
         }
@@ -115,10 +115,10 @@ TransId Scheduler::HttpGet(const Peer& peer, const http::GetParams& params, cons
 TransId Scheduler::HttpPost(const Peer& peer, const http::PostParams& params, const base::AsyncCtx* async_ctx)
 {
     http::ClientInterface* http_client = thread_sink_->GetHttpClientCenter()->GetClient(peer);
-    if (NULL == http_client)
+    if (nullptr == http_client)
     {
         http_client = thread_sink_->GetHttpClientCenter()->CreateClient(peer);
-        if (NULL == http_client)
+        if (nullptr == http_client)
         {
             return INVALID_TRANS_ID;
         }
@@ -130,10 +130,10 @@ TransId Scheduler::HttpPost(const Peer& peer, const http::PostParams& params, co
 TransId Scheduler::HttpHead(const Peer& peer, const http::HeadParams& params, const base::AsyncCtx* async_ctx)
 {
     http::ClientInterface* http_client = thread_sink_->GetHttpClientCenter()->GetClient(peer);
-    if (NULL == http_client)
+    if (nullptr == http_client)
     {
         http_client = thread_sink_->GetHttpClientCenter()->CreateClient(peer);
-        if (NULL == http_client)
+        if (nullptr == http_client)
         {
             return INVALID_TRANS_ID;
         }
@@ -156,7 +156,7 @@ int Scheduler::SendToClient(const ConnGuid* conn_guid, const MsgHead& msg_head, 
     {
         // 是自己
         ConnInterface* conn = thread_sink_->GetConnCenter()->GetConnByConnId(conn_guid->conn_id);
-        if (NULL == conn)
+        if (nullptr == conn)
         {
             LOG_ERROR("failed to get udp conn by id: " << conn_guid->conn_id);
             return -1;
@@ -170,7 +170,7 @@ int Scheduler::SendToClient(const ConnGuid* conn_guid, const MsgHead& msg_head, 
     task_ctx.task_type = TASK_TYPE_UDP_SEND_TO_CLIENT;
     task_ctx.source_thread = thread_sink_->GetThread();
 
-    if (conn_guid != NULL)
+    if (conn_guid != nullptr)
     {
         task_ctx.conn_guid = *conn_guid;
     }
@@ -180,7 +180,7 @@ int Scheduler::SendToClient(const ConnGuid* conn_guid, const MsgHead& msg_head, 
     task_ctx.msg_body_len = msg_body_len;
 
     Task* task = Task::Create(&task_ctx);
-    if (NULL == task)
+    if (nullptr == task)
     {
         return -1;
     }
@@ -200,7 +200,7 @@ int Scheduler::CloseClient(const ConnGuid* conn_guid)
     if (udp_thread == thread_sink_->GetThread())
     {
         ConnInterface* conn = thread_sink_->GetConnCenter()->GetConnByConnId(conn_guid->conn_id);
-        if (NULL == conn)
+        if (nullptr == conn)
         {
             LOG_ERROR("failed to get udp conn by id: " << conn_guid->conn_id);
             return -1;
@@ -214,13 +214,13 @@ int Scheduler::CloseClient(const ConnGuid* conn_guid)
     task_ctx.task_type = TASK_TYPE_UDP_CLOSE_CONN;
     task_ctx.source_thread = thread_sink_->GetThread();
 
-    if (conn_guid != NULL)
+    if (conn_guid != nullptr)
     {
         task_ctx.conn_guid = *conn_guid;
     }
 
     Task* task = Task::Create(&task_ctx);
-    if (NULL == task)
+    if (nullptr == task)
     {
         return -1;
     }
@@ -244,7 +244,7 @@ int Scheduler::SendToUdpThread(const ConnGuid* conn_guid, const MsgHead& msg_hea
     task_ctx.task_type = TASK_TYPE_NORMAL;
     task_ctx.source_thread = thread_sink_->GetThread();
 
-    if (conn_guid != NULL)
+    if (conn_guid != nullptr)
     {
         task_ctx.conn_guid = *conn_guid;
     }
@@ -254,7 +254,7 @@ int Scheduler::SendToUdpThread(const ConnGuid* conn_guid, const MsgHead& msg_hea
     task_ctx.msg_body_len = msg_body_len;
 
     Task* task = Task::Create(&task_ctx);
-    if (NULL == task)
+    if (nullptr == task)
     {
         return -1;
     }
@@ -271,7 +271,7 @@ int Scheduler::SendToUdpThread(const ConnGuid* conn_guid, const MsgHead& msg_hea
 int Scheduler::SendToWorkThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
                                 size_t msg_body_len, int work_thread_idx)
 {
-    if (NULL == related_thread_group_->work_thread_group)
+    if (nullptr == related_thread_group_->work_thread_group)
     {
         LOG_ERROR("no work threads");
         return -1;
@@ -284,7 +284,7 @@ int Scheduler::SendToWorkThread(const ConnGuid* conn_guid, const MsgHead& msg_he
     task_ctx.task_type = TASK_TYPE_NORMAL;
     task_ctx.source_thread = thread_sink_->GetThread();
 
-    if (conn_guid != NULL)
+    if (conn_guid != nullptr)
     {
         task_ctx.conn_guid = *conn_guid;
     }
@@ -294,7 +294,7 @@ int Scheduler::SendToWorkThread(const ConnGuid* conn_guid, const MsgHead& msg_he
     task_ctx.msg_body_len = msg_body_len;
 
     Task* task = Task::Create(&task_ctx);
-    if (NULL == task)
+    if (nullptr == task)
     {
         return -1;
     }
@@ -311,7 +311,7 @@ int Scheduler::SendToWorkThread(const ConnGuid* conn_guid, const MsgHead& msg_he
 int Scheduler::SendToGlobalThread(const ConnGuid* conn_guid, const MsgHead& msg_head, const void* msg_body,
                                   size_t msg_body_len)
 {
-    if (NULL == related_thread_group_->global_thread)
+    if (nullptr == related_thread_group_->global_thread)
     {
         LOG_ERROR("no global thread");
         return -1;
@@ -323,7 +323,7 @@ int Scheduler::SendToGlobalThread(const ConnGuid* conn_guid, const MsgHead& msg_
     task_ctx.task_type = TASK_TYPE_NORMAL;
     task_ctx.source_thread = thread_sink_->GetThread();
 
-    if (conn_guid != NULL)
+    if (conn_guid != nullptr)
     {
         task_ctx.conn_guid = *conn_guid;
     }
@@ -333,7 +333,7 @@ int Scheduler::SendToGlobalThread(const ConnGuid* conn_guid, const MsgHead& msg_
     task_ctx.msg_body_len = msg_body_len;
 
     Task* task = Task::Create(&task_ctx);
-    if (NULL == task)
+    if (nullptr == task)
     {
         return -1;
     }
@@ -351,7 +351,7 @@ void Scheduler::SetRelatedThreadGroup(RelatedThreadGroup* related_thread_group)
 {
     related_thread_group_ = related_thread_group;
 
-    if (related_thread_group_->work_thread_group != NULL)
+    if (related_thread_group_->work_thread_group != nullptr)
     {
         const int work_thread_count = related_thread_group_->work_thread_group->GetThreadCount();
         if (work_thread_count > 0)

@@ -4,7 +4,7 @@
 
 int StrLen(const char* str, size_t buf_size)
 {
-    if (NULL == str || buf_size < 2)
+    if (nullptr == str || buf_size < 2)
     {
         return 0;
     }
@@ -14,7 +14,7 @@ int StrLen(const char* str, size_t buf_size)
 
 char* StrCpy(char* buf, size_t buf_size, const char* str)
 {
-    if (NULL == buf || buf_size < 2 || NULL == str)
+    if (nullptr == buf || buf_size < 2 || nullptr == str)
     {
         return NULL;
     }
@@ -28,7 +28,7 @@ char* StrCpy(char* buf, size_t buf_size, const char* str)
 
 char* StrCat(char* buf, size_t buf_size_left, const char* str)
 {
-    if (NULL == buf || buf_size_left < 2 || NULL == str)
+    if (nullptr == buf || buf_size_left < 2 || nullptr == str)
     {
         return NULL;
     }
@@ -41,7 +41,7 @@ char* StrCat(char* buf, size_t buf_size_left, const char* str)
 
 bool StrCaseEQ(const char* str1, const char* str2, size_t min_buf_size)
 {
-    if (NULL == str1 || NULL == str2 || min_buf_size < 2)
+    if (nullptr == str1 || nullptr == str2 || min_buf_size < 2)
     {
         return false;
     }
@@ -51,7 +51,7 @@ bool StrCaseEQ(const char* str1, const char* str2, size_t min_buf_size)
 
 bool StrNoCaseEQ(const char* str1, const char* str2, size_t min_buf_size)
 {
-    if (NULL == str1 || NULL == str2 || min_buf_size < 2)
+    if (nullptr == str1 || nullptr == str2 || min_buf_size < 2)
     {
         return false;
     }
@@ -71,7 +71,7 @@ bool StrBeginWith(const std::string& str, const std::string& head)
 
 int StrPrintf(char* buf, size_t buf_size, const char* fmt, ...)
 {
-    if (NULL == buf || buf_size < 2 || NULL == fmt)
+    if (nullptr == buf || buf_size < 2 || nullptr == fmt)
     {
         return 0;
     }
@@ -154,7 +154,7 @@ void StrReverse(char str[], int len)
 
 int MatchWithAsteriskW(const char* str, int len1, const char* pattern, int len2)
 {
-    if (NULL == str || NULL == pattern)
+    if (nullptr == str || nullptr == pattern)
     {
         return -1;
     }

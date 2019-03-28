@@ -103,7 +103,7 @@ public:
 
 void SomeFunc(Rect* rect)
 {
-    if (NULL == rect)
+    if (nullptr == rect)
     {
         return;
     }

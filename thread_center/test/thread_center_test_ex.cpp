@@ -5,7 +5,7 @@ namespace thread_center_test
 {
 ThreadCenterTestEx::ThreadCenterTestEx() : loader_()
 {
-    thread_center_ = NULL;
+    thread_center_ = nullptr;
 }
 
 ThreadCenterTestEx::~ThreadCenterTestEx()
@@ -20,7 +20,7 @@ void ThreadCenterTestEx::SetUp()
     }
 
     thread_center_ = static_cast<ThreadCenterInterface*>(loader_.GetModuleInterface());
-    if (NULL == thread_center_)
+    if (nullptr == thread_center_)
     {
         FAIL() << loader_.GetLastErrMsg();
     }
@@ -56,7 +56,7 @@ void ThreadCenterTestEx::Test001()
     thread_group_ctx.thread_sink_creator = ThreadSinkEx::Create;
 
     ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
-    ASSERT_TRUE(thread_group != NULL);
+    ASSERT_TRUE(thread_group != nullptr);
 
     for (int i = 0; i < thread_group->GetThreadCount(); ++i)
     {
@@ -72,7 +72,7 @@ void ThreadCenterTestEx::Test001()
     source_thread_group_ctx.thread_sink_creator = SourceThreadSink::Create;
 
     ThreadGroupInterface* source_thread_group = thread_center_->CreateThreadGroup(&source_thread_group_ctx);
-    ASSERT_TRUE(source_thread_group != NULL);
+    ASSERT_TRUE(source_thread_group != nullptr);
 
     SourceThreadSink* source_thread_sink = static_cast<SourceThreadSink*>(source_thread_group->GetThread(0)->GetThreadSink());
     source_thread_sink->SetReleatedThreadGroup(thread_group);

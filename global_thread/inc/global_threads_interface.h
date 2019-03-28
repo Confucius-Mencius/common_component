@@ -31,30 +31,30 @@ struct ThreadsCtx
     ThreadsCtx()
     {
         argc = 0;
-        argv = NULL;
-        common_component_dir = NULL;
-        cur_working_dir = NULL;
-        app_name = NULL;
-        conf_center = NULL;
-        thread_center = NULL;
-        app_frame_conf_mgr = NULL;
-        app_frame_threads_count = NULL;
-        app_frame_threads_sync_mutex = NULL;
-        app_frame_threads_sync_cond = NULL;
+        argv = nullptr;
+        common_component_dir = nullptr;
+        cur_working_dir = nullptr;
+        app_name = nullptr;
+        conf_center = nullptr;
+        thread_center = nullptr;
+        app_frame_conf_mgr = nullptr;
+        app_frame_threads_count = nullptr;
+        app_frame_threads_sync_mutex = nullptr;
+        app_frame_threads_sync_cond = nullptr;
     }
 };
 
 struct RelatedThreadGroups
 {
-    ThreadGroupInterface* work_threads;
-    ThreadGroupInterface* burden_threads;
-    ThreadGroupInterface* proto_tcp_threads;
+    ThreadGroupInterface* work_thread_group;
+    ThreadGroupInterface* burden_thread_group;
+    ThreadGroupInterface* proto_tcp_thread_group;
 
     RelatedThreadGroups()
     {
-        work_threads = NULL;
-        burden_threads = NULL;
-        proto_tcp_threads = NULL;
+        work_thread_group = nullptr;
+        burden_thread_group = nullptr;
+        proto_tcp_thread_group = nullptr;
     }
 };
 

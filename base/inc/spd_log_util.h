@@ -13,8 +13,8 @@ struct SpdLogCtx
 
     SpdLogCtx()
     {
-        logger_file_path = NULL;
-        logger_name = NULL;
+        logger_file_path = nullptr;
+        logger_name = nullptr;
         log_level = spdlog::level::trace;
     }
 };

@@ -1,9 +1,9 @@
 #ifndef BURDEN_THREADS_SRC_BURDEN_THREADS_H_
 #define BURDEN_THREADS_SRC_BURDEN_THREADS_H_
 
-#include "burden_thread_sink.h"
 #include "burden_threads_interface.h"
 #include "module_loader.h"
+#include "thread_sink.h"
 
 namespace burden
 {
@@ -24,23 +24,16 @@ public:
 
     ///////////////////////// ThreadsInterface /////////////////////////
     int CreateThreadGroup() override;
+    void SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups) override;
     ThreadGroupInterface* GetBurdenThreadGroup() const override;
-    void SetRelatedThreadGroup(const RelatedThreadGroup* related_thread_group) override;
-
-private:
-    int CreateBurdenThreads();
 
 private:
     ThreadsCtx threads_ctx_;
+    RelatedThreadGroups related_thread_groups_;
     ThreadGroupInterface* burden_thread_group_;
 
-    typedef std::vector<ThreadInterface*> BurdenThreadVec;
-    BurdenThreadVec burden_thread_vec_;
-
-    typedef std::vector<ThreadSink*> BurdenThreadSinkVec;
-    BurdenThreadSinkVec burden_thread_sink_vec_;
-
-    RelatedThreadGroup related_thread_group_;
+    typedef std::vector<ThreadSink*> ThreadSinkVec;
+    ThreadSinkVec thread_sink_vec_;
 };
 }
 

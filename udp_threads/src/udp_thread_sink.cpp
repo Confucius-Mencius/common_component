@@ -69,18 +69,18 @@ void ThreadSink::ReadCallback(evutil_socket_t fd, short events, void* arg)
 
 ThreadSink::ThreadSink() : scheduler_(), local_logic_loader_(), logic_item_vec_()
 {
-    threads_ctx_ = NULL;
-    udp_thread_group_ = NULL;
-    conn_center_ = NULL;
-    udp_msg_codec_ = NULL;
-    tcp_client_center_ = NULL;
-    http_client_center_ = NULL;
-    udp_client_center_ = NULL;
+    threads_ctx_ = nullptr;
+    udp_thread_group_ = nullptr;
+    conn_center_ = nullptr;
+    udp_msg_codec_ = nullptr;
+    tcp_client_center_ = nullptr;
+    http_client_center_ = nullptr;
+    udp_client_center_ = nullptr;
     listen_sock_fd_ = -1;
-    udp_event_ = NULL;
-    recv_buf_ = NULL;
-    local_logic_ = NULL;
-    related_thread_group_ = NULL;
+    udp_event_ = nullptr;
+    recv_buf_ = nullptr;
+    local_logic_ = nullptr;
+    related_thread_group_ = nullptr;
 }
 
 ThreadSink::~ThreadSink()
@@ -116,7 +116,7 @@ int ThreadSink::OnInitialize(ThreadInterface* thread)
         msg_codec_ctx.do_checksum = threads_ctx_->conf_mgr->UdpDoChecksum();
 
         MsgCodecInterface* msg_codec_ = threads_ctx_->msg_codec_center->CreateMsgCodec(&msg_codec_ctx);
-        if (NULL == msg_codec_)
+        if (nullptr == msg_codec_)
         {
             LOG_ERROR("failed to create tcp msg codec");
             return -1;
@@ -132,7 +132,7 @@ int ThreadSink::OnInitialize(ThreadInterface* thread)
     udp_conn_center_ctx.max_udp_msg_len = threads_ctx_->conf_mgr->GetUdpMaxMsgBodyLen();
 
     conn_center_ = thread_->GetConnCenterMgr()->CreateUdpConnCenter(&udp_conn_center_ctx);
-    if (NULL == conn_center_)
+    if (nullptr == conn_center_)
     {
         return -1;
     }
@@ -150,7 +150,7 @@ int ThreadSink::OnInitialize(ThreadInterface* thread)
         msg_codec_ctx.do_checksum = threads_ctx_->conf_mgr->TcpDoChecksum();
 
         MsgCodecInterface* msg_codec_ = threads_ctx_->msg_codec_center->CreateMsgCodec(&msg_codec_ctx);
-        if (NULL == msg_codec_)
+        if (nullptr == msg_codec_)
         {
             LOG_ERROR("failed to create tcp msg codec");
             return -1;
@@ -167,7 +167,7 @@ int ThreadSink::OnInitialize(ThreadInterface* thread)
                                                };
 
     tcp_client_center_ = thread_->GetClientCenterMgr()->CreateTcpClientCenter(&tcp_client_center_ctx);
-    if (NULL == tcp_client_center_)
+    if (nullptr == tcp_client_center_)
     {
         return -1;
     }
@@ -180,7 +180,7 @@ int ThreadSink::OnInitialize(ThreadInterface* thread)
     http_client_center_ctx.http_conn_max_retry = threads_ctx_->conf_mgr->GetPeerHttpConnMaxRetry();
 
     http_client_center_ = thread_->GetClientCenterMgr()->CreateHttpClientCenter(&http_client_center_ctx);
-    if (NULL == http_client_center_)
+    if (nullptr == http_client_center_)
     {
         return -1;
     }
@@ -193,14 +193,14 @@ int ThreadSink::OnInitialize(ThreadInterface* thread)
     udp_client_center_ctx.max_msg_body_len = threads_ctx_->conf_mgr->GetUdpMaxMsgBodyLen();
 
     udp_client_center_ = thread_->GetClientCenterMgr()->CreateUdpClientCenter(&udp_client_center_ctx);
-    if (NULL == udp_client_center_)
+    if (nullptr == udp_client_center_)
     {
         return -1;
     }
 
     recv_buf_ = (char*) malloc(
                     TOTAL_MSG_LEN_FIELD_LEN + MIN_TOTAL_MSG_LEN + threads_ctx_->conf_mgr->GetUdpMaxMsgBodyLen() + 1);
-    if (NULL == recv_buf_)
+    if (nullptr == recv_buf_)
     {
         const int err = errno;
         LOG_ERROR("failed to alloc recv buf, errno: " << err << ", err msg: " << strerror(err));
@@ -243,11 +243,11 @@ void ThreadSink::OnFinalize()
 
     SAFE_FINALIZE(local_logic_);
 
-    if (udp_event_ != NULL)
+    if (udp_event_ != nullptr)
     {
         event_del(udp_event_);
         event_free(udp_event_);
-        udp_event_ = NULL;
+        udp_event_ = nullptr;
     }
 
     if (listen_sock_fd_ != -1)
@@ -258,10 +258,10 @@ void ThreadSink::OnFinalize()
 
     scheduler_.Finalize();
 
-    if (recv_buf_ != NULL)
+    if (recv_buf_ != nullptr)
     {
         free(recv_buf_);
-        recv_buf_ = NULL;
+        recv_buf_ = nullptr;
     }
 
     ThreadSinkInterface::OnFinalize();
@@ -329,7 +329,7 @@ void ThreadSink::OnStop()
         it->logic->OnStop();
     }
 
-    if (local_logic_ != NULL)
+    if (local_logic_ != nullptr)
     {
         local_logic_->OnStop();
     }
@@ -344,7 +344,7 @@ void ThreadSink::OnReload()
         it->logic->OnReload();
     }
 
-    if (local_logic_ != NULL)
+    if (local_logic_ != nullptr)
     {
         local_logic_->OnReload();
     }
@@ -404,7 +404,7 @@ bool ThreadSink::CanExit() const
         can_exit &= (it->logic->CanExit() ? 1 : 0);
     }
 
-    if (local_logic_ != NULL)
+    if (local_logic_ != nullptr)
     {
         can_exit &= (local_logic_->CanExit() ? 1 : 0);
     }
@@ -432,7 +432,7 @@ void ThreadSink::OnRecvClientMsg(evutil_socket_t fd, const struct sockaddr_in* c
     char client_ip[INET_ADDRSTRLEN] = "";
     unsigned short client_port = 0;
 
-    if (evutil_inet_ntop(AF_INET, &(client_addr->sin_addr), client_ip, sizeof(client_ip)) != NULL)
+    if (evutil_inet_ntop(AF_INET, &(client_addr->sin_addr), client_ip, sizeof(client_ip)) != nullptr)
     {
         client_port = ntohs(client_addr->sin_port);
     }
@@ -440,10 +440,10 @@ void ThreadSink::OnRecvClientMsg(evutil_socket_t fd, const struct sockaddr_in* c
     LOG_TRACE("client ip: " << client_ip << ", port: " << client_port);
 
     ConnInterface* udp_conn = conn_center_->GetConn(client_ip, client_port);
-    if (NULL == udp_conn)
+    if (nullptr == udp_conn)
     {
         udp_conn = conn_center_->CreateConn(thread_->GetThreadIdx(), fd, client_addr, client_ip, client_port);
-        if (NULL == udp_conn)
+        if (nullptr == udp_conn)
         {
             return;
         }
@@ -455,7 +455,7 @@ void ThreadSink::OnRecvClientMsg(evutil_socket_t fd, const struct sockaddr_in* c
 
     MsgId err_msg_id = 0;
     MsgHead msg_head;
-    char* msg_body = NULL;
+    char* msg_body = nullptr;
     size_t msg_body_len = 0;
 
     if (udp_msg_codec_->DecodeMsg(err_msg_id, &msg_head, &msg_body, msg_body_len, total_msg_buf, total_msg_len) != 0)
@@ -497,9 +497,9 @@ void ThreadSink::SetRelatedThreadGroup(RelatedThreadGroup* related_thread_group)
 {
     related_thread_group_ = related_thread_group;
 
-    if (related_thread_group_->global_logic != NULL)
+    if (related_thread_group_->global_logic != nullptr)
     {
-        if (local_logic_ != NULL)
+        if (local_logic_ != nullptr)
         {
             local_logic_->SetGlobalLogic(related_thread_group_->global_logic);
         }
@@ -577,7 +577,7 @@ int ThreadSink::BindUdpSocket()
 
     udp_event_ = event_new(thread_->GetThreadEvBase(), listen_sock_fd_, EV_READ | EV_PERSIST, ThreadSink::ReadCallback,
                            this);
-    if (NULL == udp_event_)
+    if (nullptr == udp_event_)
     {
         const int err = errno;
         LOG_ERROR("failed to create udp event, errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
@@ -612,7 +612,7 @@ int ThreadSink::LoadLocalLogic()
     }
 
     local_logic_ = (LocalLogicInterface*) local_logic_loader_.GetModuleInterface();
-    if (NULL == local_logic_)
+    if (nullptr == local_logic_)
     {
         LOG_ERROR("failed to get local logic interface, " << local_logic_loader_.GetLastErrMsg());
         return -1;
@@ -631,7 +631,7 @@ int ThreadSink::LoadLocalLogic()
     logic_ctx.time_service = thread_->GetTimeService();
     logic_ctx.random_engine = thread_->GetRandomEngine();
     logic_ctx.conn_center = conn_center_;
-    logic_ctx.msg_dispatcher = NULL;
+    logic_ctx.msg_dispatcher = nullptr;
     logic_ctx.scheduler = &scheduler_;
     logic_ctx.local_logic = local_logic_;
     logic_ctx.thread_ev_base = thread_->GetThreadEvBase();
@@ -649,7 +649,7 @@ int ThreadSink::LoadLogicGroup()
 {
     // logic group
     LogicItem logic_item;
-    logic_item.logic = NULL;
+    logic_item.logic = nullptr;
 
     const StrGroup logic_so_group = threads_ctx_->conf_mgr->GetUdpLogicSoGroup();
 
@@ -672,7 +672,7 @@ int ThreadSink::LoadLogicGroup()
         }
 
         logic_item.logic = (LogicInterface*) logic_item.logic_loader.GetModuleInterface();
-        if (NULL == logic_item.logic)
+        if (nullptr == logic_item.logic)
         {
             LOG_ERROR("failed to get logic interface, " << logic_item.logic_loader.GetLastErrMsg());
             return -1;

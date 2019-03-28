@@ -1015,13 +1015,13 @@ unsigned int FastCRC32(const void* data, size_t length, unsigned int previous_cr
 
 unsigned int FileFastCRC32(const char* file_path)
 {
-    if (NULL == file_path || !FileExist(file_path))
+    if (nullptr == file_path || !FileExist(file_path))
     {
         return 0;
     }
 
     FILE* fp = fopen(file_path, "r");
-    if (NULL == fp)
+    if (nullptr == fp)
     {
         return 0;
     }

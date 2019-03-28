@@ -9,7 +9,7 @@ std::atomic<int> g_thread_task_count(0);
 
 ThreadCenterTest::ThreadCenterTest() : loader_()
 {
-    thread_center_ = NULL;
+    thread_center_ = nullptr;
 }
 
 ThreadCenterTest::~ThreadCenterTest()
@@ -24,7 +24,7 @@ void ThreadCenterTest::SetUp()
     }
 
     thread_center_ = static_cast<ThreadCenterInterface*>(loader_.GetModuleInterface());
-    if (NULL == thread_center_)
+    if (nullptr == thread_center_)
     {
         FAIL() << loader_.GetLastErrMsg();
     }
@@ -60,7 +60,7 @@ void ThreadCenterTest::Test001()
     thread_group_ctx.thread_sink_creator = ThreadSink::Create;
 
     ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
-    ASSERT_TRUE(thread_group != NULL);
+    ASSERT_TRUE(thread_group != nullptr);
 
     EXPECT_EQ(0, thread_group->Activate());
     EXPECT_EQ(0, thread_group->Start());
@@ -97,7 +97,7 @@ void ThreadCenterTest::Test002()
     thread_group_ctx.thread_sink_creator = ThreadSink::Create;
 
     ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
-    ASSERT_TRUE(thread_group != NULL);
+    ASSERT_TRUE(thread_group != nullptr);
 
     EXPECT_EQ(0, thread_group->Activate());
     EXPECT_EQ(0, thread_group->Start());
@@ -135,13 +135,13 @@ void ThreadCenterTest::Test003()
     thread_group_ctx.thread_sink_creator = ThreadSink::Create;
 
     ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
-    ASSERT_TRUE(thread_group != NULL);
+    ASSERT_TRUE(thread_group != nullptr);
 
     EXPECT_EQ(0, thread_group->Activate());
     EXPECT_EQ(0, thread_group->Start());
 
     ThreadTask* task = new ThreadTask();
-    ASSERT_TRUE(task != NULL);
+    ASSERT_TRUE(task != nullptr);
     g_thread_task_count++;
 
     thread_group->PushTaskToThread(task, 5);
@@ -177,13 +177,13 @@ void ThreadCenterTest::Test004()
     thread_group_ctx.thread_sink_creator = ThreadSink::Create;
 
     ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
-    ASSERT_TRUE(thread_group != NULL);
+    ASSERT_TRUE(thread_group != nullptr);
 
     EXPECT_EQ(0, thread_group->Activate());
     EXPECT_EQ(0, thread_group->Start());
 
     ThreadTask* task = new ThreadTask();
-    ASSERT_TRUE(task != NULL);
+    ASSERT_TRUE(task != nullptr);
     g_thread_task_count = thread_group_ctx.thread_count; // 广播接口推往每个线程的task都会new一个新的出来
 
     thread_group->PushTaskToThread(task, -1);
@@ -203,7 +203,7 @@ void ProducerThreadProcess(ThreadGroupInterface* thread_group, int thread_count)
     for (int i = 0; i < 1000000; ++i)
     {
         ThreadTask* task = new ThreadTask();
-        ASSERT_TRUE(task != NULL);
+        ASSERT_TRUE(task != nullptr);
         g_thread_task_count++;
 
         thread_group->PushTaskToThread(task, rand() % thread_count);
@@ -239,7 +239,7 @@ void ThreadCenterTest::Test005()
     thread_group_ctx.thread_sink_creator = ThreadSink::Create;
 
     ThreadGroupInterface* thread_group = thread_center_->CreateThreadGroup(&thread_group_ctx);
-    ASSERT_TRUE(thread_group != NULL);
+    ASSERT_TRUE(thread_group != nullptr);
 
     EXPECT_EQ(0, thread_group->Activate());
     EXPECT_EQ(0, thread_group->Start());

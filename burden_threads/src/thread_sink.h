@@ -1,16 +1,15 @@
-#ifndef RAW_TCP_THREADS_SRC_THREAD_SINK_H_
-#define RAW_TCP_THREADS_SRC_THREAD_SINK_H_
+#ifndef BURDEN_THREADS_SRC_THREAD_SINK_H_
+#define BURDEN_THREADS_SRC_THREAD_SINK_H_
 
-#include "conn_center.h"
+#include "burden_logic_interface.h"
+#include "burden_threads_interface.h"
+#include "msg_dispatcher.h"
 #include "mem_util.h"
 #include "module_loader.h"
-#include "new_conn.h"
+#include "proto_msg_codec.h"
 #include "scheduler.h"
-#include "raw_tcp_logic_interface.h"
 
-namespace tcp
-{
-namespace raw
+namespace burden
 {
 struct LogicItem
 {
@@ -20,7 +19,7 @@ struct LogicItem
 
     LogicItem() : logic_so_path(), logic_loader()
     {
-        logic = NULL;
+        logic = nullptr;
     }
 };
 
@@ -34,6 +33,18 @@ public:
     ThreadSink();
     virtual ~ThreadSink();
 
+    void SetBurdenThreadGroup(ThreadGroupInterface* burden_thread_group)
+    {
+        burden_thread_group_ = burden_thread_group;
+    }
+
+    ThreadGroupInterface* GetBurdenThreadGroup()
+    {
+        return burden_thread_group_;
+    }
+
+    void SetRelatedThreadGroup(RelatedThreadGroups* related_thread_groups);
+
     ///////////////////////// ThreadSinkInterface /////////////////////////
     void Release() override;
     int OnInitialize(ThreadInterface* thread, const void* ctx) override;
@@ -46,51 +57,22 @@ public:
     void OnTask(const ThreadTask* task) override;
     bool CanExit() const override;
 
-public:
-    void SetListenThread(ThreadInterface* listen_thread)
-    {
-        listen_thread_ = listen_thread;
-    }
-
-    void SetTCPThreadGroup(ThreadGroupInterface* tcp_thread_group)
-    {
-        tcp_thread_group_ = tcp_thread_group;
-    }
-
-    ThreadGroupInterface* GetTCPThreadGroup()
-    {
-        return tcp_thread_group_;
-    }
-
-    void SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups);
-
-    ConnCenter* GetConnMgr()
-    {
-        return &conn_center_;
-    }
-
-    void OnClientClosed(const BaseConn* conn, int task_type);
-    void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len);
-
 private:
     int LoadCommonLogic();
     int LoadLogicGroup();
-    int OnClientConnected(const NewConnCtx* new_conn_ctx);
 
 private:
     const ThreadsCtx* threads_ctx_;
-    ThreadInterface* listen_thread_;
-    ThreadGroupInterface* tcp_thread_group_;
-    RelatedThreadGroups* related_thread_group_;
+    ThreadGroupInterface* burden_thread_group_;
 
     ModuleLoader common_logic_loader_;
     CommonLogicInterface* common_logic_;
     LogicItemVec logic_item_vec_;
 
-    ConnCenter conn_center_;
+    ::proto::MsgCodec msg_codec_;
     Scheduler scheduler_;
+    MsgDispatcher msg_dispatcher_;
 };
 }
-}
 
-#endif // RAW_TCP_THREADS_SRC_THREAD_SINK_H_
+#endif // BURDEN_THREADS_SRC_THREAD_SINK_H_

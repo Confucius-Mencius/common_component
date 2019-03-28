@@ -8,7 +8,7 @@ namespace tcp
 {
 namespace raw
 {
-class ThreadSink;
+class IOThreadSink;
 
 struct ConnCenterCtx
 {
@@ -20,7 +20,7 @@ struct ConnCenterCtx
 
     ConnCenterCtx()
     {
-        timer_axis = NULL;
+        timer_axis = nullptr;
         inactive_conn_check_interval.tv_sec = inactive_conn_check_interval.tv_usec = 0;
         inactive_conn_life = 0;
         storm_interval = 0;
@@ -40,7 +40,7 @@ public:
     int Activate();
     void Freeze();
 
-    void SetThreadSink(ThreadSink* sink)
+    void SetThreadSink(IOThreadSink* sink)
     {
         thread_sink_ = sink;
     }
@@ -62,7 +62,7 @@ private:
 
 private:
     ConnCenterCtx conn_mgr_ctx_;
-    ThreadSink* thread_sink_;
+    IOThreadSink* thread_sink_;
 
     struct ClientCtx
     {
@@ -72,7 +72,7 @@ private:
 
         ClientCtx()
         {
-            conn = NULL;
+            conn = nullptr;
             start_time = 0;
             recv_count = 0;
         }

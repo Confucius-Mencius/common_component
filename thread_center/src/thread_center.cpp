@@ -31,7 +31,6 @@ void ThreadCenter::Release()
 
 int ThreadCenter::Initialize(const void* ctx)
 {
-    (void) ctx;
     return 0;
 }
 
@@ -51,7 +50,7 @@ void ThreadCenter::Freeze()
 ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
 {
     ThreadGroup* thread_group = ThreadGroup::Create();
-    if (NULL == thread_group)
+    if (nullptr == thread_group)
     {
         const int err = errno;
         LOG_ERROR("failed to create thread group, errno: " << err << ", err msg: " << strerror(err));
@@ -83,7 +82,7 @@ ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
             thread_ctx.threads_ctx = ctx->threads_ctx;
             thread_ctx.thread_group = thread_group;
 
-            if (NULL == thread_group->CreateThread(&thread_ctx))
+            if (nullptr == thread_group->CreateThread(&thread_ctx))
             {
                 LOG_ERROR("failed to create thread, i: " << i);
                 SAFE_DESTROY(thread_group);

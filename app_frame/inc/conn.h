@@ -35,7 +35,7 @@ struct ConnGUID
     static ConnGUID* Create(const ConnGUID* instance)
     {
         ConnGUID* obj = new ConnGUID();
-        if (NULL == obj)
+        if (nullptr == obj)
         {
             return NULL;
         }

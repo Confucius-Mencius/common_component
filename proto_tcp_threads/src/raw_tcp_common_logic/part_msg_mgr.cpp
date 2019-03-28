@@ -7,7 +7,7 @@ namespace proto
 {
 PartMsgMgr::PartMsgMgr()
 {
-    scheduler_ = NULL;
+    scheduler_ = nullptr;
 }
 
 PartMsgMgr::~PartMsgMgr()

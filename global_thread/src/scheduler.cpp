@@ -7,9 +7,9 @@ namespace global
 {
 Scheduler::Scheduler()
 {
-    thread_sink_ = NULL;
-    related_thread_groups_ = NULL;
-    msg_codec_ = NULL;
+    thread_sink_ = nullptr;
+    related_thread_groups_ = nullptr;
+    msg_codec_ = nullptr;
 }
 
 Scheduler::~Scheduler()
@@ -29,32 +29,33 @@ int Scheduler::SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgH
 }
 
 int Scheduler::SendToProtoTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
-                                    size_t msg_body_len, int proto_tcp_thread_idx)
+                                    size_t msg_body_len, int tcp_thread_idx)
 {
-    return SendToThread(THREAD_TYPE_PROTO_TCP, conn_guid, msg_head, msg_body, msg_body_len, proto_tcp_thread_idx);
+    return SendToThread(THREAD_TYPE_PROTO_TCP, conn_guid, msg_head, msg_body, msg_body_len, tcp_thread_idx);
 }
 
-int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const proto::MsgHead& msg_head, const void* msg_body, size_t msg_body_len, int thread_idx)
+int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const proto::MsgHead& msg_head,
+                            const void* msg_body, size_t msg_body_len, int thread_idx)
 {
-    ThreadGroupInterface* thread_group = NULL;
+    ThreadGroupInterface* thread_group = nullptr;
 
     switch (thread_type)
     {
         case THREAD_TYPE_WORK:
         {
-            thread_group = related_thread_groups_->work_threads;
+            thread_group = related_thread_groups_->work_thread_group;
         }
         break;
 
         case THREAD_TYPE_BURDEN:
         {
-            thread_group = related_thread_groups_->burden_threads;
+            thread_group = related_thread_groups_->burden_thread_group;
         }
         break;
 
         case THREAD_TYPE_PROTO_TCP:
         {
-            thread_group = related_thread_groups_->proto_tcp_threads;
+            thread_group = related_thread_groups_->proto_tcp_thread_group;
         }
         break;
 
@@ -64,7 +65,7 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const pr
         break;
     }
 
-    if (NULL == thread_group)
+    if (nullptr == thread_group)
     {
         LOG_ERROR("no such threads, thread type: " << thread_type);
         return -1;
@@ -86,7 +87,7 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const pr
     }
 
     ThreadTask* task = new ThreadTask(TASK_TYPE_NORMAL, thread_sink_->GetThread(), conn_guid, data + TOTAL_MSG_LEN_FIELD_LEN, len - TOTAL_MSG_LEN_FIELD_LEN); // 内部的消息不发送4个字节的长度字段
-    if (NULL == task)
+    if (nullptr == task)
     {
         const int err = errno;
         LOG_ERROR("failed to create task, errno: " << err << ", err msg: " << strerror(err));

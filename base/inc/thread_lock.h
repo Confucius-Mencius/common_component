@@ -104,7 +104,7 @@ public:
     {
         mutex_ = mutex;
 
-        if (mutex_ != NULL)
+        if (mutex_ != nullptr)
         {
             mutex_->Lock();
         }
@@ -112,10 +112,10 @@ public:
 
     ~AutoThreadMutex()
     {
-        if (mutex_ != NULL)
+        if (mutex_ != nullptr)
         {
             mutex_->Unlock();
-            mutex_ = NULL;
+            mutex_ = nullptr;
         }
     }
 
@@ -186,7 +186,7 @@ public:
     {
         rwlock_ = rwlock;
 
-        if (rwlock_ != NULL)
+        if (rwlock_ != nullptr)
         {
             rwlock_->WLock();
         }
@@ -194,10 +194,10 @@ public:
 
     ~AutoThreadWLock()
     {
-        if (rwlock_ != NULL)
+        if (rwlock_ != nullptr)
         {
             rwlock_->Unlock();
-            rwlock_ = NULL;
+            rwlock_ = nullptr;
         }
     }
 
@@ -215,7 +215,7 @@ public:
     {
         rwlock_ = rwlock;
 
-        if (rwlock_ != NULL)
+        if (rwlock_ != nullptr)
         {
             rwlock_->RLock();
         }
@@ -223,10 +223,10 @@ public:
 
     ~AutoThreadRLock()
     {
-        if (rwlock_ != NULL)
+        if (rwlock_ != nullptr)
         {
             rwlock_->Unlock();
-            rwlock_ = NULL;
+            rwlock_ = nullptr;
         }
     }
 

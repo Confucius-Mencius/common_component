@@ -71,7 +71,7 @@ public:
         msg_head->passback = ntohl(*(int32_t*) (total_msg_buf + CHECKSUM_FIELD_LEN));
         msg_head->msg_id = ntohl(*(int32_t*) (total_msg_buf + CHECKSUM_FIELD_LEN + PASSBACK_FIELD_LEN));
 
-        *msg_body = NULL;
+        *msg_body = nullptr;
         msg_body_len = 0;
 
         if (total_msg_len > MIN_TOTAL_MSG_LEN)
@@ -91,7 +91,7 @@ public:
         *((int32_t*) (*data + TOTAL_MSG_LEN_FIELD_LEN + CHECKSUM_FIELD_LEN)) = htonl(msg_head.passback);
         *((int32_t*) (*data + TOTAL_MSG_LEN_FIELD_LEN + CHECKSUM_FIELD_LEN + PASSBACK_FIELD_LEN)) = htonl(msg_head.msg_id);
 
-        if (msg_body != NULL)
+        if (msg_body != nullptr)
         {
             memcpy(*data + TOTAL_MSG_LEN_FIELD_LEN + MIN_TOTAL_MSG_LEN, msg_body, msg_body_len);
         }

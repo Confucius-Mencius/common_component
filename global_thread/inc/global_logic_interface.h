@@ -1,7 +1,7 @@
 #ifndef GLOBAL_THREAD_INC_GLOBAL_LOGIC_INTERFACE_H_
 #define GLOBAL_THREAD_INC_GLOBAL_LOGIC_INTERFACE_H_
 
-#include <stddef.h>
+#include <atomic>
 #include "module_interface.h"
 
 class ConfCenterInterface;
@@ -35,15 +35,15 @@ struct LogicCtx
     LogicCtx()
     {
         argc = 0;
-        argv = NULL;
-        common_component_dir = NULL;
-        cur_work_dir = NULL;
-        app_name = NULL;
-        conf_center = NULL;
-        timer_axis = NULL;
-        scheduler = NULL;
-        msg_dispatcher = NULL;
-        global_logic = NULL;
+        argv = nullptr;
+        common_component_dir = nullptr;
+        cur_work_dir = nullptr;
+        app_name = nullptr;
+        conf_center = nullptr;
+        timer_axis = nullptr;
+        scheduler = nullptr;
+        msg_dispatcher = nullptr;
+        global_logic = nullptr;
     }
 };
 
@@ -61,7 +61,7 @@ public:
 
     virtual int Initialize(const void* ctx)
     {
-        if (NULL == ctx)
+        if (nullptr == ctx)
         {
             return -1;
         }
@@ -73,7 +73,7 @@ public:
     virtual void OnStop()
     {
     }
-
+#include <atomic>
     virtual void OnReload()
     {
     }
@@ -90,7 +90,7 @@ public:
 
 protected:
     LogicCtx logic_ctx_;
-    bool can_exit_;
+    std::atomic_bool can_exit_;
 };
 }
 

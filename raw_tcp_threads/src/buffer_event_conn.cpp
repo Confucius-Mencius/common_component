@@ -5,7 +5,7 @@
 #include <event2/event.h>
 #include "log_util.h"
 #include "task_type.h"
-#include "thread_sink.h"
+#include "io_thread_sink.h"
 
 #if defined(USE_BUFFEREVENT)
 namespace tcp
@@ -19,13 +19,13 @@ void BufferEventConn::EventCallback(struct bufferevent* buffer_event, short even
 {
     const int err = EVUTIL_SOCKET_ERROR();
     const evutil_socket_t sock_fd = bufferevent_getfd(buffer_event);
-    ThreadSink* thread_sink = static_cast<BufferEventConn*>(arg)->thread_sink_;
+    IOThreadSink* thread_sink = static_cast<BufferEventConn*>(arg)->thread_sink_;
 
     LOG_TRACE("events occured on socket, fd: " << sock_fd << ", events: "
               << setiosflags(std::ios::showbase) << std::hex << events);
 
     BaseConn* conn = static_cast<BaseConn*>(thread_sink->GetConnMgr()->GetConnBySockFD(sock_fd));
-    if (NULL == conn)
+    if (nullptr == conn)
     {
         LOG_ERROR("failed to get tcp conn by socket fd: " << sock_fd);
         return;
@@ -94,7 +94,7 @@ void BufferEventConn::ReadCallback(struct bufferevent* buffer_event, void* arg)
     const evutil_socket_t sock_fd = bufferevent_getfd(buffer_event);
     LOG_TRACE("recv data, socket fd: " << sock_fd << ", input buf len: " << evbuffer_get_length(input_buf));
 
-    ThreadSink* thread_sink = static_cast<BufferEventConn*>(arg)->thread_sink_;
+    IOThreadSink* thread_sink = static_cast<BufferEventConn*>(arg)->thread_sink_;
 
     if (thread_sink->GetThread()->IsStopping())
     {
@@ -104,7 +104,7 @@ void BufferEventConn::ReadCallback(struct bufferevent* buffer_event, void* arg)
 
     ConnCenter* conn_mgr = thread_sink->GetConnMgr();
     BaseConn* conn = static_cast<BaseConn*>(conn_mgr->GetConnBySockFD(sock_fd));
-    if (NULL == conn)
+    if (nullptr == conn)
     {
         LOG_ERROR("failed to get tcp conn by socket fd: " << sock_fd);
         return;
@@ -139,7 +139,7 @@ void BufferEventConn::ReadCallback(struct bufferevent* buffer_event, void* arg)
 
 BufferEventConn::BufferEventConn()
 {
-    buffer_event_ = NULL;
+    buffer_event_ = nullptr;
 }
 
 BufferEventConn::~BufferEventConn()
@@ -153,13 +153,11 @@ void BufferEventConn::Release()
 
 int BufferEventConn::Initialize(const void* ctx)
 {
-    (void) ctx;
-
     buffer_event_ = bufferevent_socket_new(
                         thread_sink_->GetThread()->GetThreadEvBase(),
                         sock_fd_,
                         BEV_OPT_CLOSE_ON_FREE);
-    if (NULL == buffer_event_)
+    if (nullptr == buffer_event_)
     {
         const int err = EVUTIL_SOCKET_ERROR();
         LOG_ERROR("failed to create buffer event, errno: " << err
@@ -187,7 +185,7 @@ int BufferEventConn::Initialize(const void* ctx)
         LOG_ERROR("failed to enable buffer event reading and writing, errno: " << err
                   << ", err msg: " << evutil_socket_error_to_string(err));
         bufferevent_free(buffer_event_);
-        buffer_event_ = NULL;
+        buffer_event_ = nullptr;
         return -1;
     }
 
@@ -196,10 +194,10 @@ int BufferEventConn::Initialize(const void* ctx)
 
 void BufferEventConn::Finalize()
 {
-    if (buffer_event_ != NULL)
+    if (buffer_event_ != nullptr)
     {
         bufferevent_free(buffer_event_);
-        buffer_event_ = NULL;
+        buffer_event_ = nullptr;
     }
 }
 

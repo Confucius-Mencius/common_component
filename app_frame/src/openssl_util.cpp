@@ -16,9 +16,6 @@ static void pthreads_thread_id(CRYPTO_THREADID* tid)
 
 static void pthreads_locking_callback(int mode, int type, const char* file, int line)
 {
-    (void) file;
-    (void) line;
-
 //    BIO_printf(bio_err, "thread=%4d mode=%s lock=%s %s:%d\n",
 //               CRYPTO_thread_id(),
 //               (mode & CRYPTO_LOCK) ? "l" : "u",

@@ -10,13 +10,13 @@ namespace app_launcher
 {
 int GetAppName(char* buf, size_t buf_size, const char* argv0)
 {
-    if (NULL == buf || buf_size < 2 || NULL == argv0)
+    if (nullptr == buf || buf_size < 2 || nullptr == argv0)
     {
         return -1;
     }
 
     const char* last_slash = strrchr(argv0, '/');
-    if (NULL == last_slash)
+    if (nullptr == last_slash)
     {
         syslog(LOG_ERR, "can't find / in %s", argv0);
         return -1;

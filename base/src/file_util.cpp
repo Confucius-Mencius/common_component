@@ -15,7 +15,7 @@
 
 bool FileExist(const char* file_path)
 {
-    if (NULL == file_path)
+    if (nullptr == file_path)
     {
         return false;
     }
@@ -58,13 +58,13 @@ bool IsDirEmpty(const char* file_path)
     }
 
     DIR* dir = opendir(file_path);
-    if (NULL == dir)
+    if (nullptr == dir)
     {
         return false;
     }
 
     struct dirent entry;
-    struct dirent* result = NULL;
+    struct dirent* result = nullptr;
     bool has_children = false;
 
     while (true)
@@ -76,7 +76,7 @@ bool IsDirEmpty(const char* file_path)
         }
 
         // readdir_r returns NULL in *result if the end of the directory stream is reached
-        if (NULL == result)
+        if (nullptr == result)
         {
             break; // 没有了
         }
@@ -96,7 +96,7 @@ bool IsDirEmpty(const char* file_path)
 
 int CreateDir(const char* file_path)
 {
-    if (NULL == file_path)
+    if (nullptr == file_path)
     {
         return -1;
     }
@@ -109,7 +109,7 @@ int CreateDir(const char* file_path)
 
 int CreateFile(const char* file_path, mode_t mode)
 {
-    if (NULL == file_path)
+    if (nullptr == file_path)
     {
         return -1;
     }
@@ -136,8 +136,8 @@ int CreateFile(const char* file_path, mode_t mode)
     int fd = creat(file_path, mode);
     if (-1 == fd)
     {
-        const int err = errno;
-        (void) err;
+        // const int err = errno;
+        // (void) err;
         return -1;
     }
 
@@ -146,7 +146,7 @@ int CreateFile(const char* file_path, mode_t mode)
 
 int DelFile(const char* file_path)
 {
-    if (NULL == file_path)
+    if (nullptr == file_path)
     {
         return -1;
     }
@@ -159,7 +159,7 @@ int DelFile(const char* file_path)
 
 int GetFileDir(char* buf, int buf_size, const char* file_path)
 {
-    if (NULL == buf || buf_size < 2 || NULL == file_path)
+    if (nullptr == buf || buf_size < 2 || nullptr == file_path)
     {
         return -1;
     }
@@ -172,7 +172,7 @@ int GetFileDir(char* buf, int buf_size, const char* file_path)
 
 int GetFileName(char* buf, int buf_size, const char* file_path)
 {
-    if (NULL == buf || buf_size < 2 || NULL == file_path)
+    if (nullptr == buf || buf_size < 2 || nullptr == file_path)
     {
         return -1;
     }
@@ -189,7 +189,7 @@ int GetFileName(char* buf, int buf_size, const char* file_path)
 
 int GetAbsolutePath(char* buf, int buf_size, const char* path, const char* cur_working_dir)
 {
-    if (NULL == buf || buf_size < 2 || NULL == path)
+    if (nullptr == buf || buf_size < 2 || nullptr == path)
     {
         return -1;
     }
@@ -198,7 +198,7 @@ int GetAbsolutePath(char* buf, int buf_size, const char* path, const char* cur_w
 
     if (path[0] != '/')
     {
-        if (NULL == cur_working_dir)
+        if (nullptr == cur_working_dir)
         {
             return -1;
         }
@@ -251,7 +251,7 @@ int GetAbsolutePath(char* buf, int buf_size, const char* path, const char* cur_w
 
 int WriteBinFile(const char* file_path, const void* data, size_t len)
 {
-    if (NULL == file_path || NULL == data || len < 1)
+    if (nullptr == file_path || nullptr == data || len < 1)
     {
         return -1;
     }
@@ -272,7 +272,7 @@ int WriteBinFile(const char* file_path, const void* data, size_t len)
 
 int AppendBinFile(const char* file_path, const void* data, size_t len)
 {
-    if (NULL == file_path || NULL == data || len < 1)
+    if (nullptr == file_path || nullptr == data || len < 1)
     {
         return -1;
     }
@@ -293,7 +293,7 @@ int AppendBinFile(const char* file_path, const void* data, size_t len)
 
 int ReadBinFile(void* data, size_t len, const char* file_path)
 {
-    if (NULL == data || NULL == file_path)
+    if (nullptr == data || nullptr == file_path)
     {
         return -1;
     }
@@ -328,7 +328,7 @@ int ReadBinFile(void* data, size_t len, const char* file_path)
 
 int WriteTxtFile(const char* file_path, const void* data, size_t len)
 {
-    if (NULL == file_path || NULL == data || len < 1)
+    if (nullptr == file_path || nullptr == data || len < 1)
     {
         return -1;
     }
@@ -349,7 +349,7 @@ int WriteTxtFile(const char* file_path, const void* data, size_t len)
 
 int AppendTxtFile(const char* file_path, const void* data, size_t len)
 {
-    if (NULL == file_path || NULL == data || len < 1)
+    if (nullptr == file_path || nullptr == data || len < 1)
     {
         return -1;
     }
@@ -370,7 +370,7 @@ int AppendTxtFile(const char* file_path, const void* data, size_t len)
 
 int ReadTxtFile(void* data, size_t len, const char* file_path)
 {
-    if (NULL == file_path || NULL == data)
+    if (nullptr == file_path || nullptr == data)
     {
         return -1;
     }

@@ -25,8 +25,6 @@ enum
 
 void Thread::ReadCallback(evutil_socket_t fd, short events, void* arg)
 {
-    (void) events;
-
     Thread* thread = static_cast<Thread*>(arg);
 
     do
@@ -90,10 +88,10 @@ Thread::Thread() : thread_ctx_(), write_fd_mutex_(), tq_(), pending_notify_list_
 {
     thread_id_ = (pthread_t) -1;
     pipe_[0] = pipe_[1] = -1;
-    thread_ev_base_ = NULL;
-    read_event_ = NULL;
+    thread_ev_base_ = nullptr;
+    read_event_ = nullptr;
     stopping_ = false;
-    timer_axis_ = NULL;
+    timer_axis_ = nullptr;
 }
 
 Thread::~Thread()
@@ -110,7 +108,7 @@ void Thread::Release()
 
 int Thread::Initialize(const void* ctx)
 {
-    if (NULL == ctx)
+    if (nullptr == ctx)
     {
         return -1;
     }
@@ -146,7 +144,7 @@ int Thread::Initialize(const void* ctx)
     LOG_DEBUG("after set, pipe0 size: " << pipe0_size << ", pipe1 size: " << pipe1_size);
 
     thread_ev_base_ = event_base_new();
-    if (NULL == thread_ev_base_)
+    if (nullptr == thread_ev_base_)
     {
         const int err = errno;
         LOG_ERROR("failed to create thread event base, errno: " << err << ", err msg: " << strerror(err));
@@ -154,7 +152,7 @@ int Thread::Initialize(const void* ctx)
     }
 
     read_event_ = event_new(thread_ev_base_, pipe_[0], EV_READ | EV_PERSIST, Thread::ReadCallback, this);
-    if (NULL == read_event_)
+    if (nullptr == read_event_)
     {
         const int err = errno;
         LOG_ERROR("failed to create event, errno: " << err << ", err msg: " << strerror(err));
@@ -186,11 +184,11 @@ void Thread::Finalize()
     thread_ctx_.sink->OnFinalize();
     SAFE_FINALIZE(timer_axis_);
 
-    if (read_event_ != NULL)
+    if (read_event_ != nullptr)
     {
         event_del(read_event_);
         event_free(read_event_);
-        read_event_ = NULL;
+        read_event_ = nullptr;
     }
 
     if (pipe_[0] != -1)
@@ -203,10 +201,10 @@ void Thread::Finalize()
         close(pipe_[1]);
     }
 
-    if (thread_ev_base_ != NULL)
+    if (thread_ev_base_ != nullptr)
     {
         event_base_free(thread_ev_base_);
-        thread_ev_base_ = NULL;
+        thread_ev_base_ = nullptr;
     }
 
     pending_notify_list_.clear();
@@ -261,11 +259,6 @@ void Thread::PushTask(ThreadTask* task)
 
 void Thread::OnTimer(TimerID timer_id, void* data, size_t len, int times)
 {
-    (void) timer_id;
-    (void) data;
-    (void) len;
-    (void) times;
-
     // 加锁后每次只发送一个通知，基本不会影响往队列里面写
     std::lock_guard<std::mutex> lock(write_fd_mutex_);
 
@@ -349,7 +342,7 @@ void Thread::OnStop()
     while (!tq_.IsEmpty())
     {
         ThreadTask* task = tq_.PopFront();
-        if (task != NULL)
+        if (task != nullptr)
         {
             thread_ctx_.sink->OnTask(task);
             task->Release();
@@ -412,7 +405,7 @@ void Thread::OnTask()
     ThreadTask* task = tq_.PopFront();
     write_fd_mutex_.unlock();
 
-    if (task != NULL)
+    if (task != nullptr)
     {
         thread_ctx_.sink->OnTask(task);
         task->Release();
@@ -432,7 +425,7 @@ int Thread::LoadTimerAxis()
     }
 
     timer_axis_ = static_cast<TimerAxisInterface*>(timer_axis_loader_.GetModuleInterface());
-    if (NULL == timer_axis_)
+    if (nullptr == timer_axis_)
     {
         LOG_ERROR(timer_axis_loader_.GetLastErrMsg());
         return -1;
@@ -452,7 +445,7 @@ int Thread::LoadTimerAxis()
 
 void Thread::StartPendingNotifyTimer()
 {
-    if (NULL == timer_axis_)
+    if (nullptr == timer_axis_)
     {
         return;
     }
@@ -468,7 +461,7 @@ void Thread::StartPendingNotifyTimer()
 
 void Thread::StopPendingNotifyTimer()
 {
-    if (NULL == timer_axis_)
+    if (nullptr == timer_axis_)
     {
         return;
     }

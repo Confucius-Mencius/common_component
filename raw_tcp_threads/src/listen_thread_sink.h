@@ -37,21 +37,21 @@ public:
     void OnTask(const ThreadTask* task) override;
     bool CanExit() const override;
 
-    void SetTCPThreadGroup(ThreadGroupInterface* tcp_thread_group)
+    void SetIOThreadGroup(ThreadGroupInterface* io_thread_group)
     {
-        tcp_thread_group_ = tcp_thread_group;
+        io_thread_group_ = io_thread_group;
     }
 
     void OnClientConnected(const NewConnCtx* new_conn_ctx);
 
 private:
     const ThreadsCtx* threads_ctx_;
-    ThreadGroupInterface* tcp_thread_group_;
+    ThreadGroupInterface* io_thread_group_;
     struct evconnlistener* listener_;
     int online_tcp_conn_count_;
     int max_online_tcp_conn_count_;
-    int tcp_thread_count_;
-    int last_tcp_thread_idx_;
+    int io_thread_count_;
+    int last_io_thread_idx_;
 };
 }
 }

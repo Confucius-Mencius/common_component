@@ -3,7 +3,7 @@
 #include "num_util.h"
 #include "str_util.h"
 
-LogEngineInterface* g_log_engine = NULL;
+LogEngineInterface* g_log_engine = nullptr;
 
 namespace app_launcher
 {
@@ -46,10 +46,10 @@ void ServiceMgr::EventLogCallback(int severity, const char* msg)
 ServiceMgr::ServiceMgr() : last_err_msg_(), log_engine_loader_(), conf_center_loader_(),
     thread_center_loader_()
 {
-    app_launcher_ = NULL;
-    log_engine_ = NULL;
-    conf_center_ = NULL;
-    thread_center_ = NULL;
+    app_launcher_ = nullptr;
+    log_engine_ = nullptr;
+    conf_center_ = nullptr;
+    thread_center_ = nullptr;
 }
 
 ServiceMgr::~ServiceMgr()
@@ -79,7 +79,7 @@ void ServiceMgr::Release()
     SAFE_RELEASE_MODULE(thread_center_, thread_center_loader_);
     SAFE_RELEASE_MODULE(conf_center_, conf_center_loader_);
     SAFE_RELEASE_MODULE(log_engine_, log_engine_loader_);
-    g_log_engine = NULL;
+    g_log_engine = nullptr;
 }
 
 int ServiceMgr::Initialize()
@@ -152,7 +152,7 @@ int ServiceMgr::LoadLogEngine()
     }
 
     log_engine_ = static_cast<LogEngineInterface*>(log_engine_loader_.GetModuleInterface(0));
-    if (NULL == log_engine_)
+    if (nullptr == log_engine_)
     {
         SET_LAST_ERR_MSG(&last_err_msg_, log_engine_loader_.GetLastErrMsg());
         return -1;
@@ -187,7 +187,7 @@ int ServiceMgr::LoadConfCenter()
     }
 
     conf_center_ = static_cast<ConfCenterInterface*>(conf_center_loader_.GetModuleInterface(0));
-    if (NULL == conf_center_)
+    if (nullptr == conf_center_)
     {
         SET_LAST_ERR_MSG(&last_err_msg_, conf_center_loader_.GetLastErrMsg());
         return -1;
@@ -218,7 +218,7 @@ int ServiceMgr::LoadThreadCenter()
     }
 
     thread_center_ = static_cast<ThreadCenterInterface*>(thread_center_loader_.GetModuleInterface());
-    if (NULL == thread_center_)
+    if (nullptr == thread_center_)
     {
         LOG_ERROR(thread_center_loader_.GetLastErrMsg());
         return -1;

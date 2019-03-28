@@ -11,8 +11,6 @@ namespace raw
 void ListenThreadSink::ErrorCallback(struct evconnlistener* listener, void* arg)
 {
     // 当ulimit -n较低时会报错： errno: 24, err msg: Too many open files
-    (void) arg;
-
     const int err = EVUTIL_SOCKET_ERROR();
     evutil_socket_t sock_fd = evconnlistener_get_fd(listener);
 
@@ -23,9 +21,6 @@ void ListenThreadSink::ErrorCallback(struct evconnlistener* listener, void* arg)
 void ListenThreadSink::OnAccept(struct evconnlistener* listener, evutil_socket_t sock_fd,
                                 struct sockaddr* sock_addr, int sock_addr_len, void* arg)
 {
-    (void) listener;
-    (void) sock_addr_len;
-
     ListenThreadSink* sink = static_cast<ListenThreadSink*>(arg);
 
     if (sink->GetThread()->IsStopping())
@@ -49,8 +44,8 @@ void ListenThreadSink::OnAccept(struct evconnlistener* listener, evutil_socket_t
     NewConnCtx new_conn_ctx;
     new_conn_ctx.client_sock_fd = sock_fd;
 
-    if (NULL == evutil_inet_ntop(AF_INET, &(client_addr->sin_addr),
-                                 new_conn_ctx.client_ip, sizeof(new_conn_ctx.client_ip)))
+    if (nullptr == evutil_inet_ntop(AF_INET, &(client_addr->sin_addr),
+                                    new_conn_ctx.client_ip, sizeof(new_conn_ctx.client_ip)))
     {
         LOG_ERROR("failed to get client ip, socket fd: " << sock_fd);
     }
@@ -66,13 +61,13 @@ void ListenThreadSink::OnAccept(struct evconnlistener* listener, evutil_socket_t
 
 ListenThreadSink::ListenThreadSink()
 {
-    threads_ctx_ = NULL;
-    tcp_thread_group_ = NULL;
-    listener_ = NULL;
+    threads_ctx_ = nullptr;
+    io_thread_group_ = nullptr;
+    listener_ = nullptr;
     online_tcp_conn_count_ = 0;
     max_online_tcp_conn_count_ = 0;
-    tcp_thread_count_ = 0;
-    last_tcp_thread_idx_ = 0;
+    io_thread_count_ = 0;
+    last_io_thread_idx_ = 0;
 }
 
 ListenThreadSink::~ListenThreadSink()
@@ -151,11 +146,18 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 //            break;
 //        }
 
+    // SO_REUSEPORT支持多个进程或者线程绑定到同一端口，提高服务器程序的性能，解决的问题：
+    // 1. 允许多个套接字 bind()/listen() 同一个TCP/UDP端口
+    //      每一个线程拥有自己的服务器套接字
+    //      在服务器套接字上没有了锁的竞争
+    // 2. 内核层面实现负载均衡
+    // 3. 安全层面，监听同一个端口的套接字只能位于同一个用户下面(effective UID)
+    // 4. 可用于实现服务的无缝切换（更新）
     listener_ = evconnlistener_new_bind(self_thread_->GetThreadEvBase(), ListenThreadSink::OnAccept, this,
-                                        LEV_OPT_REUSEABLE | LEV_OPT_REUSEABLE_PORT | LEV_OPT_CLOSE_ON_EXEC |
-                                        LEV_OPT_CLOSE_ON_FREE | LEV_OPT_DEFERRED_ACCEPT, -1,
+                                        LEV_OPT_REUSEABLE | LEV_OPT_REUSEABLE_PORT | LEV_OPT_CLOSE_ON_EXEC
+                                        | LEV_OPT_CLOSE_ON_FREE | LEV_OPT_DEFERRED_ACCEPT, -1,
                                         (struct sockaddr*) &listen_sock_addr, listen_sock_addr_len);
-    if (NULL == listener_)
+    if (nullptr == listener_)
     {
         const int err = EVUTIL_SOCKET_ERROR();
         LOG_ERROR("failed to create listener, errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
@@ -164,16 +166,16 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 
     evconnlistener_set_error_cb(listener_, ListenThreadSink::ErrorCallback);
 
-    tcp_thread_count_ = threads_ctx_->conf.thread_count;
+    io_thread_count_ = threads_ctx_->conf.thread_count;
     return 0;
 }
 
 void ListenThreadSink::OnFinalize()
 {
-    if (listener_ != NULL)
+    if (listener_ != nullptr)
     {
         evconnlistener_free(listener_);
-        listener_ = NULL;
+        listener_ = nullptr;
     }
 
     ThreadSinkInterface::OnFinalize();
@@ -252,17 +254,17 @@ bool ListenThreadSink::CanExit() const
 void ListenThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
 {
     ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_CONN_CONNECTED, self_thread_, NULL, new_conn_ctx, sizeof(NewConnCtx));
-    if (NULL == task)
+    if (nullptr == task)
     {
         LOG_ERROR("failed to create new conn task");
         evutil_closesocket(new_conn_ctx->client_sock_fd);
         return;
     }
 
-    const int tcp_thread_idx = last_tcp_thread_idx_;
-    last_tcp_thread_idx_ = (last_tcp_thread_idx_ + 1) % tcp_thread_count_;
+    const int io_thread_idx = last_io_thread_idx_;
+    last_io_thread_idx_ = (last_io_thread_idx_ + 1) % io_thread_count_;
 
-    if (tcp_thread_group_->PushTaskToThread(task, tcp_thread_idx) != 0)
+    if (io_thread_group_->PushTaskToThread(task, io_thread_idx) != 0)
     {
         task->Release();
         return;

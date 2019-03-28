@@ -22,9 +22,9 @@ class TimerSink1 : public TimerSinkInterface
 public:
     TimerSink1()
     {
-        thread_ev_base_ = NULL;
-        timer_axis_ = NULL;
-        timer_sink_ = NULL;
+        thread_ev_base_ = nullptr;
+        timer_axis_ = nullptr;
+        timer_sink_ = nullptr;
     }
 
     void SetCtx(struct event_base* thread_ev_base, TimerAxisInterface* timer_axis, TimerSinkInterface* sink)
@@ -36,9 +36,6 @@ public:
 
     virtual void OnTimer(TimerID timer_id, void* data, size_t len, int times)
     {
-        (void) data;
-        (void) len;
-
         LOG_DEBUG("on timer, times: " << times);
         timer_axis_->KillTimer(timer_sink_, timer_id);
         event_base_loopbreak(thread_ev_base_);
@@ -71,9 +68,9 @@ class TimerSink2 : public TimerSinkInterface
 public:
     TimerSink2()
     {
-        thread_ev_base_ = NULL;
-        timer_axis_ = NULL;
-        timer_sink_ = NULL;
+        thread_ev_base_ = nullptr;
+        timer_axis_ = nullptr;
+        timer_sink_ = nullptr;
         interval_.tv_sec = interval_.tv_usec = 0;
     }
 
@@ -88,9 +85,6 @@ public:
 
     virtual void OnTimer(TimerID timer_id, void* data, size_t len, int times)
     {
-        (void) data;
-        (void) len;
-
         LOG_DEBUG("on timer, times: " << times);
         timer_axis_->KillTimer(timer_sink_, timer_id);
         timer_axis_->SetTimer(timer_sink_, timer_id, interval_, NULL, 0);
@@ -133,9 +127,9 @@ class TimerSink3 : public TimerSinkInterface
 public:
     TimerSink3()
     {
-        thread_ev_base_ = NULL;
-        timer_axis_ = NULL;
-        other_timer_sink_ = NULL;
+        thread_ev_base_ = nullptr;
+        timer_axis_ = nullptr;
+        other_timer_sink_ = nullptr;
         other_timer_id_ = -1;
     }
 
@@ -149,10 +143,6 @@ public:
 
     virtual void OnTimer(TimerID timer_id, void* data, size_t len, int times)
     {
-        (void) timer_id;
-        (void) data;
-        (void) len;
-
         LOG_DEBUG("on timer, times: " << times);
         timer_axis_->KillTimer(other_timer_sink_, other_timer_id_);
 
@@ -194,9 +184,9 @@ class TimerSink4 : public TimerSinkInterface
 public:
     TimerSink4()
     {
-        thread_ev_base_ = NULL;
-        timer_axis_ = NULL;
-        other_timer_sink_ = NULL;
+        thread_ev_base_ = nullptr;
+        timer_axis_ = nullptr;
+        other_timer_sink_ = nullptr;
         other_timer_id_ = -1;
         other_interval_.tv_sec = other_interval_.tv_usec = 0;
     }
@@ -213,10 +203,6 @@ public:
 
     virtual void OnTimer(TimerID timer_id, void* data, size_t len, int times)
     {
-        (void) timer_id;
-        (void) data;
-        (void) len;
-
         LOG_DEBUG("on timer, times: " << times);
         timer_axis_->SetTimer(other_timer_sink_, other_timer_id_, other_interval_, NULL, 0);
 
@@ -260,9 +246,9 @@ class TimerSink5 : public TimerSinkInterface
 public:
     TimerSink5()
     {
-        thread_ev_base_ = NULL;
-        timer_axis_ = NULL;
-        timer_sink_ = NULL;
+        thread_ev_base_ = nullptr;
+        timer_axis_ = nullptr;
+        timer_sink_ = nullptr;
         ntimes_ = 0;
     }
 
@@ -276,10 +262,6 @@ public:
 
     virtual void OnTimer(TimerID timer_id, void* data, size_t len, int times)
     {
-        (void) timer_id;
-        (void) data;
-        (void) len;
-
         LOG_DEBUG("on timer, times: " << times);
 
         if (times >= ntimes_)

@@ -2,7 +2,7 @@
 #include "app_frame_conf_mgr_interface.h"
 #include "listen_thread_sink.h"
 #include "str_util.h"
-#include "thread_sink.h"
+#include "io_thread_sink.h"
 #include "version.h"
 
 namespace tcp
@@ -11,8 +11,8 @@ namespace raw
 {
 Threads::Threads() : threads_ctx_(), related_thread_groups_()
 {
-    listen_thread_group_ = NULL;
-    tcp_thread_group_ = NULL;
+    listen_thread_group_ = nullptr;
+    io_thread_group_ = nullptr;
 }
 
 Threads::~Threads()
@@ -31,14 +31,14 @@ const char* Threads::GetLastErrMsg() const
 
 void Threads::Release()
 {
-    SAFE_RELEASE(tcp_thread_group_);
+    SAFE_RELEASE(io_thread_group_);
     SAFE_RELEASE(listen_thread_group_);
     delete this;
 }
 
 int Threads::Initialize(const void* ctx)
 {
-    if (NULL == ctx)
+    if (nullptr == ctx)
     {
         return -1;
     }
@@ -49,7 +49,7 @@ int Threads::Initialize(const void* ctx)
 
 void Threads::Finalize()
 {
-    SAFE_FINALIZE(tcp_thread_group_);
+    SAFE_FINALIZE(io_thread_group_);
     SAFE_FINALIZE(listen_thread_group_);
 }
 
@@ -60,7 +60,7 @@ int Threads::Activate()
         return -1;
     }
 
-    if (SAFE_ACTIVATE_FAILED(tcp_thread_group_) != 0)
+    if (SAFE_ACTIVATE_FAILED(io_thread_group_) != 0)
     {
         return -1;
     }
@@ -70,7 +70,7 @@ int Threads::Activate()
 
 void Threads::Freeze()
 {
-    SAFE_FREEZE(tcp_thread_group_);
+    SAFE_FREEZE(io_thread_group_);
     SAFE_FREEZE(listen_thread_group_);
 }
 
@@ -89,34 +89,34 @@ int Threads::CreateThreadGroup(const char* name_prefix)
         listen_thread_group_ctx.threads_ctx = &threads_ctx_;
 
         listen_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup(&listen_thread_group_ctx);
-        if (NULL == listen_thread_group_)
+        if (nullptr == listen_thread_group_)
         {
             break;
         }
 
-        ThreadGroupCtx tcp_thread_group_ctx;
-        tcp_thread_group_ctx.common_component_dir = threads_ctx_.common_component_dir;
-        tcp_thread_group_ctx.enable_cpu_profiling = threads_ctx_.app_frame_conf_mgr->EnableCPUProfiling();
-        tcp_thread_group_ctx.thread_name = std::string(name_prefix) + " thread";
-        tcp_thread_group_ctx.thread_count = threads_ctx_.conf.thread_count;
-        tcp_thread_group_ctx.thread_sink_creator = ThreadSink::Create;
-        tcp_thread_group_ctx.threads_ctx = &threads_ctx_;
+        ThreadGroupCtx io_thread_group_ctx;
+        io_thread_group_ctx.common_component_dir = threads_ctx_.common_component_dir;
+        io_thread_group_ctx.enable_cpu_profiling = threads_ctx_.app_frame_conf_mgr->EnableCPUProfiling();
+        io_thread_group_ctx.thread_name = std::string(name_prefix) + " thread";
+        io_thread_group_ctx.thread_count = threads_ctx_.conf.thread_count;
+        io_thread_group_ctx.thread_sink_creator = IOThreadSink::Create;
+        io_thread_group_ctx.threads_ctx = &threads_ctx_;
 
-        tcp_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup(&tcp_thread_group_ctx);
-        if (NULL == tcp_thread_group_)
+        io_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup(&io_thread_group_ctx);
+        if (nullptr == io_thread_group_)
         {
             break;
         }
 
         ThreadInterface* listen_thread = listen_thread_group_->GetThread(0);
         ListenThreadSink* listen_thread_sink = static_cast<ListenThreadSink*>(listen_thread->GetThreadSink());
-        listen_thread_sink->SetTCPThreadGroup(tcp_thread_group_);
+        listen_thread_sink->SetIOThreadGroup(io_thread_group_);
 
-        for (int i = 0; i < tcp_thread_group_->GetThreadCount(); ++i)
+        for (int i = 0; i < io_thread_group_->GetThreadCount(); ++i)
         {
-            ThreadSink* thread_sink = static_cast<ThreadSink*>(tcp_thread_group_->GetThread(i)->GetThreadSink());
-            thread_sink->SetListenThread(listen_thread);
-            thread_sink->SetTCPThreadGroup(tcp_thread_group_);
+            IOThreadSink* io_thread_sink = static_cast<IOThreadSink*>(io_thread_group_->GetThread(i)->GetThreadSink());
+            io_thread_sink->SetListenThread(listen_thread);
+            io_thread_sink->SetIOThreadGroup(io_thread_group_);
         }
 
         ret = 0;
@@ -124,12 +124,12 @@ int Threads::CreateThreadGroup(const char* name_prefix)
 
     if (ret != 0)
     {
-        if (tcp_thread_group_ != NULL)
+        if (io_thread_group_ != nullptr)
         {
-            SAFE_DESTROY(tcp_thread_group_);
+            SAFE_DESTROY(io_thread_group_);
         }
 
-        if (listen_thread_group_ != NULL)
+        if (listen_thread_group_ != nullptr)
         {
             SAFE_DESTROY(listen_thread_group_);
         }
@@ -140,17 +140,17 @@ int Threads::CreateThreadGroup(const char* name_prefix)
 
 void Threads::SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups)
 {
-    if (NULL == related_thread_groups)
+    if (nullptr == related_thread_groups)
     {
         return;
     }
 
     related_thread_groups_ = *related_thread_groups;
 
-    for (int i = 0; i < tcp_thread_group_->GetThreadCount(); ++i)
+    for (int i = 0; i < io_thread_group_->GetThreadCount(); ++i)
     {
-        ThreadSink* tcp_thread_sink = static_cast<ThreadSink*>(tcp_thread_group_->GetThread(i)->GetThreadSink());
-        tcp_thread_sink->SetRelatedThreadGroups(&related_thread_groups_);
+        IOThreadSink* io_thread_sink = static_cast<IOThreadSink*>(io_thread_group_->GetThread(i)->GetThreadSink());
+        io_thread_sink->SetRelatedThreadGroups(&related_thread_groups_);
     }
 }
 
@@ -159,9 +159,9 @@ ThreadGroupInterface* Threads::GetListenThreadGroup() const
     return listen_thread_group_;
 }
 
-ThreadGroupInterface* Threads::GetTCPThreadGroup() const
+ThreadGroupInterface* Threads::GetIOThreadGroup() const
 {
-    return tcp_thread_group_;
+    return io_thread_group_;
 }
 }
 }

@@ -29,7 +29,7 @@ struct TimerAxisCtx
 
     TimerAxisCtx()
     {
-        thread_ev_base = NULL;
+        thread_ev_base = nullptr;
     }
 };
 

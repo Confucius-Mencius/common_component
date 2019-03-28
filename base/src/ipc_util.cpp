@@ -5,7 +5,7 @@
 
 key_t FToKey(const char* file_path, char proj_id)
 {
-    if (NULL == file_path || strlen(file_path) < 1 || 0 == proj_id)
+    if (nullptr == file_path || strlen(file_path) < 1 || 0 == proj_id)
     {
         return -1;
     }

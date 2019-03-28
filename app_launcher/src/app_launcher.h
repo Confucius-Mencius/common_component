@@ -23,7 +23,7 @@ struct AppLauncherCtx
     AppLauncherCtx()
     {
         argc = 0;
-        argv = NULL;
+        argv = nullptr;
         memset(common_component_dir, 0, sizeof(common_component_dir));
         memset(log_conf_file_path, 0, sizeof(log_conf_file_path));
         memset(logger_name, 0, sizeof(logger_name));

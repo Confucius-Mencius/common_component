@@ -5,7 +5,7 @@
 #include "buffer_event_conn.h"
 #include "normal_conn.h"
 #include "task_type.h"
-#include "thread_sink.h"
+#include "io_thread_sink.h"
 
 namespace tcp
 {
@@ -13,7 +13,7 @@ namespace raw
 {
 ConnCenter::ConnCenter() : conn_mgr_ctx_(), conn_hash_map_(), conn_id_seq_(), conn_id_hash_map_()
 {
-    thread_sink_ = NULL;
+    thread_sink_ = nullptr;
     max_online_conn_count_ = 0;
 }
 
@@ -38,7 +38,7 @@ void ConnCenter::Release()
 
 int ConnCenter::Initialize(const ConnCenterCtx* ctx)
 {
-    if (NULL == ctx)
+    if (nullptr == ctx)
     {
         return -1;
     }
@@ -92,7 +92,7 @@ BaseConn* ConnCenter::CreateConn(IOType io_type, int io_thread_idx, const char* 
     NormalConn* conn = NormalConn::Create();
 #endif
 
-    if (NULL == conn)
+    if (nullptr == conn)
     {
         const int err = errno;
         LOG_ERROR("failed to create tcp conn, errno: " << err << ", err msg: " << strerror(errno));

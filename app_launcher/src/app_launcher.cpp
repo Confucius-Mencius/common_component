@@ -8,9 +8,9 @@ namespace app_launcher
 {
 AppLauncher::AppLauncher() : last_err_msg_(), service_mgr_(), event_wrapper_(), app_frame_loader_()
 {
-    app_launcher_ctx_ = NULL;
-    thread_ev_base_ = NULL;
-    app_frame_ = NULL;
+    app_launcher_ctx_ = nullptr;
+    thread_ev_base_ = nullptr;
+    app_frame_ = nullptr;
 }
 
 AppLauncher::~AppLauncher()
@@ -26,7 +26,7 @@ void AppLauncher::Release()
 {
     SAFE_RELEASE_MODULE(app_frame_, app_frame_loader_);
 
-    if (g_log_engine != NULL)
+    if (g_log_engine != nullptr)
     {
         LOG_ALWAYS(app_launcher_ctx_->app_name << " exit ok");
     }
@@ -37,7 +37,7 @@ void AppLauncher::Release()
 
 int AppLauncher::Initialize(const AppLauncherCtx* app_launcher_ctx)
 {
-    if (NULL == app_launcher_ctx)
+    if (nullptr == app_launcher_ctx)
     {
         return -1;
     }
@@ -86,7 +86,7 @@ int AppLauncher::Initialize(const AppLauncherCtx* app_launcher_ctx)
 
     // event_config方式
 //    struct event_config* cfg = event_config_new();
-//    if (NULL == cfg)
+//    if (nullptr == cfg)
 //    {
 //        const int err = errno;
 //        LOG_ERROR("failed to create libevent config, errno: " << err << ", err msg: " << strerror(err));
@@ -102,7 +102,7 @@ int AppLauncher::Initialize(const AppLauncherCtx* app_launcher_ctx)
 
 //    thread_ev_base_ = event_base_new_with_config(cfg);
     thread_ev_base_ = event_base_new();
-    if (NULL == thread_ev_base_)
+    if (nullptr == thread_ev_base_)
     {
         const int err = errno;
         LOG_ERROR("failed to create main thread event base, errno: " << err << ", err msg: " << strerror(err));
@@ -153,10 +153,10 @@ void AppLauncher::Finalize()
     SAFE_FINALIZE(app_frame_);
     service_mgr_.Finalize();
 
-    if (thread_ev_base_ != NULL)
+    if (thread_ev_base_ != nullptr)
     {
         event_base_free(thread_ev_base_);
-        thread_ev_base_ = NULL;
+        thread_ev_base_ = nullptr;
     }
 }
 
@@ -198,7 +198,7 @@ void AppLauncher::OnReload(bool app_conf_changed, bool log_conf_changed)
 
 void AppLauncher::OnExitCheck()
 {
-    if (app_frame_ != NULL)
+    if (app_frame_ != nullptr)
     {
         if (!app_frame_->CanExit())
         {
@@ -268,7 +268,7 @@ int AppLauncher::LoadAppFrame(const char* common_component_dir)
     }
 
     app_frame_ = static_cast<AppFrameInterface*>(app_frame_loader_.GetModuleInterface());
-    if (NULL == app_frame_)
+    if (nullptr == app_frame_)
     {
         LOG_ERROR(app_frame_loader_.GetLastErrMsg());
         return -1;

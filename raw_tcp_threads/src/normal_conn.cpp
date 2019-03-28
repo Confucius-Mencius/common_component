@@ -4,7 +4,7 @@
 #include <iomanip>
 #include "log_util.h"
 #include "task_type.h"
-#include "thread_sink.h"
+#include "io_thread_sink.h"
 
 #if !defined(USE_BUFFEREVENT)
 namespace tcp
@@ -20,7 +20,7 @@ void NormalConn::ReadCallback(evutil_socket_t fd, short events, void* arg)
     ConnMgr* conn_mgr = thread_sink->GetConnMgr();
 
     BaseConn* conn = conn_mgr->GetConn(fd);
-    if (NULL == conn)
+    if (nullptr == conn)
     {
         LOG_ERROR("failed to get tcp conn by socket fd: " << fd);
         return;
@@ -213,8 +213,8 @@ void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
 
 NormalConn::NormalConn() : send_list_()
 {
-    read_event_ = NULL;
-    write_event_ = NULL;
+    read_event_ = nullptr;
+    write_event_ = nullptr;
 }
 
 NormalConn::~NormalConn()
@@ -228,13 +228,11 @@ void NormalConn::Release()
 
 int NormalConn::Initialize(const void* ctx)
 {
-    (void) ctx;
-
     read_event_ = event_new(thread_sink_->GetThread()->GetThreadEvBase(),
                             sock_fd_,
                             EV_READ | EV_PERSIST | EV_CLOSED,
                             NormalConn::ReadCallback, this);
-    if (NULL == read_event_)
+    if (nullptr == read_event_)
     {
         const int err = EVUTIL_SOCKET_ERROR();
         LOG_ERROR("failed to create read event, errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
@@ -250,7 +248,7 @@ int NormalConn::Initialize(const void* ctx)
         evutil_closesocket(sock_fd_);
 
         event_free(read_event_);
-        read_event_ = NULL;
+        read_event_ = nullptr;
 
         return -1;
     }
@@ -260,18 +258,18 @@ int NormalConn::Initialize(const void* ctx)
 
 void NormalConn::Finalize()
 {
-    if (write_event_ != NULL)
+    if (write_event_ != nullptr)
     {
         event_del(write_event_);
         event_free(write_event_);
-        write_event_ = NULL;
+        write_event_ = nullptr;
     }
 
-    if (read_event_ != NULL)
+    if (read_event_ != nullptr)
     {
         event_del(read_event_);
         event_free(read_event_);
-        read_event_ = NULL;
+        read_event_ = nullptr;
     }
 
     send_list_.clear();
@@ -288,7 +286,7 @@ void NormalConn::Freeze()
 
 int NormalConn::Send(const void* data, size_t len)
 {
-    if (NULL == write_event_)
+    if (nullptr == write_event_)
     {
         int ret = -1;
 
@@ -297,7 +295,7 @@ int NormalConn::Send(const void* data, size_t len)
             write_event_ = event_new(event_get_base(read_event_), sock_fd_,
                                      EV_WRITE | EV_PERSIST, // EV_CLOSED 在read事件中处理
                                      NormalConn::WriteCallback, this);
-            if (NULL == write_event_)
+            if (nullptr == write_event_)
             {
                 const int err = EVUTIL_SOCKET_ERROR();
                 LOG_ERROR("failed to create write event, errno: " << err << ", err msg: "
@@ -319,10 +317,10 @@ int NormalConn::Send(const void* data, size_t len)
 
         if (ret != 0)
         {
-            if (write_event_ != NULL)
+            if (write_event_ != nullptr)
             {
                 event_free(write_event_);
-                write_event_ = NULL;
+                write_event_ = nullptr;
             }
 
             return ret;
@@ -339,7 +337,7 @@ int NormalConn::Send(const void* data, size_t len)
                           << evutil_socket_error_to_string(err));
 
                 event_free(write_event_);
-                write_event_ = NULL;
+                write_event_ = nullptr;
                 return -1;
             }
 

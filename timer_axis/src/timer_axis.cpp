@@ -12,14 +12,14 @@ struct CallbackArg
 
     CallbackArg()
     {
-        timer_axis = NULL;
-        timer = NULL;
+        timer_axis = nullptr;
+        timer = nullptr;
     }
 
     static CallbackArg* Create(TimerAxis* timer_axis, Timer* timer)
     {
         CallbackArg* callback_arg = new CallbackArg();
-        if (NULL == callback_arg)
+        if (nullptr == callback_arg)
         {
             const int err = errno;
             LOG_ERROR("failed to alloc memory, errno: " << err << ", err msg: " << strerror(err));
@@ -40,9 +40,6 @@ struct CallbackArg
 
 void TimerAxis::OnTimer(evutil_socket_t fd, short event, void* arg)
 {
-    (void) fd;
-    (void) event;
-
     CallbackArg* callback_arg = static_cast<CallbackArg*>(arg);
     Timer* timer = callback_arg->timer;
     const int times = ++(timer->times);
@@ -82,7 +79,7 @@ void TimerAxis::Release()
 
 int TimerAxis::Initialize(const void* ctx)
 {
-    if (NULL == ctx)
+    if (nullptr == ctx)
     {
         return -1;
     }
@@ -101,11 +98,11 @@ void TimerAxis::Finalize()
         callback_arg->Release();
         ReleaseAsyncData(&timer);
 
-        if (timer.event != NULL)
+        if (timer.event != nullptr)
         {
             event_del(timer.event);
             event_free(timer.event);
-            timer.event = NULL;
+            timer.event = nullptr;
         }
     }
 
@@ -123,7 +120,7 @@ void TimerAxis::Freeze()
 
 bool TimerAxis::TimerExist(TimerSinkInterface* sink, TimerID timer_id)
 {
-    if (NULL == sink)
+    if (nullptr == sink)
     {
         return false;
     }
@@ -144,7 +141,7 @@ bool TimerAxis::TimerExist(TimerSinkInterface* sink, TimerID timer_id)
 int TimerAxis::SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct timeval& interval,
                         void* data, size_t len, int total_times)
 {
-    if (NULL == sink)
+    if (nullptr == sink)
     {
         return -1;
     }
@@ -202,20 +199,20 @@ int TimerAxis::SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct
         }
 
         CallbackArg* callback_arg = CallbackArg::Create(this, &timer);
-        if (NULL == callback_arg)
+        if (nullptr == callback_arg)
         {
             ReleaseAsyncData(&timer);
             timer_hash_map_.erase(timer_key);
             return -1;
         }
 
-        struct event* timer_event = NULL;
+        struct event* timer_event = nullptr;
         int ret = -1;
 
         do
         {
             timer_event = event_new(timer_axis_ctx_.thread_ev_base, -1, EV_PERSIST, TimerAxis::OnTimer, callback_arg);
-            if (NULL == timer_event)
+            if (nullptr == timer_event)
             {
                 const int err = errno;
                 LOG_ERROR("failed to create timer event, errno: " << err << ", err msg: " << strerror(err));
@@ -251,7 +248,7 @@ int TimerAxis::SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct
 
 void TimerAxis::KillTimer(TimerSinkInterface* sink, TimerID timer_id)
 {
-    if (NULL == sink)
+    if (nullptr == sink)
     {
         return;
     }
@@ -278,7 +275,7 @@ void TimerAxis::KillTimer(TimerSinkInterface* sink, TimerID timer_id)
 
 int TimerAxis::FillAsyncData(Timer* timer, void* data, size_t len)
 {
-    if (NULL == data || len < 1)
+    if (nullptr == data || len < 1)
     {
         return 0; // 没有异步数据需要暂存
     }
@@ -294,7 +291,7 @@ int TimerAxis::FillAsyncData(Timer* timer, void* data, size_t len)
     ReleaseAsyncData(timer);
 
     timer->data = new char[len + 1];
-    if (NULL == timer->data)
+    if (nullptr == timer->data)
     {
         const int err = errno;
         LOG_ERROR("failed to alloc memory, errno: " << err << ", err msg: " << strerror(err));
@@ -308,10 +305,10 @@ int TimerAxis::FillAsyncData(Timer* timer, void* data, size_t len)
 
 void TimerAxis::ReleaseAsyncData(Timer* timer)
 {
-    if (timer->data != NULL && timer->len > 0)
+    if (timer->data != nullptr && timer->len > 0)
     {
         delete[] (char*) timer->data;
-        timer->data = NULL;
+        timer->data = nullptr;
         timer->len = 0;
     }
 }
@@ -320,10 +317,10 @@ void TimerAxis::RemoveTimer(Timer* timer)
 {
     ReleaseAsyncData(timer);
 
-    if (timer->event != NULL)
+    if (timer->event != nullptr)
     {
         event_free(timer->event);
-        timer->event = NULL;
+        timer->event = nullptr;
     }
 
     timer_hash_map_.erase(timer->timer_key);

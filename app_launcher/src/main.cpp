@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
     bool chdir_to_root = FLAGS_chdir_to_root;
 
     char cur_working_dir[MAX_PATH_LEN] = "";
-    if (NULL == getcwd(cur_working_dir, sizeof(cur_working_dir)))
+    if (nullptr == getcwd(cur_working_dir, sizeof(cur_working_dir)))
     {
         const int err = errno;
         syslog(LOG_ERR, "getcwd failed, errno: %d, err msg: %s", err, strerror(err));
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 
     gflags::ShutDownCommandLineFlags();
 
-    if (NULL == getcwd(app_launcher_ctx.cur_working_dir, sizeof(app_launcher_ctx.cur_working_dir)))
+    if (nullptr == getcwd(app_launcher_ctx.cur_working_dir, sizeof(app_launcher_ctx.cur_working_dir)))
     {
         const int err = errno;
         syslog(LOG_ERR, "getcwd failed, errno: %d, err msg: %s", err, strerror(err));
@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
     StrCpy(app_launcher_ctx.app_conf_file_path, sizeof(app_launcher_ctx.app_conf_file_path), app_conf_file_path);
 
     app_launcher::AppLauncher* app_launcher = app_launcher::AppLauncher::Create();
-    if (NULL == app_launcher)
+    if (nullptr == app_launcher)
     {
         syslog(LOG_ERR, "failed to create app launcher");
         return -1;

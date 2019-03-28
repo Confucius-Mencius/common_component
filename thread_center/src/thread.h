@@ -25,12 +25,12 @@ struct ThreadCtx
 
     ThreadCtx() : name()
     {
-        common_component_dir = NULL;
+        common_component_dir = nullptr;
         enable_cpu_profiling = false;
         idx = -1;
-        sink = NULL;
-        threads_ctx = NULL;
-        thread_group = NULL;
+        sink = nullptr;
+        threads_ctx = nullptr;
+        thread_group = nullptr;
     }
 };
 

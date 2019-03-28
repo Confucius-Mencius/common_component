@@ -45,12 +45,12 @@ struct ThreadGroupCtx
 
     ThreadGroupCtx() : thread_name()
     {
-        common_component_dir = NULL;
+        common_component_dir = nullptr;
         enable_cpu_profiling = false;
         thread_count = 0;
-        thread_sink_creator = NULL;
-        threads_ctx = NULL;
-        logic_args = NULL;
+        thread_sink_creator = nullptr;
+        threads_ctx = nullptr;
+        logic_args = nullptr;
     }
 };
 
@@ -76,7 +76,7 @@ class ThreadSinkInterface
 public:
     ThreadSinkInterface()
     {
-        self_thread_ = NULL;
+        self_thread_ = nullptr;
     }
 
     virtual ~ThreadSinkInterface()
@@ -88,15 +88,13 @@ public:
     virtual int OnInitialize(ThreadInterface* thread, const void* ctx)
     {
         self_thread_ = thread;
-        (void) ctx;
-
         LOG_TRACE(self_thread_->GetThreadName() << " OnInitialize");
         return 0;
     }
 
     virtual void OnFinalize()
     {
-        if (NULL == self_thread_)
+        if (nullptr == self_thread_)
         {
             return;
         }
@@ -106,7 +104,7 @@ public:
 
     virtual int OnActivate()
     {
-        if (NULL == self_thread_)
+        if (nullptr == self_thread_)
         {
             return 0;
         }
@@ -117,7 +115,7 @@ public:
 
     virtual void OnFreeze()
     {
-        if (NULL == self_thread_)
+        if (nullptr == self_thread_)
         {
             return;
         }
@@ -149,7 +147,6 @@ public:
 
     virtual void OnTask(const ThreadTask* task)
     {
-        (void) task;
         LOG_TRACE(self_thread_->GetThreadName() << " OnTask, task type: " << task->GetType());
     }
 

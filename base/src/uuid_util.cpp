@@ -16,7 +16,7 @@ UUID MakeUUID()
 
 char* UUID38(char* buf, size_t buf_size, const UUID& uuid)
 {
-    if (NULL == buf || buf_size != (UUID_LEN_38 + 1))
+    if (nullptr == buf || buf_size != (UUID_LEN_38 + 1))
     {
         return NULL;
     }
@@ -32,7 +32,7 @@ char* UUID38(char* buf, size_t buf_size, const UUID& uuid)
 
 char* UUID32(char* buf, size_t buf_size, const UUID& uuid)
 {
-    if (NULL == buf || buf_size != (UUID_LEN_32 + 1))
+    if (nullptr == buf || buf_size != (UUID_LEN_32 + 1))
     {
         return NULL;
     }

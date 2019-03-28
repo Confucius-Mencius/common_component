@@ -2,7 +2,7 @@
 #include "app_frame_conf_mgr_interface.h"
 #include "num_util.h"
 #include "task_type.h"
-#include "thread_sink.h"
+#include "io_thread_sink.h"
 
 namespace tcp
 {
@@ -10,9 +10,9 @@ namespace raw
 {
 Scheduler::Scheduler()
 {
-    threads_ctx_ = NULL;
-    thread_sink_ = NULL;
-    related_thread_groups_ = NULL;
+    threads_ctx_ = nullptr;
+    thread_sink_ = nullptr;
+    related_thread_groups_ = nullptr;
     last_tcp_thread_idx_ = 0;
     last_work_thread_idx_ = 0;
 }
@@ -23,7 +23,7 @@ Scheduler::~Scheduler()
 
 int Scheduler::Initialize(const void* ctx)
 {
-    if (NULL == ctx)
+    if (nullptr == ctx)
     {
         return -1;
     }
@@ -47,7 +47,7 @@ int Scheduler::SendToClient(const ConnGUID* conn_guid, const void* data, size_t 
     {
         // 是自己
         BaseConn* conn = static_cast<BaseConn*>(thread_sink_->GetConnMgr()->GetConnByID(conn_guid->conn_id));
-        if (NULL == conn)
+        if (nullptr == conn)
         {
             LOG_ERROR("failed to get tcp conn by id: " << conn_guid->conn_id);
             return -1;
@@ -58,7 +58,7 @@ int Scheduler::SendToClient(const ConnGUID* conn_guid, const void* data, size_t 
 
     // 是其它的tcp线程
     ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_SEND_TO_CLIENT, thread_sink_->GetThread(), conn_guid, data, len);
-    if (NULL == task)
+    if (nullptr == task)
     {
         const int err = errno;
         LOG_ERROR("failed to create task, errno: " << err << ", err msg: " << strerror(err));
@@ -75,7 +75,7 @@ int Scheduler::CloseClient(const ConnGUID* conn_guid)
     if (tcp_thread == thread_sink_->GetThread())
     {
         BaseConn* conn = static_cast<BaseConn*>(thread_sink_->GetConnMgr()->GetConnByID(conn_guid->conn_id));
-        if (NULL == conn)
+        if (nullptr == conn)
         {
             LOG_ERROR("failed to get tcp conn by id: " << conn_guid->conn_id);
             return -1;
@@ -86,7 +86,7 @@ int Scheduler::CloseClient(const ConnGUID* conn_guid)
     }
 
     ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_CLOSE_CONN, thread_sink_->GetThread(), conn_guid, NULL, 0);
-    if (NULL == task)
+    if (nullptr == task)
     {
         const int err = errno;
         LOG_ERROR("failed to create task, errno: " << err << ", err msg: " << strerror(err));
@@ -95,6 +95,11 @@ int Scheduler::CloseClient(const ConnGUID* conn_guid)
 
     tcp_thread->PushTask(task);
     return 0;
+}
+
+int Scheduler::SendToGlobalThread(const ConnGUID* conn_guid, const void* data, size_t len)
+{
+    return SendToThread(THREAD_TYPE_GLOBAL, conn_guid, data, len, 0);
 }
 
 int Scheduler::SendToTCPThread(const ConnGUID* conn_guid, const void* data, size_t len, int tcp_thread_idx)
@@ -107,18 +112,13 @@ int Scheduler::SendToWorkThread(const ConnGUID* conn_guid, const void* data, siz
     return SendToThread(THREAD_TYPE_WORK, conn_guid, data, len, work_thread_idx);
 }
 
-int Scheduler::SendToGlobalThread(const ConnGUID* conn_guid, const void* data, size_t len)
-{
-    return SendToThread(THREAD_TYPE_GLOBAL, conn_guid, data, len, 0);
-}
-
 void Scheduler::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups)
 {
     related_thread_groups_ = related_thread_groups;
 
-    if (related_thread_groups_->work_threads != NULL)
+    if (related_thread_groups_->work_thread_group != nullptr)
     {
-        const int work_thread_count = related_thread_groups_->work_threads->GetThreadCount();
+        const int work_thread_count = related_thread_groups_->work_thread_group->GetThreadCount();
         if (work_thread_count > 0)
         {
             last_work_thread_idx_ = rand() % work_thread_count;
@@ -141,7 +141,7 @@ int Scheduler::GetScheduleTCPThreadIdx(int tcp_thread_idx)
 
 int Scheduler::GetScheduleWorkThreadIdx(int work_thread_idx)
 {
-    const int work_thread_count = related_thread_groups_->work_threads->GetThreadCount();
+    const int work_thread_count = related_thread_groups_->work_thread_group->GetThreadCount();
 
     if (INVALID_IDX(work_thread_idx, 0, work_thread_count))
     {
@@ -154,16 +154,22 @@ int Scheduler::GetScheduleWorkThreadIdx(int work_thread_idx)
 
 int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const void* data, size_t len, int thread_idx)
 {
-    ThreadGroupInterface* thread_group = NULL;
-    ThreadInterface* thread = NULL;
+    ThreadGroupInterface* thread_group = nullptr;
+    ThreadInterface* thread = nullptr;
     int real_thread_idx = -1;
 
     switch (thread_type)
     {
+        case THREAD_TYPE_GLOBAL:
+        {
+            thread = related_thread_groups_->global_thread;
+        }
+        break;
+
         case THREAD_TYPE_TCP:
         {
             thread_group = thread_sink_->GetTCPThreadGroup();
-            if (NULL == thread_group)
+            if (nullptr == thread_group)
             {
                 LOG_ERROR("no such threads, thread type: " << thread_type);
                 return -1;
@@ -177,8 +183,8 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const vo
 
         case THREAD_TYPE_WORK:
         {
-            thread_group = related_thread_groups_->work_threads;
-            if (NULL == thread_group)
+            thread_group = related_thread_groups_->work_thread_group;
+            if (nullptr == thread_group)
             {
                 LOG_ERROR("no such threads, thread type: " << thread_type);
                 return -1;
@@ -189,26 +195,20 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const vo
         }
         break;
 
-        case THREAD_TYPE_GLOBAL:
-        {
-            thread = related_thread_groups_->global_thread;
-        }
-        break;
-
         default:
         {
         }
         break;
     }
 
-    if (NULL == thread)
+    if (nullptr == thread)
     {
         LOG_ERROR("no such thread, thread type: " << thread_type);
         return -1;
     }
 
     ThreadTask* task = new ThreadTask(TASK_TYPE_NORMAL, thread, conn_guid, data, len);
-    if (NULL == task)
+    if (nullptr == task)
     {
         const int err = errno;
         LOG_ERROR("failed to create task, errno: " << err << ", err msg: " << strerror(err));

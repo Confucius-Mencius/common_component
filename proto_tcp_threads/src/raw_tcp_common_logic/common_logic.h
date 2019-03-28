@@ -23,7 +23,7 @@ struct LogicItem
 
     LogicItem() : logic_so_path(), logic_loader()
     {
-        logic = NULL;
+        logic = nullptr;
     }
 };
 

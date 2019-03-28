@@ -32,19 +32,19 @@ public:
                      size_t msg_body_len) override;
     int SendToClient(const ConnGUID* conn_guid, const void* data, size_t len) override;
     int CloseClient(const ConnGUID* conn_guid) override;
+    int SendToGlobalThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
+                           size_t msg_body_len) override;
     int SendToTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
                         size_t msg_body_len, int tcp_thread_idx) override;
     int SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
                          size_t msg_body_len, int work_thread_idx) override;
-    int SendToGlobalThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
-                           size_t msg_body_len) override;
 
 private:
     enum
     {
+        THREAD_TYPE_GLOBAL,
         THREAD_TYPE_TCP,
         THREAD_TYPE_WORK,
-        THREAD_TYPE_GLOBAL,
     };
 
     int SendToThread(int thread_type, const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,

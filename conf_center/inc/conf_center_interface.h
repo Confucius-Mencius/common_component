@@ -16,7 +16,7 @@ struct ConfCenterCtx
 
     ConfCenterCtx()
     {
-        app_conf_file_path = NULL;
+        app_conf_file_path = nullptr;
     }
 };
 

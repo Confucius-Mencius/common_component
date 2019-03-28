@@ -353,7 +353,7 @@ private:
 
     int LoadGlobalLogicSo()
     {
-        char* global_logic_so = NULL;
+        char* global_logic_so = nullptr;
         if (conf_center_->GetConf(&global_logic_so, GLOBAL_LOGIC_SO_XPATH, true, "") != 0)
         {
             LOG_ERROR("failed to get " << GLOBAL_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
@@ -377,7 +377,7 @@ private:
 
     int LoadWorkCommonLogicSo()
     {
-        char* work_common_logic_so = NULL;
+        char* work_common_logic_so = nullptr;
         if (conf_center_->GetConf(&work_common_logic_so, WORK_COMMON_LOGIC_SO_XPATH, true, "") != 0)
         {
             LOG_ERROR("failed to get " << WORK_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
@@ -391,7 +391,7 @@ private:
 
     int LoadWorkLogicSoGroup()
     {
-        char** work_logic_so = NULL;
+        char** work_logic_so = nullptr;
         int n = 0;
         if (conf_center_->GetConf(&work_logic_so, n, WORK_LOGIC_SO_XPATH, true, "") != 0)
         {
@@ -422,7 +422,7 @@ private:
 
     int LoadBurdenCommonLogicSo()
     {
-        char* burden_common_logic_so = NULL;
+        char* burden_common_logic_so = nullptr;
         if (conf_center_->GetConf(&burden_common_logic_so, BURDEN_COMMON_LOGIC_SO_XPATH, true, "") != 0)
         {
             LOG_ERROR("failed to get " << BURDEN_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
@@ -436,7 +436,7 @@ private:
 
     int LoadBurdenLogicSoGroup()
     {
-        char** burden_logic_so = NULL;
+        char** burden_logic_so = nullptr;
         int n = 0;
         if (conf_center_->GetConf(&burden_logic_so, n, BURDEN_LOGIC_SO_XPATH, true, "") != 0)
         {
@@ -517,7 +517,7 @@ private:
 
     int LoadRawTCPAddr()
     {
-        char* raw_tcp_addr = NULL;
+        char* raw_tcp_addr = nullptr;
         if (conf_center_->GetConf(&raw_tcp_addr, RAW_TCP_ADDR_XPATH, true, "") != 0)
         {
             LOG_ERROR("failed to get " << RAW_TCP_ADDR_XPATH << ": " << conf_center_->GetLastErrMsg());
@@ -551,7 +551,7 @@ private:
 
     int LoadRawTCPCommonLogicSo()
     {
-        char* raw_tcp_common_logic_so = NULL;
+        char* raw_tcp_common_logic_so = nullptr;
         if (conf_center_->GetConf(&raw_tcp_common_logic_so, RAW_TCP_COMMON_LOGIC_SO_XPATH, true, "") != 0)
         {
             LOG_ERROR("failed to get " << RAW_TCP_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
@@ -565,7 +565,7 @@ private:
 
     int LoadRawTCPLogicSoGroup()
     {
-        char** raw_tcp_logic_so = NULL;
+        char** raw_tcp_logic_so = nullptr;
         int n = 0;
         if (conf_center_->GetConf(&raw_tcp_logic_so, n, RAW_TCP_LOGIC_SO_XPATH, true, "") != 0)
         {
@@ -628,7 +628,7 @@ private:
 
     int LoadProtoTCPAddr()
     {
-        char* proto_tcp_addr = NULL;
+        char* proto_tcp_addr = nullptr;
         if (conf_center_->GetConf(&proto_tcp_addr, PROTO_TCP_ADDR_XPATH, true, "") != 0)
         {
             LOG_ERROR("failed to get " << PROTO_TCP_ADDR_XPATH << ": " << conf_center_->GetLastErrMsg());
@@ -662,7 +662,7 @@ private:
 
     int LoadProtoTCPCommonLogicSo()
     {
-        char* proto_tcp_common_logic_so = NULL;
+        char* proto_tcp_common_logic_so = nullptr;
         if (conf_center_->GetConf(&proto_tcp_common_logic_so, PROTO_TCP_COMMON_LOGIC_SO_XPATH, true, "") != 0)
         {
             LOG_ERROR("failed to get " << PROTO_TCP_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
@@ -676,7 +676,7 @@ private:
 
     int LoadProtoTCPLogicSoGroup()
     {
-        char** proto_tcp_logic_so = NULL;
+        char** proto_tcp_logic_so = nullptr;
         int n = 0;
         if (conf_center_->GetConf(&proto_tcp_logic_so, n, PROTO_TCP_LOGIC_SO_XPATH, true, "") != 0)
         {
@@ -717,7 +717,7 @@ private:
 
     int LoadWSAddr()
     {
-        char* ws_addr = NULL;
+        char* ws_addr = nullptr;
         if (conf_center_->GetConf(&ws_addr, WS_ADDR_XPATH, true, "") != 0)
         {
             LOG_ERROR("failed to get " << WS_ADDR_XPATH << ": " << conf_center_->GetLastErrMsg());
@@ -751,7 +751,7 @@ private:
 
     int LoadWSCertificateChainFilePath()
     {
-        char* ws_certificate_chain_file_path = NULL;
+        char* ws_certificate_chain_file_path = nullptr;
         if (conf_center_->GetConf(&ws_certificate_chain_file_path, WS_CERTIFICATE_CHAIN_FILE_PATH_XPATH, true, "") != 0)
         {
             LOG_ERROR("failed to get " << WS_CERTIFICATE_CHAIN_FILE_PATH_XPATH << ": " << conf_center_->GetLastErrMsg());
@@ -765,7 +765,7 @@ private:
 
     int LoadWSPrivateKeyFilePath()
     {
-        char* ws_private_key_file_path = NULL;
+        char* ws_private_key_file_path = nullptr;
         if (conf_center_->GetConf(&ws_private_key_file_path, WS_PRIVATE_KEY_FILE_PATH_XPATH, true, "") != 0)
         {
             LOG_ERROR("failed to get " << WS_PRIVATE_KEY_FILE_PATH_XPATH << ": " << conf_center_->GetLastErrMsg());
@@ -789,7 +789,7 @@ private:
 
     int LoadWSCommonLogicSo()
     {
-        char* ws_common_logic_so = NULL;
+        char* ws_common_logic_so = nullptr;
         if (conf_center_->GetConf(&ws_common_logic_so, WS_COMMON_LOGIC_SO_XPATH, true, "") != 0)
         {
             LOG_ERROR("failed to get " << WS_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
@@ -803,7 +803,7 @@ private:
 
     int LoadWSLogicSoGroup()
     {
-        char** ws_logic_so = NULL;
+        char** ws_logic_so = nullptr;
         int n = 0;
         if (conf_center_->GetConf(&ws_logic_so, n, WS_LOGIC_SO_XPATH, true, "") != 0)
         {
@@ -854,7 +854,7 @@ private:
 
     int LoadUDPAddr()
     {
-        char* udp_addr = NULL;
+        char* udp_addr = nullptr;
         if (conf_center_->GetConf(&udp_addr, UDP_ADDR_XPATH, true, "") != 0)
         {
             LOG_ERROR("failed to get " << UDP_ADDR_XPATH << ": " << conf_center_->GetLastErrMsg());
@@ -888,7 +888,7 @@ private:
 
     int LoadUDPCommonLogicSo()
     {
-        char* udp_common_logic_so = NULL;
+        char* udp_common_logic_so = nullptr;
         if (conf_center_->GetConf(&udp_common_logic_so, UDP_COMMON_LOGIC_SO_XPATH, true, "") != 0)
         {
             LOG_ERROR("failed to get " << UDP_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
@@ -902,7 +902,7 @@ private:
 
     int LoadUDPLogicSoGroup()
     {
-        char** udp_logic_so = NULL;
+        char** udp_logic_so = nullptr;
         int n = 0;
         if (conf_center_->GetConf(&udp_logic_so, n, UDP_LOGIC_SO_XPATH, true, "") != 0)
         {

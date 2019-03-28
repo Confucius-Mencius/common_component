@@ -16,7 +16,7 @@ public:
     ThreadTask() : conn_guid_(), data_()
     {
         task_type_ = -1;
-        source_thread_ = NULL;
+        source_thread_ = nullptr;
     }
 
     ThreadTask(int task_type, ThreadInterface* source_thread, const ConnGUID* conn_guid, const void* data, size_t len)
@@ -24,12 +24,12 @@ public:
         task_type_ = task_type;
         source_thread_ = source_thread;
 
-        if (conn_guid != NULL)
+        if (conn_guid != nullptr)
         {
             conn_guid_ = *conn_guid;
         }
 
-        if (data != NULL && len > 0)
+        if (data != nullptr && len > 0)
         {
             data_.assign((const char*) data, len);
         }
@@ -40,7 +40,7 @@ public:
         task_type_ = task_type;
         source_thread_ = source_thread;
 
-        if (conn_guid != NULL)
+        if (conn_guid != nullptr)
         {
             conn_guid_ = *conn_guid;
         }
@@ -60,7 +60,7 @@ public:
     ThreadTask* Clone()
     {
         ThreadTask* task = new ThreadTask(task_type_, source_thread_, &conn_guid_, data_);
-        if (NULL == task)
+        if (nullptr == task)
         {
             const int err = errno;
             LOG_ERROR("failed to create task, err: " << err << ", err msg: " << strerror(err));

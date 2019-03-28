@@ -42,7 +42,7 @@ void Test001()
     Demo1Instance->SayHello();
 
     Demo1* p1 = Demo1Instance;
-    EXPECT_TRUE(p1 != NULL);
+    EXPECT_TRUE(p1 != nullptr);
     Demo1* p2 = Demo1Instance;
     EXPECT_TRUE(p2 == p1);
 }

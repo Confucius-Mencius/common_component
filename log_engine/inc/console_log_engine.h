@@ -51,7 +51,6 @@ public:
 
     int Initialize(const void* ctx) override
     {
-        (void) ctx;
         return 0;
     }
 

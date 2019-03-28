@@ -2,7 +2,7 @@
 #define WORK_THREADS_SRC_WORK_THREADS_H_
 
 #include "module_loader.h"
-#include "work_thread_sink.h"
+#include "thread_sink.h"
 #include "work_threads_interface.h"
 
 namespace work
@@ -24,23 +24,16 @@ public:
 
     ///////////////////////// ThreadsInterface /////////////////////////
     int CreateThreadGroup() override;
+    void SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_group) override;
     ThreadGroupInterface* GetWorkThreadGroup() const override;
-    void SetRelatedThreadGroup(const RelatedThreadGroup* related_thread_group) override;
-
-private:
-    int CreateWorkThreads();
 
 private:
     ThreadsCtx threads_ctx_;
+    RelatedThreadGroups related_thread_groups_;
     ThreadGroupInterface* work_thread_group_;
 
-    typedef std::vector<ThreadInterface*> WorkThreadVec;
-    WorkThreadVec work_thread_vec_;
-
-    typedef std::vector<ThreadSink*> WorkThreadSinkVec;
-    WorkThreadSinkVec work_thread_sink_vec_;
-
-    RelatedThreadGroup related_thread_group_;
+    typedef std::vector<ThreadSink*> ThreadSinkVec;
+    ThreadSinkVec thread_sink_vec_;
 };
 }
 

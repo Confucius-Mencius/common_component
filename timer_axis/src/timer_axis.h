@@ -15,7 +15,7 @@ struct TimerKey
 
     TimerKey()
     {
-        sink = NULL;
+        sink = nullptr;
         timer_id = 0;
     }
 
@@ -57,8 +57,8 @@ struct Timer
 
     Timer() : timer_key()
     {
-        event = NULL;
-        data = NULL;
+        event = nullptr;
+        data = nullptr;
         len = 0;
         total_times = -1;
         times = 0;

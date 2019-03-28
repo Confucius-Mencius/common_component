@@ -354,7 +354,7 @@ void strtok_test()
     for (i = 1, str = (char*) s;; ++i, str = NULL)
     {
         token = strtok_r(str, "&", &saveptr);
-        if (NULL == token)
+        if (nullptr == token)
         {
             break;
         }

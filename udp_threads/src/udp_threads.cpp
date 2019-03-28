@@ -8,7 +8,7 @@ namespace udp
 {
 Threads::Threads() : threads_ctx_(), udp_thread_vec_(), udp_thread_sink_vec_(), related_thread_group_()
 {
-    udp_thread_group_ = NULL;
+    udp_thread_group_ = nullptr;
 }
 
 Threads::~Threads()
@@ -33,7 +33,7 @@ void Threads::Release()
 
 int Threads::Initialize(const void* ctx)
 {
-    if (NULL == ctx)
+    if (nullptr == ctx)
     {
         return -1;
     }
@@ -69,7 +69,7 @@ int Threads::CreateThreadGroup()
     do
     {
         udp_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup();
-        if (NULL == udp_thread_group_)
+        if (nullptr == udp_thread_group_)
         {
             break;
         }
@@ -84,7 +84,7 @@ int Threads::CreateThreadGroup()
 
     if (ret != 0)
     {
-        if (udp_thread_group_ != NULL)
+        if (udp_thread_group_ != nullptr)
         {
             SAFE_DESTROY(udp_thread_group_);
         }
@@ -100,7 +100,7 @@ ThreadGroupInterface* Threads::GetUdpThreadGroup() const
 
 void Threads::SetRelatedThreadGroup(const RelatedThreadGroup* related_thread_group)
 {
-    if (NULL == related_thread_group)
+    if (nullptr == related_thread_group)
     {
         return;
     }
@@ -116,7 +116,7 @@ void Threads::SetRelatedThreadGroup(const RelatedThreadGroup* related_thread_gro
 int Threads::CreateUdpThreads()
 {
     ThreadCtx thread_ctx;
-    ThreadSink* sink = NULL;
+    ThreadSink* sink = nullptr;
     char thread_name[64] = "";
 
     for (int i = 0; i < threads_ctx_.conf_mgr->GetUdpThreadCount(); ++i)
@@ -129,7 +129,7 @@ int Threads::CreateUdpThreads()
         thread_ctx.idx = i;
 
         sink = ThreadSink::Create();
-        if (NULL == sink)
+        if (nullptr == sink)
         {
             const int err = errno;
             LOG_ERROR("failed to create udp thread sink, errno: " << err << ", err msg: " << strerror(err));
@@ -141,7 +141,7 @@ int Threads::CreateUdpThreads()
         thread_ctx.sink = sink;
 
         ThreadInterface* thread = udp_thread_group_->CreateThread(&thread_ctx);
-        if (NULL == thread)
+        if (nullptr == thread)
         {
             return -1;
         }

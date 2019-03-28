@@ -1,4 +1,4 @@
-#include "thread_sink.h"
+#include "io_thread_sink.h"
 #include <unistd.h>
 #include "app_frame_conf_mgr_interface.h"
 #include "file_util.h"
@@ -9,21 +9,21 @@ namespace tcp
 {
 namespace raw
 {
-ThreadSink::ThreadSink()
+IOThreadSink::IOThreadSink()
     : common_logic_loader_(), logic_item_vec_(), conn_center_(), scheduler_()
 {
-    threads_ctx_ = NULL;
-    listen_thread_ = NULL;
-    tcp_thread_group_ = NULL;
-    related_thread_group_ = NULL;
-    common_logic_ = NULL;
+    threads_ctx_ = nullptr;
+    listen_thread_ = nullptr;
+    io_thread_group_ = nullptr;
+    related_thread_group_ = nullptr;
+    common_logic_ = nullptr;
 }
 
-ThreadSink::~ThreadSink()
+IOThreadSink::~IOThreadSink()
 {
 }
 
-void ThreadSink::Release()
+void IOThreadSink::Release()
 {
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
@@ -37,7 +37,7 @@ void ThreadSink::Release()
     delete this;
 }
 
-int ThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
+int IOThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 {
     if (ThreadSinkInterface::OnInitialize(thread, ctx) != 0)
     {
@@ -85,7 +85,7 @@ int ThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
     return 0;
 }
 
-void ThreadSink::OnFinalize()
+void IOThreadSink::OnFinalize()
 {
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
@@ -99,7 +99,7 @@ void ThreadSink::OnFinalize()
     ThreadSinkInterface::OnFinalize();
 }
 
-int ThreadSink::OnActivate()
+int IOThreadSink::OnActivate()
 {
     if (ThreadSinkInterface::OnActivate() != 0)
     {
@@ -127,7 +127,7 @@ int ThreadSink::OnActivate()
     return 0;
 }
 
-void ThreadSink::OnFreeze()
+void IOThreadSink::OnFreeze()
 {
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
@@ -139,7 +139,7 @@ void ThreadSink::OnFreeze()
     ThreadSinkInterface::OnFreeze();
 }
 
-void ThreadSink::OnThreadStartOK()
+void IOThreadSink::OnThreadStartOK()
 {
     ThreadSinkInterface::OnThreadStartOK();
 
@@ -149,11 +149,11 @@ void ThreadSink::OnThreadStartOK()
     pthread_mutex_unlock(threads_ctx_->app_frame_threads_sync_mutex);
 }
 
-void ThreadSink::OnStop()
+void IOThreadSink::OnStop()
 {
     ThreadSinkInterface::OnStop();
 
-    if (common_logic_ != NULL)
+    if (common_logic_ != nullptr)
     {
         common_logic_->OnStop();
     }
@@ -164,11 +164,11 @@ void ThreadSink::OnStop()
     }
 }
 
-void ThreadSink::OnReload()
+void IOThreadSink::OnReload()
 {
     ThreadSinkInterface::OnReload();
 
-    if (common_logic_ != NULL)
+    if (common_logic_ != nullptr)
     {
         common_logic_->OnReload();
     }
@@ -179,7 +179,7 @@ void ThreadSink::OnReload()
     }
 }
 
-void ThreadSink::OnTask(const ThreadTask* task)
+void IOThreadSink::OnTask(const ThreadTask* task)
 {
     ThreadSinkInterface::OnTask(task);
 
@@ -223,11 +223,11 @@ void ThreadSink::OnTask(const ThreadTask* task)
     }
 }
 
-bool ThreadSink::CanExit() const
+bool IOThreadSink::CanExit() const
 {
     int can_exit = 1;
 
-    if (common_logic_ != NULL)
+    if (common_logic_ != nullptr)
     {
         can_exit &= (common_logic_->CanExit() ? 1 : 0);
     }
@@ -240,9 +240,9 @@ bool ThreadSink::CanExit() const
     return (can_exit != 0);
 }
 
-void ThreadSink::OnClientClosed(const BaseConn* conn, int task_type)
+void IOThreadSink::OnClientClosed(const BaseConn* conn, int task_type)
 {
-    if (common_logic_ != NULL)
+    if (common_logic_ != nullptr)
     {
         common_logic_->OnClientClosed(conn->GetConnGUID());
     }
@@ -257,7 +257,7 @@ void ThreadSink::OnClientClosed(const BaseConn* conn, int task_type)
                             conn->GetClientIP(), conn->GetClientPort(), conn->GetSockFD());
 
     ThreadTask* task = new ThreadTask(task_type, self_thread_, NULL, client_ctx_buf, n);
-    if (NULL == task)
+    if (nullptr == task)
     {
         LOG_ERROR("failed to create tcp conn closed task");
         return;
@@ -267,9 +267,9 @@ void ThreadSink::OnClientClosed(const BaseConn* conn, int task_type)
     conn_center_.DestroyConn(conn->GetSockFD());
 }
 
-void ThreadSink::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
+void IOThreadSink::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
 {
-    if (common_logic_ != NULL)
+    if (common_logic_ != nullptr)
     {
         common_logic_->OnRecvClientData(conn_guid, data, len);
     }
@@ -280,13 +280,13 @@ void ThreadSink::OnRecvClientData(const ConnGUID* conn_guid, const void* data, s
     }
 }
 
-void ThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups)
+void IOThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups)
 {
     related_thread_group_ = related_thread_groups;
 
-    if (related_thread_group_->global_logic != NULL)
+    if (related_thread_group_->global_logic != nullptr)
     {
-        if (common_logic_ != NULL)
+        if (common_logic_ != nullptr)
         {
             common_logic_->SetGlobalLogic(related_thread_group_->global_logic);
         }
@@ -301,7 +301,7 @@ void ThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_grou
     scheduler_.SetRelatedThreadGroups(related_thread_groups);
 }
 
-int ThreadSink::LoadCommonLogic()
+int IOThreadSink::LoadCommonLogic()
 {
     const std::string& tcp_common_logic_so = threads_ctx_->conf.common_logic_so;
     if (0 == tcp_common_logic_so.length())
@@ -321,7 +321,7 @@ int ThreadSink::LoadCommonLogic()
     }
 
     common_logic_ = static_cast<CommonLogicInterface*>(common_logic_loader_.GetModuleInterface());
-    if (NULL == common_logic_)
+    if (nullptr == common_logic_)
     {
         LOG_ERROR("failed to get common logic, " << common_logic_loader_.GetLastErrMsg());
         return -1;
@@ -350,11 +350,11 @@ int ThreadSink::LoadCommonLogic()
     return 0;
 }
 
-int ThreadSink::LoadLogicGroup()
+int IOThreadSink::LoadLogicGroup()
 {
     // logic so group
     LogicItem logic_item;
-    logic_item.logic = NULL;
+    logic_item.logic = nullptr;
 
     const StrGroup& logic_so_group = threads_ctx_->conf.logic_so_group;
 
@@ -379,7 +379,7 @@ int ThreadSink::LoadLogicGroup()
         }
 
         logic_item.logic = static_cast<LogicInterface*>(logic_item.logic_loader.GetModuleInterface());
-        if (NULL == logic_item.logic)
+        if (nullptr == logic_item.logic)
         {
             LOG_ERROR("failed to get logic, " << logic_item.logic_loader.GetLastErrMsg());
             return -1;
@@ -410,10 +410,10 @@ int ThreadSink::LoadLogicGroup()
     return 0;
 }
 
-int ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
+int IOThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
 {
     BaseConn* conn = static_cast<BaseConn*>(conn_center_.GetConnBySockFD(new_conn_ctx->client_sock_fd));
-    if (conn != NULL)
+    if (conn != nullptr)
     {
         LOG_WARN("tcp conn already exist, socket fd: " << new_conn_ctx->client_sock_fd << ", destroy it first");
         conn_center_.DestroyConn(conn->GetSockFD());
@@ -421,7 +421,7 @@ int ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
 
     conn = conn_center_.CreateConn(threads_ctx_->conf.io_type, self_thread_->GetThreadIdx(), new_conn_ctx->client_ip,
                                    new_conn_ctx->client_port, new_conn_ctx->client_sock_fd);
-    if (NULL == conn)
+    if (nullptr == conn)
     {
         char client_ctx_buf[128] = "";
         const int n = StrPrintf(client_ctx_buf, sizeof(client_ctx_buf), "%s:%u, socket fd: %d",
@@ -429,7 +429,7 @@ int ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
                                 new_conn_ctx->client_sock_fd);
 
         ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_CONN_CLOSED, self_thread_, NULL, client_ctx_buf, n);
-        if (NULL == task)
+        if (nullptr == task)
         {
             LOG_ERROR("failed to create tcp conn closed task");
             return -1;
@@ -439,7 +439,7 @@ int ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
         return -1;
     }
 
-    if (common_logic_ != NULL)
+    if (common_logic_ != nullptr)
     {
         common_logic_->OnClientConnected(conn->GetConnGUID());
     }

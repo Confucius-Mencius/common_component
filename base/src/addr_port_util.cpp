@@ -3,13 +3,13 @@
 
 int ParseAddrPort(char* addr, size_t buf_size, unsigned short& port, const char* addr_port, size_t len)
 {
-    if (NULL == addr || buf_size < 2 || NULL == addr_port || len < 1)
+    if (nullptr == addr || buf_size < 2 || nullptr == addr_port || len < 1)
     {
         return -1;
     }
 
     const char* colon = strchr(addr_port, ':');
-    if (NULL == colon || colon == addr_port || (size_t) (colon - addr_port + 1) == len)
+    if (nullptr == colon || colon == addr_port || (size_t) (colon - addr_port + 1) == len)
     {
         return -1;
     }
@@ -29,7 +29,7 @@ int ParseAddrPort(char* addr, size_t buf_size, unsigned short& port, const char*
 
 int ParseAddrPort(char* addr, size_t buf_size, unsigned short& port, const std::string& addr_port)
 {
-    if (NULL == addr || buf_size < 2)
+    if (nullptr == addr || buf_size < 2)
     {
         return -1;
     }

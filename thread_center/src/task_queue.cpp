@@ -8,7 +8,7 @@ TaskQueue::TaskQueue() : task_list_()
 {
     cur_task_count_ = 0;
     max_task_count_ = 0;
-    thread_ = NULL;
+    thread_ = nullptr;
 }
 
 TaskQueue::~TaskQueue()

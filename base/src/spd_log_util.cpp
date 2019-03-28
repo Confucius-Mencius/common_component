@@ -4,7 +4,7 @@
 
 int SpdLogInitialize(const SpdLogCtx* ctx)
 {
-    if (NULL == ctx || NULL == ctx->logger_file_path || NULL == ctx->logger_name)
+    if (nullptr == ctx || nullptr == ctx->logger_file_path || nullptr == ctx->logger_name)
     {
         return -1;
     }

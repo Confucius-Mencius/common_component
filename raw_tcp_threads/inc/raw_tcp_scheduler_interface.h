@@ -29,7 +29,7 @@ public:
      */
     virtual int CloseClient(const ConnGUID* conn_guid) = 0;
 
-    // 自己这组线程，下一级线程组，global线程组
+    virtual int SendToGlobalThread(const ConnGUID* conn_guid, const void* data, size_t len) = 0;
 
     /**
      * @brief 发送给tcp thread，包括自己
@@ -44,8 +44,6 @@ public:
      * @return
      */
     virtual int SendToWorkThread(const ConnGUID* conn_guid, const void* data, size_t len, int work_thread_idx) = 0;
-
-    virtual int SendToGlobalThread(const ConnGUID* conn_guid, const void* data, size_t len) = 0;
 };
 }
 }

@@ -1,7 +1,7 @@
 #ifndef UDP_THREADS_INC_UDP_LOGIC_INTERFACE_H_
 #define UDP_THREADS_INC_UDP_LOGIC_INTERFACE_H_
 
-#include <stddef.h>
+#include <atomic>
 #include "module_interface.h"
 
 class ConfCenterInterface;
@@ -38,7 +38,7 @@ struct LogicCtx
     ConfCenterInterface* conf_center;
     TimerAxisInterface* timer_axis;
     TimeServiceInterface* time_service;
-    RandomEngineInterface* random_engine;
+    RandomEng#include <atomic>ineInterface* random_engine;
     ConnCenterInterface* conn_center;
     base::MsgDispatcherInterface* msg_dispatcher;
     SchedulerInterface* scheduler;
@@ -48,19 +48,19 @@ struct LogicCtx
     LogicCtx()
     {
         argc = 0;
-        argv = NULL;
-        common_component_dir = NULL;
-        cur_work_dir = NULL;
-        app_name = NULL;
-        conf_center = NULL;
-        timer_axis = NULL;
-        time_service = NULL;
-        random_engine = NULL;
-        conn_center = NULL;
-        msg_dispatcher = NULL;
-        scheduler = NULL;
-        local_logic = NULL;
-        thread_ev_base = NULL;
+        argv = nullptr;
+        common_component_dir = nullptr;
+        cur_work_dir = nullptr;
+        app_name = nullptr;
+        conf_center = nullptr;
+        timer_axis = nullptr;
+        time_service = nullptr;
+        random_engine = nullptr;
+        conn_center = nullptr;
+        msg_dispatcher = nullptr;
+        scheduler = nullptr;
+        local_logic = nullptr;
+        thread_ev_base = nullptr;
     }
 };
 
@@ -70,7 +70,7 @@ public:
     LogicInterface() : logic_ctx_()
     {
         can_exit_ = false;
-        global_logic_ = NULL;
+        global_logic_ = nullptr;
     }
 
     virtual ~LogicInterface()
@@ -84,7 +84,7 @@ public:
 
     virtual int Initialize(const void* ctx)
     {
-        if (NULL == ctx)
+        if (nullptr == ctx)
         {
             return -1;
         }
@@ -113,7 +113,7 @@ public:
 
 protected:
     LogicCtx logic_ctx_;
-    bool can_exit_;
+    std::atomic_bool can_exit_;
     global::LogicInterface* global_logic_;
 };
 

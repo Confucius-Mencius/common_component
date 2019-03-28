@@ -12,7 +12,7 @@ namespace proto
 {
 Threads::Threads() : threads_ctx_(), related_thread_groups_(), raw_tcp_threads_loader_(), proto_tcp_logic_args_()
 {
-    raw_tcp_threads_ = NULL;
+    raw_tcp_threads_ = nullptr;
 }
 
 Threads::~Threads()
@@ -37,7 +37,7 @@ void Threads::Release()
 
 int Threads::Initialize(const void* ctx)
 {
-    if (NULL == ctx)
+    if (nullptr == ctx)
     {
         return -1;
     }
@@ -84,7 +84,7 @@ int Threads::CreateThreadGroup(const char* name_prefix)
 
 void Threads::SetRelatedThreadGroups(const tcp::RelatedThreadGroups* related_thread_groups)
 {
-    if (NULL == related_thread_groups)
+    if (nullptr == related_thread_groups)
     {
         return;
     }
@@ -98,9 +98,9 @@ ThreadGroupInterface* Threads::GetListenThreadGroup() const
     return raw_tcp_threads_->GetListenThreadGroup();
 }
 
-ThreadGroupInterface* Threads::GetTCPThreadGroup() const
+ThreadGroupInterface* Threads::GetIOThreadGroup() const
 {
-    return raw_tcp_threads_->GetTCPThreadGroup();
+    return raw_tcp_threads_->GetIOThreadGroup();
 }
 
 int Threads::LoadRawTCPThreads()
@@ -116,7 +116,7 @@ int Threads::LoadRawTCPThreads()
     }
 
     raw_tcp_threads_ = static_cast<tcp::raw::ThreadsInterface*>(raw_tcp_threads_loader_.GetModuleInterface());
-    if (NULL == raw_tcp_threads_)
+    if (nullptr == raw_tcp_threads_)
     {
         LOG_ERROR(raw_tcp_threads_loader_.GetLastErrMsg());
         return -1;

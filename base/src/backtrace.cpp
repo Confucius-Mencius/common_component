@@ -6,7 +6,7 @@
 
 int Backtrace(char* buf, int buf_size, int nframes)
 {
-    if (NULL == buf || buf_size < 2 || nframes <= 0)
+    if (nullptr == buf || buf_size < 2 || nframes <= 0)
     {
         StrPrintf(buf, buf_size, "%s\n", "No stack trace because max frame count is not greater than 0!");
         return -1;
@@ -30,7 +30,7 @@ int Backtrace(char* buf, int buf_size, int nframes)
     // resolve addresses into strings containing "filename(function+address)",
     // this array_ must be free()-ed
     char** symbol_list = backtrace_symbols(addr_list, naddrs);
-    if (NULL == symbol_list)
+    if (nullptr == symbol_list)
     {
         result << "  Error occured!" << std::endl;
         StrPrintf(buf, buf_size, "%s", result.str().c_str());
@@ -40,7 +40,7 @@ int Backtrace(char* buf, int buf_size, int nframes)
     // allocate string which will be filled with the demangled function name
     //    size_t funcNameSize = 256;
     //    char* func_name = (char*) ::malloc(funcNameSize);
-    char* func_name = NULL;
+    char* func_name = nullptr;
 
     // iterate over the returned symbol lines. skip the first, it is the
     // address of this function.
@@ -81,7 +81,7 @@ int Backtrace(char* buf, int buf_size, int nframes)
             int status = -1;
             func_name = abi::__cxa_demangle(begin_name, NULL, NULL, &status);
 
-            if ((0 == status) && (func_name != NULL))
+            if ((0 == status) && (func_name != nullptr))
             {
                 //func_name = ret; // use possibly realloc()-ed string
                 result << "  " << symbol_list[i] << " : " << func_name << "+" << begin_offset << std::endl;

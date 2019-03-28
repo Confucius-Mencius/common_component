@@ -4,7 +4,7 @@ namespace thread_center_test
 {
 SourceThreadSink::SourceThreadSink()
 {
-    thread_group_ = NULL;
+    thread_group_ = nullptr;
 }
 
 SourceThreadSink::~SourceThreadSink()
@@ -66,7 +66,7 @@ void SourceThreadSink::OnReload()
     ThreadSinkInterface::OnReload();
 
     ThreadTask* task = new ThreadTask(-1, self_thread_, NULL, NULL, 0);
-    if (NULL == task)
+    if (nullptr == task)
     {
         LOG_ERROR("failed to create task");
         return;
@@ -147,7 +147,7 @@ void ThreadSinkEx::OnTask(const ThreadTask* task)
     ThreadSinkInterface::OnTask(task);
 
     ThreadTask* new_task = new ThreadTask(-1, self_thread_, NULL, NULL, 0);
-    if (NULL == new_task)
+    if (nullptr == new_task)
     {
         LOG_ERROR("failed to create task");
         return;

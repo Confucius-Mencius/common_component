@@ -110,7 +110,7 @@ public:
         len_ = str.len_;
         data_ = str.data_;
         str.len_ = 0;
-        str.data_ = NULL;
+        str.data_ = nullptr;
 
         std::cout << "Move Constructor is called! source: " << data_ << std::endl;
     }
@@ -129,7 +129,7 @@ public:
             len_ = str.len_;
             data_ = str.data_;
             str.len_ = 0;
-            str.data_ = NULL;
+            str.data_ = nullptr;
         }
 
         std::cout << "Move Assignment is called! source: " << data_ << std::endl;

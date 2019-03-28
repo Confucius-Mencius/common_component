@@ -129,10 +129,10 @@ void Destory(Type* obj, int n)
  */
 #define SAFE_DELETE(obj_ptr)\
     do {\
-        if (obj_ptr != NULL)\
+        if (obj_ptr != nullptr)\
         {\
             delete obj_ptr;\
-            obj_ptr = NULL;\
+            obj_ptr = nullptr;\
         }\
     } while (0)
 
@@ -144,10 +144,10 @@ void Destory(Type* obj, int n)
  */
 #define SAFE_DELETE_ARRAY(obj_ptr_array)\
     do {\
-        if (obj_ptr_array != NULL)\
+        if (obj_ptr_array != nullptr)\
         {\
             delete [] obj_ptr_array;\
-            obj_ptr_array = NULL;\
+            obj_ptr_array = nullptr;\
         }\
     } while (0)
 
@@ -158,38 +158,38 @@ void Destory(Type* obj, int n)
  */
 #define SAFE_RELEASE(obj_ptr)\
     do {\
-        if (obj_ptr != NULL)\
+        if (obj_ptr != nullptr)\
         {\
             obj_ptr->Release();\
-            obj_ptr = NULL;\
+            obj_ptr = nullptr;\
         }\
     } while (0)
 
 #define SAFE_RELEASE_MODULE(module_ptr, module_loader)\
     do {\
-        if (module_ptr != NULL)\
+        if (module_ptr != nullptr)\
         {\
             module_ptr->Release();\
-            module_ptr = NULL;\
+            module_ptr = nullptr;\
         }\
         module_loader.Unload();\
     } while (0)
 
-#define SAFE_INITIALIZE_FAILED(obj_ptr, ctx) (obj_ptr != NULL && obj_ptr->Initialize(ctx) != 0)
+#define SAFE_INITIALIZE_FAILED(obj_ptr, ctx) (obj_ptr != nullptr && obj_ptr->Initialize(ctx) != 0)
 
 #define SAFE_FINALIZE(obj_ptr)\
     do {\
-        if (obj_ptr != NULL)\
+        if (obj_ptr != nullptr)\
         {\
             obj_ptr->Finalize();\
         }\
     } while (0)
 
-#define SAFE_ACTIVATE_FAILED(obj_ptr) (obj_ptr != NULL && obj_ptr->Activate() != 0)
+#define SAFE_ACTIVATE_FAILED(obj_ptr) (obj_ptr != nullptr && obj_ptr->Activate() != 0)
 
 #define SAFE_FREEZE(obj_ptr)\
     do {\
-        if (obj_ptr != NULL)\
+        if (obj_ptr != nullptr)\
         {\
             obj_ptr->Freeze();\
         }\
@@ -197,23 +197,23 @@ void Destory(Type* obj, int n)
 
 #define SAFE_DESTROY(obj_ptr)\
     do {\
-        if (obj_ptr != NULL)\
+        if (obj_ptr != nullptr)\
         {\
             obj_ptr->Freeze();\
             obj_ptr->Finalize();\
             obj_ptr->Release();\
-            obj_ptr = NULL;\
+            obj_ptr = nullptr;\
         }\
     } while (0)
 
 #define SAFE_DESTROY_MODULE(module_ptr, module_loader)\
     do {\
-        if (module_ptr != NULL)\
+        if (module_ptr != nullptr)\
         {\
             module_ptr->Freeze();\
             module_ptr->Finalize();\
             module_ptr->Release();\
-            module_ptr = NULL;\
+            module_ptr = nullptr;\
         }\
         module_loader.Unload();\
     } while (0)

@@ -6,9 +6,9 @@
 
 namespace burden
 {
-Threads::Threads() : threads_ctx_(), burden_thread_vec_(), burden_thread_sink_vec_(), related_thread_group_()
+Threads::Threads() : threads_ctx_(), related_thread_groups_(), thread_sink_vec_()
 {
-    burden_thread_group_ = NULL;
+    burden_thread_group_ = nullptr;
 }
 
 Threads::~Threads()
@@ -27,29 +27,29 @@ const char* Threads::GetLastErrMsg() const
 
 void Threads::Release()
 {
-    RELEASE_CONTAINER(burden_thread_sink_vec_);
+    SAFE_RELEASE(burden_thread_group_);
     delete this;
 }
 
 int Threads::Initialize(const void* ctx)
 {
-    if (NULL == ctx)
+    if (nullptr == ctx)
     {
         return -1;
     }
 
-    threads_ctx_ = *((ThreadsCtx*) ctx);
+    threads_ctx_ = *(static_cast<const ThreadsCtx*>(ctx));
     return 0;
 }
 
 void Threads::Finalize()
 {
-    // 由thread center集中管理
+    SAFE_FINALIZE(burden_thread_group_);
 }
 
 int Threads::Activate()
 {
-    if (burden_thread_group_->Activate() != 0)
+    if (SAFE_ACTIVATE_FAILED(burden_thread_group_))
     {
         return -1;
     }
@@ -59,7 +59,7 @@ int Threads::Activate()
 
 void Threads::Freeze()
 {
-    // 由thread center集中管理
+    SAFE_FREEZE(burden_thread_group_);
 }
 
 int Threads::CreateThreadGroup()
@@ -68,9 +68,25 @@ int Threads::CreateThreadGroup()
 
     do
     {
-        if (CreateBurdenThreads() != 0)
+        ThreadGroupCtx thread_group_ctx;
+        thread_group_ctx.common_component_dir = threads_ctx_.common_component_dir;
+        thread_group_ctx.enable_cpu_profiling = threads_ctx_.app_frame_conf_mgr->EnableCPUProfiling();
+        thread_group_ctx.thread_name = "burden thread";
+        thread_group_ctx.thread_count = threads_ctx_.app_frame_conf_mgr->GetWorkThreadCount();
+        thread_group_ctx.thread_sink_creator = ThreadSink::Create;
+        thread_group_ctx.threads_ctx = &threads_ctx_;
+
+        burden_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup(&thread_group_ctx);
+        if (nullptr == burden_thread_group_)
         {
             break;
+        }
+
+        for (int i = 0; i < burden_thread_group_->GetThreadCount(); ++i)
+        {
+            ThreadSink* thread_sink = static_cast<ThreadSink*>(burden_thread_group_->GetThread(i)->GetThreadSink());
+            thread_sink->SetBurdenThreadGroup(burden_thread_group_);
+            thread_sink_vec_.push_back(thread_sink);
         }
 
         ret = 0;
@@ -78,7 +94,7 @@ int Threads::CreateThreadGroup()
 
     if (ret != 0)
     {
-        if (burden_thread_group_ != NULL)
+        if (burden_thread_group_ != nullptr)
         {
             SAFE_DESTROY(burden_thread_group_);
         }
@@ -87,69 +103,23 @@ int Threads::CreateThreadGroup()
     return ret;
 }
 
-ThreadGroupInterface* Threads::GetBurdenThreadGroup() const
+void Threads::SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups)
 {
-    return burden_thread_group_;
-}
-
-void Threads::SetRelatedThreadGroup(const RelatedThreadGroup* related_thread_group)
-{
-    if (NULL == related_thread_group)
+    if (nullptr == related_thread_groups)
     {
         return;
     }
 
-    related_thread_group_ = *related_thread_group;
+    related_thread_groups_ = *related_thread_groups;
 
-    for (BurdenThreadSinkVec::iterator it = burden_thread_sink_vec_.begin(); it != burden_thread_sink_vec_.end(); ++it)
+    for (ThreadSinkVec::iterator it = thread_sink_vec_.begin(); it != thread_sink_vec_.end(); ++it)
     {
-        (*it)->SetRelatedThreadGroup(&related_thread_group_);
+        (*it)->SetRelatedThreadGroup(&related_thread_groups_);
     }
 }
 
-int Threads::CreateBurdenThreads()
+ThreadGroupInterface* Threads::GetBurdenThreadGroup() const
 {
-    burden_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup();
-    if (NULL == burden_thread_group_)
-    {
-        return -1;
-    }
-
-    ThreadCtx thread_ctx;
-    ThreadSink* sink = NULL;
-    char thread_name[64] = "";
-
-    for (int i = 0; i < threads_ctx_.conf_mgr->GetBurdenThreadCount(); ++i)
-    {
-        thread_ctx.common_component_dir = threads_ctx_.common_component_dir;
-        thread_ctx.need_reply_msg_check_interval = threads_ctx_.conf_mgr->GetPeerNeedReplyMsgCheckInterval();
-
-        StrPrintf(thread_name, sizeof(thread_name), "burden thread #%d", i);
-        thread_ctx.name = thread_name;
-        thread_ctx.idx = i;
-
-        sink = ThreadSink::Create();
-        if (NULL == sink)
-        {
-            const int err = errno;
-            LOG_ERROR("failed to create burden thread sink, errno: " << err << ", err msg: " << strerror(err));
-            return -1;
-        }
-
-        sink->SetThreadsCtx(&threads_ctx_);
-        sink->SetBurdenThreadGroup(burden_thread_group_);
-        thread_ctx.sink = sink;
-
-        ThreadInterface* thread = burden_thread_group_->CreateThread(&thread_ctx);
-        if (NULL == thread)
-        {
-            return -1;
-        }
-
-        burden_thread_vec_.push_back(thread);
-        burden_thread_sink_vec_.push_back(sink);
-    }
-
-    return 0;
+    return burden_thread_group_;
 }
 }

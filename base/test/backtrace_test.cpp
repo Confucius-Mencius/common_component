@@ -24,9 +24,6 @@ void Test001()
 
 int Func(int a, int b)
 {
-    (void) a;
-    (void) b;
-
     char buf[4096] = "";
     int ret = Backtrace(buf, sizeof(buf));
     LOG_CPP(buf);
@@ -54,9 +51,6 @@ class COnly4Test
 public:
     int Func(int a, int b)
     {
-        (void) a;
-        (void) b;
-
         char buf[4096] = "";
         int ret = Backtrace(buf, sizeof(buf));
         LOG_CPP(buf);

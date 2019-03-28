@@ -8,7 +8,7 @@ static const char APP_CONF_FILE_PATH[] = "./test_server_conf.xml";
 
 ConfCenterTest::ConfCenterTest()
 {
-    conf_center_ = NULL;
+    conf_center_ = nullptr;
 }
 
 ConfCenterTest::~ConfCenterTest()
@@ -23,7 +23,7 @@ void ConfCenterTest::SetUp()
     }
 
     conf_center_ = static_cast<ConfCenterInterface*>(loader_.GetModuleInterface(0));
-    if (NULL == conf_center_)
+    if (nullptr == conf_center_)
     {
         FAIL() << loader_.GetLastErrMsg();
     }
@@ -87,7 +87,7 @@ void ConfCenterTest::Test001()
     std::cout << "coef: " << coef << std::endl;
 
     ////////////////////////////////////////////////////////////////////////////////
-    char* ip = NULL;
+    char* ip = nullptr;
 
     ret = conf_center_->GetConf(&ip, "/conf/ip");
     EXPECT_EQ(0, ret);
@@ -124,7 +124,7 @@ void ConfCenterTest::Test001()
     std::cout << "attrib_coef: " << attrib_coef << std::endl;
 
     ////////////////////////////////////////////////////////////////////////////////
-    char* db_name = NULL;
+    char* db_name = nullptr;
 
     ret = conf_center_->GetConf(&db_name, "/conf/db/@name");
     EXPECT_EQ(0, ret);
@@ -179,7 +179,7 @@ void ConfCenterTest::Test001()
     EXPECT_DOUBLE_EQ(100.0, not_exist_f64);
 
     ////////////////////////////////////////////////////////////////////////////////
-    char* not_exist_str = NULL;
+    char* not_exist_str = nullptr;
 
     ret = conf_center_->GetConf(&not_exist_str, "/conf/not_exist_node");
     EXPECT_TRUE(ret != 0);
@@ -222,7 +222,7 @@ void ConfCenterTest::Test002()
     ////////////////////////////////////////////////////////////////////////////////
     // 取组节点
     ////////////////////////////////////////////////////////////////////////////////
-    i32* port_group = NULL;
+    i32* port_group = nullptr;
     int n;
 
     int ret = conf_center_->GetConf(&port_group, n, "/conf/port_list/port");
@@ -248,7 +248,7 @@ void ConfCenterTest::Test002()
     conf_center_->ReleaseConf(&port_group);
 
     ////////////////////////////////////////////////////////////////////////////////
-    f32* coef_group = NULL;
+    f32* coef_group = nullptr;
 
     ret = conf_center_->GetConf(&coef_group, n, "/conf/coef_list/coef");
     EXPECT_EQ(0, ret);
@@ -273,7 +273,7 @@ void ConfCenterTest::Test002()
     conf_center_->ReleaseConf(&coef_group);
 
     ////////////////////////////////////////////////////////////////////////////////
-    char** ip_group = NULL;
+    char** ip_group = nullptr;
 
     ret = conf_center_->GetConf(&ip_group, n, "/conf/ip_list/ip", false);
     EXPECT_EQ(0, ret);
@@ -300,7 +300,7 @@ void ConfCenterTest::Test002()
     ////////////////////////////////////////////////////////////////////////////////
     // 取组属性
     ////////////////////////////////////////////////////////////////////////////////
-    i64* nthreads_group = NULL;
+    i64* nthreads_group = nullptr;
 
     ret = conf_center_->GetConf(&nthreads_group, n, "/conf/db_list/db/@threads");
     EXPECT_EQ(0, ret);
@@ -325,7 +325,7 @@ void ConfCenterTest::Test002()
     conf_center_->ReleaseConf(&nthreads_group);
 
     ////////////////////////////////////////////////////////////////////////////////
-    f64* db_coef_group = NULL;
+    f64* db_coef_group = nullptr;
 
     ret = conf_center_->GetConf(&db_coef_group, n, "/conf/db_list/db/@coef");
     EXPECT_EQ(0, ret);
@@ -350,7 +350,7 @@ void ConfCenterTest::Test002()
     conf_center_->ReleaseConf(&db_coef_group);
 
     ////////////////////////////////////////////////////////////////////////////////
-    char** db_name_group = NULL;
+    char** db_name_group = nullptr;
 
     ret = conf_center_->GetConf(&db_name_group, n, "/conf/db_list/db/@name");
     EXPECT_EQ(0, ret);
@@ -423,7 +423,7 @@ void ConfCenterTest::Test004()
  */
 void ConfCenterTest::Test005()
 {
-    char* myconf = NULL;
+    char* myconf = nullptr;
     int ret = conf_center_->GetConf(&myconf, "/conf/myconf", true, "");
     ASSERT_EQ(0, ret);
 
@@ -446,7 +446,7 @@ void ConfCenterTest::Test005()
 void ConfCenterTest::Test006()
 {
     {
-        i32* myconf_i32 = NULL;
+        i32* myconf_i32 = nullptr;
         int n = 0;
         int ret = conf_center_->GetConf(&myconf_i32, n, "/conf/myconf_i32", true, 0);
         ASSERT_EQ(0, ret);
@@ -456,7 +456,7 @@ void ConfCenterTest::Test006()
     }
 
     {
-        i64* myconf_i64 = NULL;
+        i64* myconf_i64 = nullptr;
         int n = 0;
         int ret = conf_center_->GetConf(&myconf_i64, n, "/conf/myconf_i64", true, 0L);
         ASSERT_EQ(0, ret);
@@ -466,7 +466,7 @@ void ConfCenterTest::Test006()
     }
 
     {
-        f32* myconf_f32 = NULL;
+        f32* myconf_f32 = nullptr;
         int n = 0;
         int ret = conf_center_->GetConf(&myconf_f32, n, "/conf/myconf_f32", true, 0.0f);
         ASSERT_EQ(0, ret);
@@ -476,7 +476,7 @@ void ConfCenterTest::Test006()
     }
 
     {
-        f64* myconf_f64 = NULL;
+        f64* myconf_f64 = nullptr;
         int n = 0;
         int ret = conf_center_->GetConf(&myconf_f64, n, "/conf/myconf_f64", true, 0.0);
         ASSERT_EQ(0, ret);
@@ -486,7 +486,7 @@ void ConfCenterTest::Test006()
     }
 
     {
-        char** myconf_str = NULL;
+        char** myconf_str = nullptr;
         int n = 0;
         int ret = conf_center_->GetConf(&myconf_str, n, "/conf/myconf_str", true, "");
         ASSERT_EQ(0, ret);
