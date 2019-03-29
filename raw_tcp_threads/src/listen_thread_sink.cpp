@@ -146,7 +146,8 @@ int ListenThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 //            break;
 //        }
 
-    // SO_REUSEPORT支持多个进程或者线程绑定到同一端口，提高服务器程序的性能，解决的问题：
+    // http://www.blogjava.net/yongboy/archive/2015/02/12/422893.html
+    // SO_REUSEPORT(Linux kernel 3.9)支持多个进程或者线程绑定到同一端口，提高服务器程序的性能，解决的问题：
     // 1. 允许多个套接字 bind()/listen() 同一个TCP/UDP端口
     //      每一个线程拥有自己的服务器套接字
     //      在服务器套接字上没有了锁的竞争
