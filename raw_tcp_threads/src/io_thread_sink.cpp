@@ -193,13 +193,13 @@ void IOThreadSink::OnTask(const ThreadTask* task)
         }
         break;
 
-        case TASK_TYPE_TCP_SEND_TO_CLIENT:
+        case TASK_TYPE_SEND_TO_CLIENT:
         {
             scheduler_.SendToClient(task->GetConnGUID(), task->GetData().data(), task->GetData().size());
         }
         break;
 
-        case TASK_TYPE_TCP_CLOSE_CONN:
+        case TASK_TYPE_CLOSE_CONN:
         {
             scheduler_.CloseClient(task->GetConnGUID());
         }

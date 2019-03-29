@@ -11,6 +11,8 @@ namespace tcp
 {
 namespace raw
 {
+class ConnCenter;
+
 class NormalConn : public BaseConn
 {
     CREATE_FUNC(NormalConn)
@@ -38,6 +40,7 @@ private:
     SendList send_list_;
 
     struct event* write_event_;
+    ConnCenter* conn_center_;
 };
 }
 }

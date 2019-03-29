@@ -7,6 +7,7 @@ namespace tcp
 {
 namespace raw
 {
+class ConnCenter;
 class IOThreadSink;
 
 class BaseConn : public ConnInterface
@@ -54,6 +55,16 @@ public:
         data_.clear();
     }
 
+    void SetConnCenter(ConnCenter* conn_center)
+    {
+        conn_center_ = conn_center;
+    }
+
+    ConnCenter* GetConnCenter()
+    {
+        return conn_center_;
+    }
+
     void SetCreatedTime(time_t t)
     {
         created_time_ = t;
@@ -87,6 +98,7 @@ public:
     }
 
 protected:
+    ConnCenter* conn_center_;
     time_t created_time_;
     ConnGUID conn_guid_;
     std::string client_ip_;

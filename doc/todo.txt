@@ -108,6 +108,7 @@ bufferevent_get_write_max_(struct bufferevent_private *bev)
 
 
 收报频率限制，达到一定频率就断掉连接，且一段时间内拒绝该ip的连接。
+限速可以参考nginx limit_rate配置
 
 
 

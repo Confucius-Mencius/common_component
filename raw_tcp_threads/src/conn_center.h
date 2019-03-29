@@ -47,7 +47,7 @@ public:
 
     BaseConn* CreateConn(IOType io_type, int io_thread_idx, const char* ip, unsigned short port, int sock_fd);
     void DestroyConn(int sock_fd);
-    int UpdateConnStatus(ConnID conn_id);
+    int UpdateConnStatus(ConnID conn_id, bool in);
 
     ///////////////////////// ConnCenterInterface /////////////////////////
     ConnInterface* GetConnBySockFD(int sock_fd) const override;

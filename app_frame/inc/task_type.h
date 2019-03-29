@@ -9,18 +9,10 @@ enum
     TASK_TYPE_TCP_CONN_CONNECTED, // listen thread通知tcp thread有新的连接建立了
     TASK_TYPE_TCP_CONN_CLOSED, // 通知listen thread减少连接数
     TASK_TYPE_TCP_CONN_CLOSED_NET_STORM, // 通知listen thread减少连接数，原因是网络风暴
-    TASK_TYPE_TCP_SEND_TO_CLIENT, // tcp thread发送数据给客户端
-    TASK_TYPE_TCP_CLOSE_CONN, // tcp thread关闭客户端连接
 
-    TASK_TYPE_WS_SEND_TO_CLIENT,
-    TASK_TYPE_WS_CLOSE_CONN,
+    TASK_TYPE_SEND_TO_CLIENT, // io thread发送数据给客户端
+    TASK_TYPE_CLOSE_CONN, // io thread关闭客户端连接
 
-//    TASK_TYPE_UDP_SEND_TO_CLIENT,
-//    TASK_TYPE_UDP_CLOSE_CONN,
-
-//    TASK_TYPE_GLOBAL_RETURN_TO_HTTP,
-//    TASK_TYPE_WORK_RETURN_TO_HTTP,
-//    TASK_TYPE_BURDEN_RETURN_TO_HTTP,
     TASK_TYPE_MAX,
 };
 

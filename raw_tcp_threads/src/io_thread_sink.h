@@ -57,14 +57,14 @@ public:
         io_thread_group_ = io_thread_group;
     }
 
-    ThreadGroupInterface* GetTCPThreadGroup()
+    ThreadGroupInterface* GetIOThreadGroup()
     {
         return io_thread_group_;
     }
 
     void SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups);
 
-    ConnCenter* GetConnMgr()
+    ConnCenter* GetConnCenter()
     {
         return &conn_center_;
     }

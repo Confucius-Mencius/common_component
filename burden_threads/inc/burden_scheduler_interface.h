@@ -12,6 +12,7 @@ struct MsgHead;
 
 namespace burden
 {
+// 第三次线程组，不允许同IO线程交互
 class SchedulerInterface
 {
 public:
@@ -43,8 +44,8 @@ public:
      * @param work_thread_idx 为-1则由框架自行调度一个work线程
      * @return
      */
-    virtual int SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
-                                 const void* msg_body, size_t msg_body_len, int work_thread_idx) = 0;
+    // virtual int SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+    //                              const void* msg_body, size_t msg_body_len, int work_thread_idx) = 0;
 };
 }
 

@@ -42,11 +42,11 @@ void Scheduler::Finalize()
 
 int Scheduler::SendToClient(const ConnGUID* conn_guid, const void* data, size_t len)
 {
-    ThreadInterface* tcp_thread = thread_sink_->GetTCPThreadGroup()->GetThread(conn_guid->io_thread_idx);
+    ThreadInterface* tcp_thread = thread_sink_->GetIOThreadGroup()->GetThread(conn_guid->io_thread_idx);
     if (tcp_thread == thread_sink_->GetThread())
     {
         // 是自己
-        BaseConn* conn = static_cast<BaseConn*>(thread_sink_->GetConnMgr()->GetConnByID(conn_guid->conn_id));
+        BaseConn* conn = static_cast<BaseConn*>(thread_sink_->GetConnCenter()->GetConnByID(conn_guid->conn_id));
         if (nullptr == conn)
         {
             LOG_ERROR("failed to get tcp conn by id: " << conn_guid->conn_id);
@@ -57,7 +57,7 @@ int Scheduler::SendToClient(const ConnGUID* conn_guid, const void* data, size_t 
     }
 
     // 是其它的tcp线程
-    ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_SEND_TO_CLIENT, thread_sink_->GetThread(), conn_guid, data, len);
+    ThreadTask* task = new ThreadTask(TASK_TYPE_SEND_TO_CLIENT, thread_sink_->GetThread(), conn_guid, data, len);
     if (nullptr == task)
     {
         const int err = errno;
@@ -71,10 +71,10 @@ int Scheduler::SendToClient(const ConnGUID* conn_guid, const void* data, size_t 
 
 int Scheduler::CloseClient(const ConnGUID* conn_guid)
 {
-    ThreadInterface* tcp_thread = thread_sink_->GetTCPThreadGroup()->GetThread(conn_guid->io_thread_idx);
+    ThreadInterface* tcp_thread = thread_sink_->GetIOThreadGroup()->GetThread(conn_guid->io_thread_idx);
     if (tcp_thread == thread_sink_->GetThread())
     {
-        BaseConn* conn = static_cast<BaseConn*>(thread_sink_->GetConnMgr()->GetConnByID(conn_guid->conn_id));
+        BaseConn* conn = static_cast<BaseConn*>(thread_sink_->GetConnCenter()->GetConnByID(conn_guid->conn_id));
         if (nullptr == conn)
         {
             LOG_ERROR("failed to get tcp conn by id: " << conn_guid->conn_id);
@@ -85,7 +85,7 @@ int Scheduler::CloseClient(const ConnGUID* conn_guid)
         return 0;
     }
 
-    ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_CLOSE_CONN, thread_sink_->GetThread(), conn_guid, NULL, 0);
+    ThreadTask* task = new ThreadTask(TASK_TYPE_CLOSE_CONN, thread_sink_->GetThread(), conn_guid, NULL, 0);
     if (nullptr == task)
     {
         const int err = errno;
@@ -128,7 +128,7 @@ void Scheduler::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_group
 
 int Scheduler::GetScheduleTCPThreadIdx(int tcp_thread_idx)
 {
-    const int tcp_thread_count = thread_sink_->GetTCPThreadGroup()->GetThreadCount();
+    const int tcp_thread_count = thread_sink_->GetIOThreadGroup()->GetThreadCount();
 
     if (INVALID_IDX(tcp_thread_idx, 0, tcp_thread_count))
     {
@@ -168,7 +168,7 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const vo
 
         case THREAD_TYPE_TCP:
         {
-            thread_group = thread_sink_->GetTCPThreadGroup();
+            thread_group = thread_sink_->GetIOThreadGroup();
             if (nullptr == thread_group)
             {
                 LOG_ERROR("no such threads, thread type: " << thread_type);

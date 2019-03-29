@@ -2,9 +2,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <iomanip>
+#include "io_thread_sink.h"
 #include "log_util.h"
 #include "task_type.h"
-#include "io_thread_sink.h"
 
 #if !defined(USE_BUFFEREVENT)
 namespace tcp
@@ -16,10 +16,10 @@ void NormalConn::ReadCallback(evutil_socket_t fd, short events, void* arg)
     LOG_TRACE("events occured on socket, fd: " << fd << ", events: "
               << setiosflags(std::ios::showbase) << std::hex << events);
 
-    ThreadSink* thread_sink = static_cast<NormalConn*>(arg)->thread_sink_;
-    ConnMgr* conn_mgr = thread_sink->GetConnMgr();
+    IOThreadSink* thread_sink = static_cast<NormalConn*>(arg)->thread_sink_;
+    ConnCenter* conn_center = thread_sink->GetConnCenter();
 
-    BaseConn* conn = conn_mgr->GetConn(fd);
+    BaseConn* conn = static_cast<BaseConn*>(conn_center->GetConnBySockFD(fd));
     if (nullptr == conn)
     {
         LOG_ERROR("failed to get tcp conn by socket fd: " << fd);
@@ -46,7 +46,7 @@ void NormalConn::ReadCallback(evutil_socket_t fd, short events, void* arg)
                 break;
             }
 
-            if (conn_mgr->UpdateConnStatus(conn->GetConnGUID()->conn_id) != 0)
+            if (conn_center->UpdateConnStatus(conn->GetConnGUID()->conn_id, true) != 0)
             {
                 closed = true;
                 task_type = TASK_TYPE_TCP_CONN_CLOSED_NET_STORM;
@@ -209,12 +209,15 @@ void NormalConn::WriteCallback(evutil_socket_t fd, short events, void* arg)
             LOG_TRACE("del write event ok");
         }
     }
+
+    conn->GetConnCenter()->UpdateConnStatus(conn->GetConnGUID()->conn_id, false);
 }
 
 NormalConn::NormalConn() : send_list_()
 {
     read_event_ = nullptr;
     write_event_ = nullptr;
+    conn_center_ = nullptr;
 }
 
 NormalConn::~NormalConn()

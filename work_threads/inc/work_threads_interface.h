@@ -52,6 +52,7 @@ struct RelatedThreadGroups
     ThreadInterface* global_thread;
     global::LogicInterface* global_logic;
     ThreadGroupInterface* burden_thread_group;
+    ThreadGroupInterface* raw_tcp_thread_group;
     ThreadGroupInterface* proto_tcp_thread_group;
 
     RelatedThreadGroups()
@@ -59,6 +60,7 @@ struct RelatedThreadGroups
         global_thread = nullptr;
         global_logic = nullptr;
         burden_thread_group = nullptr;
+        raw_tcp_thread_group = nullptr;
         proto_tcp_thread_group = nullptr;
     }
 };

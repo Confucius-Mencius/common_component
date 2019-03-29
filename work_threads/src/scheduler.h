@@ -39,6 +39,9 @@ public:
                            size_t msg_body_len, int burden_thread_idx) override;
     int SendToProtoTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
                              size_t msg_body_len, int tcp_thread_idx) override;
+    int SendToClient(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body, size_t msg_body_len);
+    int SendToClient(const ConnGUID* conn_guid, const void* data, size_t len);
+    int CloseClient(const ConnGUID* conn_guid);
 
 private:
     int GetScheduleWorkThreadIdx(int work_thread_idx);

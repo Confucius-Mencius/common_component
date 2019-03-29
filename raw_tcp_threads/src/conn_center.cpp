@@ -99,6 +99,8 @@ BaseConn* ConnCenter::CreateConn(IOType io_type, int io_thread_idx, const char* 
         return NULL;
     }
 
+    conn->SetConnCenter(this);
+
     const ConnID conn_id = conn_id_seq_.Alloc();
     if (INVALID_CONN_ID == conn_id)
     {
@@ -191,38 +193,41 @@ void ConnCenter::DestroyConn(int sock_fd)
     }
 }
 
-int ConnCenter::UpdateConnStatus(ConnID conn_id)
+int ConnCenter::UpdateConnStatus(ConnID conn_id, bool in)
 {
     ConnIDHashMap::const_iterator it = conn_id_hash_map_.find(conn_id);
     if (it != conn_id_hash_map_.end())
     {
-        const BaseConn* conn = it->second;
-        const int sock_fd = conn->GetSockFD();
-
-        // 统计收包的频率，断开疑似攻击的连接
-        ++(conn_hash_map_[sock_fd].recv_count);
-
-        const time_t now = time(NULL);
-        LOG_DEBUG("socket fd: " << sock_fd << ", now: " << now
-                  << ", start_time: " << conn_hash_map_[sock_fd].start_time
-                  << ", recv count: " << conn_hash_map_[sock_fd].recv_count
-                  << ", storm interval: " << conn_mgr_ctx_.storm_interval
-                  << ", storm threshold: " << conn_mgr_ctx_.storm_threshold);
-
-        if ((now - conn_hash_map_[sock_fd].start_time) >= conn_mgr_ctx_.storm_interval)
+        if (in)
         {
-            if (conn_hash_map_[sock_fd].recv_count >= conn_mgr_ctx_.storm_threshold)
+            const BaseConn* conn = it->second;
+            const int sock_fd = conn->GetSockFD();
+
+            // 统计收包的频率，断开疑似攻击的连接
+            ++(conn_hash_map_[sock_fd].recv_count);
+
+            const time_t now = time(NULL);
+            LOG_DEBUG("socket fd: " << sock_fd << ", now: " << now
+                      << ", start_time: " << conn_hash_map_[sock_fd].start_time
+                      << ", recv count: " << conn_hash_map_[sock_fd].recv_count
+                      << ", storm interval: " << conn_mgr_ctx_.storm_interval
+                      << ", storm threshold: " << conn_mgr_ctx_.storm_threshold);
+
+            if ((now - conn_hash_map_[sock_fd].start_time) >= conn_mgr_ctx_.storm_interval)
             {
-                // TODO 网络风暴测试
-                LOG_WARN("net storm! conn id: " << conn_id << ", now: " << now << ", start time: "
-                         << conn_hash_map_[sock_fd].start_time << ", recv count: " << conn_hash_map_[sock_fd].recv_count);
-                return -1;
-            }
-            else
-            {
-                // 重新计数
-                conn_hash_map_[sock_fd].start_time = now;
-                conn_hash_map_[sock_fd].recv_count = 0;
+                if (conn_hash_map_[sock_fd].recv_count >= conn_mgr_ctx_.storm_threshold)
+                {
+                    // TODO 网络风暴测试
+                    LOG_WARN("net storm! conn id: " << conn_id << ", now: " << now << ", start time: "
+                             << conn_hash_map_[sock_fd].start_time << ", recv count: " << conn_hash_map_[sock_fd].recv_count);
+                    return -1;
+                }
+                else
+                {
+                    // 重新计数
+                    conn_hash_map_[sock_fd].start_time = now;
+                    conn_hash_map_[sock_fd].recv_count = 0;
+                }
             }
         }
 

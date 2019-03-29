@@ -10,6 +10,8 @@ namespace tcp
 {
 namespace raw
 {
+class ConnCenter;
+
 class BufferEventConn : public BaseConn
 {
     CREATE_FUNC(BufferEventConn)

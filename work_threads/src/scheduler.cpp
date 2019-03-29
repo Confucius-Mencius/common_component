@@ -80,6 +80,199 @@ int Scheduler::SendToProtoTCPThread(const ConnGUID* conn_guid, const ::proto::Ms
     return SendToThread(THREAD_TYPE_PROTO_TCP, conn_guid, msg_head, msg_body, msg_body_len, tcp_thread_idx);
 }
 
+int Scheduler::SendToClient(const ConnGUID* conn_guid, const proto::MsgHead& msg_head, const void* msg_body, size_t msg_body_len)
+{
+    if (nullptr == conn_guid)
+    {
+        return -1;
+    }
+
+    ThreadGroupInterface* thread_group = nullptr;
+    ThreadInterface* thread = nullptr;
+
+    switch (conn_guid->io_type)
+    {
+        case IO_TYPE_PROTO_TCP:
+        {
+            thread_group = related_thread_groups_->proto_tcp_thread_group;
+            if (nullptr == thread_group)
+            {
+                LOG_ERROR("no such threads, io type: " << conn_guid->io_type);
+                return -1;
+            }
+
+            thread = thread_group->GetThread(conn_guid->io_thread_idx);
+        }
+        break;
+
+        default:
+            break;
+    }
+
+    if (nullptr == thread)
+    {
+        LOG_ERROR("no such thread, io type: " << conn_guid->io_type);
+        return -1;
+    }
+
+    std::unique_ptr<char []> buf(new char[MIN_DATA_LEN + msg_body_len + 1]);
+    if (nullptr == buf)
+    {
+        LOG_ERROR("failed to alloc memory");
+        return -1;
+    }
+
+    char* data = buf.get();
+    size_t len;
+
+    if (msg_codec_->EncodeMsg(&data, len, msg_head, msg_body, msg_body_len) != 0)
+    {
+        return -1;
+    }
+
+    ThreadTask* task = new ThreadTask(TASK_TYPE_SEND_TO_CLIENT, thread_sink_->GetThread(), conn_guid, data, len);
+    if (nullptr == task)
+    {
+        const int err = errno;
+        LOG_ERROR("failed to create task, errno: " << err << ", err msg: " << strerror(err));
+        return -1;
+    }
+
+    thread->PushTask(task);
+    return 0;
+}
+
+int Scheduler::SendToClient(const ConnGUID* conn_guid, const void* data, size_t len)
+{
+    if (nullptr == conn_guid)
+    {
+        return -1;
+    }
+
+    ThreadGroupInterface* thread_group = nullptr;
+    ThreadInterface* thread = nullptr;
+
+    switch (conn_guid->io_type)
+    {
+        case IO_TYPE_RAW_TCP:
+        {
+            thread_group = related_thread_groups_->raw_tcp_thread_group;
+            if (nullptr == thread_group)
+            {
+                LOG_ERROR("no such threads, io type: " << conn_guid->io_type);
+                return -1;
+            }
+
+            thread = thread_group->GetThread(conn_guid->io_thread_idx);
+        }
+        break;
+
+        case IO_TYPE_PROTO_TCP:
+        {
+            thread_group = related_thread_groups_->proto_tcp_thread_group;
+            if (nullptr == thread_group)
+            {
+                LOG_ERROR("no such threads, io type: " << conn_guid->io_type);
+                return -1;
+            }
+
+            thread = thread_group->GetThread(conn_guid->io_thread_idx);
+        }
+        break;
+
+        case IO_TYPE_WS_HTTP:
+        {
+        }
+        break;
+
+        default:
+            break;
+    }
+
+    if (nullptr == thread)
+    {
+        LOG_ERROR("no such thread, io type: " << conn_guid->io_type);
+        return -1;
+    }
+
+    ThreadTask* task = new ThreadTask(TASK_TYPE_SEND_TO_CLIENT, thread_sink_->GetThread(), conn_guid, data, len);
+    if (nullptr == task)
+    {
+        const int err = errno;
+        LOG_ERROR("failed to create task, errno: " << err << ", err msg: " << strerror(err));
+        return -1;
+    }
+
+    thread->PushTask(task);
+    return 0;
+
+}
+
+int Scheduler::CloseClient(const ConnGUID* conn_guid)
+{
+    if (nullptr == conn_guid)
+    {
+        return -1;
+    }
+
+    ThreadGroupInterface* thread_group = nullptr;
+    ThreadInterface* thread = nullptr;
+
+    switch (conn_guid->io_type)
+    {
+        case IO_TYPE_RAW_TCP:
+        {
+            thread_group = related_thread_groups_->raw_tcp_thread_group;
+            if (nullptr == thread_group)
+            {
+                LOG_ERROR("no such threads, io type: " << conn_guid->io_type);
+                return -1;
+            }
+
+            thread = thread_group->GetThread(conn_guid->io_thread_idx);
+        }
+        break;
+
+        case IO_TYPE_PROTO_TCP:
+        {
+            thread_group = related_thread_groups_->proto_tcp_thread_group;
+            if (nullptr == thread_group)
+            {
+                LOG_ERROR("no such threads, io type: " << conn_guid->io_type);
+                return -1;
+            }
+
+            thread = thread_group->GetThread(conn_guid->io_thread_idx);
+        }
+        break;
+
+        case IO_TYPE_WS_HTTP:
+        {
+        }
+        break;
+
+        default:
+            break;
+    }
+
+    if (nullptr == thread)
+    {
+        LOG_ERROR("no such thread, io type: " << conn_guid->io_type);
+        return -1;
+    }
+
+    ThreadTask* task = new ThreadTask(TASK_TYPE_CLOSE_CONN, thread_sink_->GetThread(), conn_guid, nullptr, 0);
+    if (nullptr == task)
+    {
+        const int err = errno;
+        LOG_ERROR("failed to create task, errno: " << err << ", err msg: " << strerror(err));
+        return -1;
+    }
+
+    thread->PushTask(task);
+    return 0;
+}
+
 int Scheduler::GetScheduleWorkThreadIdx(int work_thread_idx)
 {
     const int work_thread_count = thread_sink_->GetWorkThreadGroup()->GetThreadCount();

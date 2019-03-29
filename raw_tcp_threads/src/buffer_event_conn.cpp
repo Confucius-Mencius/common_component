@@ -3,9 +3,9 @@
 #include <iomanip>
 #include <event2/buffer.h>
 #include <event2/event.h>
+#include "io_thread_sink.h"
 #include "log_util.h"
 #include "task_type.h"
-#include "io_thread_sink.h"
 
 #if defined(USE_BUFFEREVENT)
 namespace tcp
@@ -24,7 +24,7 @@ void BufferEventConn::EventCallback(struct bufferevent* buffer_event, short even
     LOG_TRACE("events occured on socket, fd: " << sock_fd << ", events: "
               << setiosflags(std::ios::showbase) << std::hex << events);
 
-    BaseConn* conn = static_cast<BaseConn*>(thread_sink->GetConnMgr()->GetConnBySockFD(sock_fd));
+    BaseConn* conn = static_cast<BaseConn*>(thread_sink->GetConnCenter()->GetConnBySockFD(sock_fd));
     if (nullptr == conn)
     {
         LOG_ERROR("failed to get tcp conn by socket fd: " << sock_fd);
@@ -102,7 +102,7 @@ void BufferEventConn::ReadCallback(struct bufferevent* buffer_event, void* arg)
         return;
     }
 
-    ConnCenter* conn_mgr = thread_sink->GetConnMgr();
+    ConnCenter* conn_mgr = thread_sink->GetConnCenter();
     BaseConn* conn = static_cast<BaseConn*>(conn_mgr->GetConnBySockFD(sock_fd));
     if (nullptr == conn)
     {
@@ -110,7 +110,7 @@ void BufferEventConn::ReadCallback(struct bufferevent* buffer_event, void* arg)
         return;
     }
 
-    if (conn_mgr->UpdateConnStatus(conn->GetConnGUID()->conn_id) != 0)
+    if (conn_mgr->UpdateConnStatus(conn->GetConnGUID()->conn_id, true) != 0)
     {
         thread_sink->OnClientClosed(conn, TASK_TYPE_TCP_CONN_CLOSED_NET_STORM);
         return;
@@ -222,6 +222,15 @@ int BufferEventConn::Send(const void* data, size_t len)
     else
     {
         LOG_TRACE("send ok, " << client_ip_ << ":" << client_port_ << ", socket fd: " << sock_fd_ << ", " << conn_guid_);
+
+        BaseConn* conn = static_cast<BaseConn*>(conn_center_->GetConnBySockFD(sock_fd_));
+        if (nullptr == conn)
+        {
+            LOG_ERROR("failed to get tcp conn by socket fd: " << sock_fd_);
+            return -1;
+        }
+
+        conn_center_->UpdateConnStatus(conn_guid_.conn_id, false);
         return 0;
     }
 }
