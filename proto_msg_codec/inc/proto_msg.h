@@ -27,8 +27,7 @@ typedef int32_t MsgID; /**< MsgId类型 */
 #define MSG_ID_HEARTBEAT_REQ        -200
 #define MSG_ID_HEARTBEAT_RSP        -201
 
-// 消息结构
-// | total msg len(int32_t) | checksum(uint32_t) | passback(int32_t) | msg id(int32_t) | msg body() |
+// 消息结构：| total msg len(int32_t) | checksum(uint32_t) | passback(int32_t) | msg id(int32_t) | msg body() |
 #define TOTAL_MSG_LEN_FIELD_LEN sizeof(int32_t)
 #define CHECKSUM_FIELD_LEN sizeof(uint32_t)
 #define PASSBACK_FIELD_LEN sizeof(int32_t)
