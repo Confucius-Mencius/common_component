@@ -38,11 +38,11 @@ set(LOG_ENGINE_INC_DIR ${PROJECT_SOURCE_DIR}/../log_engine/inc)
 set(CONF_CENTER_INC_DIR ${PROJECT_SOURCE_DIR}/../conf_center/inc)
 set(THREAD_CENTER_INC_DIR ${PROJECT_SOURCE_DIR}/../thread_center/inc)
 set(GLOBAL_THREAD_INC_DIR ${PROJECT_SOURCE_DIR}/../global_thread/inc)
+set(WORK_THREADS_INC_DIR ${PROJECT_SOURCE_DIR}/../work_threads/inc)
+set(BURDEN_THREADS_INC_DIR ${PROJECT_SOURCE_DIR}/../burden_threads/inc)
 set(RAW_TCP_THREADS_INC_DIR ${PROJECT_SOURCE_DIR}/../raw_tcp_threads/inc)
 set(PROTO_TCP_THREADS_INC_DIR ${PROJECT_SOURCE_DIR}/../proto_tcp_threads/inc)
 
-#set(WORK_THREADS_INC_DIR ${PROJECT_SOURCE_DIR}/../work_threads/inc)
-#set(BURDEN_THREADS_INC_DIR ${PROJECT_SOURCE_DIR}/../burden_threads/inc)
 #set(HTTP_THREADS_INC_DIR ${PROJECT_SOURCE_DIR}/../http_threads/inc)
 #set(UDP_THREADS_INC_DIR ${PROJECT_SOURCE_DIR}/../udp_threads/inc)
 
