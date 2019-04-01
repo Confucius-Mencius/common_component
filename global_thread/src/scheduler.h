@@ -21,14 +21,17 @@ public:
         thread_sink_ = sink;
     }
 
-    void SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups)
-    {
-        related_thread_groups_ = related_thread_groups;
-    }
-
     void SetMsgCodec(::proto::MsgCodec* msg_codec)
     {
         msg_codec_ = msg_codec;
+    }
+
+    int Initialize(const void* ctx);
+    void Finalize();
+
+    void SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups)
+    {
+        related_thread_groups_ = related_thread_groups;
     }
 
     ///////////////////////// SchedulerInterface /////////////////////////
@@ -52,8 +55,9 @@ private:
 
 private:
     ThreadSink* thread_sink_;
-    RelatedThreadGroups* related_thread_groups_;
     ::proto::MsgCodec* msg_codec_;
+    const ThreadsCtx* threads_ctx_;
+    RelatedThreadGroups* related_thread_groups_;
 };
 }
 

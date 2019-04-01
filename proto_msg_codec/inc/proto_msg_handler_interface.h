@@ -95,7 +95,7 @@ int MsgDispatcher::AttachMsgHandler(::proto::MsgID msg_id, ::proto::MsgHandlerIn
         return -1; \
     } \
  \
-    LOG_INFO("attach msg handler ok, msg id: " << msg_id << ", msg handler: " << msg_handler); \
+    LOG_ALWAYS("attach msg handler ok, msg id: " << msg_id << ", msg handler: " << msg_handler); \
     return 0; \
 } \
  \
@@ -134,7 +134,7 @@ int MsgDispatcher::DispatchMsg(const ConnGUID* conn_guid, const ::proto::MsgHead
     gettimeofday(&end_time, NULL); \
     const long end_millisecond = end_time.tv_sec * 1000 + end_time.tv_usec / 1000; \
  \
-    LOG_TRACE("msg process time: " << end_millisecond - begin_millisecond << " milliseconds. " \
+    LOG_INFO("msg process time: " << end_millisecond - begin_millisecond << " milliseconds. " \
               << conn_guid << ", " << msg_head << ", msg body len: " << msg_body_len); \
     return 0; \
 }

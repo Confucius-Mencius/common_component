@@ -128,12 +128,12 @@ public:
      */
     virtual void OnThreadStartOK()
     {
-        LOG_TRACE(self_thread_->GetThreadName() << " OnThreadStartOK, sink: " << this);
+        LOG_ALWAYS(self_thread_->GetThreadName() << " OnThreadStartOK, sink: " << this);
     }
 
     virtual void OnStop()
     {
-        LOG_TRACE(self_thread_->GetThreadName() << " OnStop");
+        LOG_ALWAYS(self_thread_->GetThreadName() << " OnStop");
 
         ////////////////////////////////////////////////////////////////////////////////
         // stop routine here...
@@ -142,7 +142,7 @@ public:
 
     virtual void OnReload()
     {
-        LOG_TRACE(self_thread_->GetThreadName() << " OnReload");
+        LOG_ALWAYS(self_thread_->GetThreadName() << " OnReload");
     }
 
     virtual void OnTask(const ThreadTask* task)

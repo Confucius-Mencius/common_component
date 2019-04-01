@@ -8,6 +8,8 @@ namespace burden
 Scheduler::Scheduler()
 {
     thread_sink_ = nullptr;
+    msg_codec_ = nullptr;
+    threads_ctx_ = nullptr;
     related_thread_groups_ = nullptr;
 //    last_work_thread_idx_ = 0;
     last_burden_thread_idx_ = 0;
@@ -19,12 +21,12 @@ Scheduler::~Scheduler()
 
 int Scheduler::Initialize(const void* ctx)
 {
-    const int burden_thread_count = thread_sink_->GetBurdenThreadGroup()->GetThreadCount();
-    if (burden_thread_count > 0)
+    if (nullptr == ctx)
     {
-        last_burden_thread_idx_ = rand() % burden_thread_count;
+        return -1;
     }
 
+    threads_ctx_ = static_cast<const ThreadsCtx*>(ctx);
     return 0;
 }
 
@@ -35,6 +37,12 @@ void Scheduler::Finalize()
 void Scheduler::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_group)
 {
     related_thread_groups_ = related_thread_group;
+
+    const int burden_thread_count = thread_sink_->GetBurdenThreadGroup()->GetThreadCount();
+    if (burden_thread_count > 0)
+    {
+        last_burden_thread_idx_ = rand() % burden_thread_count;
+    }
 
 //    if (related_thread_groups_->work_thread_group != nullptr)
 //    {
@@ -95,7 +103,6 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const ::
 {
     ThreadGroupInterface* thread_group = nullptr;
     ThreadInterface* thread = nullptr;
-    int real_thread_idx = -1;
 
     switch (thread_type)
     {
@@ -114,7 +121,7 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const ::
                 return -1;
             }
 
-            real_thread_idx = GetScheduleBurdenThreadIdx(thread_idx);
+            int real_thread_idx = GetScheduleBurdenThreadIdx(thread_idx);
             thread = thread_group->GetThread(real_thread_idx);
 
         }

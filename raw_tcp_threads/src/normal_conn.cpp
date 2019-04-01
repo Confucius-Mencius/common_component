@@ -217,7 +217,6 @@ NormalConn::NormalConn() : send_list_()
 {
     read_event_ = nullptr;
     write_event_ = nullptr;
-    conn_center_ = nullptr;
 }
 
 NormalConn::~NormalConn()
@@ -243,7 +242,7 @@ int NormalConn::Initialize(const void* ctx)
         return -1;
     }
 
-    if (event_add(read_event_, NULL) != 0)
+    if (event_add(read_event_, nullptr) != 0)
     {
         const int err = EVUTIL_SOCKET_ERROR();
         LOG_ERROR("failed to add event, errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
@@ -306,7 +305,7 @@ int NormalConn::Send(const void* data, size_t len)
                 break;
             }
 
-            if (event_add(write_event_, NULL) != 0)
+            if (event_add(write_event_, nullptr) != 0)
             {
                 const int err = EVUTIL_SOCKET_ERROR();
                 LOG_ERROR("failed to add write event, errno: " << err << ", err msg: "
@@ -333,7 +332,7 @@ int NormalConn::Send(const void* data, size_t len)
     {
         if (send_list_.empty())
         {
-            if (event_add(write_event_, NULL) != 0)
+            if (event_add(write_event_, nullptr) != 0)
             {
                 const int err = EVUTIL_SOCKET_ERROR();
                 LOG_ERROR("failed to add write event, errno: " << err << ", err msg: "

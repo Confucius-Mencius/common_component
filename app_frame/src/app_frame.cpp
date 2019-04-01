@@ -782,7 +782,7 @@ int AppFrame::LoadAndCheckConf()
 
     if (conf_mgr_.GetBurdenThreadCount() > 0)
     {
-        LOG_INFO("burden thread count: " << conf_mgr_.GetBurdenThreadCount());
+        LOG_ALWAYS("burden thread count: " << conf_mgr_.GetBurdenThreadCount());
         app_frame_threads_count_ += conf_mgr_.GetBurdenThreadCount();
 
         // 当burden thread存在时，burden local logic是可选的，burden logic group必须存在
@@ -795,7 +795,7 @@ int AppFrame::LoadAndCheckConf()
 
     if (conf_mgr_.GetWorkThreadCount() > 0)
     {
-        LOG_INFO("work thread count: " << conf_mgr_.GetWorkThreadCount());
+        LOG_ALWAYS("work thread count: " << conf_mgr_.GetWorkThreadCount());
         app_frame_threads_count_ += conf_mgr_.GetWorkThreadCount();
 
         if (0 == conf_mgr_.GetBurdenThreadCount() && 0 == conf_mgr_.GetRawTCPLogicSoGroup().size()
@@ -1248,7 +1248,7 @@ int AppFrame::LoadProtoTCPThreads()
 
 int AppFrame::CreateAllThreads()
 {
-    LOG_TRACE("AppFrame::CreateAllThreads begin");
+    LOG_ALWAYS("AppFrame::CreateAllThreads begin");
 
     if (conf_mgr_.GetGlobalLogicSo().length() > 0)
     {
@@ -1322,13 +1322,13 @@ int AppFrame::CreateAllThreads()
 //        }
 //    }
 
-    LOG_TRACE("AppFrame::CreateAllThreads end");
+    LOG_ALWAYS("AppFrame::CreateAllThreads end");
     return 0;
 }
 
 void AppFrame::SetThreadsRelationship()
 {
-    LOG_TRACE("AppFrame::SetThreadsRelationship begin");
+    LOG_ALWAYS("AppFrame::SetThreadsRelationship begin");
 
     // 各线程组互相访问
     if (global_threads_ != nullptr)
@@ -1512,6 +1512,6 @@ void AppFrame::SetThreadsRelationship()
 //        raw_tcp_threads_->SetRelatedThreadGroup(&tcp_related_thread_group);
 //    }
 
-    LOG_TRACE("AppFrame::SetThreadsRelationship end");
+    LOG_ALWAYS("AppFrame::SetThreadsRelationship end");
 }
 }

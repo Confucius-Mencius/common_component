@@ -47,7 +47,6 @@ int IOThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
     threads_ctx_ = static_cast<const ThreadsCtx*>(ctx);
 
     conn_center_.SetThreadSink(this);
-    scheduler_.SetThreadSink(this);
 
     ConnCenterCtx conn_mgr_ctx;
     conn_mgr_ctx.timer_axis = self_thread_->GetTimerAxis();
@@ -66,6 +65,8 @@ int IOThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
     {
         return -1;
     }
+
+    scheduler_.SetThreadSink(this);
 
     if (scheduler_.Initialize(threads_ctx_) != 0)
     {
@@ -256,7 +257,7 @@ void IOThreadSink::OnClientClosed(const BaseConn* conn, int task_type)
     const int n = StrPrintf(client_ctx_buf, sizeof(client_ctx_buf), "%s:%u, socket fd: %d",
                             conn->GetClientIP(), conn->GetClientPort(), conn->GetSockFD());
 
-    ThreadTask* task = new ThreadTask(task_type, self_thread_, NULL, client_ctx_buf, n);
+    ThreadTask* task = new ThreadTask(task_type, self_thread_, nullptr, client_ctx_buf, n);
     if (nullptr == task)
     {
         LOG_ERROR("failed to create tcp conn closed task");
@@ -312,7 +313,7 @@ int IOThreadSink::LoadCommonLogic()
     char common_logic_so_path[MAX_PATH_LEN] = "";
     GetAbsolutePath(common_logic_so_path, sizeof(common_logic_so_path),
                     tcp_common_logic_so.c_str(), threads_ctx_->cur_working_dir);
-    LOG_TRACE("load common logic so " << common_logic_so_path << " begin");
+    LOG_ALWAYS("load common logic so " << common_logic_so_path << " begin");
 
     if (common_logic_loader_.Load(common_logic_so_path) != 0)
     {
@@ -346,7 +347,7 @@ int IOThreadSink::LoadCommonLogic()
         return -1;
     }
 
-    LOG_TRACE("load common logic so " << common_logic_so_path << " end");
+    LOG_ALWAYS("load common logic so " << common_logic_so_path << " end");
     return 0;
 }
 
@@ -370,7 +371,7 @@ int IOThreadSink::LoadLogicGroup()
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
         LogicItem& logic_item = *it;
-        LOG_TRACE("load logic so " << logic_item.logic_so_path << " begin");
+        LOG_ALWAYS("load logic so " << logic_item.logic_so_path << " begin");
 
         if (logic_item.logic_loader.Load(logic_item.logic_so_path.c_str()) != 0)
         {
@@ -404,7 +405,7 @@ int IOThreadSink::LoadLogicGroup()
             return -1;
         }
 
-        LOG_TRACE("load logic so " << logic_item.logic_so_path << " end");
+        LOG_ALWAYS("load logic so " << logic_item.logic_so_path << " end");
     }
 
     return 0;
@@ -428,7 +429,7 @@ int IOThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
                                 new_conn_ctx->client_ip, new_conn_ctx->client_port,
                                 new_conn_ctx->client_sock_fd);
 
-        ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_CONN_CLOSED, self_thread_, NULL, client_ctx_buf, n);
+        ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_CONN_CLOSED, self_thread_, nullptr, client_ctx_buf, n);
         if (nullptr == task)
         {
             LOG_ERROR("failed to create tcp conn closed task");

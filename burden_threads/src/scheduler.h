@@ -15,20 +15,20 @@ public:
     Scheduler();
     virtual ~Scheduler();
 
-    int Initialize(const void* ctx);
-    void Finalize();
-
     void SetThreadSink(ThreadSink* sink)
     {
         thread_sink_ = sink;
     }
 
-    void SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups);
-
     void SetMsgCodec(::proto::MsgCodec* msg_codec)
     {
         msg_codec_ = msg_codec;
     }
+
+    int Initialize(const void* ctx);
+    void Finalize();
+
+    void SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups);
 
     ///////////////////////// SchedulerInterface /////////////////////////
     int SendToGlobalThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
@@ -54,8 +54,9 @@ private:
 
 private:
     ThreadSink* thread_sink_;
-    RelatedThreadGroups* related_thread_groups_;
     ::proto::MsgCodec* msg_codec_;
+    const ThreadsCtx* threads_ctx_;
+    RelatedThreadGroups* related_thread_groups_;
 
     // int last_work_thread_idx_;
     int last_burden_thread_idx_;

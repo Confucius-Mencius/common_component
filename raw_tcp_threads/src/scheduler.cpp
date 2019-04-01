@@ -10,8 +10,8 @@ namespace raw
 {
 Scheduler::Scheduler()
 {
-    threads_ctx_ = nullptr;
     thread_sink_ = nullptr;
+    threads_ctx_ = nullptr;
     related_thread_groups_ = nullptr;
     last_tcp_thread_idx_ = 0;
     last_work_thread_idx_ = 0;
@@ -29,15 +29,28 @@ int Scheduler::Initialize(const void* ctx)
     }
 
     threads_ctx_ = static_cast<const ThreadsCtx*>(ctx);
-
-    const int tcp_thread_count = threads_ctx_->conf.thread_count;
-    last_tcp_thread_idx_ = rand() % tcp_thread_count;
-
     return 0;
 }
 
 void Scheduler::Finalize()
 {
+}
+
+void Scheduler::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups)
+{
+    related_thread_groups_ = related_thread_groups;
+
+    const int tcp_thread_count = threads_ctx_->conf.thread_count;
+    last_tcp_thread_idx_ = rand() % tcp_thread_count;
+
+    if (related_thread_groups_->work_thread_group != nullptr)
+    {
+        const int work_thread_count = related_thread_groups_->work_thread_group->GetThreadCount();
+        if (work_thread_count > 0)
+        {
+            last_work_thread_idx_ = rand() % work_thread_count;
+        }
+    }
 }
 
 int Scheduler::SendToClient(const ConnGUID* conn_guid, const void* data, size_t len)
@@ -85,7 +98,7 @@ int Scheduler::CloseClient(const ConnGUID* conn_guid)
         return 0;
     }
 
-    ThreadTask* task = new ThreadTask(TASK_TYPE_CLOSE_CONN, thread_sink_->GetThread(), conn_guid, NULL, 0);
+    ThreadTask* task = new ThreadTask(TASK_TYPE_CLOSE_CONN, thread_sink_->GetThread(), conn_guid, nullptr, 0);
     if (nullptr == task)
     {
         const int err = errno;
@@ -110,20 +123,6 @@ int Scheduler::SendToTCPThread(const ConnGUID* conn_guid, const void* data, size
 int Scheduler::SendToWorkThread(const ConnGUID* conn_guid, const void* data, size_t len, int work_thread_idx)
 {
     return SendToThread(THREAD_TYPE_WORK, conn_guid, data, len, work_thread_idx);
-}
-
-void Scheduler::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups)
-{
-    related_thread_groups_ = related_thread_groups;
-
-    if (related_thread_groups_->work_thread_group != nullptr)
-    {
-        const int work_thread_count = related_thread_groups_->work_thread_group->GetThreadCount();
-        if (work_thread_count > 0)
-        {
-            last_work_thread_idx_ = rand() % work_thread_count;
-        }
-    }
 }
 
 int Scheduler::GetScheduleTCPThreadIdx(int tcp_thread_idx)

@@ -96,7 +96,7 @@ BaseConn* ConnCenter::CreateConn(IOType io_type, int io_thread_idx, const char* 
     {
         const int err = errno;
         LOG_ERROR("failed to create tcp conn, errno: " << err << ", err msg: " << strerror(errno));
-        return NULL;
+        return nullptr;
     }
 
     conn->SetConnCenter(this);
@@ -107,10 +107,10 @@ BaseConn* ConnCenter::CreateConn(IOType io_type, int io_thread_idx, const char* 
         const int err = errno;
         LOG_ERROR("failed to alloc tcp conn id, errno: " << err << ", err msg: " << strerror(errno));
         conn->Release();
-        return NULL;
+        return nullptr;
     }
 
-    const time_t now = time(NULL);
+    const time_t now = time(nullptr);
 
     conn->SetCreatedTime(now);
     conn->SetConnGUID(io_type, io_thread_idx, conn_id);
@@ -123,7 +123,7 @@ BaseConn* ConnCenter::CreateConn(IOType io_type, int io_thread_idx, const char* 
 
     do
     {
-        if (conn->Initialize(NULL) != 0)
+        if (conn->Initialize(nullptr) != 0)
         {
             break;
         }
@@ -156,7 +156,7 @@ BaseConn* ConnCenter::CreateConn(IOType io_type, int io_thread_idx, const char* 
         }
 
         Clear(conn);
-        return NULL;
+        return nullptr;
     }
 
     const int cur_online_conn_count = (int) conn_hash_map_.size();
@@ -206,7 +206,7 @@ int ConnCenter::UpdateConnStatus(ConnID conn_id, bool in)
             // 统计收包的频率，断开疑似攻击的连接
             ++(conn_hash_map_[sock_fd].recv_count);
 
-            const time_t now = time(NULL);
+            const time_t now = time(nullptr);
             LOG_DEBUG("socket fd: " << sock_fd << ", now: " << now
                       << ", start_time: " << conn_hash_map_[sock_fd].start_time
                       << ", recv count: " << conn_hash_map_[sock_fd].recv_count
@@ -245,7 +245,7 @@ ConnInterface* ConnCenter::GetConnBySockFD(int sock_fd) const
         return it->second.conn;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 ConnInterface* ConnCenter::GetConnByID(ConnID conn_id) const
@@ -256,7 +256,7 @@ ConnInterface* ConnCenter::GetConnByID(ConnID conn_id) const
         return it->second;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void ConnCenter::Clear(BaseConn* conn)

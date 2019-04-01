@@ -40,6 +40,11 @@ int ThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
     scheduler_.SetThreadSink(this);
     scheduler_.SetMsgCodec(&msg_codec_);
 
+    if (scheduler_.Initialize(threads_ctx_) != 0)
+    {
+        return -1;
+    }
+
     if (LoadLogic() != 0)
     {
         return -1;
@@ -51,6 +56,7 @@ int ThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 void ThreadSink::OnFinalize()
 {
     SAFE_FINALIZE(logic_);
+    scheduler_.Finalize();
     ThreadSinkInterface::OnFinalize();
 }
 
@@ -182,7 +188,7 @@ int ThreadSink::LoadLogic()
     char logic_so_path[MAX_PATH_LEN] = "";
     GetAbsolutePath(logic_so_path, sizeof(logic_so_path),
                     logic_so.c_str(), threads_ctx_->cur_working_dir);
-    LOG_TRACE("load logic so " << logic_so_path << " begin");
+    LOG_ALWAYS("load logic so " << logic_so_path << " begin");
 
     if (logic_loader_.Load(logic_so_path) != 0)
     {
@@ -193,7 +199,7 @@ int ThreadSink::LoadLogic()
     logic_ = static_cast<LogicInterface*>(logic_loader_.GetModuleInterface(0));
     if (nullptr == logic_)
     {
-        LOG_ERROR("failed to get logic interface, " << logic_loader_.GetLastErrMsg());
+        LOG_ERROR("failed to get logic, " << logic_loader_.GetLastErrMsg());
         return -1;
     }
 
@@ -214,7 +220,7 @@ int ThreadSink::LoadLogic()
         return -1;
     }
 
-    LOG_TRACE("load logic so " << logic_so_path << " end");
+    LOG_ALWAYS("load logic so " << logic_so_path << " end");
     return 0;
 }
 }

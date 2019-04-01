@@ -173,10 +173,10 @@ int BufferEventConn::Initialize(const void* ctx)
 //    bufferevent_set_max_single_read(buffer_event_, BUFFER_EVENT_MAX_SINGLE_READ);
 //    bufferevent_set_max_single_write(buffer_event_, BUFFER_EVENT_MAX_SINGLE_WRITE);
 
-//    LOG_DEBUG("after set, single read size limit: " << bufferevent_get_max_single_read(buffer_event_)
-//              << ", single write size limit: " << bufferevent_get_max_single_write(buffer_event_));
+    LOG_DEBUG("single read size limit: " << bufferevent_get_max_single_read(buffer_event_)
+              << ", single write size limit: " << bufferevent_get_max_single_write(buffer_event_));
 
-    bufferevent_setcb(buffer_event_, BufferEventConn::ReadCallback, NULL,
+    bufferevent_setcb(buffer_event_, BufferEventConn::ReadCallback, nullptr,
                       BufferEventConn::EventCallback, this);
 
     if (bufferevent_enable(buffer_event_, EV_READ | EV_WRITE | EV_PERSIST) != 0)

@@ -8,11 +8,27 @@ namespace global
 Scheduler::Scheduler()
 {
     thread_sink_ = nullptr;
-    related_thread_groups_ = nullptr;
     msg_codec_ = nullptr;
+    threads_ctx_ = nullptr;
+    related_thread_groups_ = nullptr;
 }
 
 Scheduler::~Scheduler()
+{
+}
+
+int Scheduler::Initialize(const void* ctx)
+{
+    if (nullptr == ctx)
+    {
+        return -1;
+    }
+
+    threads_ctx_ = static_cast<const ThreadsCtx*>(ctx);
+    return 0;
+}
+
+void Scheduler::Finalize()
 {
 }
 

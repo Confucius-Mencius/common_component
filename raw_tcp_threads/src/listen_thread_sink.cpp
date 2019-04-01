@@ -254,7 +254,7 @@ bool ListenThreadSink::CanExit() const
 
 void ListenThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
 {
-    ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_CONN_CONNECTED, self_thread_, NULL, new_conn_ctx, sizeof(NewConnCtx));
+    ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_CONN_CONNECTED, self_thread_, nullptr, new_conn_ctx, sizeof(NewConnCtx));
     if (nullptr == task)
     {
         LOG_ERROR("failed to create new conn task");

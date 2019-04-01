@@ -315,7 +315,7 @@ int ProtoCommonLogic::LoadProtoTCPCommonLogic()
     char proto_tcp_common_logic_so_path[MAX_PATH_LEN] = "";
     GetAbsolutePath(proto_tcp_common_logic_so_path, sizeof(proto_tcp_common_logic_so_path),
                     proto_tcp_common_logic_so.c_str(), logic_ctx_.cur_working_dir);
-    LOG_TRACE("load common logic so " << proto_tcp_common_logic_so_path << " begin");
+    LOG_ALWAYS("load common logic so " << proto_tcp_common_logic_so_path << " begin");
 
     if (proto_tcp_common_logic_loader_.Load(proto_tcp_common_logic_so_path) != 0)
     {
@@ -349,7 +349,7 @@ int ProtoCommonLogic::LoadProtoTCPCommonLogic()
         return -1;
     }
 
-    LOG_TRACE("load common logic so " << proto_tcp_common_logic_so_path << " end");
+    LOG_ALWAYS("load common logic so " << proto_tcp_common_logic_so_path << " end");
     return 0;
 }
 
@@ -378,7 +378,7 @@ int ProtoCommonLogic::LoadProtoTCPLogicGroup()
     for (LogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
     {
         LogicItem& logic_item = *it;
-        LOG_TRACE("load logic so " << logic_item.logic_so_path << " begin");
+        LOG_ALWAYS("load logic so " << logic_item.logic_so_path << " begin");
 
         if (logic_item.logic_loader.Load(logic_item.logic_so_path.c_str()) != 0)
         {
@@ -412,7 +412,7 @@ int ProtoCommonLogic::LoadProtoTCPLogicGroup()
             return -1;
         }
 
-        LOG_TRACE("load logic so " << logic_item.logic_so_path << " end");
+        LOG_ALWAYS("load logic so " << logic_item.logic_so_path << " end");
     }
 
     return 0;

@@ -8,6 +8,8 @@ namespace work
 Scheduler::Scheduler()
 {
     thread_sink_ = nullptr;
+    msg_codec_ = nullptr;
+    threads_ctx_ = nullptr;
     related_thread_groups_ = nullptr;
     last_work_thread_idx_ = 0;
     last_burden_thread_idx_ = 0;
@@ -20,12 +22,12 @@ Scheduler::~Scheduler()
 
 int Scheduler::Initialize(const void* ctx)
 {
-    const int work_thread_count = thread_sink_->GetWorkThreadGroup()->GetThreadCount();
-    if (work_thread_count > 0)
+    if (nullptr == ctx)
     {
-        last_work_thread_idx_ = rand() % work_thread_count;
+        return -1;
     }
 
+    threads_ctx_ = static_cast<const ThreadsCtx*>(ctx);
     return 0;
 }
 
@@ -36,6 +38,12 @@ void Scheduler::Finalize()
 void Scheduler::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups)
 {
     related_thread_groups_ = related_thread_groups;
+
+    const int work_thread_count = thread_sink_->GetWorkThreadGroup()->GetThreadCount();
+    if (work_thread_count > 0)
+    {
+        last_work_thread_idx_ = rand() % work_thread_count;
+    }
 
     if (related_thread_groups_->burden_thread_group != nullptr)
     {

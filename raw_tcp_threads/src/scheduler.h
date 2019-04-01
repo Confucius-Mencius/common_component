@@ -16,13 +16,13 @@ public:
     Scheduler();
     virtual ~Scheduler();
 
-    int Initialize(const void* ctx);
-    void Finalize();
-
     void SetThreadSink(IOThreadSink* sink)
     {
         thread_sink_ = sink;
     }
+
+    int Initialize(const void* ctx);
+    void Finalize();
 
     void SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups);
 
@@ -47,8 +47,8 @@ private:
     int SendToThread(int thread_type, const ConnGUID* conn_guid, const void* data, size_t len, int thread_idx);
 
 private:
-    const ThreadsCtx* threads_ctx_;
     IOThreadSink* thread_sink_;
+    const ThreadsCtx* threads_ctx_;
     RelatedThreadGroups* related_thread_groups_;
 
     int last_tcp_thread_idx_;

@@ -251,22 +251,20 @@ int ThreadSink::LoadCommonLogic()
     char common_logic_so_path[MAX_PATH_LEN] = "";
     GetAbsolutePath(common_logic_so_path, sizeof(common_logic_so_path),
                     threads_ctx_->app_frame_conf_mgr->GetBurdenCommonLogicSo().c_str(), threads_ctx_->cur_working_dir);
-    LOG_TRACE("load local logic so " << common_logic_so_path << " begin");
+    LOG_ALWAYS("load common logic so " << common_logic_so_path << " begin");
 
     if (common_logic_loader_.Load(common_logic_so_path) != 0)
     {
-        LOG_ERROR("failed to load local logic so, " << common_logic_loader_.GetLastErrMsg());
+        LOG_ERROR("failed to load common logic so, " << common_logic_loader_.GetLastErrMsg());
         return -1;
     }
 
     common_logic_ = static_cast<CommonLogicInterface*>(common_logic_loader_.GetModuleInterface());
     if (nullptr == common_logic_)
     {
-        LOG_ERROR("failed to get local logic interface, " << common_logic_loader_.GetLastErrMsg());
+        LOG_ERROR("failed to get common logic, " << common_logic_loader_.GetLastErrMsg());
         return -1;
     }
-
-    LOG_TRACE("load local logic so " << common_logic_so_path << " ...");
 
     LogicCtx logic_ctx;
     logic_ctx.argc = threads_ctx_->argc;
@@ -285,7 +283,7 @@ int ThreadSink::LoadCommonLogic()
         return -1;
     }
 
-    LOG_TRACE("load local logic so " << common_logic_so_path << " end");
+    LOG_ALWAYS("load common logic so " << common_logic_so_path << " end");
     return 0;
 }
 
@@ -301,13 +299,14 @@ int ThreadSink::LoadLogicGroup()
     {
         char logic_so_path[MAX_PATH_LEN] = "";
         GetAbsolutePath(logic_so_path, sizeof(logic_so_path), (*it).c_str(), threads_ctx_->cur_working_dir);
+        logic_item.logic_so_path = logic_so_path;
         logic_item_vec_.push_back(logic_item);
     }
 
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
         LogicItem& logic_item = *it;
-        LOG_TRACE("load logic so " << logic_item.logic_so_path << " begin");
+        LOG_ALWAYS("load logic so " << logic_item.logic_so_path << " begin");
 
         if (logic_item.logic_loader.Load(logic_item.logic_so_path.c_str()) != 0)
         {
@@ -318,7 +317,7 @@ int ThreadSink::LoadLogicGroup()
         logic_item.logic = static_cast<LogicInterface*>(logic_item.logic_loader.GetModuleInterface());
         if (nullptr == logic_item.logic)
         {
-            LOG_ERROR("failed to get logic interface, " << logic_item.logic_loader.GetLastErrMsg());
+            LOG_ERROR("failed to get logic, " << logic_item.logic_loader.GetLastErrMsg());
             return -1;
         }
 
@@ -339,7 +338,7 @@ int ThreadSink::LoadLogicGroup()
             return -1;
         }
 
-        LOG_TRACE("load logic so " << logic_item.logic_so_path << " end");
+        LOG_ALWAYS("load logic so " << logic_item.logic_so_path << " end");
     }
 
     return 0;

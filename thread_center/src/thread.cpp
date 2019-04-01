@@ -128,7 +128,7 @@ int Thread::Initialize(const void* ctx)
     // 默认是65536
     int pipe0_size = fcntl(pipe_[0], F_GETPIPE_SZ);
     int pipe1_size = fcntl(pipe_[1], F_GETPIPE_SZ);
-    LOG_DEBUG("before set, pipe0 size: " << pipe0_size << ", pipe1 size: " << pipe1_size);
+    LOG_ALWAYS("before set, pipe0 size: " << pipe0_size << ", pipe1 size: " << pipe1_size);
 
     // 修改为1048576。超过最大值时非root用户返回-1，设置失败，root用户可以超过最大值
     const int PIPE_SIZE = 1048576;
@@ -141,7 +141,7 @@ int Thread::Initialize(const void* ctx)
 
     pipe0_size = fcntl(pipe_[0], F_GETPIPE_SZ);
     pipe1_size = fcntl(pipe_[1], F_GETPIPE_SZ);
-    LOG_DEBUG("after set, pipe0 size: " << pipe0_size << ", pipe1 size: " << pipe1_size);
+    LOG_ALWAYS("after set, pipe0 size: " << pipe0_size << ", pipe1 size: " << pipe1_size);
 
     thread_ev_base_ = event_base_new();
     if (nullptr == thread_ev_base_)
