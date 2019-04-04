@@ -6,7 +6,7 @@ namespace num_str_util_test
 void atoiTest()
 {
     EXPECT_EQ(0, atoi(""));
-//    EXPECT_EQ(0, atoi(NULL)); // SIGSEGV
+//    EXPECT_EQ(0, atoi(nullptr)); // SIGSEGV
     EXPECT_EQ(123, atoi("0123"));
     EXPECT_EQ(0, atoi("x123"));
 }

@@ -48,7 +48,7 @@ static void thread_setup(void)
     for (i = 0; i < CRYPTO_num_locks(); ++i)
     {
         lock_count[i] = 0;
-        pthread_mutex_init(&(lock_cs[i]), NULL);
+        pthread_mutex_init(&(lock_cs[i]), nullptr);
     }
 
     CRYPTO_THREADID_set_callback(pthreads_thread_id);
@@ -59,8 +59,8 @@ static void thread_cleanup(void)
 {
     int i;
 
-    CRYPTO_set_locking_callback(NULL);
-    CRYPTO_THREADID_set_callback(NULL);
+    CRYPTO_set_locking_callback(nullptr);
+    CRYPTO_THREADID_set_callback(nullptr);
 //    BIO_printf(bio_err, "cleanup\n");
 
     for (i = 0; i < CRYPTO_num_locks(); ++i)
@@ -88,13 +88,13 @@ static void thread_cleanup(void)
 //     * thr_setconcurrency(thread_number);
 //     */
 //    for (i = 0; i < thread_number; i++) {
-//        pthread_create(&(thread_ctx[i]), NULL,
+//        pthread_create(&(thread_ctx[i]), nullptr,
 //                       (void *(*)())ndoit, (void *)ssl_ctx);
 //    }
 
 //    BIO_printf(bio_stdout, "reaping\n");
 //    for (i = 0; i < thread_number; i++) {
-//        pthread_join(thread_ctx[i], NULL);
+//        pthread_join(thread_ctx[i], nullptr);
 //    }
 
 //#if 0 /* We can't currently find out the reference amount */

@@ -113,12 +113,12 @@ void TimerAxisTest::Test001()
     timer_sink.SetCtx(thread_ev_base_);
 
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
-    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, NULL, 0));
+    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, nullptr, 0));
     ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
 
     timer_axis_->KillTimer(&timer_sink, 1);
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
-    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, NULL, 0));
+    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, nullptr, 0));
     ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
 
     event_base_dispatch(thread_ev_base_);
@@ -147,10 +147,10 @@ void TimerAxisTest::Test002()
     timer_sink.Delegate(thread_ev_base_, timer_axis_);
 
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
-    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, NULL, 0));
+    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, nullptr, 0));
     ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
 
-    EXPECT_CALL(timer_sink, OnTimer(1, NULL, 0, 1)).Times(1);
+    EXPECT_CALL(timer_sink, OnTimer(1, nullptr, 0, 1)).Times(1);
 
     event_base_dispatch(thread_ev_base_);
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
@@ -178,10 +178,10 @@ void TimerAxisTest::Test003()
     timer_sink.Delegate(thread_ev_base_, timer_axis_, interval);
 
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
-    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, NULL, 0));
+    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, nullptr, 0));
     ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
 
-    EXPECT_CALL(timer_sink, OnTimer(1, NULL, 0, _)).Times(3);
+    EXPECT_CALL(timer_sink, OnTimer(1, nullptr, 0, _)).Times(3);
 
     event_base_dispatch(thread_ev_base_);
     ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
@@ -211,17 +211,17 @@ void TimerAxisTest::Test004()
     timer_sink.SetCtx(thread_ev_base_);
 
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
-    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, NULL, 0));
+    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, nullptr, 0));
     ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
 
     MockTimerSink3 timer_sink3;
     timer_sink3.Delegate(thread_ev_base_, timer_axis_, &timer_sink, 1);
 
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink3, 1));
-    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink3, 1, interval, NULL, 0));
+    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink3, 1, interval, nullptr, 0));
     ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink3, 1));
 
-    EXPECT_CALL(timer_sink3, OnTimer(1, NULL, 0, _)).Times(3);
+    EXPECT_CALL(timer_sink3, OnTimer(1, nullptr, 0, _)).Times(3);
 
     event_base_dispatch(thread_ev_base_);
     ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink3, 1));
@@ -254,11 +254,11 @@ void TimerAxisTest::Test005()
     timer_sink4.Delegate(thread_ev_base_, timer_axis_, &timer_sink, 1, interval);
 
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink4, 1));
-    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink4, 1, interval, NULL, 0));
+    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink4, 1, interval, nullptr, 0));
     ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink4, 1));
 
-    EXPECT_CALL(timer_sink4, OnTimer(1, NULL, 0, _)).Times(3);
-    EXPECT_CALL(timer_sink, OnTimer(1, NULL, 0, 1)).Times(1);
+    EXPECT_CALL(timer_sink4, OnTimer(1, nullptr, 0, _)).Times(3);
+    EXPECT_CALL(timer_sink, OnTimer(1, nullptr, 0, 1)).Times(1);
 
     event_base_dispatch(thread_ev_base_);
     ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink4, 1));
@@ -289,10 +289,10 @@ void TimerAxisTest::Test006()
     timer_sink.Delegate(thread_ev_base_, timer_axis_, ntimes);
 
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));
-    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, NULL, 0, ntimes));
+    ASSERT_EQ(0, timer_axis_->SetTimer(&timer_sink, 1, interval, nullptr, 0, ntimes));
     ASSERT_TRUE(timer_axis_->TimerExist(&timer_sink, 1));
 
-    EXPECT_CALL(timer_sink, OnTimer(1, NULL, 0, _)).Times(ntimes);
+    EXPECT_CALL(timer_sink, OnTimer(1, nullptr, 0, _)).Times(ntimes);
 
     event_base_dispatch(thread_ev_base_);
     ASSERT_FALSE(timer_axis_->TimerExist(&timer_sink, 1));

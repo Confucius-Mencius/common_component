@@ -416,7 +416,7 @@ void ThreadSink::OnRecvNfy(const Peer& peer, const MsgHead& msg_head, const void
 {
     if (logic_item_vec_.size() > 0)
     {
-        if (0 == thread_->GetMsgDispatcher()->DispatchMsg(NULL, msg_head, msg_body, msg_body_len))
+        if (0 == thread_->GetMsgDispatcher()->DispatchMsg(nullptr, msg_head, msg_body, msg_body_len))
         {
             LOG_TRACE("dispatch msg ok, msg id: " << msg_head.msg_id);
             return;
@@ -463,7 +463,7 @@ void ThreadSink::OnRecvClientMsg(evutil_socket_t fd, const struct sockaddr_in* c
         msg_head.Reset();
         msg_head.msg_id = err_msg_id;
 
-        udp_conn->Send(msg_head, NULL, 0, 0);
+        udp_conn->Send(msg_head, nullptr, 0, 0);
         return;
     }
 
@@ -484,7 +484,7 @@ void ThreadSink::OnRecvClientMsg(evutil_socket_t fd, const struct sockaddr_in* c
             msg_head.Reset();
             msg_head.msg_id = MSG_ID_NONE_HANDLER_FOUND;
 
-            udp_conn->Send(msg_head, NULL, 0, 0);
+            udp_conn->Send(msg_head, nullptr, 0, 0);
             return;
         }
     }
@@ -584,7 +584,7 @@ int ThreadSink::BindUdpSocket()
         return -1;
     }
 
-    if (event_add(udp_event_, NULL) != 0)
+    if (event_add(udp_event_, nullptr) != 0)
     {
         const int err = errno;
         LOG_ERROR("failed to add udp event, errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));

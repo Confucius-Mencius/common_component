@@ -46,7 +46,7 @@ public:
     {
         if (pthread_once(&once_control_, Singleton::Init) != 0)
         {
-            return NULL;
+            return nullptr;
         }
 
         return instance_;

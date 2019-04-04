@@ -24,7 +24,8 @@ fi
 . ${SCRIPT_PATH}/../../sh_tools/base/proj_util.sh
 . ${SCRIPT_PATH}/common.sh
 
-RUN_TEST=0
+# 编译的时候是否执行单元测试用例
+RUN_TEST=1
 
 while getopts "b:c:r:h" opt; do
     case $opt in

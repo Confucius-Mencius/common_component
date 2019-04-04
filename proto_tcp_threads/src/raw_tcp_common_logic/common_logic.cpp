@@ -28,12 +28,12 @@ ProtoCommonLogic::~ProtoCommonLogic()
 
 const char* ProtoCommonLogic::GetVersion() const
 {
-    return NULL;
+    return nullptr;
 }
 
 const char* ProtoCommonLogic::GetLastErrMsg() const
 {
-    return NULL;
+    return nullptr;
 }
 
 void ProtoCommonLogic::Release()
@@ -145,7 +145,7 @@ void ProtoCommonLogic::OnStop()
     // 启动定时器，检查proto tcp logics是否都可以退出了。100毫秒检查一次
     struct timeval tv = { 0, 100000 };
 
-    if (logic_ctx_.timer_axis->SetTimer(this, EXIT_CHECK_TIMER_ID, tv, NULL, 0) != 0)
+    if (logic_ctx_.timer_axis->SetTimer(this, EXIT_CHECK_TIMER_ID, tv, nullptr, 0) != 0)
     {
         LOG_ERROR("failed to start exit check timer");
         return;
@@ -221,7 +221,7 @@ void ProtoCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* d
             msg_head.Reset();
             msg_head.msg_id = err_msg_id;
 
-            scheduler_.SendToClient(conn_guid, msg_head, NULL, 0);
+            scheduler_.SendToClient(conn_guid, msg_head, nullptr, 0);
 
             LOG_INFO("close proto tcp conn, " << *conn_guid << ", err msg id: " << err_msg_id);
             scheduler_.CloseClient(conn_guid); // 服务器主动关闭连接
@@ -246,7 +246,7 @@ void ProtoCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* d
         msg_head.Reset();
         msg_head.msg_id = err_msg_id;
 
-        scheduler_.SendToClient(conn_guid, msg_head, NULL, 0);
+        scheduler_.SendToClient(conn_guid, msg_head, nullptr, 0);
         return;
     }
 
@@ -428,7 +428,7 @@ void ProtoCommonLogic::OnRecvClientMsg(const ConnGUID* conn_guid, const ::proto:
             ::proto::MsgHead rsp_msg_head = msg_head;
             rsp_msg_head.msg_id = MSG_ID_HEARTBEAT_RSP;
 
-            scheduler_.SendToClient(conn_guid, rsp_msg_head, NULL, 0);
+            scheduler_.SendToClient(conn_guid, rsp_msg_head, nullptr, 0);
             return;
         }
 
@@ -448,7 +448,7 @@ void ProtoCommonLogic::OnRecvClientMsg(const ConnGUID* conn_guid, const ::proto:
         ::proto::MsgHead rsp_msg_head = msg_head;
         rsp_msg_head.msg_id = MSG_ID_NONE_HANDLER_FOUND;
 
-        scheduler_.SendToClient(conn_guid, rsp_msg_head, NULL, 0);
+        scheduler_.SendToClient(conn_guid, rsp_msg_head, nullptr, 0);
         return;
     }
 
@@ -459,7 +459,7 @@ void ProtoCommonLogic::OnRecvClientMsg(const ConnGUID* conn_guid, const ::proto:
         ::proto::MsgHead rsp_msg_head = msg_head;
         rsp_msg_head.msg_id = MSG_ID_SCHEDULE_FAILED;
 
-        scheduler_.SendToClient(conn_guid, rsp_msg_head, NULL, 0);
+        scheduler_.SendToClient(conn_guid, rsp_msg_head, nullptr, 0);
         return;
     }
 }

@@ -224,7 +224,7 @@ int ServiceMgr::LoadThreadCenter()
         return -1;
     }
 
-    if (thread_center_->Initialize(NULL) != 0)
+    if (thread_center_->Initialize(nullptr) != 0)
     {
         return -1;
     }

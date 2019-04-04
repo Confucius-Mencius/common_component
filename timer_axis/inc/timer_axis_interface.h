@@ -79,7 +79,7 @@ public:
      * @param total_times 定时器执行的总次数，=-1表示一直执行
      */
     virtual int SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct timeval& interval,
-                         void* data = NULL, size_t len = 0, int total_times = -1) = 0;
+                         void* data = nullptr, size_t len = 0, int total_times = -1) = 0;
 
     /**
      * @brief 删除定时器

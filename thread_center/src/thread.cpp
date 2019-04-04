@@ -278,7 +278,7 @@ void Thread::OnTimer(TimerID timer_id, void* data, size_t len, int times)
 
 int Thread::Start()
 {
-    if (pthread_create(&thread_id_, NULL, Thread::ThreadRoutine, this) != 0)
+    if (pthread_create(&thread_id_, nullptr, Thread::ThreadRoutine, this) != 0)
     {
         const int err = errno;
         LOG_ERROR("failed to create thread, errno: " << err << ", err msg: " << strerror(err));
@@ -292,7 +292,7 @@ void Thread::Join()
 {
     if (thread_id_ != (pthread_t) -1)
     {
-        pthread_join(thread_id_, NULL);
+        pthread_join(thread_id_, nullptr);
     }
 }
 

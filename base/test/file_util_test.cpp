@@ -329,7 +329,7 @@ void FileUtilTest::Test007()
     LOG_CPP(stat_info.st_ctime);   /* time of last status change */
 
     sleep(1);
-    time_t now = time(NULL);
+    time_t now = time(nullptr);
 
     struct utimbuf utim_info;
     utim_info.actime = now;

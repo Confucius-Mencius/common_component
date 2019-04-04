@@ -38,7 +38,7 @@ ThreadTask* TaskQueue::PopBack()
 {
     if (task_list_.empty())
     {
-        return NULL;
+        return nullptr;
     }
 
     ThreadTask* task = task_list_.back();
@@ -52,7 +52,7 @@ ThreadTask* TaskQueue::PopFront()
 {
     if (task_list_.empty())
     {
-        return NULL;
+        return nullptr;
     }
 
     ThreadTask* task = task_list_.front();

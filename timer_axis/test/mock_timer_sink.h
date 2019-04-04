@@ -87,7 +87,7 @@ public:
     {
         LOG_DEBUG("on timer, times: " << times);
         timer_axis_->KillTimer(timer_sink_, timer_id);
-        timer_axis_->SetTimer(timer_sink_, timer_id, interval_, NULL, 0);
+        timer_axis_->SetTimer(timer_sink_, timer_id, interval_, nullptr, 0);
 
         static int n = 0;
 
@@ -204,7 +204,7 @@ public:
     virtual void OnTimer(TimerID timer_id, void* data, size_t len, int times)
     {
         LOG_DEBUG("on timer, times: " << times);
-        timer_axis_->SetTimer(other_timer_sink_, other_timer_id_, other_interval_, NULL, 0);
+        timer_axis_->SetTimer(other_timer_sink_, other_timer_id_, other_interval_, nullptr, 0);
 
         static int n = 0;
 

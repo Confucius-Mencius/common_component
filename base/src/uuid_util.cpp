@@ -18,7 +18,7 @@ char* UUID38(char* buf, size_t buf_size, const UUID& uuid)
 {
     if (nullptr == buf || buf_size != (UUID_LEN_38 + 1))
     {
-        return NULL;
+        return nullptr;
     }
 
     StrPrintf(buf, buf_size,
@@ -34,7 +34,7 @@ char* UUID32(char* buf, size_t buf_size, const UUID& uuid)
 {
     if (nullptr == buf || buf_size != (UUID_LEN_32 + 1))
     {
-        return NULL;
+        return nullptr;
     }
 
     StrPrintf(buf, buf_size,

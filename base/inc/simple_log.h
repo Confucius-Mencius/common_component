@@ -40,7 +40,7 @@ extern pthread_mutex_t g_simple_log_mutex;
 #define LOG_C(format, ...)\
     do {\
         struct timeval tv;\
-        gettimeofday(&tv, NULL);\
+        gettimeofday(&tv, nullptr);\
         struct tm* p = localtime(&tv.tv_sec);\
         pthread_mutex_lock(&g_simple_log_mutex);\
         fprintf(stdout, "[%#lx %04d-%02d-%02d %02d:%02d:%02d %03ld %s:%d %s] " format "\n", pthread_self(), (1900 + p->tm_year), (1 + p->tm_mon), \
@@ -54,7 +54,7 @@ extern pthread_mutex_t g_simple_log_mutex;
 #define LOG_CE(format, ...)\
     do {\
         struct timeval tv;\
-        gettimeofday(&tv, NULL);\
+        gettimeofday(&tv, nullptr);\
         struct tm* p = localtime(&tv.tv_sec);\
         pthread_mutex_lock(&g_simple_log_mutex);\
         fprintf(stderr, "[%#lx %04d-%02d-%02d %02d:%02d:%02d %03ld %s:%d %s] " format "\n", pthread_self(), (1900 + p->tm_year), (1 + p->tm_mon), \
@@ -75,7 +75,7 @@ extern pthread_mutex_t g_simple_log_mutex;
 #define LOG_CPP(msg)\
     do {\
         struct timeval tv;\
-        gettimeofday(&tv, NULL);\
+        gettimeofday(&tv, nullptr);\
         struct tm* p = localtime(&tv.tv_sec);\
         std::ostringstream result("");\
         result << "[" << std::hex << std::showbase << pthread_self() << " "\
@@ -93,7 +93,7 @@ extern pthread_mutex_t g_simple_log_mutex;
 #define LOG_CPPE(msg)\
     do {\
         struct timeval tv;\
-        gettimeofday(&tv, NULL);\
+        gettimeofday(&tv, nullptr);\
         struct tm* p = localtime(&tv.tv_sec);\
         std::ostringstream result("");\
         result << "[" << std::hex << std::showbase << pthread_self() << " "\

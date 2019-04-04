@@ -79,7 +79,7 @@ int Backtrace(char* buf, int buf_size, int nframes)
             // offset in [begin_offset, end_offset). now apply
             // __cxa_demangle():
             int status = -1;
-            func_name = abi::__cxa_demangle(begin_name, NULL, NULL, &status);
+            func_name = abi::__cxa_demangle(begin_name, nullptr, nullptr, &status);
 
             if ((0 == status) && (func_name != nullptr))
             {

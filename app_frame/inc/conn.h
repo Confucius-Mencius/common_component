@@ -37,7 +37,7 @@ struct ConnGUID
         ConnGUID* obj = new ConnGUID();
         if (nullptr == obj)
         {
-            return NULL;
+            return nullptr;
         }
 
         obj->io_type = instance->io_type;

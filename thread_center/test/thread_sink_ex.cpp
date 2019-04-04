@@ -65,7 +65,7 @@ void SourceThreadSink::OnReload()
 {
     ThreadSinkInterface::OnReload();
 
-    ThreadTask* task = new ThreadTask(-1, self_thread_, NULL, NULL, 0);
+    ThreadTask* task = new ThreadTask(-1, self_thread_, nullptr, nullptr, 0);
     if (nullptr == task)
     {
         LOG_ERROR("failed to create task");
@@ -146,7 +146,7 @@ void ThreadSinkEx::OnTask(const ThreadTask* task)
 {
     ThreadSinkInterface::OnTask(task);
 
-    ThreadTask* new_task = new ThreadTask(-1, self_thread_, NULL, NULL, 0);
+    ThreadTask* new_task = new ThreadTask(-1, self_thread_, nullptr, nullptr, 0);
     if (nullptr == new_task)
     {
         LOG_ERROR("failed to create task");

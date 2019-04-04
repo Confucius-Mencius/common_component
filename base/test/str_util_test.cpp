@@ -351,7 +351,7 @@ void strtok_test()
 
     const char s[] = "a&b&c";
 
-    for (i = 1, str = (char*) s;; ++i, str = NULL)
+    for (i = 1, str = (char*) s;; ++i, str = nullptr)
     {
         token = strtok_r(str, "&", &saveptr);
         if (nullptr == token)

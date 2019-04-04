@@ -13,8 +13,8 @@
 
 //Shutdown =>
 //FIPS_mode_set(0);
-//CRYPTO_set_locking_callback(NULL);
-//CRYPTO_set_id_callback(NULL);
+//CRYPTO_set_locking_callback(nullptr);
+//CRYPTO_set_id_callback(nullptr);
 //ENGINE_cleanup();
 //CONF_modules_unload();
 //ERR_free_strings();

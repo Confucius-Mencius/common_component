@@ -16,7 +16,7 @@ char* StrCpy(char* buf, size_t buf_size, const char* str)
 {
     if (nullptr == buf || buf_size < 2 || nullptr == str)
     {
-        return NULL;
+        return nullptr;
     }
 
     const size_t n = buf_size - 1;
@@ -30,7 +30,7 @@ char* StrCat(char* buf, size_t buf_size_left, const char* str)
 {
     if (nullptr == buf || buf_size_left < 2 || nullptr == str)
     {
-        return NULL;
+        return nullptr;
     }
 
     const size_t n = buf_size_left - 1;

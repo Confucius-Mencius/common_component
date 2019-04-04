@@ -202,7 +202,7 @@ int EventWrapper::Initialize()
     sigaddset(&set, SIGTERM);
     sigaddset(&set, SIGPIPE); // 忽略SIGPIPE，write时若对端关闭，返回值为-1，errno为EPIPE
 
-    pthread_sigmask(SIG_BLOCK, &set, NULL);
+    pthread_sigmask(SIG_BLOCK, &set, nullptr);
 
     // 监控配置文件的变化
     if (WatchConfFiles() != 0)
@@ -340,7 +340,7 @@ int EventWrapper::WatchConfFiles()
         return -1;
     }
 
-    if (event_add(inotify_read_event_, NULL) != 0)
+    if (event_add(inotify_read_event_, nullptr) != 0)
     {
         const int err = errno;
         LOG_ERROR("failed to add inotify event, errno: " << err << ", err msg: " << strerror(err));
@@ -365,7 +365,7 @@ int EventWrapper::SetStopSignal(int signo)
         return -1;
     }
 
-    if (event_add(stop_event_, NULL) != 0)
+    if (event_add(stop_event_, nullptr) != 0)
     {
         const int err = errno;
         SET_LAST_ERR_MSG(&last_err_msg_, "failed to add stop signal event, errno: "

@@ -628,7 +628,7 @@ xmlXPathObjectPtr ConfCenter::GetObjPtr(xmlDocPtr xml_doc_ptr, const xmlChar* xp
     xmlXPathContextPtr xpath_ctx_ptr = xmlXPathNewContext(xml_doc_ptr);
     if (nullptr == xpath_ctx_ptr)
     {
-        return NULL;
+        return nullptr;
     }
 
     xmlXPathObjectPtr xpath_obj_ptr = xmlXPathEvalExpression(xpath, xpath_ctx_ptr);
@@ -636,13 +636,13 @@ xmlXPathObjectPtr ConfCenter::GetObjPtr(xmlDocPtr xml_doc_ptr, const xmlChar* xp
 
     if (nullptr == xpath_obj_ptr)
     {
-        return NULL;
+        return nullptr;
     }
 
     if (xmlXPathNodeSetIsEmpty(xpath_obj_ptr->nodesetval))
     {
         xmlXPathFreeObject(xpath_obj_ptr);
-        return NULL;
+        return nullptr;
     }
 
     return xpath_obj_ptr;

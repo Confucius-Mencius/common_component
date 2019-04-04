@@ -68,7 +68,7 @@ public:
     ///////////////////////// TimerSinkInterface /////////////////////////
     void OnTimer(TimerID timer_id, void* data, size_t len, int times) override
     {
-        const time_t now = time(NULL);
+        const time_t now = time(nullptr);
 
 #if !defined(NDEBUG) && RECORD_TIMEOUT_DEBUG
         LOG_CPP("OnTimer, now: " << now);
@@ -153,7 +153,7 @@ public:
     void Display()
     {
         LOG_CPP("////////////////////////////////////////////////////////////////////////////////");
-        LOG_CPP("current time: " << time(NULL));
+        LOG_CPP("current time: " << time(nullptr));
         LOG_CPP("record count: " << record_hash_map_.size());
 
         for (typename RecordHashMap::const_iterator it = record_hash_map_.begin(); it != record_hash_map_.end(); ++it)
@@ -226,7 +226,7 @@ RecordTimeoutMgr<Key, KeyHash, Value>::~RecordTimeoutMgr()
 template<typename Key, typename KeyHash, typename Value>
 void RecordTimeoutMgr<Key, KeyHash, Value>::UpsertRecord(const Key& k, const Value& v, int timeout_sec)
 {
-    const time_t now = time(NULL);
+    const time_t now = time(nullptr);
 
     typename RecordHashMap::iterator it = record_hash_map_.find(k);
     if (it != record_hash_map_.end())

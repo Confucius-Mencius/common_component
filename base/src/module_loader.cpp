@@ -139,7 +139,7 @@ void* ModuleLoader::GET_MODULE_INTERFACE(int type)
 {
     if (nullptr == get_module_interface_func_)
     {
-        return NULL;
+        return nullptr;
     }
 
     return get_module_interface_func_(type);

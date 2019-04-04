@@ -21,7 +21,7 @@ const char* ThreadCenter::GetVersion() const
 
 const char* ThreadCenter::GetLastErrMsg() const
 {
-    return NULL;
+    return nullptr;
 }
 
 void ThreadCenter::Release()
@@ -54,7 +54,7 @@ ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
     {
         const int err = errno;
         LOG_ERROR("failed to create thread group, errno: " << err << ", err msg: " << strerror(err));
-        return NULL;
+        return nullptr;
     }
 
     thread_group->SetThreadCenter(this);
@@ -86,7 +86,7 @@ ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
             {
                 LOG_ERROR("failed to create thread, i: " << i);
                 SAFE_DESTROY(thread_group);
-                return NULL;
+                return nullptr;
             }
         }
 
@@ -96,7 +96,7 @@ ThreadGroupInterface* ThreadCenter::CreateThreadGroup(const ThreadGroupCtx* ctx)
     if (ret != 0)
     {
         SAFE_DESTROY(thread_group);
-        return NULL;
+        return nullptr;
     }
 
     return thread_group;

@@ -104,7 +104,7 @@ int CreateDir(const char* file_path)
     std::ostringstream cmd;
     cmd << "mkdir -p " << file_path;
 
-    return ExecShellCmd(NULL, 0, cmd.str().c_str());
+    return ExecShellCmd(nullptr, 0, cmd.str().c_str());
 }
 
 int CreateFile(const char* file_path, mode_t mode)
@@ -154,7 +154,7 @@ int DelFile(const char* file_path)
     std::ostringstream cmd;
     cmd << "rm -rf " << file_path;
 
-    return ExecShellCmd(NULL, 0, cmd.str().c_str());
+    return ExecShellCmd(nullptr, 0, cmd.str().c_str());
 }
 
 int GetFileDir(char* buf, int buf_size, const char* file_path)

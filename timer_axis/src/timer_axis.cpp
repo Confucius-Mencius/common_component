@@ -23,7 +23,7 @@ struct CallbackArg
         {
             const int err = errno;
             LOG_ERROR("failed to alloc memory, errno: " << err << ", err msg: " << strerror(err));
-            return NULL;
+            return nullptr;
         }
 
         callback_arg->timer_axis = timer_axis;
@@ -69,7 +69,7 @@ const char* TimerAxis::GetVersion() const
 
 const char* TimerAxis::GetLastErrMsg() const
 {
-    return NULL;
+    return nullptr;
 }
 
 void TimerAxis::Release()

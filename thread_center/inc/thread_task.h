@@ -64,7 +64,7 @@ public:
         {
             const int err = errno;
             LOG_ERROR("failed to create task, err: " << err << ", err msg: " << strerror(err));
-            return NULL;
+            return nullptr;
         }
 
         return task;

@@ -87,7 +87,7 @@ public:
     ///////////////////////// TimerAxisInterface /////////////////////////
     bool TimerExist(TimerSinkInterface* sink, TimerID timer_id) override;
     int SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct timeval& interval,
-                 void* data = NULL, size_t len = 0, int total_times = -1) override;
+                 void* data = nullptr, size_t len = 0, int total_times = -1) override;
     void KillTimer(TimerSinkInterface* sink, TimerID timer_id) override;
 
 private:

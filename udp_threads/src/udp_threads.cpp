@@ -22,7 +22,7 @@ const char* Threads::GetVersion() const
 
 const char* Threads::GetLastErrMsg() const
 {
-    return NULL;
+    return nullptr;
 }
 
 void Threads::Release()

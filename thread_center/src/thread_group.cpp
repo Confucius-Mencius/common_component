@@ -16,12 +16,12 @@ ThreadGroup::~ThreadGroup()
 
 const char* ThreadGroup::GetVersion() const
 {
-    return NULL;
+    return nullptr;
 }
 
 const char* ThreadGroup::GetLastErrMsg() const
 {
-    return NULL;
+    return nullptr;
 }
 
 void ThreadGroup::Release()
@@ -32,7 +32,7 @@ void ThreadGroup::Release()
 
 int ThreadGroup::Initialize(const void* ctx)
 {
-    if (pthread_key_create(&tsd_key_, NULL) != 0)
+    if (pthread_key_create(&tsd_key_, nullptr) != 0)
     {
         const int err = errno;
         LOG_ERROR("pthread_key_create failed, errno: " << err << ", err msg: " << strerror(err));
@@ -63,7 +63,7 @@ ThreadInterface* ThreadGroup::GetThread(int thread_idx) const
     if (INVALID_IDX(thread_idx, 0, thread_vec_.size()))
     {
         LOG_ERROR("invalid thread idx: " << thread_idx);
-        return NULL;
+        return nullptr;
     }
 
     return thread_vec_[thread_idx];
@@ -167,7 +167,7 @@ ThreadInterface* ThreadGroup::CreateThread(const ThreadCtx* thread_ctx)
     {
         const int err = errno;
         LOG_ERROR("failed to create thread, errno: " << err << ", err msg: " << strerror(err));
-        return NULL;
+        return nullptr;
     }
 
     int ret = -1;
@@ -176,7 +176,7 @@ ThreadInterface* ThreadGroup::CreateThread(const ThreadCtx* thread_ctx)
     {
         if (thread->Initialize(thread_ctx) != 0)
         {
-            LOG_ERROR("thread initialize failed");
+            LOG_ERROR(thread->GetThreadName() << " initialize failed");
             break;
         }
 
@@ -186,7 +186,7 @@ ThreadInterface* ThreadGroup::CreateThread(const ThreadCtx* thread_ctx)
     if (ret != 0)
     {
         SAFE_DESTROY(thread);
-        return NULL;
+        return nullptr;
     }
 
     thread_vec_.push_back(thread);

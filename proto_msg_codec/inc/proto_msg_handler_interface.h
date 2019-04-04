@@ -118,7 +118,7 @@ int MsgDispatcher::DispatchMsg(const ConnGUID* conn_guid, const ::proto::MsgHead
     } \
  \
     struct timeval begin_time; \
-    gettimeofday(&begin_time, NULL); \
+    gettimeofday(&begin_time, nullptr); \
     const long begin_millisecond = begin_time.tv_sec * 1000 + begin_time.tv_usec / 1000; \
  \
     const ConnGUID* real_conn_guid = nullptr; \
@@ -131,7 +131,7 @@ int MsgDispatcher::DispatchMsg(const ConnGUID* conn_guid, const ::proto::MsgHead
     it->second->OnMsg(real_conn_guid, msg_head, msg_body, msg_body_len); \
  \
     struct timeval end_time; \
-    gettimeofday(&end_time, NULL); \
+    gettimeofday(&end_time, nullptr); \
     const long end_millisecond = end_time.tv_sec * 1000 + end_time.tv_usec / 1000; \
  \
     LOG_INFO("msg process time: " << end_millisecond - begin_millisecond << " milliseconds. " \

@@ -37,12 +37,12 @@ public:
     ///////////////////////// ModuleInterface /////////////////////////
     const char* GetVersion() const override
     {
-        return NULL;
+        return nullptr;
     }
 
     const char* GetLastErrMsg() const override
     {
-        return NULL;
+        return nullptr;
     }
 
     void Release() override

@@ -130,7 +130,7 @@ struct ThreadRWLock
 public:
     ThreadRWLock()
     {
-        pthread_rwlock_init(&rwlock_, NULL);
+        pthread_rwlock_init(&rwlock_, nullptr);
     }
 
     ~ThreadRWLock()

@@ -39,7 +39,7 @@ const char* AppFrame::GetVersion() const
 
 const char* AppFrame::GetLastErrMsg() const
 {
-    return NULL;
+    return nullptr;
 }
 
 void AppFrame::Release()
@@ -73,17 +73,17 @@ int AppFrame::Initialize(const void* ctx)
     }
 
     app_frame_ctx_ = *(static_cast<const AppFrameCtx*>(ctx));
-    srand(time(NULL));
+    srand(time(nullptr));
     // OpenSSLInitialize(); // TODO 初始化openssl，保证只有一次调用 参考libwebsockets中的方法
 
-    if (pthread_mutex_init(&g_app_frame_threads_sync_mutex, NULL) != 0)
+    if (pthread_mutex_init(&g_app_frame_threads_sync_mutex, nullptr) != 0)
     {
         const int err = errno;
         LOG_ERROR("pthread_mutex_init failed, errno: " << err << ", err msg: " << strerror(err));
         return -1;
     }
 
-    if (pthread_cond_init(&g_app_frame_threads_sync_cond, NULL) != 0)
+    if (pthread_cond_init(&g_app_frame_threads_sync_cond, nullptr) != 0)
     {
         const int err = errno;
         LOG_ERROR("pthread_cond_init failed, errno: " << err << ", err msg: " << strerror(err));
@@ -823,7 +823,7 @@ int AppFrame::LoadAndCheckConf()
 
 int AppFrame::GetDate() const
 {
-    const time_t now = time(NULL);
+    const time_t now = time(nullptr);
     tm* ltm = localtime(&now);
 
     return (1900 + ltm->tm_year) * 10000 + (1 + ltm->tm_mon) * 100 + ltm->tm_mday;

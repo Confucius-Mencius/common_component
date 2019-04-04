@@ -25,7 +25,7 @@ void ThreadCenterTestEx::SetUp()
         FAIL() << loader_.GetLastErrMsg();
     }
 
-    ASSERT_EQ(0, thread_center_->Initialize(NULL));
+    ASSERT_EQ(0, thread_center_->Initialize(nullptr));
     ASSERT_EQ(0, thread_center_->Activate());
 }
 

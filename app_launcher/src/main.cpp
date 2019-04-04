@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
         const char arg_daemon[] = "-daemon=false";
         const char arg_daemon_orig[] = "-daemon_orig=true";
 
-        if (-1 == execl(app_path.str().c_str(), argv[0], argv[1], argv[2], argv[3], argv[4], arg_daemon_orig, arg_daemon, argv[6], NULL))
+        if (-1 == execl(app_path.str().c_str(), argv[0], argv[1], argv[2], argv[3], argv[4], arg_daemon_orig, arg_daemon, argv[6], nullptr))
         {
             const int err = errno;
             syslog(LOG_ERR, "execl failed, errno: %d, err msg: %s", err, strerror(err));
