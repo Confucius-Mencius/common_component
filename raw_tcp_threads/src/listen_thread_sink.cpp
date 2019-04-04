@@ -52,7 +52,7 @@ void ListenThreadSink::OnAccept(struct evconnlistener* listener, evutil_socket_t
     else
     {
         new_conn_ctx.client_port = ntohs(client_addr->sin_port);
-        LOG_DEBUG("conn connected, client ip: " << new_conn_ctx.client_ip << ", port: " << new_conn_ctx.client_port
+        LOG_DEBUG("client connected, client ip: " << new_conn_ctx.client_ip << ", port: " << new_conn_ctx.client_port
                   << ", socket fd: " << sock_fd);
     }
 
@@ -225,13 +225,13 @@ void ListenThreadSink::OnTask(const ThreadTask* task)
     {
         case TASK_TYPE_TCP_CONN_CLOSED:
         {
-            LOG_TRACE("tcp conn closed: " << task->GetData()); // close by client self or server
+            LOG_TRACE("client closed: " << task->GetData()); // close by client self or server
         }
         break;
 
         case TASK_TYPE_TCP_CONN_CLOSED_NET_STORM:
         {
-            LOG_TRACE("tcp conn closed: " << task->GetData()); // close by server because of net storm
+            LOG_TRACE("client closed: " << task->GetData()); // close by server because of net storm
 
             // TODO 将ip地址加入黑名单，在一定时间内拒绝连接
         }

@@ -33,7 +33,7 @@ public:
 
     virtual int AttachMsgHandler(MsgID msg_id, MsgHandlerInterface* msg_handler) = 0;
     virtual void DetachMsgHandler(MsgID msg_id) = 0;
-    virtual int DispatchMsg(const ConnGUID* conn_guid, const MsgHead& msg_head, const void* msg_body, size_t msg_body_len) = 0;
+    // virtual int DispatchMsg(const ConnGUID* conn_guid, const MsgHead& msg_head, const void* msg_body, size_t msg_body_len) = 0;
 };
 
 class MsgHandlerMgrInterface
@@ -68,7 +68,7 @@ public: \
     int AttachMsgHandler(::proto::MsgID msg_id, ::proto::MsgHandlerInterface* msg_handler) override; \
     void DetachMsgHandler(::proto::MsgID msg_id) override; \
     int DispatchMsg(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body, \
-                    size_t msg_body_len) override; \
+                    size_t msg_body_len); \
  \
 protected: \
     typedef std::map<::proto::MsgID, ::proto::MsgHandlerInterface*> MsgHandlerMap; \

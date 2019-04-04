@@ -167,7 +167,7 @@ void ProtoCommonLogic::OnReload()
 
 void ProtoCommonLogic::OnClientConnected(const ConnGUID* conn_guid)
 {
-    LOG_TRACE("conn connected, " << *conn_guid);
+    LOG_TRACE("ProtoCommonLogic::OnClientConnected, " << conn_guid);
 
     ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_guid->conn_id);
     if (nullptr == conn)
@@ -181,7 +181,7 @@ void ProtoCommonLogic::OnClientConnected(const ConnGUID* conn_guid)
 
 void ProtoCommonLogic::OnClientClosed(const ConnGUID* conn_guid)
 {
-    LOG_TRACE("conn closed, " << *conn_guid);
+    LOG_TRACE("ProtoCommonLogic::OnClientClosed, " << conn_guid);
 
     ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_guid->conn_id);
     if (nullptr == conn)
@@ -195,7 +195,7 @@ void ProtoCommonLogic::OnClientClosed(const ConnGUID* conn_guid)
 
 void ProtoCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
 {
-    LOG_DEBUG(*conn_guid << ", data: " << data << ", len: " << len);
+    LOG_DEBUG("ProtoCommonLogic::OnRecvClientData, " << conn_guid << ", data: " << data << ", len: " << len);
 
     ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_guid->conn_id);
     if (nullptr == conn)
