@@ -11,7 +11,6 @@ Scheduler::Scheduler()
     msg_codec_ = nullptr;
     threads_ctx_ = nullptr;
     related_thread_groups_ = nullptr;
-//    last_work_thread_idx_ = 0;
     last_burden_thread_idx_ = 0;
 }
 
@@ -43,15 +42,6 @@ void Scheduler::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_group
     {
         last_burden_thread_idx_ = rand() % burden_thread_count;
     }
-
-//    if (related_thread_groups_->work_thread_group != nullptr)
-//    {
-//        const int work_thread_count = related_thread_groups_->work_thread_group->GetThreadCount();
-//        if (work_thread_count > 0)
-//        {
-//            last_work_thread_idx_ = rand() % work_thread_count;
-//        }
-//    }
 }
 
 int Scheduler::SendToGlobalThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
@@ -66,12 +56,6 @@ int Scheduler::SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgH
     return SendToThread(THREAD_TYPE_BURDEN, conn_guid, msg_head, msg_body, msg_body_len, burden_thread_idx);
 }
 
-//int Scheduler::SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
-//                                const void* msg_body, size_t msg_body_len, int work_thread_idx)
-//{
-//    return SendToThread(THREAD_TYPE_WORK, conn_guid, msg_head, msg_body, msg_body_len, work_thread_idx);
-//}
-
 int Scheduler::GetScheduleBurdenThreadIdx(int burden_thread_idx)
 {
     const int burden_thread_count = thread_sink_->GetBurdenThreadGroup()->GetThreadCount();
@@ -84,19 +68,6 @@ int Scheduler::GetScheduleBurdenThreadIdx(int burden_thread_idx)
 
     return burden_thread_idx;
 }
-
-//int Scheduler::GetScheduleWorkThreadIdx(int work_thread_idx)
-//{
-//    const int work_thread_count = related_thread_groups_->work_thread_group->GetThreadCount();
-
-//    if (INVALID_IDX(work_thread_idx, 0, work_thread_count))
-//    {
-//        work_thread_idx = last_work_thread_idx_;
-//        last_work_thread_idx_ = (last_work_thread_idx_ + 1) % work_thread_count;
-//    }
-
-//    return work_thread_idx;
-//}
 
 int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
                             const void* msg_body, size_t msg_body_len, int thread_idx)
@@ -126,20 +97,6 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const ::
 
         }
         break;
-
-//        case THREAD_TYPE_WORK:
-//        {
-//            thread_group = related_thread_groups_->work_thread_group;
-//            if (nullptr == thread_group)
-//            {
-//                LOG_ERROR("no such threads, thread type: " << thread_type);
-//                return -1;
-//            }
-
-//            real_thread_idx = GetScheduleWorkThreadIdx(thread_idx);
-//            thread = thread_group->GetThread(real_thread_idx);
-//        }
-//        break;
 
         default:
         {

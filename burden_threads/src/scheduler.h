@@ -35,18 +35,14 @@ public:
                            size_t msg_body_len) override;
     int SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
                            size_t msg_body_len, int burden_thread_idx) override;
-    // int SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
-    //                      size_t msg_body_len, int work_thread_idx) override;
 
 private:
     int GetScheduleBurdenThreadIdx(int burden_thread_idx);
-    // int GetScheduleWorkThreadIdx(int work_thread_idx);
 
     enum
     {
-        THREAD_TYPE_WORK,
-        THREAD_TYPE_BURDEN,
         THREAD_TYPE_GLOBAL,
+        THREAD_TYPE_BURDEN,
     };
 
     int SendToThread(int thread_type, const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
@@ -58,7 +54,6 @@ private:
     const ThreadsCtx* threads_ctx_;
     RelatedThreadGroups* related_thread_groups_;
 
-    // int last_work_thread_idx_;
     int last_burden_thread_idx_;
 };
 }

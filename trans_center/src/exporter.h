@@ -1,0 +1,8 @@
+#ifndef TRANS_CENTER_SRC_EXPORTER_H_
+#define TRANS_CENTER_SRC_EXPORTER_H_
+
+#include "module_util.h"
+
+MODULE_EXPORTER_DECL();
+
+#endif // TRANS_CENTER_SRC_EXPORTER_H_

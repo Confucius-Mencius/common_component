@@ -39,6 +39,7 @@ public:
      */
     virtual int CloseClient(const ConnGUID* conn_guid) = 0;
 
+    // 注意：线程之间的调度不使用异步事务
     virtual int SendToGlobalThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
                                    size_t msg_body_len) = 0;
 
