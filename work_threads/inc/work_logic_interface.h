@@ -6,13 +6,12 @@
 
 class ConfCenterInterface;
 class TimerAxisInterface;
+struct event_base;
 
 namespace proto
 {
 class MsgDispatcherInterface;
 }
-
-struct ConnGUID;
 
 namespace global
 {
@@ -36,6 +35,8 @@ struct LogicCtx
     SchedulerInterface* scheduler;
     ::proto::MsgDispatcherInterface* msg_dispatcher;
     CommonLogicInterface* common_logic;
+    struct event_base* thread_ev_base;
+    int thread_idx;
 
     LogicCtx()
     {
@@ -49,6 +50,8 @@ struct LogicCtx
         scheduler = nullptr;
         msg_dispatcher = nullptr;
         common_logic = nullptr;
+        thread_ev_base = nullptr;
+        thread_idx = -1;
     }
 };
 

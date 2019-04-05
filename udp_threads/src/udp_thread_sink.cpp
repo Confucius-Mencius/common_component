@@ -602,7 +602,7 @@ int ThreadSink::LoadLocalLogic()
     }
 
     const std::string local_logic_so_path = GetAbsolutePath(threads_ctx_->conf_mgr->GetUdpLocalLogicSo().c_str(),
-                                            threads_ctx_->cur_work_dir);
+                                            threads_ctx_->cur_working_dir);
     LOG_INFO("load local logic so " << local_logic_so_path << " begin");
 
     if (local_logic_loader_.Load(local_logic_so_path.c_str()) != 0)
@@ -624,7 +624,7 @@ int ThreadSink::LoadLocalLogic()
     logic_ctx.argc = threads_ctx_->argc;
     logic_ctx.argv = threads_ctx_->argv;
     logic_ctx.common_component_dir = threads_ctx_->common_component_dir;
-    logic_ctx.cur_work_dir = threads_ctx_->cur_work_dir;
+    logic_ctx.cur_working_dir = threads_ctx_->cur_working_dir;
     logic_ctx.app_name = threads_ctx_->app_name;
     logic_ctx.conf_center = threads_ctx_->conf_center;
     logic_ctx.timer_axis = thread_->GetTimerAxis();
@@ -656,7 +656,7 @@ int ThreadSink::LoadLogicGroup()
     for (StrGroup::const_iterator it = logic_so_group.begin();
             it != logic_so_group.end(); ++it)
     {
-        logic_item.logic_so_path = GetAbsolutePath((*it).c_str(), threads_ctx_->cur_work_dir);
+        logic_item.logic_so_path = GetAbsolutePath((*it).c_str(), threads_ctx_->cur_working_dir);
         logic_item_vec_.push_back(logic_item);
     }
 
@@ -684,7 +684,7 @@ int ThreadSink::LoadLogicGroup()
         logic_ctx.argc = threads_ctx_->argc;
         logic_ctx.argv = threads_ctx_->argv;
         logic_ctx.common_component_dir = threads_ctx_->common_component_dir;
-        logic_ctx.cur_work_dir = threads_ctx_->cur_work_dir;
+        logic_ctx.cur_working_dir = threads_ctx_->cur_working_dir;
         logic_ctx.app_name = threads_ctx_->app_name;
         logic_ctx.conf_center = threads_ctx_->conf_center;
         logic_ctx.timer_axis = thread_->GetTimerAxis();

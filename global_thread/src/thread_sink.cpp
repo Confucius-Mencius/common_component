@@ -207,14 +207,15 @@ int ThreadSink::LoadLogic()
     logic_ctx.argc = threads_ctx_->argc;
     logic_ctx.argv = threads_ctx_->argv;
     logic_ctx.common_component_dir = threads_ctx_->common_component_dir;
-    logic_ctx.cur_work_dir = threads_ctx_->cur_working_dir;
+    logic_ctx.cur_working_dir = threads_ctx_->cur_working_dir;
     logic_ctx.app_name = threads_ctx_->app_name;
     logic_ctx.conf_center = threads_ctx_->conf_center;
     logic_ctx.timer_axis = self_thread_->GetTimerAxis();
     logic_ctx.scheduler = &scheduler_;
     logic_ctx.msg_dispatcher = &msg_dispatcher_;
     logic_ctx.global_logic = logic_;
-
+    logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
+    
     if (logic_->Initialize(&logic_ctx) != 0)
     {
         return -1;

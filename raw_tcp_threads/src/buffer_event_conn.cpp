@@ -215,13 +215,13 @@ int BufferEventConn::Send(const void* data, size_t len)
     if (evbuffer_add(bufferevent_get_output(buffer_event_), data, len) != 0)
     {
         const int err = EVUTIL_SOCKET_ERROR();
-        LOG_ERROR("failed to send to " << client_ip_ << ":" << client_port_ << ", socket fd: " << sock_fd_
+        LOG_ERROR("failed to send to client " << client_ip_ << ":" << client_port_ << ", socket fd: " << sock_fd_
                   << ", errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
         return -1;
     }
     else
     {
-        LOG_TRACE("send ok, " << client_ip_ << ":" << client_port_ << ", socket fd: " << sock_fd_ << ", " << conn_guid_);
+        LOG_TRACE("send to client " << client_ip_ << ":" << client_port_ << " ok, socket fd: " << sock_fd_ << ", " << conn_guid_);
 
         BaseConn* conn = static_cast<BaseConn*>(conn_center_->GetConnBySockFD(sock_fd_));
         if (nullptr == conn)

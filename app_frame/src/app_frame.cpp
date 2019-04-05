@@ -1135,7 +1135,7 @@ int AppFrame::LoadProtoTCPThreads()
 //    threads_ctx.argc = app_frame_ctx_.argc;
 //    threads_ctx.argv = app_frame_ctx_.argv;
 //    threads_ctx.common_component_dir = app_frame_ctx_.common_component_dir;
-//    threads_ctx.cur_work_dir = app_frame_ctx_.cur_working_dir;
+//    threads_ctx.cur_working_dir = app_frame_ctx_.cur_working_dir;
 //    threads_ctx.app_name = app_frame_ctx_.app_name;
 //    threads_ctx.conf_center = app_frame_ctx_.conf_center;
 //    threads_ctx.msg_codec_center = app_frame_ctx_.msg_codec_center;
@@ -1181,7 +1181,7 @@ int AppFrame::LoadProtoTCPThreads()
 //    threads_ctx.argc = app_frame_ctx_.argc;
 //    threads_ctx.argv = app_frame_ctx_.argv;
 //    threads_ctx.common_component_dir = app_frame_ctx_.common_component_dir;
-//    threads_ctx.cur_work_dir = app_frame_ctx_.cur_working_dir;
+//    threads_ctx.cur_working_dir = app_frame_ctx_.cur_working_dir;
 //    threads_ctx.app_name = app_frame_ctx_.app_name;
 //    threads_ctx.conf_center = app_frame_ctx_.conf_center;
 //    threads_ctx.msg_codec_center = app_frame_ctx_.msg_codec_center;
@@ -1227,7 +1227,7 @@ int AppFrame::LoadProtoTCPThreads()
 //    threads_ctx.argc = app_frame_ctx_.argc;
 //    threads_ctx.argv = app_frame_ctx_.argv;
 //    threads_ctx.common_component_dir = app_frame_ctx_.common_component_dir;
-//    threads_ctx.cur_work_dir = app_frame_ctx_.cur_working_dir;
+//    threads_ctx.cur_working_dir = app_frame_ctx_.cur_working_dir;
 //    threads_ctx.app_name = app_frame_ctx_.app_name;
 //    threads_ctx.conf_center = app_frame_ctx_.conf_center;
 //    threads_ctx.msg_codec_center = app_frame_ctx_.msg_codec_center;

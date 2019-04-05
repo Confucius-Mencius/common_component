@@ -343,6 +343,7 @@ int ProtoCommonLogic::LoadProtoTCPCommonLogic()
     logic_ctx.msg_dispatcher = &msg_dispatcher_;
     logic_ctx.common_logic = proto_tcp_common_logic_;
     logic_ctx.thread_ev_base = logic_ctx_.thread_ev_base;
+    logic_ctx.thread_idx = logic_ctx_.thread_idx;
 
     if (proto_tcp_common_logic_->Initialize(&logic_ctx) != 0)
     {
@@ -406,6 +407,7 @@ int ProtoCommonLogic::LoadProtoTCPLogicGroup()
         logic_ctx.msg_dispatcher = &msg_dispatcher_;
         logic_ctx.common_logic = proto_tcp_common_logic_;
         logic_ctx.thread_ev_base = logic_ctx_.thread_ev_base;
+        logic_ctx.thread_idx = logic_ctx_.thread_idx;
 
         if (logic_item.logic->Initialize(&logic_ctx) != 0)
         {

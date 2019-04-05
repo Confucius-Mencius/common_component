@@ -6,13 +6,12 @@
 
 class ConfCenterInterface;
 class TimerAxisInterface;
+struct event_base;
 
 namespace proto
 {
 class MsgDispatcherInterface;
 }
-
-struct ConnGUID;
 
 namespace global
 {
@@ -24,26 +23,28 @@ struct LogicCtx
     int argc;
     char** argv;
     const char* common_component_dir;
-    const char* cur_work_dir;
+    const char* cur_working_dir;
     const char* app_name;
     ConfCenterInterface* conf_center;
     TimerAxisInterface* timer_axis;
     SchedulerInterface* scheduler;
     ::proto::MsgDispatcherInterface* msg_dispatcher;
     LogicInterface* global_logic;
+    struct event_base* thread_ev_base;
 
     LogicCtx()
     {
         argc = 0;
         argv = nullptr;
         common_component_dir = nullptr;
-        cur_work_dir = nullptr;
+        cur_working_dir = nullptr;
         app_name = nullptr;
         conf_center = nullptr;
         timer_axis = nullptr;
         scheduler = nullptr;
         msg_dispatcher = nullptr;
         global_logic = nullptr;
+        thread_ev_base = nullptr;
     }
 };
 

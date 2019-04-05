@@ -8,9 +8,9 @@
 class ConfCenterInterface;
 class TimerAxisInterface;
 class ConnCenterInterface;
-class ThreadInterface;
 struct event_base;
 struct ConnGUID;
+class ThreadInterface;
 
 namespace global
 {
@@ -37,6 +37,7 @@ struct LogicCtx
     SchedulerInterface* scheduler;
     CommonLogicInterface* common_logic;
     struct event_base* thread_ev_base;
+    int thread_idx;
     const void* logic_args;
 
     LogicCtx()
@@ -52,6 +53,7 @@ struct LogicCtx
         scheduler = nullptr;
         common_logic = nullptr;
         thread_ev_base = nullptr;
+        thread_idx = -1;
         logic_args = nullptr;
     }
 };

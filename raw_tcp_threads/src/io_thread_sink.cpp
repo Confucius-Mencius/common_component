@@ -340,6 +340,7 @@ int IOThreadSink::LoadCommonLogic()
     logic_ctx.scheduler = &scheduler_;
     logic_ctx.common_logic = common_logic_;
     logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
+    logic_ctx.thread_idx = self_thread_->GetThreadIdx();
     logic_ctx.logic_args = threads_ctx_->logic_args;
 
     if (common_logic_->Initialize(&logic_ctx) != 0)
@@ -398,6 +399,7 @@ int IOThreadSink::LoadLogicGroup()
         logic_ctx.scheduler = &scheduler_;
         logic_ctx.common_logic = common_logic_;
         logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
+        logic_ctx.thread_idx = self_thread_->GetThreadIdx();
         logic_ctx.logic_args = threads_ctx_->logic_args;
 
         if (logic_item.logic->Initialize(&logic_ctx) != 0)

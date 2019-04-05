@@ -277,6 +277,8 @@ int ThreadSink::LoadCommonLogic()
     logic_ctx.scheduler = &scheduler_;
     logic_ctx.msg_dispatcher = &msg_dispatcher_;
     logic_ctx.common_logic = common_logic_;
+    logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
+    logic_ctx.thread_idx = self_thread_->GetThreadIdx();
 
     if (common_logic_->Initialize(&logic_ctx) != 0)
     {
@@ -333,6 +335,8 @@ int ThreadSink::LoadLogicGroup()
         logic_ctx.scheduler = &scheduler_;
         logic_ctx.msg_dispatcher = &msg_dispatcher_;
         logic_ctx.common_logic = common_logic_;
+        logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
+        logic_ctx.thread_idx = self_thread_->GetThreadIdx();
 
         if (logic_item.logic->Initialize(&logic_ctx) != 0)
         {

@@ -33,7 +33,7 @@ struct LogicCtx
     int argc;
     char** argv;
     const char* common_component_dir;
-    const char* cur_work_dir;
+    const char* cur_working_dir;
     const char* app_name;
     ConfCenterInterface* conf_center;
     TimerAxisInterface* timer_axis;
@@ -50,7 +50,7 @@ struct LogicCtx
         argc = 0;
         argv = nullptr;
         common_component_dir = nullptr;
-        cur_work_dir = nullptr;
+        cur_working_dir = nullptr;
         app_name = nullptr;
         conf_center = nullptr;
         timer_axis = nullptr;

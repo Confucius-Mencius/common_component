@@ -7,7 +7,6 @@
 class ConfCenterInterface;
 class TimerAxisInterface;
 class ConnCenterInterface;
-class ThreadInterface;
 struct event_base;
 struct ConnGUID;
 
@@ -42,6 +41,7 @@ struct LogicCtx
     ::proto::MsgDispatcherInterface* msg_dispatcher;
     CommonLogicInterface* common_logic;
     struct event_base* thread_ev_base;
+    int thread_idx;
 
     LogicCtx()
     {
@@ -57,6 +57,7 @@ struct LogicCtx
         msg_dispatcher = nullptr;
         common_logic = nullptr;
         thread_ev_base = nullptr;
+        thread_idx = -1;
     }
 };
 
