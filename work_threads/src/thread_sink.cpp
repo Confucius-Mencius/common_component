@@ -202,7 +202,7 @@ void ThreadSink::OnTask(const ThreadTask* task)
             {
                 if (conn_guid != nullptr)
                 {
-                    LOG_TRACE("dispatch msg ok, " << *conn_guid << ", msg id: " << msg_head.msg_id);
+                    LOG_TRACE("dispatch msg ok, " << conn_guid << ", msg id: " << msg_head.msg_id);
                 }
                 else
                 {

@@ -223,7 +223,7 @@ void ProtoCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* d
 
             scheduler_.SendToClient(conn_guid, msg_head, nullptr, 0);
 
-            LOG_INFO("close proto tcp conn, " << *conn_guid << ", err msg id: " << err_msg_id);
+            LOG_INFO("close proto tcp conn, " << conn_guid << ", err msg id: " << err_msg_id);
             scheduler_.CloseClient(conn_guid); // 服务器主动关闭连接
 
             return;
