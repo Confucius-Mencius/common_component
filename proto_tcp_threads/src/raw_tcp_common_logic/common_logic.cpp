@@ -454,6 +454,8 @@ void ProtoCommonLogic::OnRecvClientMsg(const ConnGUID* conn_guid, const ::proto:
         return;
     }
 
+    LOG_TRACE("forward to work thread");
+
     if (scheduler_.SendToWorkThread(conn_guid, msg_head, msg_body, msg_body_len, -1) != 0)
     {
         LOG_ERROR("failed to send to work thread");

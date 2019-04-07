@@ -36,7 +36,15 @@ public:
 
 private:
     int LoadAndCheckConf();
-    int GetDate() const;
+
+    inline int GetDate() const
+    {
+        const time_t now = time(nullptr);
+        tm* ltm = localtime(&now);
+
+        return (1900 + ltm->tm_year) * 10000 + (1 + ltm->tm_mon) * 100 + ltm->tm_mday;
+    }
+
     int LoadGlobalThread();
     int LoadWorkThreads();
     int LoadBurdenThreads();

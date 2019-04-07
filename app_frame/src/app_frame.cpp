@@ -172,6 +172,8 @@ void AppFrame::Finalize()
 {
     SAFE_FINALIZE(proto_tcp_threads_);
     SAFE_FINALIZE(raw_tcp_threads_);
+    SAFE_FINALIZE(burden_threads_);
+    SAFE_FINALIZE(work_threads_);
     SAFE_FINALIZE(global_threads_);
 
     conf_mgr_.Finalize();
@@ -327,7 +329,6 @@ int AppFrame::NotifyStop()
         }
     }
 
-
 //    if (ws_threads_ != nullptr)
 //    {
 //        if (ws_threads_->GetWSThreadGroup() != nullptr)
@@ -413,6 +414,7 @@ int AppFrame::NotifyReload()
         proto_tcp_threads_->GetListenThreadGroup()->NotifyReload();
         proto_tcp_threads_->GetIOThreadGroup()->NotifyReload();
     }
+
 //    if (ws_threads_ != nullptr)
 //    {
 //        ws_threads_->GetWSThreadGroup()->NotifyReload();
@@ -819,14 +821,6 @@ int AppFrame::LoadAndCheckConf()
     }
 
     return 0;
-}
-
-int AppFrame::GetDate() const
-{
-    const time_t now = time(nullptr);
-    tm* ltm = localtime(&now);
-
-    return (1900 + ltm->tm_year) * 10000 + (1 + ltm->tm_mon) * 100 + ltm->tm_mday;
 }
 
 int AppFrame::LoadGlobalThread()
