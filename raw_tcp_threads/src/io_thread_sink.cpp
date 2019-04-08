@@ -208,6 +208,12 @@ void IOThreadSink::OnTask(const ThreadTask* task)
 
         case TASK_TYPE_NORMAL:
         {
+            if (common_logic_ != nullptr)
+            {
+                common_logic_->OnTask(task->GetConnGUID(), task->GetSourceThread(),
+                                      task->GetData().data(), task->GetData().size());
+            }
+
             for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
             {
                 it->logic->OnTask(task->GetConnGUID(), task->GetSourceThread(),

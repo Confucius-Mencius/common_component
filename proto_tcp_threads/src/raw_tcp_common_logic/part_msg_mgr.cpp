@@ -16,7 +16,7 @@ PartMsgMgr::~PartMsgMgr()
 
 void PartMsgMgr::OnTimeout(ConnInterface* const& k, const ConnGUID& v, int timeout_sec)
 {
-    LOG_TRACE("PartMsgMgr::OnTimeout, k: " << k << ", v: " << v << ", timeout: " << timeout_sec);
+    LOG_TRACE("PartMsgMgr::OnTimeout, k: " << k << ", v: " << &v << ", timeout: " << timeout_sec);
     scheduler_->CloseClient(&v);
 }
 }
