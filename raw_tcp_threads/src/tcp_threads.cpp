@@ -1,8 +1,8 @@
 #include "tcp_threads.h"
 #include "app_frame_conf_mgr_interface.h"
+#include "io_thread_sink.h"
 #include "listen_thread_sink.h"
 #include "str_util.h"
-#include "io_thread_sink.h"
 #include "version.h"
 
 namespace tcp

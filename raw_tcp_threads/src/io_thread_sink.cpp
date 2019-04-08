@@ -9,8 +9,8 @@ namespace tcp
 {
 namespace raw
 {
-IOThreadSink::IOThreadSink()
-    : common_logic_loader_(), logic_item_vec_(), conn_center_(), scheduler_()
+IOThreadSink::IOThreadSink() : common_logic_loader_(), logic_item_vec_(), conn_center_(),
+    scheduler_(), msg_codec_()
 {
     threads_ctx_ = nullptr;
     listen_thread_ = nullptr;
@@ -46,6 +46,11 @@ int IOThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 
     threads_ctx_ = static_cast<const ThreadsCtx*>(ctx);
 
+    ::proto::MsgCodecCtx msg_codec_ctx;
+    msg_codec_ctx.max_msg_body_len = threads_ctx_->app_frame_conf_mgr->GetProtoMaxMsgBodyLen();
+    msg_codec_ctx.do_checksum = threads_ctx_->app_frame_conf_mgr->ProtoDoChecksum();
+    msg_codec_.SetCtx(&msg_codec_ctx);
+
     conn_center_.SetThreadSink(this);
 
     ConnCenterCtx conn_mgr_ctx;
@@ -67,6 +72,7 @@ int IOThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
     }
 
     scheduler_.SetThreadSink(this);
+    scheduler_.SetMsgCodec(&msg_codec_);
 
     if (scheduler_.Initialize(threads_ctx_) != 0)
     {

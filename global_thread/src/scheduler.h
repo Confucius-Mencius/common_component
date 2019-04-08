@@ -35,19 +35,25 @@ public:
     }
 
     ///////////////////////// SchedulerInterface /////////////////////////
-    int SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
-                         size_t msg_body_len, int work_thread_idx) override;
-    int SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
-                           size_t msg_body_len, int burden_thread_idx) override;
-    int SendToProtoTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
-                             size_t msg_body_len, int tcp_thread_idx) override;
+    int SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                         const void* msg_body, size_t msg_body_len, int work_thread_idx) override;
+    int SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                           const void* msg_body, size_t msg_body_len, int burden_thread_idx) override;
+    int SendToRawTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                           const void* msg_body, size_t msg_body_len, int raw_tcp_thread_idx) override;
+    int SendToProtoTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                             const void* msg_body, size_t msg_body_len, int proto_tcp_thread_idx) override;
+    int SendToHTTPWSThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                           const void* msg_body, size_t msg_body_len, int http_ws_thread_idx) override;
 
 private:
     enum
     {
         THREAD_TYPE_WORK,
         THREAD_TYPE_BURDEN,
+        THREAD_TYPE_RAW_TCP,
         THREAD_TYPE_PROTO_TCP,
+        THREAD_TYPE_HTTP_WS,
     };
 
     int SendToThread(int thread_type, const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,

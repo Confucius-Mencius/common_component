@@ -42,8 +42,7 @@ set(WORK_THREADS_INC_DIR ${PROJECT_SOURCE_DIR}/../work_threads/inc)
 set(BURDEN_THREADS_INC_DIR ${PROJECT_SOURCE_DIR}/../burden_threads/inc)
 set(RAW_TCP_THREADS_INC_DIR ${PROJECT_SOURCE_DIR}/../raw_tcp_threads/inc)
 set(PROTO_TCP_THREADS_INC_DIR ${PROJECT_SOURCE_DIR}/../proto_tcp_threads/inc)
-
-#set(HTTP_THREADS_INC_DIR ${PROJECT_SOURCE_DIR}/../http_threads/inc)
+set(HTTP_WS_THREADS_INC_DIR ${PROJECT_SOURCE_DIR}/../http_ws_threads/inc)
 #set(UDP_THREADS_INC_DIR ${PROJECT_SOURCE_DIR}/../udp_threads/inc)
 
 ###############################################################################

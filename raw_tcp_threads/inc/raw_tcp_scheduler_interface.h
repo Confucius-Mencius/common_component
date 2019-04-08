@@ -5,6 +5,11 @@
 
 struct ConnGUID;
 
+namespace proto
+{
+struct MsgHead;
+}
+
 namespace tcp
 {
 namespace raw
@@ -29,7 +34,11 @@ public:
      */
     virtual int CloseClient(const ConnGUID* conn_guid) = 0;
 
-    virtual int SendToGlobalThread(const ConnGUID* conn_guid, const void* data, size_t len) = 0;
+    virtual int SendToGlobalThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                                   const void* msg_body, size_t msg_body_len) = 0;
+
+    virtual int SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                                 const void* msg_body, size_t msg_body_len, int work_thread_idx) = 0;
 
     /**
      * @brief 发送给tcp thread，包括自己
@@ -38,12 +47,7 @@ public:
      */
     virtual int SendToTCPThread(const ConnGUID* conn_guid, const void* data, size_t len, int tcp_thread_idx) = 0;
 
-    /**
-     * @brief
-     * @param work_thread_idx 为-1则由框架自行调度一个work线程
-     * @return
-     */
-    virtual int SendToWorkThread(const ConnGUID* conn_guid, const void* data, size_t len, int work_thread_idx) = 0;
+    // TODO send to tcp thread(msghead
 };
 }
 }

@@ -74,7 +74,7 @@ public:
     virtual void OnStop()
     {
     }
-#include <atomic>
+
     virtual void OnReload()
     {
     }

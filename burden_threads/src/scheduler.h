@@ -31,10 +31,10 @@ public:
     void SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups);
 
     ///////////////////////// SchedulerInterface /////////////////////////
-    int SendToGlobalThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
-                           size_t msg_body_len) override;
-    int SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
-                           size_t msg_body_len, int burden_thread_idx) override;
+    int SendToGlobalThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                           const void* msg_body, size_t msg_body_len) override;
+    int SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                           const void* msg_body, size_t msg_body_len, int burden_thread_idx) override;
 
 private:
     int GetScheduleBurdenThreadIdx(int burden_thread_idx);

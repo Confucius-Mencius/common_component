@@ -123,10 +123,10 @@ int Threads::LoadRawTCPThreads()
     }
 
     tcp::ThreadsCtx raw_threads_ctx = threads_ctx_;
-    raw_threads_ctx.conf.io_type = IO_TYPE_PROTO_TCP;
-    raw_threads_ctx.conf.addr = threads_ctx_.app_frame_conf_mgr->GetProtoTCPAddr();
-    raw_threads_ctx.conf.port = threads_ctx_.app_frame_conf_mgr->GetProtoTCPPort();
-    raw_threads_ctx.conf.thread_count = threads_ctx_.app_frame_conf_mgr->GetProtoTCPThreadCount();
+    raw_threads_ctx.conf.io_type = IO_TYPE_HTTP_WS;
+    raw_threads_ctx.conf.addr = threads_ctx_.app_frame_conf_mgr->GetHTTPWSAddr();
+    raw_threads_ctx.conf.port = threads_ctx_.app_frame_conf_mgr->GetHTTPWSPort();
+    raw_threads_ctx.conf.thread_count = threads_ctx_.app_frame_conf_mgr->GetHTTPWSThreadCount();
     raw_threads_ctx.conf.common_logic_so = std::string(threads_ctx_.common_component_dir) + "/libhttp_ws_raw_tcp_common_logic.so";
 
     http_ws_logic_args_.app_frame_conf_mgr = threads_ctx_.app_frame_conf_mgr;

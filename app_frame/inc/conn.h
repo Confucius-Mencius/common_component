@@ -20,7 +20,7 @@ enum IOType
     IO_TYPE_MIN = 0,
     IO_TYPE_RAW_TCP = IO_TYPE_MIN,
     IO_TYPE_PROTO_TCP,
-    IO_TYPE_WS_HTTP,
+    IO_TYPE_HTTP_WS,
     IO_TYPE_UDP,
     IO_TYPE_MAX,
 };
@@ -91,21 +91,21 @@ struct ConnGUID
 //        return os;
 //    }
 
-     friend std::ostream& operator<<(std::ostream& os, const ConnGUID* instance)
-     {
-         if (nullptr == instance)
-         {
-             os << "conn guid => null";
-         }
-         else
-         {
-             os << "conn guid => { io type: " << (int) (instance->io_type)
-                << ", io thread idx: " << instance->io_thread_idx
-                << ", conn id: " << instance->conn_id << " }";
-         }
+    friend std::ostream& operator<<(std::ostream& os, const ConnGUID* instance)
+    {
+        if (nullptr == instance)
+        {
+            os << "conn guid => null";
+        }
+        else
+        {
+            os << "conn guid => { io type: " << instance->io_type
+               << ", io thread idx: " << instance->io_thread_idx
+               << ", conn id: " << instance->conn_id << " }";
+        }
 
-         return os;
-     }
+        return os;
+    }
 };
 
 class ConnInterface

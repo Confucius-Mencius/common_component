@@ -51,13 +51,11 @@ struct RelatedThreadGroups
 {
     ThreadInterface* global_thread;
     global::LogicInterface* global_logic;
-    // ThreadGroupInterface* work_thread_group;
 
     RelatedThreadGroups()
     {
         global_thread = nullptr;
         global_logic = nullptr;
-        // work_thread_group = nullptr;
     }
 };
 

@@ -5,8 +5,9 @@
 #include "mem_util.h"
 #include "module_loader.h"
 #include "new_conn.h"
-#include "scheduler.h"
+#include "proto_msg_codec.h"
 #include "raw_tcp_logic_interface.h"
+#include "scheduler.h"
 
 namespace tcp
 {
@@ -89,6 +90,7 @@ private:
 
     ConnCenter conn_center_;
     Scheduler scheduler_;
+    ::proto::MsgCodec msg_codec_;
 };
 }
 }

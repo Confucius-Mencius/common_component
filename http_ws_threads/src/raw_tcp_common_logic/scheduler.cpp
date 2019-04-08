@@ -32,6 +32,12 @@ int Scheduler::SendToGlobalThread(const ConnGUID* conn_guid, const ::proto::MsgH
     return SendToThread(THREAD_TYPE_GLOBAL, conn_guid, msg_head, msg_body, msg_body_len, 0);
 }
 
+int Scheduler::SendToTCPThread(const ConnGUID* conn_guid, const proto::MsgHead& msg_head,
+                               const void* msg_body, size_t msg_body_len, int tcp_thread_idx)
+{
+    return SendToThread(THREAD_TYPE_TCP, conn_guid, msg_head, msg_body, msg_body_len, tcp_thread_idx);
+}
+
 int Scheduler::SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
                                 const void* msg_body, size_t msg_body_len, int work_thread_idx)
 {
@@ -61,6 +67,13 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const ::
         case THREAD_TYPE_GLOBAL:
         {
             return raw_tcp_scheduler_->SendToGlobalThread(conn_guid, data + TOTAL_MSG_LEN_FIELD_LEN, len - TOTAL_MSG_LEN_FIELD_LEN); // 内部的消息不发送4个字节的长度字段
+        }
+        break;
+
+        case THREAD_TYPE_TCP:
+        {
+            return raw_tcp_scheduler_->SendToTCPThread(conn_guid,
+                    data + TOTAL_MSG_LEN_FIELD_LEN, len - TOTAL_MSG_LEN_FIELD_LEN, thread_idx); // 内部的消息不发送4个字节的长度字段
         }
         break;
 

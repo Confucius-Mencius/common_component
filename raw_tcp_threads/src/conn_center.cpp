@@ -1,11 +1,11 @@
 #include "conn_center.h"
 #include <string.h>
 #include "log_util.h"
-#include "mem_util.h"
 #include "buffer_event_conn.h"
+#include "io_thread_sink.h"
+#include "mem_util.h"
 #include "normal_conn.h"
 #include "task_type.h"
-#include "io_thread_sink.h"
 
 namespace tcp
 {

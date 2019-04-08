@@ -32,22 +32,34 @@ void Scheduler::Finalize()
 {
 }
 
-int Scheduler::SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
-                                size_t msg_body_len, int work_thread_idx)
+int Scheduler::SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                                const void* msg_body, size_t msg_body_len, int work_thread_idx)
 {
     return SendToThread(THREAD_TYPE_WORK, conn_guid, msg_head, msg_body, msg_body_len, work_thread_idx);
 }
 
-int Scheduler::SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
-                                  size_t msg_body_len, int burden_thread_idx)
+int Scheduler::SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                                  const void* msg_body, size_t msg_body_len, int burden_thread_idx)
 {
     return SendToThread(THREAD_TYPE_BURDEN, conn_guid, msg_head, msg_body, msg_body_len, burden_thread_idx);
 }
 
-int Scheduler::SendToProtoTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
-                                    size_t msg_body_len, int tcp_thread_idx)
+int Scheduler::SendToRawTCPThread(const ConnGUID* conn_guid, const proto::MsgHead& msg_head,
+                                  const void* msg_body, size_t msg_body_len, int raw_tcp_thread_idx)
 {
-    return SendToThread(THREAD_TYPE_PROTO_TCP, conn_guid, msg_head, msg_body, msg_body_len, tcp_thread_idx);
+    return SendToThread(THREAD_TYPE_RAW_TCP, conn_guid, msg_head, msg_body, msg_body_len, raw_tcp_thread_idx);
+}
+
+int Scheduler::SendToProtoTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                                    const void* msg_body, size_t msg_body_len, int proto_tcp_thread_idx)
+{
+    return SendToThread(THREAD_TYPE_PROTO_TCP, conn_guid, msg_head, msg_body, msg_body_len, proto_tcp_thread_idx);
+}
+
+int Scheduler::SendToHTTPWSThread(const ConnGUID* conn_guid, const proto::MsgHead& msg_head,
+                                  const void* msg_body, size_t msg_body_len, int http_ws_thread_idx)
+{
+    return SendToThread(THREAD_TYPE_HTTP_WS, conn_guid, msg_head, msg_body, msg_body_len, http_ws_thread_idx);
 }
 
 int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const proto::MsgHead& msg_head,
@@ -69,14 +81,28 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const pr
         }
         break;
 
+        case THREAD_TYPE_RAW_TCP:
+        {
+            thread_group = related_thread_groups_->raw_tcp_thread_group;
+        }
+        break;
+
         case THREAD_TYPE_PROTO_TCP:
         {
             thread_group = related_thread_groups_->proto_tcp_thread_group;
         }
         break;
 
+        case THREAD_TYPE_HTTP_WS:
+        {
+            thread_group = related_thread_groups_->http_ws_thread_group;
+        }
+        break;
+
         default:
         {
+            LOG_ERROR("invalid thread type: " << thread_type);
+            return -1;
         }
         break;
     }

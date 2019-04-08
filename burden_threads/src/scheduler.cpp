@@ -94,12 +94,13 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const ::
 
             int real_thread_idx = GetScheduleBurdenThreadIdx(thread_idx);
             thread = thread_group->GetThread(real_thread_idx);
-
         }
         break;
 
         default:
         {
+            LOG_ERROR("invalid thread type: " << thread_type);
+            return -1;
         }
         break;
     }
@@ -125,7 +126,8 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const ::
         return -1;
     }
 
-    ThreadTask* task = new ThreadTask(TASK_TYPE_NORMAL, thread_sink_->GetThread(), conn_guid, data + TOTAL_MSG_LEN_FIELD_LEN, len - TOTAL_MSG_LEN_FIELD_LEN); // 内部的消息不发送4个字节的长度字段
+    ThreadTask* task = new ThreadTask(TASK_TYPE_NORMAL, thread_sink_->GetThread(), conn_guid,
+                                      data + TOTAL_MSG_LEN_FIELD_LEN, len - TOTAL_MSG_LEN_FIELD_LEN); // 内部的消息不发送4个字节的长度字段
     if (nullptr == task)
     {
         const int err = errno;

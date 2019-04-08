@@ -13,7 +13,9 @@ Scheduler::Scheduler()
     related_thread_groups_ = nullptr;
     last_work_thread_idx_ = 0;
     last_burden_thread_idx_ = 0;
+    last_raw_tcp_thread_idx_ = 0;
     last_proto_tcp_thread_idx_ = 0;
+    last_http_ws_thread_idx_ = 0;
 }
 
 Scheduler::~Scheduler()
@@ -54,41 +56,36 @@ void Scheduler::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_group
         }
     }
 
+    if (related_thread_groups->raw_tcp_thread_group != nullptr)
+    {
+        const int raw_tcp_thread_count = related_thread_groups_->raw_tcp_thread_group->GetThreadCount();
+        if (raw_tcp_thread_count > 0)
+        {
+            last_raw_tcp_thread_idx_ = rand() % raw_tcp_thread_count;
+        }
+    }
+
     if (related_thread_groups->proto_tcp_thread_group != nullptr)
     {
-        const int tcp_thread_count = related_thread_groups_->proto_tcp_thread_group->GetThreadCount();
-        if (tcp_thread_count > 0)
+        const int proto_tcp_thread_count = related_thread_groups_->proto_tcp_thread_group->GetThreadCount();
+        if (proto_tcp_thread_count > 0)
         {
-            last_proto_tcp_thread_idx_ = rand() % tcp_thread_count;
+            last_proto_tcp_thread_idx_ = rand() % proto_tcp_thread_count;
+        }
+    }
+
+    if (related_thread_groups->http_ws_thread_group != nullptr)
+    {
+        const int http_ws_thread_count = related_thread_groups_->http_ws_thread_group->GetThreadCount();
+        if (http_ws_thread_count > 0)
+        {
+            last_http_ws_thread_idx_ = rand() % http_ws_thread_count;
         }
     }
 }
 
-int Scheduler::SendToGlobalThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
-                                  size_t msg_body_len)
-{
-    return SendToThread(THREAD_TYPE_GLOBAL, conn_guid, msg_head, msg_body, msg_body_len, 0);
-}
-
-int Scheduler::SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
-                                size_t msg_body_len, int work_thread_idx)
-{
-    return SendToThread(THREAD_TYPE_WORK, conn_guid, msg_head, msg_body, msg_body_len, work_thread_idx);
-}
-
-int Scheduler::SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
-                                  size_t msg_body_len, int burden_thread_idx)
-{
-    return SendToThread(THREAD_TYPE_BURDEN, conn_guid, msg_head, msg_body, msg_body_len, burden_thread_idx);
-}
-
-int Scheduler::SendToProtoTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body,
-                                    size_t msg_body_len, int tcp_thread_idx)
-{
-    return SendToThread(THREAD_TYPE_PROTO_TCP, conn_guid, msg_head, msg_body, msg_body_len, tcp_thread_idx);
-}
-
-int Scheduler::SendToClient(const ConnGUID* conn_guid, const proto::MsgHead& msg_head, const void* msg_body, size_t msg_body_len)
+int Scheduler::SendToClient(const ConnGUID* conn_guid, const proto::MsgHead& msg_head,
+                            const void* msg_body, size_t msg_body_len)
 {
     if (nullptr == conn_guid)
     {
@@ -114,7 +111,11 @@ int Scheduler::SendToClient(const ConnGUID* conn_guid, const proto::MsgHead& msg
         break;
 
         default:
-            break;
+        {
+            LOG_ERROR("invalid io type: " << conn_guid->io_type);
+            return -1;
+        }
+        break;
     }
 
     if (nullptr == thread)
@@ -188,13 +189,25 @@ int Scheduler::SendToClient(const ConnGUID* conn_guid, const void* data, size_t 
         }
         break;
 
-        case IO_TYPE_WS_HTTP:
+        case IO_TYPE_HTTP_WS:
         {
+            thread_group = related_thread_groups_->http_ws_thread_group;
+            if (nullptr == thread_group)
+            {
+                LOG_ERROR("no such threads, io type: " << conn_guid->io_type);
+                return -1;
+            }
+
+            thread = thread_group->GetThread(conn_guid->io_thread_idx);
         }
         break;
 
         default:
-            break;
+        {
+            LOG_ERROR("invalid io type: " << conn_guid->io_type);
+            return -1;
+        }
+        break;
     }
 
     if (nullptr == thread)
@@ -254,13 +267,25 @@ int Scheduler::CloseClient(const ConnGUID* conn_guid)
         }
         break;
 
-        case IO_TYPE_WS_HTTP:
+        case IO_TYPE_HTTP_WS:
         {
+            thread_group = related_thread_groups_->http_ws_thread_group;
+            if (nullptr == thread_group)
+            {
+                LOG_ERROR("no such threads, io type: " << conn_guid->io_type);
+                return -1;
+            }
+
+            thread = thread_group->GetThread(conn_guid->io_thread_idx);
         }
         break;
 
         default:
-            break;
+        {
+            LOG_ERROR("invalid io type: " << conn_guid->io_type);
+            return -1;
+        }
+        break;
     }
 
     if (nullptr == thread)
@@ -279,6 +304,42 @@ int Scheduler::CloseClient(const ConnGUID* conn_guid)
 
     thread->PushTask(task);
     return 0;
+}
+
+int Scheduler::SendToGlobalThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                                  const void* msg_body, size_t msg_body_len)
+{
+    return SendToThread(THREAD_TYPE_GLOBAL, conn_guid, msg_head, msg_body, msg_body_len, 0);
+}
+
+int Scheduler::SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                                const void* msg_body, size_t msg_body_len, int work_thread_idx)
+{
+    return SendToThread(THREAD_TYPE_WORK, conn_guid, msg_head, msg_body, msg_body_len, work_thread_idx);
+}
+
+int Scheduler::SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                                  const void* msg_body, size_t msg_body_len, int burden_thread_idx)
+{
+    return SendToThread(THREAD_TYPE_BURDEN, conn_guid, msg_head, msg_body, msg_body_len, burden_thread_idx);
+}
+
+int Scheduler::SendToRawTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                                  const void* msg_body, size_t msg_body_len, int raw_tcp_thread_idx)
+{
+    return SendToThread(THREAD_TYPE_RAW_TCP, conn_guid, msg_head, msg_body, msg_body_len, raw_tcp_thread_idx);
+}
+
+int Scheduler::SendToProtoTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                                    const void* msg_body, size_t msg_body_len, int proto_tcp_thread_idx)
+{
+    return SendToThread(THREAD_TYPE_PROTO_TCP, conn_guid, msg_head, msg_body, msg_body_len, proto_tcp_thread_idx);
+}
+
+int Scheduler::SendToHTTPWSThread(const ConnGUID* conn_guid, const proto::MsgHead& msg_head,
+                                  const void* msg_body, size_t msg_body_len, int http_ws_thread_idx)
+{
+    return SendToThread(THREAD_TYPE_HTTP_WS, conn_guid, msg_head, msg_body, msg_body_len, http_ws_thread_idx);
 }
 
 int Scheduler::GetScheduleWorkThreadIdx(int work_thread_idx)
@@ -307,6 +368,19 @@ int Scheduler::GetScheduleBurdenThreadIdx(int burden_thread_idx)
     return burden_thread_idx;
 }
 
+int Scheduler::GetScheduleRawTCPThreadIdx(int raw_tcp_thread_idx)
+{
+    const int raw_tcp_thread_count = related_thread_groups_->raw_tcp_thread_group->GetThreadCount();
+
+    if (INVALID_IDX(raw_tcp_thread_idx, 0, raw_tcp_thread_count))
+    {
+        raw_tcp_thread_idx = last_raw_tcp_thread_idx_;
+        last_raw_tcp_thread_idx_ = (last_raw_tcp_thread_idx_ + 1) % raw_tcp_thread_count;
+    }
+
+    return raw_tcp_thread_idx;
+}
+
 int Scheduler::GetScheduleProtoTCPThreadIdx(int proto_tcp_thread_idx)
 {
     const int proto_tcp_thread_count = related_thread_groups_->proto_tcp_thread_group->GetThreadCount();
@@ -318,6 +392,19 @@ int Scheduler::GetScheduleProtoTCPThreadIdx(int proto_tcp_thread_idx)
     }
 
     return proto_tcp_thread_idx;
+}
+
+int Scheduler::GetScheduleHTTPWSThreadIdx(int http_ws_thread_idx)
+{
+    const int http_ws_thread_count = related_thread_groups_->http_ws_thread_group->GetThreadCount();
+
+    if (INVALID_IDX(http_ws_thread_idx, 0, http_ws_thread_count))
+    {
+        http_ws_thread_idx = last_http_ws_thread_idx_;
+        last_http_ws_thread_idx_ = (last_http_ws_thread_idx_ + 1) % http_ws_thread_count;
+    }
+
+    return http_ws_thread_idx;
 }
 
 int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const proto::MsgHead& msg_head,
@@ -360,7 +447,20 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const pr
 
             real_thread_idx = GetScheduleBurdenThreadIdx(thread_idx);
             thread = thread_group->GetThread(real_thread_idx);
+        }
+        break;
 
+        case THREAD_TYPE_RAW_TCP:
+        {
+            thread_group = related_thread_groups_->raw_tcp_thread_group;
+            if (nullptr == thread_group)
+            {
+                LOG_ERROR("no such threads, thread type: " << thread_type);
+                return -1;
+            }
+
+            real_thread_idx = GetScheduleRawTCPThreadIdx(thread_idx);
+            thread = thread_group->GetThread(real_thread_idx);
         }
         break;
 
@@ -375,12 +475,27 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const pr
 
             real_thread_idx = GetScheduleProtoTCPThreadIdx(thread_idx);
             thread = thread_group->GetThread(real_thread_idx);
+        }
+        break;
 
+        case THREAD_TYPE_HTTP_WS:
+        {
+            thread_group = related_thread_groups_->http_ws_thread_group;
+            if (nullptr == thread_group)
+            {
+                LOG_ERROR("no such threads, thread type: " << thread_type);
+                return -1;
+            }
+
+            real_thread_idx = GetScheduleHTTPWSThreadIdx(thread_idx);
+            thread = thread_group->GetThread(real_thread_idx);
         }
         break;
 
         default:
         {
+            LOG_ERROR("invalid thread type: " << thread_type);
+            return -1;
         }
         break;
     }

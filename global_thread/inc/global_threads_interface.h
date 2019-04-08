@@ -48,13 +48,17 @@ struct RelatedThreadGroups
 {
     ThreadGroupInterface* work_thread_group;
     ThreadGroupInterface* burden_thread_group;
+    ThreadGroupInterface* raw_tcp_thread_group;
     ThreadGroupInterface* proto_tcp_thread_group;
+    ThreadGroupInterface* http_ws_thread_group;
 
     RelatedThreadGroups()
     {
         work_thread_group = nullptr;
         burden_thread_group = nullptr;
+        raw_tcp_thread_group = nullptr;
         proto_tcp_thread_group = nullptr;
+        http_ws_thread_group = nullptr;
     }
 };
 
