@@ -292,17 +292,17 @@ int ThreadSink::LoadCommonLogic()
 int ThreadSink::LoadLogicGroup()
 {
     // logic group
-    LogicItem logic_item;
-    logic_item.logic = nullptr;
-
     const StrGroup logic_so_group = threads_ctx_->app_frame_conf_mgr->GetWorkLogicSoGroup();
 
-    for (StrGroup::const_iterator it = logic_so_group.begin();
-            it != logic_so_group.end(); ++it)
+    for (StrGroup::const_iterator it = logic_so_group.begin(); it != logic_so_group.end(); ++it)
     {
         char logic_so_path[MAX_PATH_LEN] = "";
         GetAbsolutePath(logic_so_path, sizeof(logic_so_path), (*it).c_str(), threads_ctx_->cur_working_dir);
+
+        LogicItem logic_item;
         logic_item.logic_so_path = logic_so_path;
+        logic_item.logic = nullptr;
+
         logic_item_vec_.push_back(logic_item);
     }
 

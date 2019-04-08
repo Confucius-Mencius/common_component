@@ -1,0 +1,8 @@
+#ifndef HTTP_WS_THREADS_SRC_EXPORTER_H_
+#define HTTP_WS_THREADS_SRC_EXPORTER_H_
+
+#include "module_util.h"
+
+MODULE_EXPORTER_DECL();
+
+#endif // HTTP_WS_THREADS_SRC_EXPORTER_H_

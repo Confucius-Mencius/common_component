@@ -25,7 +25,7 @@ IOThreadSink::~IOThreadSink()
 
 void IOThreadSink::Release()
 {
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
         SAFE_RELEASE_MODULE(it->logic, it->logic_loader);
     }
@@ -88,7 +88,7 @@ int IOThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 
 void IOThreadSink::OnFinalize()
 {
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
         SAFE_FINALIZE(it->logic);
     }
@@ -117,7 +117,7 @@ int IOThreadSink::OnActivate()
         return -1;
     }
 
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
         if (SAFE_ACTIVATE_FAILED(it->logic))
         {
@@ -130,7 +130,7 @@ int IOThreadSink::OnActivate()
 
 void IOThreadSink::OnFreeze()
 {
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
         SAFE_FREEZE(it->logic);
     }
@@ -159,7 +159,7 @@ void IOThreadSink::OnStop()
         common_logic_->OnStop();
     }
 
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
         it->logic->OnStop();
     }
@@ -174,7 +174,7 @@ void IOThreadSink::OnReload()
         common_logic_->OnReload();
     }
 
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
         it->logic->OnReload();
     }
@@ -214,7 +214,7 @@ void IOThreadSink::OnTask(const ThreadTask* task)
                                       task->GetData().data(), task->GetData().size());
             }
 
-            for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+            for (ProtoLogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
             {
                 it->logic->OnTask(task->GetConnGUID(), task->GetSourceThread(),
                                   task->GetData().data(), task->GetData().size());
@@ -239,7 +239,7 @@ bool IOThreadSink::CanExit() const
         can_exit &= (common_logic_->CanExit() ? 1 : 0);
     }
 
-    for (LogicItemVec::const_iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::const_iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
         can_exit &= (it->logic->CanExit() ? 1 : 0);
     }
@@ -254,7 +254,7 @@ void IOThreadSink::OnClientClosed(const BaseConn* conn, int task_type)
         common_logic_->OnClientClosed(conn->GetConnGUID());
     }
 
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
         (*it).logic->OnClientClosed(conn->GetConnGUID());
     }
@@ -281,7 +281,7 @@ void IOThreadSink::OnRecvClientData(const ConnGUID* conn_guid, const void* data,
         common_logic_->OnRecvClientData(conn_guid, data, len);
     }
 
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
         (*it).logic->OnRecvClientData(conn_guid, data, len);
     }
@@ -298,9 +298,9 @@ void IOThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_gr
             common_logic_->SetGlobalLogic(related_thread_group_->global_logic);
         }
 
-        for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+        for (ProtoLogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
         {
-            LogicItem& logic_item = *it;
+            ProtoLogicItem& logic_item = *it;
             logic_item.logic->SetGlobalLogic(related_thread_group_->global_logic);
         }
     }
@@ -310,15 +310,15 @@ void IOThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_gr
 
 int IOThreadSink::LoadCommonLogic()
 {
-    const std::string& tcp_common_logic_so = threads_ctx_->conf.common_logic_so;
-    if (0 == tcp_common_logic_so.length())
+    const std::string& common_logic_so = threads_ctx_->conf.common_logic_so;
+    if (0 == common_logic_so.length())
     {
         return 0;
     }
 
     char common_logic_so_path[MAX_PATH_LEN] = "";
     GetAbsolutePath(common_logic_so_path, sizeof(common_logic_so_path),
-                    tcp_common_logic_so.c_str(), threads_ctx_->cur_working_dir);
+                    common_logic_so.c_str(), threads_ctx_->cur_working_dir);
     LOG_ALWAYS("load common logic so " << common_logic_so_path << " begin");
 
     if (common_logic_loader_.Load(common_logic_so_path) != 0)
@@ -361,23 +361,23 @@ int IOThreadSink::LoadCommonLogic()
 int IOThreadSink::LoadLogicGroup()
 {
     // logic so group
-    LogicItem logic_item;
-    logic_item.logic = nullptr;
-
     const StrGroup& logic_so_group = threads_ctx_->conf.logic_so_group;
 
-    for (StrGroup::const_iterator it = logic_so_group.begin();
-            it != logic_so_group.end(); ++it)
+    for (StrGroup::const_iterator it = logic_so_group.begin(); it != logic_so_group.end(); ++it)
     {
         char logic_so_path[MAX_PATH_LEN] = "";
         GetAbsolutePath(logic_so_path, sizeof(logic_so_path), (*it).c_str(), threads_ctx_->cur_working_dir);
+
+        ProtoLogicItem logic_item;
         logic_item.logic_so_path = logic_so_path;
+        logic_item.logic = nullptr;
+
         logic_item_vec_.push_back(logic_item);
     }
 
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
-        LogicItem& logic_item = *it;
+        ProtoLogicItem& logic_item = *it;
         LOG_ALWAYS("load logic so " << logic_item.logic_so_path << " begin");
 
         if (logic_item.logic_loader.Load(logic_item.logic_so_path.c_str()) != 0)
@@ -453,7 +453,7 @@ int IOThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
         common_logic_->OnClientConnected(conn->GetConnGUID());
     }
 
-    for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
         (*it).logic->OnClientConnected(conn->GetConnGUID());
     }

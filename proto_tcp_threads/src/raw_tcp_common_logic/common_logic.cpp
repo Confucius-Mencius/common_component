@@ -16,7 +16,7 @@ enum
     EXIT_CHECK_TIMER_ID = 1,
 };
 
-ProtoCommonLogic::ProtoCommonLogic() : proto_tcp_logic_args_(), proto_tcp_common_logic_loader_(),
+ProtoCommonLogic::ProtoCommonLogic() : proto_logic_args_(), proto_tcp_common_logic_loader_(),
     proto_tcp_logic_item_vec_(), msg_codec_(), scheduler_(), msg_dispatcher_(), part_msg_mgr_()
 {
     proto_tcp_common_logic_ = nullptr;
@@ -38,7 +38,7 @@ const char* ProtoCommonLogic::GetLastErrMsg() const
 
 void ProtoCommonLogic::Release()
 {
-    for (LogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
     {
         SAFE_RELEASE_MODULE(it->logic, it->logic_loader);
     }
@@ -56,17 +56,17 @@ int ProtoCommonLogic::Initialize(const void* ctx)
         return -1;
     }
 
-    proto_tcp_logic_args_ = *(static_cast<const ProtoArgs*>(logic_ctx_.logic_args));
+    proto_logic_args_ = *(static_cast<const ProtoLogicArgs*>(logic_ctx_.logic_args));
 
     ::proto::MsgCodecCtx msg_codec_ctx;
-    msg_codec_ctx.max_msg_body_len = proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoMaxMsgBodyLen();
-    msg_codec_ctx.do_checksum = proto_tcp_logic_args_.app_frame_conf_mgr->ProtoDoChecksum();
+    msg_codec_ctx.max_msg_body_len = proto_logic_args_.app_frame_conf_mgr->GetProtoMaxMsgBodyLen();
+    msg_codec_ctx.do_checksum = proto_logic_args_.app_frame_conf_mgr->ProtoDoChecksum();
     msg_codec_.SetCtx(&msg_codec_ctx);
 
     scheduler_.SetRawTCPScheduler(logic_ctx_.scheduler);
     scheduler_.SetMsgCodec(&msg_codec_);
 
-    if (part_msg_mgr_.Initialize(logic_ctx_.timer_axis, { proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoPartMsgCheckInterval(), 0 }) != 0)
+    if (part_msg_mgr_.Initialize(logic_ctx_.timer_axis, { proto_logic_args_.app_frame_conf_mgr->GetProtoPartMsgCheckInterval(), 0 }) != 0)
     {
         return -1;
     }
@@ -86,7 +86,7 @@ int ProtoCommonLogic::Initialize(const void* ctx)
 
 void ProtoCommonLogic::Finalize()
 {
-    for (LogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
     {
         SAFE_FINALIZE(it->logic);
     }
@@ -107,7 +107,7 @@ int ProtoCommonLogic::Activate()
         return -1;
     }
 
-    for (LogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
     {
         if (SAFE_ACTIVATE_FAILED(it->logic))
         {
@@ -120,7 +120,7 @@ int ProtoCommonLogic::Activate()
 
 void ProtoCommonLogic::Freeze()
 {
-    for (LogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
     {
         SAFE_FREEZE(it->logic);
     }
@@ -137,7 +137,7 @@ void ProtoCommonLogic::OnStop()
         proto_tcp_common_logic_->OnStop();
     }
 
-    for (LogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
     {
         it->logic->OnStop();
     }
@@ -159,7 +159,7 @@ void ProtoCommonLogic::OnReload()
         proto_tcp_common_logic_->OnReload();
     }
 
-    for (LogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
     {
         it->logic->OnReload();
     }
@@ -177,6 +177,16 @@ void ProtoCommonLogic::OnClientConnected(const ConnGUID* conn_guid)
     }
 
     conn->ClearData();
+
+    if (proto_tcp_common_logic_ != nullptr)
+    {
+        proto_tcp_common_logic_->OnClientConnected(conn_guid);
+    }
+
+    for (ProtoLogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
+    {
+        it->logic->OnClientConnected(conn_guid);
+    }
 }
 
 void ProtoCommonLogic::OnClientClosed(const ConnGUID* conn_guid)
@@ -191,6 +201,16 @@ void ProtoCommonLogic::OnClientClosed(const ConnGUID* conn_guid)
     }
 
     conn->ClearData();
+
+    if (proto_tcp_common_logic_ != nullptr)
+    {
+        proto_tcp_common_logic_->OnClientClosed(conn_guid);
+    }
+
+    for (ProtoLogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
+    {
+        it->logic->OnClientClosed(conn_guid);
+    }
 }
 
 void ProtoCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
@@ -230,7 +250,7 @@ void ProtoCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* d
         }
 
         // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
-        part_msg_mgr_.UpsertRecord(conn, *conn_guid, proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoPartMsgConnLife());
+        part_msg_mgr_.UpsertRecord(conn, *conn_guid, proto_logic_args_.app_frame_conf_mgr->GetProtoPartMsgConnLife());
         return;
     }
 
@@ -293,7 +313,7 @@ void ProtoCommonLogic::OnTimer(TimerID timer_id, void* data, size_t len, int tim
         can_exit &= (proto_tcp_common_logic_->CanExit() ? 1 : 0);
     }
 
-    for (LogicItemVec::const_iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::const_iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
     {
         can_exit &= (it->logic->CanExit() ? 1 : 0);
     }
@@ -306,18 +326,18 @@ void ProtoCommonLogic::OnTimer(TimerID timer_id, void* data, size_t len, int tim
 
 int ProtoCommonLogic::LoadProtoTCPCommonLogic()
 {
-    const std::string proto_tcp_common_logic_so = proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoTCPCommonLogicSo();
-    if (0 == proto_tcp_common_logic_so.length())
+    const std::string common_logic_so = proto_logic_args_.app_frame_conf_mgr->GetProtoTCPCommonLogicSo();
+    if (0 == common_logic_so.length())
     {
         return 0;
     }
 
-    char proto_tcp_common_logic_so_path[MAX_PATH_LEN] = "";
-    GetAbsolutePath(proto_tcp_common_logic_so_path, sizeof(proto_tcp_common_logic_so_path),
-                    proto_tcp_common_logic_so.c_str(), logic_ctx_.cur_working_dir);
-    LOG_ALWAYS("load common logic so " << proto_tcp_common_logic_so_path << " begin");
+    char common_logic_so_path[MAX_PATH_LEN] = "";
+    GetAbsolutePath(common_logic_so_path, sizeof(common_logic_so_path),
+                    common_logic_so.c_str(), logic_ctx_.cur_working_dir);
+    LOG_ALWAYS("load common logic so " << common_logic_so_path << " begin");
 
-    if (proto_tcp_common_logic_loader_.Load(proto_tcp_common_logic_so_path) != 0)
+    if (proto_tcp_common_logic_loader_.Load(common_logic_so_path) != 0)
     {
         LOG_ERROR("failed to load common logic so, " << proto_tcp_common_logic_loader_.GetLastErrMsg());
         return -1;
@@ -350,35 +370,35 @@ int ProtoCommonLogic::LoadProtoTCPCommonLogic()
         return -1;
     }
 
-    LOG_ALWAYS("load common logic so " << proto_tcp_common_logic_so_path << " end");
+    LOG_ALWAYS("load common logic so " << common_logic_so_path << " end");
     return 0;
 }
 
 int ProtoCommonLogic::LoadProtoTCPLogicGroup()
 {
     // logic so group
-    if (0 == proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoTCPLogicSoGroup().size())
+    if (0 == proto_logic_args_.app_frame_conf_mgr->GetProtoTCPLogicSoGroup().size())
     {
         return 0;
     }
 
-    LogicItem proto_tcp_logic_item;
-    proto_tcp_logic_item.logic = nullptr;
+    const StrGroup proto_tcp_logic_so_group = proto_logic_args_.app_frame_conf_mgr->GetProtoTCPLogicSoGroup();
 
-    const StrGroup proto_tcp_logic_so_group = proto_tcp_logic_args_.app_frame_conf_mgr->GetProtoTCPLogicSoGroup();
-
-    for (StrGroup::const_iterator it = proto_tcp_logic_so_group.begin();
-            it != proto_tcp_logic_so_group.end(); ++it)
+    for (StrGroup::const_iterator it = proto_tcp_logic_so_group.begin(); it != proto_tcp_logic_so_group.end(); ++it)
     {
         char logic_so_path[MAX_PATH_LEN] = "";
         GetAbsolutePath(logic_so_path, sizeof(logic_so_path), (*it).c_str(), logic_ctx_.cur_working_dir);
-        proto_tcp_logic_item.logic_so_path = logic_so_path;
-        proto_tcp_logic_item_vec_.push_back(proto_tcp_logic_item);
+
+        ProtoLogicItem logic_item;
+        logic_item.logic_so_path = logic_so_path;
+        logic_item.logic = nullptr;
+
+        proto_tcp_logic_item_vec_.push_back(logic_item);
     }
 
-    for (LogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
     {
-        LogicItem& logic_item = *it;
+        ProtoLogicItem& logic_item = *it;
         LOG_ALWAYS("load logic so " << logic_item.logic_so_path << " begin");
 
         if (logic_item.logic_loader.Load(logic_item.logic_so_path.c_str()) != 0)
@@ -442,8 +462,8 @@ void ProtoCommonLogic::OnRecvClientMsg(const ConnGUID* conn_guid, const ::proto:
     }
 
     // 没有io logic或者io logic派发失败，把任务均匀分配给work线程
-    if (nullptr == proto_tcp_logic_args_.related_thread_groups->work_thread_group ||
-            0 == proto_tcp_logic_args_.related_thread_groups->work_thread_group->GetThreadCount())
+    if (nullptr == proto_logic_args_.related_thread_groups->work_thread_group ||
+            0 == proto_logic_args_.related_thread_groups->work_thread_group->GetThreadCount())
     {
         LOG_ERROR("no work threads, failed to dispatch msg, " << conn_guid << ", msg id: " << msg_head.msg_id);
 

@@ -8,9 +8,9 @@
 
 namespace tcp
 {
-namespace proto
+namespace http_ws
 {
-Threads::Threads() : threads_ctx_(), related_thread_groups_(), raw_tcp_threads_loader_(), proto_logic_args_()
+Threads::Threads() : threads_ctx_(), related_thread_groups_(), raw_tcp_threads_loader_(), http_ws_logic_args_()
 {
     raw_tcp_threads_ = nullptr;
 }
@@ -21,7 +21,7 @@ Threads::~Threads()
 
 const char* Threads::GetVersion() const
 {
-    return PROTO_TCP_THREADS_PROTO_TCP_THREADS_VERSION;
+    return HTTP_WS_THREADS_HTTP_WS_THREADS_VERSION;
 }
 
 const char* Threads::GetLastErrMsg() const
@@ -127,12 +127,12 @@ int Threads::LoadRawTCPThreads()
     raw_threads_ctx.conf.addr = threads_ctx_.app_frame_conf_mgr->GetProtoTCPAddr();
     raw_threads_ctx.conf.port = threads_ctx_.app_frame_conf_mgr->GetProtoTCPPort();
     raw_threads_ctx.conf.thread_count = threads_ctx_.app_frame_conf_mgr->GetProtoTCPThreadCount();
-    raw_threads_ctx.conf.common_logic_so = std::string(threads_ctx_.common_component_dir) + "/libproto_raw_tcp_common_logic.so";
+    raw_threads_ctx.conf.common_logic_so = std::string(threads_ctx_.common_component_dir) + "/libhttp_ws_raw_tcp_common_logic.so";
 
-    proto_logic_args_.app_frame_conf_mgr = threads_ctx_.app_frame_conf_mgr;
-    proto_logic_args_.related_thread_groups = &related_thread_groups_;
+    http_ws_logic_args_.app_frame_conf_mgr = threads_ctx_.app_frame_conf_mgr;
+    http_ws_logic_args_.related_thread_groups = &related_thread_groups_;
 
-    raw_threads_ctx.logic_args = &proto_logic_args_;
+    raw_threads_ctx.logic_args = &http_ws_logic_args_;
 
     if (raw_tcp_threads_->Initialize(&raw_threads_ctx) != 0)
     {

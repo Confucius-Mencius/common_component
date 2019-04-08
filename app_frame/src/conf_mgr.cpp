@@ -44,16 +44,16 @@ int ConfMgr::Load()
     proto_tcp_thread_count_ = 0;
     proto_tcp_common_logic_so_ = "";
     proto_tcp_logic_so_group_.clear();
-    ws_part_msg_check_interval_ = 0;
-    ws_part_msg_conn_life_ = 0;
-    ws_addr_ = "";
-    ws_port_ = 0;
-    ws_security_port_ = 0;
-    ws_certificate_chain_file_path_ = "";
-    ws_private_key_file_path_ = "";
-    ws_thread_count_ = 0;
-    ws_common_logic_so_ = "";
-    ws_logic_so_group_.clear();
+    http_ws_part_msg_check_interval_ = 0;
+    http_ws_part_msg_conn_life_ = 0;
+    http_ws_addr_ = "";
+    http_ws_port_ = 0;
+    http_ws_security_port_ = 0;
+    http_ws_certificate_chain_file_path_ = "";
+    http_ws_private_key_file_path_ = "";
+    http_ws_thread_count_ = 0;
+    http_ws_common_logic_so_ = "";
+    http_ws_logic_so_group_.clear();
     udp_inactive_conn_check_interval_sec_ = 0;
     udp_inactive_conn_check_interval_usec_ = 0;
     udp_inactive_conn_life_ = 0;
@@ -213,52 +213,52 @@ int ConfMgr::Load()
         return -1;
     }
 
-    if (LoadWSPartMsgCheckInterval() != 0)
+    if (LoadHTTPWSPartMsgCheckInterval() != 0)
     {
         return -1;
     }
 
-    if (LoadWSPartMsgConnLife() != 0)
+    if (LoadHTTPWSPartMsgConnLife() != 0)
     {
         return -1;
     }
 
-    if (LoadWSAddr() != 0)
+    if (LoadHTTPWSAddr() != 0)
     {
         return -1;
     }
 
-    if (LoadWSPort() != 0)
+    if (LoadHTTPWSPort() != 0)
     {
         return -1;
     }
 
-    if (LoadWSSecurityPort() != 0)
+    if (LoadHTTPWSSecurityPort() != 0)
     {
         return -1;
     }
 
-    if (LoadWSCertificateChainFilePath() != 0)
+    if (LoadHTTPWSCertificateChainFilePath() != 0)
     {
         return -1;
     }
 
-    if (LoadWSPrivateKeyFilePath() != 0)
+    if (LoadHTTPWSPrivateKeyFilePath() != 0)
     {
         return -1;
     }
 
-    if (LoadWSThreadCount() != 0)
+    if (LoadHTTPWSThreadCount() != 0)
     {
         return -1;
     }
 
-    if (LoadWSCommonLogicSo() != 0)
+    if (LoadHTTPWSCommonLogicSo() != 0)
     {
         return -1;
     }
 
-    if (LoadWSLogicSoGroup() != 0)
+    if (LoadHTTPWSLogicSoGroup() != 0)
     {
         return -1;
     }

@@ -1,13 +1,13 @@
-#ifndef PROTO_TCP_THREADS_SRC_TCP_THREADS_H_
-#define PROTO_TCP_THREADS_SRC_TCP_THREADS_H_
+#ifndef HTTP_WS_THREADS_SRC_TCP_THREADS_H_
+#define HTTP_WS_THREADS_SRC_TCP_THREADS_H_
 
+#include "http_ws_threads_interface.h"
 #include "module_loader.h"
-#include "proto_tcp_threads_interface.h"
-#include "raw_tcp_common_logic/proto_logic_args.h"
+#include "raw_tcp_common_logic/http_ws_logic_args.h"
 
 namespace tcp
 {
-namespace proto
+namespace http_ws
 {
 class Threads : public ThreadsInterface
 {
@@ -40,9 +40,9 @@ private:
     ModuleLoader raw_tcp_threads_loader_;
     tcp::raw::ThreadsInterface* raw_tcp_threads_;
 
-    tcp::raw::ProtoLogicArgs proto_logic_args_;
+    tcp::raw::HTTPWSLogicArgs http_ws_logic_args_;
 };
 }
 }
 
-#endif // PROTO_TCP_THREADS_SRC_TCP_THREADS_H_
+#endif // HTTP_WS_THREADS_SRC_TCP_THREADS_H_
