@@ -25,7 +25,7 @@ fi
 . ${SCRIPT_PATH}/common.sh
 
 # 编译的时候是否执行单元测试用例
-RUN_TEST=0
+RUN_TEST=1
 
 while getopts "b:c:r:h" opt; do
     case $opt in
