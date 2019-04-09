@@ -1,0 +1,29 @@
+#ifndef HTTP_THREADS_SRC_HTTP_MSG_DISPATCHER_H_
+#define HTTP_THREADS_SRC_HTTP_MSG_DISPATCHER_H_
+
+#include "http.h"
+
+namespace tcp
+{
+namespace http
+{
+class MsgDispatcher : public MsgDispatcherInterface
+{
+public:
+    MsgDispatcher();
+    virtual ~MsgDispatcher();
+
+    ///////////////////////// MsgDispatcherInterface /////////////////////////
+    int AttachMsgHandler(const char* path, MsgHandlerInterface* msg_handler) override;
+    void DetachMsgHandler(const char* path) override;
+
+    int DispatchMsg(const ConnInterface* conn, const HTTPReq& req);
+
+private:
+    typedef std::map<std::string, MsgHandlerInterface*> MsgHandlerMap; // path ->
+    MsgHandlerMap msg_handler_map_;
+};
+}
+}
+
+#endif // HTTP_THREADS_SRC_HTTP_MSG_DISPATCHER_H_

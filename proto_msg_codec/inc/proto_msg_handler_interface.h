@@ -33,7 +33,6 @@ public:
 
     virtual int AttachMsgHandler(MsgID msg_id, MsgHandlerInterface* msg_handler) = 0;
     virtual void DetachMsgHandler(MsgID msg_id) = 0;
-    // virtual int DispatchMsg(const ConnGUID* conn_guid, const MsgHead& msg_head, const void* msg_body, size_t msg_body_len) = 0;
 };
 
 class MsgHandlerMgrInterface
@@ -138,5 +137,7 @@ int MsgDispatcher::DispatchMsg(const ConnGUID* conn_guid, const ::proto::MsgHead
               << conn_guid << ", " << msg_head << ", msg body len: " << msg_body_len); \
     return 0; \
 }
+
+// TODO real_conn_guid 需要吗?
 
 #endif // PROTO_MSG_CODEC_INC_PROTO_MSG_HANDLER_INTERFACE_H_

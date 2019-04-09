@@ -17,7 +17,8 @@ enum
 };
 
 HTTPWSCommonLogic::HTTPWSCommonLogic() : http_ws_logic_args_(), http_ws_common_logic_loader_(),
-    http_ws_logic_item_vec_(), msg_codec_(), scheduler_(), msg_dispatcher_(), part_msg_mgr_()
+    http_ws_logic_item_vec_(), msg_codec_(), scheduler_(), msg_dispatcher_(), http_msg_dispatcher_(),
+    part_msg_mgr_(), http_conn_map_()
 {
     http_ws_common_logic_ = nullptr;
 }
@@ -178,6 +179,17 @@ void HTTPWSCommonLogic::OnClientConnected(const ConnGUID* conn_guid)
 
     conn->ClearData();
 
+    HTTPConn http_conn;
+    http_conn.conn = conn;
+    http_conn.http_parser.SetRawTCPCommonLogic(this);
+    http_conn.http_parser.SetConnID(conn_guid->conn_id);
+
+    if (!http_conn_map_.insert(HTTPConnMap::value_type(conn_guid->conn_id, http_conn)).second)
+    {
+        LOG_ERROR("failed to insert to map, conn id: " << conn_guid->conn_id);
+        return;
+    }
+
     if (http_ws_common_logic_ != nullptr)
     {
         http_ws_common_logic_->OnClientConnected(conn_guid);
@@ -211,11 +223,23 @@ void HTTPWSCommonLogic::OnClientClosed(const ConnGUID* conn_guid)
     {
         it->logic->OnClientClosed(conn_guid);
     }
+
+    http_conn_map_.erase(conn_guid->conn_id);
 }
 
 void HTTPWSCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
 {
-//    LOG_DEBUG("HTTPWSCommonLogic::OnRecvClientData, " << conn_guid << ", data: " << data << ", len: " << len);
+    LOG_DEBUG("HTTPWSCommonLogic::OnRecvClientData, " << conn_guid << ", data: " << data << ", len: " << len);
+
+    HTTPConnMap::iterator it = http_conn_map_.find(conn_guid->conn_id);
+    if (it == http_conn_map_.end())
+    {
+        LOG_ERROR("failed to find conn by id: " << conn_guid->conn_id);
+        return;
+    }
+
+    it->second.http_parser.Execute((const char*) data, len);
+
 
 //    ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_guid->conn_id);
 //    if (nullptr == conn)
@@ -332,6 +356,22 @@ void HTTPWSCommonLogic::OnTimer(TimerID timer_id, void* data, size_t len, int ti
     if (can_exit != 0)
     {
         can_exit_ = true;
+    }
+}
+
+void HTTPWSCommonLogic::OnHTTPReq(ConnID conn_id, const http::HTTPReq& http_req)
+{
+    ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_id);
+    if (nullptr == conn)
+    {
+        LOG_ERROR("failed to get conn by id: " << conn_id);
+        return;
+    }
+
+    if (0 == http_msg_dispatcher_.DispatchMsg(conn, http_req))
+    {
+        LOG_TRACE("dispatch http req ok, path: " << http_req.path_);
+        return;
     }
 }
 

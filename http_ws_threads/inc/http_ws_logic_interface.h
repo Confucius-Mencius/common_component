@@ -23,6 +23,11 @@ class MsgDispatcherInterface;
 
 namespace tcp
 {
+namespace http
+{
+class MsgDispatcherInterface;
+}
+
 namespace http_ws
 {
 class SchedulerInterface;
@@ -40,6 +45,7 @@ struct LogicCtx
     ConnCenterInterface* conn_center;
     SchedulerInterface* scheduler;
     ::proto::MsgDispatcherInterface* msg_dispatcher;
+    http::MsgDispatcherInterface* http_msg_dispatcher;
     CommonLogicInterface* common_logic;
     struct event_base* thread_ev_base;
     int thread_idx;
@@ -56,6 +62,7 @@ struct LogicCtx
         conn_center = nullptr;
         scheduler = nullptr;
         msg_dispatcher = nullptr;
+        http_msg_dispatcher = nullptr;
         common_logic = nullptr;
         thread_ev_base = nullptr;
         thread_idx = -1;

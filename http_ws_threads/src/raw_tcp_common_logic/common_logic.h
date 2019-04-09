@@ -1,12 +1,14 @@
 #ifndef HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_COMMON_LOGIC_H_
 #define HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_COMMON_LOGIC_H_
 
-#include <vector>
-#include "msg_dispatcher.h"
-#include "module_loader.h"
-#include "part_msg_mgr.h"
+#include "hash_util.h"
+#include "http.h"
+#include "http_msg_dispatcher.h"
 #include "http_ws_logic_args.h"
 #include "http_ws_logic_interface.h"
+#include "http_ws_msg_dispatcher.h"
+#include "module_loader.h"
+#include "part_msg_mgr.h"
 #include "proto_msg_codec.h"
 #include "raw_tcp_logic_interface.h"
 #include "scheduler.h"
@@ -55,6 +57,8 @@ public:
     ///////////////////////// TimerSinkInterface /////////////////////////
     void OnTimer(TimerID timer_id, void* data, size_t len, int times);
 
+    void OnHTTPReq(ConnID conn_id, const tcp::http::HTTPReq& http_req);
+
 private:
     int LoadHTTPWSCommonLogic();
     int LoadHTTPWSLogicGroup();
@@ -70,8 +74,24 @@ private:
 
     ::proto::MsgCodec msg_codec_;
     tcp::http_ws::Scheduler scheduler_;
-    tcp::http_ws::MsgDispatcher msg_dispatcher_;
-    tcp::http_ws::PartMsgMgr part_msg_mgr_;
+    tcp::http_ws::MsgDispatcher msg_dispatcher_; // proto msg dispatcher
+    tcp::http::MsgDispatcher http_msg_dispatcher_;
+
+    tcp::http_ws::PartMsgMgr part_msg_mgr_; // TODO
+
+    struct HTTPConn
+    {
+        ConnInterface* conn;
+        tcp::http::HTTPParser http_parser;
+
+        HTTPConn() : http_parser()
+        {
+            conn = nullptr;
+        }
+    };
+
+    typedef __hash_map <int, HTTPConn> HTTPConnMap;
+    HTTPConnMap http_conn_map_;
 };
 }
 }

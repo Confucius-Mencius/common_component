@@ -14,7 +14,7 @@ CreateVersionFile(${CMAKE_CURRENT_SOURCE_DIR} ${PROJ_NAME} ${LIB_NAME})
 
 ###############################################################################
 # include/link dir
-include_directories(${PROJ_INC_DIR} ${PROTO_MSG_CODEC_INC_DIR} ${APP_FRAME_INC_DIR}
+include_directories(${PROJ_INC_DIR} ${APP_FRAME_INC_DIR} ${PROTO_MSG_CODEC_INC_DIR}
         ${THREAD_CENTER_INC_DIR} ${TIMER_AXIS_INC_DIR} ${LOG_ENGINE_INC_DIR}
         ${CONF_CENTER_INC_DIR} ${BASE_INC_DIR} ${LIBEVENT_INC_DIR} ${LOG4CPLUS_INC_DIR}
         ${GPERFTOOLS_INC_DIR})

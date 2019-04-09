@@ -50,3 +50,4 @@ set(PROJ_INC_DIR ${PROJECT_SOURCE_DIR}/inc)
 # sub dir
 add_subdirectory(src)
 add_subdirectory(src/raw_tcp_common_logic)
+add_subdirectory(test)
