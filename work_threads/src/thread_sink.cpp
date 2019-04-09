@@ -211,14 +211,18 @@ void ThreadSink::OnTask(const ThreadTask* task)
 
                 return;
             }
-
-            LOG_ERROR("failed to dispatch msg, msg id: " << msg_head.msg_id);
+            else
+            {
+                LOG_ERROR("failed to dispatch msg, msg id: " << msg_head.msg_id);
+                return;
+            }
         }
         break;
 
         default:
         {
             LOG_ERROR("invalid task type: " << task->GetType());
+            return;
         }
         break;
     }

@@ -1,11 +1,11 @@
-#ifndef PROTO_TCP_THREADS_INC_PROTO_TCP_MSG_HANDLER_INTERFACE_H_
-#define PROTO_TCP_THREADS_INC_PROTO_TCP_MSG_HANDLER_INTERFACE_H_
+#ifndef RAW_TCP_THREADS_INC_RAW_TCP_MSG_HANDLER_INTERFACE_H_
+#define RAW_TCP_THREADS_INC_RAW_TCP_MSG_HANDLER_INTERFACE_H_
 
 #include "proto_msg_handler_interface.h"
 
 namespace tcp
 {
-namespace proto
+namespace raw
 {
 class LogicCtx;
 
@@ -56,4 +56,4 @@ protected:
 }
 }
 
-#endif // PROTO_TCP_THREADS_INC_PROTO_TCP_MSG_HANDLER_INTERFACE_H_
+#endif // RAW_TCP_THREADS_INC_RAW_TCP_MSG_HANDLER_INTERFACE_H_

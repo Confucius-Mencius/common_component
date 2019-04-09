@@ -71,6 +71,7 @@ private:
     ::proto::MsgCodec msg_codec_;
     tcp::proto::Scheduler scheduler_;
     tcp::proto::MsgDispatcher msg_dispatcher_;
+
     tcp::proto::PartMsgMgr part_msg_mgr_;
 };
 }

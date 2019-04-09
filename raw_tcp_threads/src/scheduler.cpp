@@ -115,50 +115,19 @@ int Scheduler::CloseClient(const ConnGUID* conn_guid)
 int Scheduler::SendToGlobalThread(const ConnGUID* conn_guid, const proto::MsgHead& msg_head,
                                   const void* msg_body, size_t msg_body_len)
 {
-    std::unique_ptr<char []> buf(new char[MIN_DATA_LEN + msg_body_len + 1]);
-    if (nullptr == buf)
-    {
-        LOG_ERROR("failed to alloc memory");
-        return -1;
-    }
-
-    char* data = buf.get();
-    size_t len;
-
-    if (msg_codec_->EncodeMsg(&data, len, msg_head, msg_body, msg_body_len) != 0)
-    {
-        return -1;
-    }
-
-    return SendToThread(THREAD_TYPE_GLOBAL, conn_guid,
-                        data + TOTAL_MSG_LEN_FIELD_LEN, len - TOTAL_MSG_LEN_FIELD_LEN, 0);
+    return SendToThread(THREAD_TYPE_GLOBAL, conn_guid, msg_head, msg_body, msg_body_len, 0);
 }
 
 int Scheduler::SendToWorkThread(const ConnGUID* conn_guid, const proto::MsgHead& msg_head,
                                 const void* msg_body, size_t msg_body_len, int work_thread_idx)
 {
-    std::unique_ptr<char []> buf(new char[MIN_DATA_LEN + msg_body_len + 1]);
-    if (nullptr == buf)
-    {
-        LOG_ERROR("failed to alloc memory");
-        return -1;
-    }
-
-    char* data = buf.get();
-    size_t len;
-
-    if (msg_codec_->EncodeMsg(&data, len, msg_head, msg_body, msg_body_len) != 0)
-    {
-        return -1;
-    }
-
-    return SendToThread(THREAD_TYPE_WORK, conn_guid,
-                        data + TOTAL_MSG_LEN_FIELD_LEN, len - TOTAL_MSG_LEN_FIELD_LEN, work_thread_idx);
+    return SendToThread(THREAD_TYPE_WORK, conn_guid, msg_head, msg_body, msg_body_len, work_thread_idx);
 }
 
-int Scheduler::SendToTCPThread(const ConnGUID* conn_guid, const void* data, size_t len, int tcp_thread_idx)
+int Scheduler::SendToTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                               const void* msg_body, size_t msg_body_len, int tcp_thread_idx)
 {
-    return SendToThread(THREAD_TYPE_TCP, conn_guid, data, len, tcp_thread_idx);
+    return SendToThread(THREAD_TYPE_TCP, conn_guid, msg_head, msg_body, msg_body_len, tcp_thread_idx);
 }
 
 int Scheduler::GetScheduleWorkThreadIdx(int work_thread_idx)
@@ -187,7 +156,8 @@ int Scheduler::GetScheduleTCPThreadIdx(int tcp_thread_idx)
     return tcp_thread_idx;
 }
 
-int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const void* data, size_t len, int thread_idx)
+int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                            const void* msg_body, size_t msg_body_len, int thread_idx)
 {
     ThreadGroupInterface* thread_group = nullptr;
     ThreadInterface* thread = nullptr;
@@ -226,7 +196,6 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const vo
 
             real_thread_idx = GetScheduleTCPThreadIdx(thread_idx);
             thread = thread_group->GetThread(real_thread_idx);
-
         }
         break;
 
@@ -244,7 +213,23 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const vo
         return -1;
     }
 
-    ThreadTask* task = new ThreadTask(TASK_TYPE_NORMAL, thread, conn_guid, data, len);
+    std::unique_ptr<char []> buf(new char[MIN_DATA_LEN + msg_body_len + 1]);
+    if (nullptr == buf)
+    {
+        LOG_ERROR("failed to alloc memory");
+        return -1;
+    }
+
+    char* data = buf.get();
+    size_t len;
+
+    if (msg_codec_->EncodeMsg(&data, len, msg_head, msg_body, msg_body_len) != 0)
+    {
+        return -1;
+    }
+
+    ThreadTask* task = new ThreadTask(TASK_TYPE_NORMAL, thread_sink_->GetThread(), conn_guid,
+                                      data + TOTAL_MSG_LEN_FIELD_LEN, len - TOTAL_MSG_LEN_FIELD_LEN);
     if (nullptr == task)
     {
         const int err = errno;

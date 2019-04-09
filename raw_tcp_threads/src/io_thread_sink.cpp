@@ -10,7 +10,7 @@ namespace tcp
 namespace raw
 {
 IOThreadSink::IOThreadSink() : common_logic_loader_(), logic_item_vec_(), conn_center_(),
-    scheduler_(), msg_codec_()
+    msg_codec_(), scheduler_(), msg_dispatcher_()
 {
     threads_ctx_ = nullptr;
     listen_thread_ = nullptr;
@@ -214,16 +214,50 @@ void IOThreadSink::OnTask(const ThreadTask* task)
 
         case TASK_TYPE_NORMAL:
         {
-            if (common_logic_ != nullptr)
+            const char* data = task->GetData().data();
+            size_t len = task->GetData().size();
+
+            if (nullptr == data || 0 == len)
             {
-                common_logic_->OnTask(task->GetConnGUID(), task->GetSourceThread(),
-                                      task->GetData().data(), task->GetData().size());
+                LOG_ERROR("invalid params");
+                return;
             }
 
-            for (ProtoLogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+            ::proto::MsgID err_msg_id;
+            ::proto::MsgHead msg_head;
+            char* msg_body = nullptr;
+            size_t msg_body_len = 0;
+
+            if (msg_codec_.DecodeMsg(err_msg_id, &msg_head, &msg_body, msg_body_len, (const char*) data, len) != 0)
             {
-                it->logic->OnTask(task->GetConnGUID(), task->GetSourceThread(),
-                                  task->GetData().data(), task->GetData().size());
+                return;
+            }
+
+            const ConnGUID* conn_guid = task->GetConnGUID();
+            if (0 == msg_dispatcher_.DispatchMsg(conn_guid, msg_head, msg_body, msg_body_len))
+            {
+                if (conn_guid != nullptr)
+                {
+                    LOG_TRACE("dispatch msg ok, " << conn_guid << ", msg id: " << msg_head.msg_id);
+                }
+                else
+                {
+                    LOG_TRACE("dispatch msg ok, msg id: " << msg_head.msg_id);
+                }
+            }
+            else
+            {
+                if (common_logic_ != nullptr)
+                {
+                    common_logic_->OnTask(task->GetConnGUID(), task->GetSourceThread(),
+                                          task->GetData().data(), task->GetData().size());
+                }
+
+                for (ProtoLogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+                {
+                    it->logic->OnTask(task->GetConnGUID(), task->GetSourceThread(),
+                                      task->GetData().data(), task->GetData().size());
+                }
             }
         }
         break;
@@ -231,6 +265,7 @@ void IOThreadSink::OnTask(const ThreadTask* task)
         default:
         {
             LOG_ERROR("invalid task type: " << task->GetType());
+            return;
         }
         break;
     }
@@ -350,6 +385,7 @@ int IOThreadSink::LoadCommonLogic()
     logic_ctx.timer_axis = self_thread_->GetTimerAxis();
     logic_ctx.conn_center = &conn_center_;
     logic_ctx.scheduler = &scheduler_;
+    logic_ctx.msg_dispatcher = &msg_dispatcher_;
     logic_ctx.common_logic = common_logic_;
     logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
     logic_ctx.thread_idx = self_thread_->GetThreadIdx();
@@ -409,6 +445,7 @@ int IOThreadSink::LoadLogicGroup()
         logic_ctx.timer_axis = self_thread_->GetTimerAxis();
         logic_ctx.conn_center = &conn_center_;
         logic_ctx.scheduler = &scheduler_;
+        logic_ctx.msg_dispatcher = &msg_dispatcher_;
         logic_ctx.common_logic = common_logic_;
         logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
         logic_ctx.thread_idx = self_thread_->GetThreadIdx();

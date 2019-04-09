@@ -45,7 +45,8 @@ public:
      * @param tcp_thread_idx 为-1则由框架自行调度一个tcp线程
      * @return
      */
-    virtual int SendToTCPThread(const ConnGUID* conn_guid, const void* data, size_t len, int tcp_thread_idx) = 0;
+    virtual int SendToTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                                const void* msg_body, size_t msg_body_len, int tcp_thread_idx) = 0;
 
     // TODO send to tcp thread(msghead
 };

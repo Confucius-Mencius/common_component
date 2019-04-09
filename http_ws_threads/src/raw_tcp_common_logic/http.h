@@ -5,14 +5,6 @@ namespace tcp
 {
 namespace http_ws
 {
-class HTTPParser
-{
-public:
-    HttpParser();
-
-private:
-    http_parser_settings parser_settings;
-};
 }
 }
 

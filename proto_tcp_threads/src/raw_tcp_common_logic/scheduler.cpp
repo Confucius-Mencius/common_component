@@ -84,23 +84,7 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const ::
 
         case THREAD_TYPE_TCP:
         {
-            std::unique_ptr<char []> buf(new char[MIN_DATA_LEN + msg_body_len + 1]);
-            if (nullptr == buf)
-            {
-                LOG_ERROR("failed to alloc memory");
-                return -1;
-            }
-
-            char* data = buf.get();
-            size_t len;
-
-            if (msg_codec_->EncodeMsg(&data, len, msg_head, msg_body, msg_body_len) != 0)
-            {
-                return -1;
-            }
-
-            return raw_tcp_scheduler_->SendToTCPThread(conn_guid,
-                    data + TOTAL_MSG_LEN_FIELD_LEN, len - TOTAL_MSG_LEN_FIELD_LEN, thread_idx); // 内部的消息不发送4个字节的长度字段
+            return raw_tcp_scheduler_->SendToTCPThread(conn_guid, msg_head, msg_body, msg_body_len, thread_idx);
         }
         break;
 

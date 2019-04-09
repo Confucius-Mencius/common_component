@@ -3,6 +3,7 @@
 
 #include "conn_center.h"
 #include "mem_util.h"
+#include "msg_dispatcher.h"
 #include "module_loader.h"
 #include "new_conn.h"
 #include "proto_msg_codec.h"
@@ -89,8 +90,10 @@ private:
     ProtoLogicItemVec logic_item_vec_;
 
     ConnCenter conn_center_;
-    Scheduler scheduler_;
+
     ::proto::MsgCodec msg_codec_;
+    Scheduler scheduler_;
+    MsgDispatcher msg_dispatcher_;
 };
 }
 }

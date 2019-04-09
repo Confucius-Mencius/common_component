@@ -39,7 +39,8 @@ public:
                            const void* msg_body, size_t msg_body_len) override;
     int SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
                          const void* msg_body, size_t msg_body_len, int work_thread_idx) override;
-    int SendToTCPThread(const ConnGUID* conn_guid, const void* data, size_t len, int tcp_thread_idx) override;
+    int SendToTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                        const void* msg_body, size_t msg_body_len, int tcp_thread_idx) override;
 
 private:
     int GetScheduleWorkThreadIdx(int work_thread_idx);
@@ -52,7 +53,8 @@ private:
         THREAD_TYPE_TCP,
     };
 
-    int SendToThread(int thread_type, const ConnGUID* conn_guid, const void* data, size_t len, int thread_idx);
+    int SendToThread(int thread_type, const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                     const void* msg_body, size_t msg_body_len, int thread_idx);
 
 private:
     IOThreadSink* thread_sink_;

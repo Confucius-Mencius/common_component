@@ -299,7 +299,18 @@ void ProtoCommonLogic::OnTask(const ConnGUID* conn_guid, ThreadInterface* source
 
     if (0 == msg_dispatcher_.DispatchMsg(conn_guid, msg_head, msg_body, msg_body_len))
     {
-        LOG_TRACE("dispatch msg ok, " << conn_guid << ", msg id: " << msg_head.msg_id);
+        if (conn_guid != nullptr)
+        {
+            LOG_TRACE("dispatch msg ok, " << conn_guid << ", msg id: " << msg_head.msg_id);
+        }
+        else
+        {
+            LOG_TRACE("dispatch msg ok, msg id: " << msg_head.msg_id);
+        }
+    }
+    else
+    {
+        LOG_ERROR("failed to dispatch msg, msg id: " << msg_head.msg_id);
         return;
     }
 }

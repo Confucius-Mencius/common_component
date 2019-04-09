@@ -154,14 +154,18 @@ void ThreadSink::OnTask(const ThreadTask* task)
 
                 return;
             }
-
-            LOG_ERROR("failed to dispatch msg, msg id: " << msg_head.msg_id);
+            else
+            {
+                LOG_ERROR("failed to dispatch msg, msg id: " << msg_head.msg_id);
+                return;
+            }
         }
         break;
 
         default:
         {
             LOG_ERROR("invalid task type: " << task->GetType());
+            return;
         }
         break;
     }
@@ -215,7 +219,7 @@ int ThreadSink::LoadLogic()
     logic_ctx.msg_dispatcher = &msg_dispatcher_;
     logic_ctx.global_logic = logic_;
     logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
-    
+
     if (logic_->Initialize(&logic_ctx) != 0)
     {
         return -1;
