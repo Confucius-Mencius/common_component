@@ -1486,11 +1486,6 @@ void AppFrame::SetThreadsRelationship()
             related_thread_groups.http_ws_thread_group = http_ws_threads_->GetIOThreadGroup();
         }
 
-//        if (http_threads_ != nullptr)
-//        {
-//            work_related_thread_groups.http_thread_group = http_threads_->GetHttpThreadGroup();
-//        }
-
 //        if (udp_threads_ != nullptr)
 //        {
 //            work_related_thread_groups.udp_thread_group = udp_threads_->GetUdpThreadGroup();
@@ -1566,42 +1561,6 @@ void AppFrame::SetThreadsRelationship()
         http_ws_threads_->SetRelatedThreadGroups(&related_thread_groups);
     }
 
-//    if (ws_threads_ != nullptr)
-//    {
-//        ws::RelatedThreadGroups ws_related_thread_groups;
-
-//        if (global_threads_ != nullptr)
-//        {
-//            ws_related_thread_groups.global_thread = global_threads_->GetGlobalThreadGroup()->GetThread(0);
-//            ws_related_thread_groups.global_logic = global_threads_->GetLogic();
-//        }
-
-//        if (work_threads_ != nullptr)
-//        {
-//            ws_related_thread_groups.work_thread_group = work_threads_->GetWorkThreadGroup();
-//        }
-
-//        ws_threads_->SetRelatedThreadGroups(&ws_related_thread_groups);
-//}
-
-//    if (http_threads_ != nullptr)
-//    {
-//        http::RelatedThreadGroup http_related_thread_group;
-
-//        if (global_threads_ != nullptr)
-//        {
-//            http_related_thread_group.global_thread = global_threads_->GetGlobalThreadGroup()->GetThread(0);
-//            http_related_thread_group.global_logic = global_threads_->GetLogic();
-//        }
-
-//        if (work_threads_ != nullptr)
-//        {
-//            http_related_thread_group.work_thread_group = work_threads_->GetWorkThreadGroup();
-//        }
-
-//        http_threads_->SetRelatedThreadGroup(&http_related_thread_group);
-//    }
-
 //    if (udp_threads_ != nullptr)
 //    {
 //        udp::RelatedThreadGroup udp_related_thread_group;
@@ -1618,24 +1577,6 @@ void AppFrame::SetThreadsRelationship()
 //        }
 
 //        udp_threads_->SetRelatedThreadGroup(&udp_related_thread_group);
-//    }
-
-//    if (raw_tcp_threads_ != nullptr)
-//    {
-//        tcp::RelatedThreadGroup tcp_related_thread_group;
-
-//        if (global_threads_ != nullptr)
-//        {
-//            tcp_related_thread_group.global_thread = global_threads_->GetGlobalThreadGroup()->GetThread(0);
-//            tcp_related_thread_group.global_logic = global_threads_->GetLogic();
-//        }
-
-//        if (work_threads_ != nullptr)
-//        {
-//            tcp_related_thread_group.work_thread_group = work_threads_->GetWorkThreadGroup();
-//        }
-
-//        raw_tcp_threads_->SetRelatedThreadGroup(&tcp_related_thread_group);
 //    }
 
     LOG_ALWAYS("AppFrame::SetThreadsRelationship end");

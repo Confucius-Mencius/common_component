@@ -2,6 +2,7 @@
 #define HTTP_WS_THREADS_INC_HTTP_WS_LOGIC_INTERFACE_H_
 
 #include <atomic>
+#include <stddef.h>
 #include "module_interface.h"
 
 class ConfCenterInterface;
@@ -121,6 +122,11 @@ public:
      * @param conn_guid
      */
     virtual void OnClientClosed(const ConnGUID* conn_guid)
+    {
+    }
+
+    // TODO http get, http post, 完整的ws消息
+    virtual void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
     {
     }
 
