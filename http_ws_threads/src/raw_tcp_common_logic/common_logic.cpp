@@ -251,68 +251,6 @@ void HTTPWSCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* 
         http_conn.conn->AppendData((const char*) data, len);
         ProcessWSData(http_conn);
     }
-
-
-//    ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_guid->conn_id);
-//    if (nullptr == conn)
-//    {
-//        LOG_ERROR("failed to get conn by id, " << conn_guid);
-//        return;
-//    }
-
-//    std::string& d = conn->AppendData((const char*) data, len);
-//    const char* dp = d.data();
-//    const size_t dl = d.size();
-
-//    ::proto::MsgHead msg_head;
-//    ::proto::MsgID err_msg_id = MSG_ID_OK;
-//    size_t total_msg_len = 0;
-
-//    if (!msg_codec_.IsWholeMsg(err_msg_id, total_msg_len, dp, dl))
-//    {
-//        if (err_msg_id != MSG_ID_NOT_A_WHOLE_MSG)
-//        {
-//            conn->ClearData();
-
-//            msg_head.Reset();
-//            msg_head.msg_id = err_msg_id;
-
-//            scheduler_.SendToClient(conn_guid, msg_head, nullptr, 0);
-
-//            LOG_INFO("close proto tcp conn, " << conn_guid << ", err msg id: " << err_msg_id);
-//            scheduler_.CloseClient(conn_guid); // 服务器主动关闭连接
-
-//            return;
-//        }
-
-//        // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
-//        part_msg_mgr_.UpsertRecord(conn, *conn_guid, http_ws_logic_args_.app_frame_conf_mgr->GetProtoPartMsgConnLife());
-//        return;
-//    }
-
-//    part_msg_mgr_.RemoveRecord(conn);
-
-//    char* msg_body = nullptr;
-//    size_t msg_body_len = 0;
-
-//    msg_head.Reset();
-
-//    if (msg_codec_.DecodeMsg(err_msg_id, &msg_head, &msg_body, msg_body_len, dp + TOTAL_MSG_LEN_FIELD_LEN, total_msg_len) != 0)
-//    {
-//        msg_head.Reset();
-//        msg_head.msg_id = err_msg_id;
-
-//        scheduler_.SendToClient(conn_guid, msg_head, nullptr, 0);
-//        return;
-//    }
-
-//    OnRecvClientMsg(conn->GetConnGUID(), msg_head, msg_body, msg_body_len);
-
-//    const size_t left = dl - TOTAL_MSG_LEN_FIELD_LEN - total_msg_len;
-//    if (left > 0)
-//    {
-//        d.assign(dp + total_msg_len + total_msg_len, left); // TODO 重叠assign是否安全？
-//    }
 }
 
 void HTTPWSCommonLogic::OnTask(const ConnGUID* conn_guid, ThreadInterface* source_thread, const void* data, size_t len)
@@ -382,7 +320,7 @@ void HTTPWSCommonLogic::OnHTTPReq(ConnID conn_id, const http::HTTPReq& http_req)
 
     if (0 == http_msg_dispatcher_.DispatchMsg(conn, http_req))
     {
-        LOG_TRACE("dispatch http req ok, path: " << http_req.path_);
+        LOG_TRACE("dispatch http req ok, path: " << http_req.path);
         return;
     }
 }
@@ -460,6 +398,7 @@ int HTTPWSCommonLogic::LoadHTTPWSCommonLogic()
     logic_ctx.conn_center = logic_ctx_.conn_center;
     logic_ctx.scheduler = &scheduler_;
     logic_ctx.msg_dispatcher = &msg_dispatcher_;
+    logic_ctx.http_msg_dispatcher = &http_msg_dispatcher_;
     logic_ctx.common_logic = http_ws_common_logic_;
     logic_ctx.thread_ev_base = logic_ctx_.thread_ev_base;
     logic_ctx.thread_idx = logic_ctx_.thread_idx;
@@ -476,12 +415,12 @@ int HTTPWSCommonLogic::LoadHTTPWSCommonLogic()
 int HTTPWSCommonLogic::LoadHTTPWSLogicGroup()
 {
     // logic so group
-    if (0 == http_ws_logic_args_.app_frame_conf_mgr->GetProtoTCPLogicSoGroup().size())
+    if (0 == http_ws_logic_args_.app_frame_conf_mgr->GetHTTPWSLogicSoGroup().size())
     {
         return 0;
     }
 
-    const StrGroup logic_so_group = http_ws_logic_args_.app_frame_conf_mgr->GetProtoTCPLogicSoGroup();
+    const StrGroup logic_so_group = http_ws_logic_args_.app_frame_conf_mgr->GetHTTPWSLogicSoGroup();
 
     for (StrGroup::const_iterator it = logic_so_group.begin(); it != logic_so_group.end(); ++it)
     {
@@ -524,6 +463,7 @@ int HTTPWSCommonLogic::LoadHTTPWSLogicGroup()
         logic_ctx.conn_center = logic_ctx_.conn_center;
         logic_ctx.scheduler = &scheduler_;
         logic_ctx.msg_dispatcher = &msg_dispatcher_;
+        logic_ctx.http_msg_dispatcher = &http_msg_dispatcher_;
         logic_ctx.common_logic = http_ws_common_logic_;
         logic_ctx.thread_ev_base = logic_ctx_.thread_ev_base;
         logic_ctx.thread_idx = logic_ctx_.thread_idx;
@@ -551,7 +491,7 @@ void HTTPWSCommonLogic::ProcessWSData(HTTPConn& http_conn)
         const size_t dl = d.size();
         size_t offset = 0;
 
-        const tcp::ws::FrameType frame_type = http_conn.ws_parser.ParseFrame(offset, dp, dl);
+        const tcp::ws::ParseResult parse_result = http_conn.ws_parser.ParseFrame(offset, dp, dl);
 
         if (offset > 0)
         {
@@ -571,7 +511,7 @@ void HTTPWSCommonLogic::ProcessWSData(HTTPConn& http_conn)
             break;
         }
 
-        switch (frame_type)
+        switch (parse_result)
         {
             case tcp::ws::ERROR:
             case tcp::ws::CLOSE_FRAME:

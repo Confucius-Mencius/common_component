@@ -1,7 +1,7 @@
 #ifndef HTTP_THREADS_SRC_HTTP_MSG_DISPATCHER_H_
 #define HTTP_THREADS_SRC_HTTP_MSG_DISPATCHER_H_
 
-#include "http.h"
+#include "the_http_parser.h"
 
 namespace tcp
 {

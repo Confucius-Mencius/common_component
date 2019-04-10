@@ -1,7 +1,6 @@
 #ifndef HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_COMMON_LOGIC_H_
 #define HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_COMMON_LOGIC_H_
 
-#include "http.h"
 #include "http_msg_dispatcher.h"
 #include "http_ws_logic_args.h"
 #include "http_ws_logic_interface.h"
@@ -11,7 +10,8 @@
 #include "proto_msg_codec.h"
 #include "raw_tcp_logic_interface.h"
 #include "scheduler.h"
-#include "ws_parser.h"
+#include "the_http_parser.h"
+#include "the_ws_parser.h"
 
 namespace tcp
 {
@@ -81,9 +81,6 @@ private:
 
 private:
     void ProcessWSData(HTTPConn& http_conn);
-
-    void OnRecvClientMsg(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
-                         const void* msg_body, size_t msg_body_len);
 
 private:
     HTTPWSLogicArgs http_ws_logic_args_;

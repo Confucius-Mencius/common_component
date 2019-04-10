@@ -1,5 +1,5 @@
-#ifndef HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_WS_PARSER_H_
-#define HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_WS_PARSER_H_
+#ifndef HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_THE_WS_PARSER_H_
+#define HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_THE_WS_PARSER_H_
 
 // only RFC6455
 #include <string>
@@ -15,16 +15,15 @@ namespace ws
 {
 
 
-enum FrameType
+enum ParseResult
 {
-    ERROR = 0xFF00,
-    INCOMPLETE = 0xFE00,
-
-    TEXT_FRAME = 0x81,
-    BINARY_FRAME = 0x82,
-    CLOSE_FRAME = 0x88,
-    PING_FRAME = 0x89,
-    PONG_FRAME = 0x8A
+    ERROR,
+    INCOMPLETE,
+    TEXT_FRAME,
+    BINARY_FRAME,
+    CLOSE_FRAME,
+    PING_FRAME,
+    PONG_FRAME,
 };
 
 /*
@@ -61,9 +60,9 @@ public:
 
     int CheckUpgrade(const http::HTTPReq& http_req);
     std::string MakeHandshake();
-    FrameType ParseFrame(size_t& offset, const char* data, size_t len);
+    ParseResult ParseFrame(size_t& offset, const char* data, size_t len);
 };
 }
 }
 
-#endif // HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_WS_PARSER_H_
+#endif // HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_THE_WS_PARSER_H_

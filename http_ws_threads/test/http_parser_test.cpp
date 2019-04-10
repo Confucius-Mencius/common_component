@@ -78,8 +78,15 @@ void HTTPParserTest::Test003()
     http_parser_.Execute(ws_req, strlen(ws_req));
 }
 
-ADD_TEST_F(HTTPParserTest, Test001);
-ADD_TEST_F(HTTPParserTest, Test002);
-ADD_TEST_F(HTTPParserTest, Test003);
+void HTTPParserTest::Test004()
+{
+    const char http_get_req[] = "GET /crossdomain.xml HTTP/1.1\r\nHost: 127.0.0.1:10080\r\nAccept-Encoding: identity\r\n\r\n";
+    http_parser_.Execute(http_get_req, strlen(http_get_req));
+}
+
+//ADD_TEST_F(HTTPParserTest, Test001);
+//ADD_TEST_F(HTTPParserTest, Test002);
+//ADD_TEST_F(HTTPParserTest, Test003);
+ADD_TEST_F(HTTPParserTest, Test004);
 }
 }

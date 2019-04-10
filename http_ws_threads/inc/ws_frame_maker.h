@@ -21,9 +21,11 @@ public:
         PONG = 0xa
     };
 
-    FrameMaker()
+    FrameMaker() : frame_header_()
     {
     }
+
+    ~FrameMaker() {}
 
     FrameMaker& ResetMaskingKey()
     {

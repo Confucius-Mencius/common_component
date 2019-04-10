@@ -1,7 +1,7 @@
 #ifndef CONF_CENTER_TEST_CONF_CENTER_TEST_H_
 #define CONF_CENTER_TEST_CONF_CENTER_TEST_H_
 
-#include "http.h"
+#include "the_http_parser.h"
 #include "test_util.h"
 
 namespace tcp
@@ -20,6 +20,7 @@ public:
     void Test001();
     void Test002();
     void Test003();
+    void Test004();
 
 private:
     tcp::http::HTTPParser http_parser_;

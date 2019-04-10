@@ -56,10 +56,10 @@ void MsgDispatcher::DetachMsgHandler(const char* path)
 
 int MsgDispatcher::DispatchMsg(const ConnInterface* conn, const HTTPReq& http_req)
 {
-    MsgHandlerMap::iterator it = msg_handler_map_.find(http_req.path_);
+    MsgHandlerMap::iterator it = msg_handler_map_.find(http_req.path);
     if (it == msg_handler_map_.end())
     {
-        LOG_WARN("failed to get msg handler, path: " << http_req.path_);
+        LOG_WARN("failed to get msg handler, path: " << http_req.path);
         return -1;
     }
 
@@ -72,12 +72,12 @@ int MsgDispatcher::DispatchMsg(const ConnInterface* conn, const HTTPReq& http_re
     if (HTTP_GET == http_req.method)
     {
         it->second->OnGet(conn_guid, http_req.client_ip.empty() ? conn->GetClientIP() : http_req.client_ip.c_str(),
-                          http_req.query_params_, http_req.headers_);
+                          http_req.query_params, http_req.headers);
     }
     else if (HTTP_POST == http_req.method)
     {
         it->second->OnPost(conn_guid, http_req.client_ip.empty() ? conn->GetClientIP() : http_req.client_ip.c_str(),
-                           http_req.query_params_, http_req.headers_,
+                           http_req.query_params, http_req.headers,
                            http_req.body.data(), http_req.body.size());
     }
 
@@ -86,7 +86,7 @@ int MsgDispatcher::DispatchMsg(const ConnInterface* conn, const HTTPReq& http_re
     const long end_millisecond = end_time.tv_sec * 1000 + end_time.tv_usec / 1000;
 
     LOG_INFO("msg process time: " << end_millisecond - begin_millisecond << " milliseconds. "
-             << conn_guid << ", path " << http_req.path_);
+             << conn_guid << ", path " << http_req.path);
     return 0;
 }
 }

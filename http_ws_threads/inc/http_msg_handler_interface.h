@@ -5,16 +5,18 @@
 #include <string.h>
 #include <string>
 #include <vector>
-#include <http_parser.h>
 
 struct ConnGUID;
 
 namespace tcp
 {
-namespace http
+namespace http_ws
 {
 class LogicCtx;
+}
 
+namespace http
+{
 struct CaseKeyCmp
 {
     bool operator() (const std::string& p1, const std::string& p2) const
@@ -50,7 +52,7 @@ public:
             return -1;
         }
 
-        logic_ctx_ = (LogicCtx*) ctx;
+        logic_ctx_ = (tcp::http_ws::LogicCtx*) ctx;
         return 0;
     }
 
@@ -69,12 +71,12 @@ public:
 
     virtual const char* GetPath() = 0;
     virtual void OnGet(const ConnGUID* conn_guid, const char* client_ip,
-                       const QueryParams& query_params, const Headers& headers) = 0;
+                       const QueryParams& query_params, const Headers& headers) {}
     virtual void OnPost(const ConnGUID* conn_guid, const char* client_ip,
-                        const QueryParams& query_params, const Headers& headers, const char* body, size_t len) = 0;
+                        const QueryParams& query_params, const Headers& headers, const char* body, size_t len) {}
 
 protected:
-    LogicCtx* logic_ctx_;
+    tcp::http_ws::LogicCtx* logic_ctx_;
 };
 
 class MsgDispatcherInterface
@@ -107,83 +109,6 @@ public:
 
 protected:
     MsgDispatcherInterface* msg_dispatcher_;
-};
-
-class HTTPRsp
-{
-public:
-    HTTPRsp()
-    {
-        status = HTTP_STATUS_OK;
-    }
-
-    ~HTTPRsp() {}
-
-    http_status status;
-    std::string body;
-
-    void SetContentType(const std::string& content_type)
-    {
-        headers_.insert(std::make_pair("Content-Type", content_type));
-    }
-
-    void SetKeepAlive(bool on)
-    {
-        if (on)
-        {
-            headers_.insert(std::make_pair("Connection",  "Keep-Alive"));
-        }
-        else
-        {
-            headers_.insert(std::make_pair("Connection", "close"));
-        }
-    }
-
-    void SetNoCache()
-    {
-        headers_.insert(std::make_pair("Cache-Control", "no-cache"));
-        headers_.insert(std::make_pair("Pragma", "no-cache"));
-    }
-
-    void AddHeader(const std::string& name, const std::string& value)
-    {
-        headers_.insert(std::make_pair(name, value));
-    }
-
-    std::string Dump()
-    {
-        char buf[1024] = "";
-        int n = snprintf(buf, sizeof(buf), "HTTP/1.1 %d %s\r\n", status, http_status_str(status));
-
-        std::string str;
-        str.append(buf, n);
-
-        n = snprintf(buf, sizeof(buf), "%d", int(body.size()));
-        headers_.insert(make_pair("Content-Length", std::string(buf, n)));
-
-        auto it = headers_.cbegin();
-        while (it != headers_.cend())
-        {
-            n = snprintf(buf, sizeof(buf), "%s: %s\r\n", it->first.c_str(), it->second.c_str());
-            str.append(buf, n);
-            ++it;
-        }
-
-        str.append("\r\n");
-        str.append(body);
-
-        return str;
-    }
-
-    void Clear()
-    {
-        status = HTTP_STATUS_OK;
-        headers_.clear();
-        body.clear();
-    }
-
-private:
-    Headers headers_;
 };
 }
 }

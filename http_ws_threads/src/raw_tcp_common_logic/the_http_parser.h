@@ -1,5 +1,5 @@
-#ifndef HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_HTTP_H_
-#define HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_HTTP_H_
+#ifndef HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_THE_HTTP_PARSER_H_
+#define HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_THE_HTTP_PARSER_H_
 
 #include <http_parser.h>
 #include "conn.h"
@@ -23,16 +23,16 @@ public:
     http_method method;
     std::string client_ip;
     std::string url;
-    std::string path_;
-    QueryParams query_params_;
-    Headers headers_;
+    std::string path;
+    QueryParams query_params;
+    Headers headers;
     std::string body;
 
     void ParseURL();
 
     void AddHeader(const std::string& name, const std::string& value)
     {
-        headers_.insert(std::make_pair(name, value));
+        headers.insert(std::make_pair(name, value));
     }
 
     void ParseClientIP();
@@ -49,6 +49,8 @@ private:
     std::string host_;
     uint16_t port_;
     std::string query_;
+    std::string fragment_;
+    std::string user_info_;
 };
 
 class HTTPParser
@@ -89,4 +91,4 @@ private:
 }
 }
 
-#endif // HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_HTTP_H_
+#endif // HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_THE_HTTP_PARSER_H_

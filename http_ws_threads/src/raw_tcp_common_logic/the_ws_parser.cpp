@@ -1,11 +1,11 @@
-#include "ws_parser.h"
+#include "the_ws_parser.h"
 #include <string.h>
 #include <openssl/sha.h>
 #include <openssl/pem.h>
 #include <openssl/bio.h>
 #include <openssl/evp.h>
-#include "http.h"
 #include "log_util.h"
+#include "the_http_parser.h"
 
 namespace tcp
 {
@@ -44,29 +44,29 @@ WSParser::~WSParser()
 
 int WSParser::CheckUpgrade(const http::HTTPReq& http_req)
 {
-    http::Headers::const_iterator it = http_req.headers_.find("Upgrade");
-    if (it == http_req.headers_.end() || it->second != "websocket")
+    http::Headers::const_iterator it = http_req.headers.find("Upgrade");
+    if (it == http_req.headers.end() || it->second != "websocket")
     {
         LOG_ERROR("should have header: { Upgrade: websocket }");
         return -1;
     }
 
-    it = http_req.headers_.find("Connection");
-    if (it == http_req.headers_.end() || it->second != "upgrade")
+    it = http_req.headers.find("Connection");
+    if (it == http_req.headers.end() || it->second != "upgrade")
     {
         LOG_ERROR("should have header: { Connection: upgrade }");
         return -1;
     }
 
-    it = http_req.headers_.find("Sec-Websocket-Version");
-    if (it == http_req.headers_.end() || it->second != "13") // 13表示RFC6455
+    it = http_req.headers.find("Sec-Websocket-Version");
+    if (it == http_req.headers.end() || it->second != "13") // 13表示RFC6455
     {
         LOG_ERROR("should have header: { Sec-Websocket-Version: 13 }");
         return -1;
     }
 
-    it = http_req.headers_.find("Sec-Websocket-Key");
-    if (it == http_req.headers_.end())
+    it = http_req.headers.find("Sec-Websocket-Key");
+    if (it == http_req.headers.end())
     {
         LOG_ERROR("no Sec-Websocket-Key header");
         return -1;
@@ -74,8 +74,8 @@ int WSParser::CheckUpgrade(const http::HTTPReq& http_req)
 
     this->key = it->second;
 
-    it = http_req.headers_.find("Sec-Websocket-Protocol");
-    if (it != http_req.headers_.end())
+    it = http_req.headers.find("Sec-Websocket-Protocol");
+    if (it != http_req.headers.end())
     {
         LOG_DEBUG("Sec-Websocket-Protocol: " << it->second);
         this->protocol = it->second;
@@ -86,12 +86,12 @@ int WSParser::CheckUpgrade(const http::HTTPReq& http_req)
 
 std::string WSParser::MakeHandshake()
 {
-    std::string answer;
-    answer.reserve(128);
+    std::string handshake;
+    handshake.reserve(128);
 
-    answer += "HTTP/1.1 101 Switching Protocols\r\n";
-    answer += "Upgrade: WebSocket\r\n";
-    answer += "Connection: Upgrade\r\n";
+    handshake += "HTTP/1.1 101 Switching Protocols\r\n";
+    handshake += "Upgrade: WebSocket\r\n";
+    handshake += "Connection: Upgrade\r\n";
 
     std::string accept_key;
     accept_key.reserve(128);
@@ -119,20 +119,20 @@ std::string WSParser::MakeHandshake()
     unsigned char out[128] = "";
     Base64Encode(out, digest, 20);
 
-    answer += "Sec-WebSocket-Accept: ";
-    answer += (char*) out;
-    answer += "\r\n";
+    handshake += "Sec-WebSocket-Accept: ";
+    handshake += (char*) out;
+    handshake += "\r\n";
 
     if (this->protocol.length() > 0)
     {
-        answer += "Sec-WebSocket-Protocol: " + (this->protocol) + "\r\n"; // 如果客户端请求的protocol有多个，服务器只回复一个？
+        handshake += "Sec-WebSocket-Protocol: " + (this->protocol) + "\r\n"; // 如果客户端请求的protocol有多个，服务器只回复一个？
     }
 
-    answer += "\r\n";
-    return answer;
+    handshake += "\r\n";
+    return handshake;
 }
 
-FrameType WSParser::ParseFrame(size_t& offset, const char* data, size_t len)
+ParseResult WSParser::ParseFrame(size_t& offset, const char* data, size_t len)
 {
     if (len < 3)
     {
