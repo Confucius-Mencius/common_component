@@ -201,21 +201,21 @@ std::string HTTPReq::Dump()
     return str;
 }
 
-HTTPParser::HTTPParser() : http_request_(), last_header_name_()
+HTTPParser::HTTPParser() : http_req_(), last_header_name_()
 {
-    settings_.on_message_begin = HTTPParser::OnMessageBegin;
-    settings_.on_url = HTTPParser::OnURL;
-    settings_.on_status = nullptr;
-    settings_.on_header_field = HTTPParser::OnHeaderField;
-    settings_.on_header_value = HTTPParser::OnHeaderValue;
-    settings_.on_headers_complete = HTTPParser::OnHeadersComplete;
-    settings_.on_body = HTTPParser::OnBody;
-    settings_.on_message_complete = HTTPParser::OnMessageComplete;
-    settings_.on_chunk_header = nullptr;
-    settings_.on_chunk_complete = nullptr;
+    parser_settings_.on_message_begin = HTTPParser::OnMessageBegin;
+    parser_settings_.on_url = HTTPParser::OnURL;
+    parser_settings_.on_status = nullptr;
+    parser_settings_.on_header_field = HTTPParser::OnHeaderField;
+    parser_settings_.on_header_value = HTTPParser::OnHeaderValue;
+    parser_settings_.on_headers_complete = HTTPParser::OnHeadersComplete;
+    parser_settings_.on_body = HTTPParser::OnBody;
+    parser_settings_.on_message_complete = HTTPParser::OnMessageComplete;
+    parser_settings_.on_chunk_header = nullptr;
+    parser_settings_.on_chunk_complete = nullptr;
 
-    http_parser_init(&parser_, HTTP_REQUEST);
-    parser_.data = this;
+    http_parser_init(&http_parser_, HTTP_REQUEST);
+    http_parser_.data = this;
 
     http_ws_raw_tcp_common_logic_ = nullptr;
     conn_id_ = INVALID_CONN_ID;
@@ -227,17 +227,22 @@ HTTPParser::~HTTPParser()
 
 int HTTPParser::Execute(const char* buffer, size_t count)
 {
-    size_t n = http_parser_execute(&parser_, &settings_, buffer, count);
-    if (parser_.upgrade)
+    size_t n = http_parser_execute(&http_parser_, &parser_settings_, buffer, count);
+    if (http_parser_.upgrade)
     {
         LOG_TRACE("upgrade");
-//        onUpgrade(buffer + n, count - n);
+
+        if (http_ws_raw_tcp_common_logic_ != nullptr)
+        {
+            http_ws_raw_tcp_common_logic_->OnUpgrade(conn_id_, http_req_, buffer + n, count - n);
+        }
+
         return 0;
     }
     else if (n != count)
     {
         LOG_ERROR("parser error: " << std::string(buffer, count));
-        return parser_.http_errno;
+        return http_parser_.http_errno;
     }
 
     return 0;
@@ -254,8 +259,8 @@ int HTTPParser::OnURL(http_parser* parser, const char* at, size_t length)
     LOG_TRACE("HTTPParser::OnURL");
 
     HTTPParser* hp = static_cast<HTTPParser*>(parser->data);
-    hp->http_request_.url.assign(at, length);
-    hp->http_request_.ParseURL();
+    hp->http_req_.url.assign(at, length);
+    hp->http_req_.ParseURL();
 
     return 0;
 }
@@ -282,7 +287,7 @@ int HTTPParser::OnHeaderValue(http_parser* parser, const char* at, size_t length
         return -1;
     }
 
-    hp->http_request_.AddHeader(hp->last_header_name_, std::string(at, length));
+    hp->http_req_.AddHeader(hp->last_header_name_, std::string(at, length));
     hp->last_header_name_ = "";
 
     return 0;
@@ -293,7 +298,7 @@ int HTTPParser::OnHeadersComplete(http_parser* parser)
     LOG_TRACE("HTTPParser::OnHeadersComplete");
 
     HTTPParser* hp = static_cast<HTTPParser*>(parser->data);
-    hp->http_request_.ParseClientIP();
+    hp->http_req_.ParseClientIP();
     hp->last_header_name_ = "";
 
     return 0;
@@ -304,8 +309,8 @@ int HTTPParser::OnBody(http_parser* parser, const char* at, size_t length)
     LOG_TRACE("HTTPParser::OnBody");
 
     HTTPParser* hp = static_cast<HTTPParser*>(parser->data);
-    hp->http_request_.method = HTTP_POST;
-    hp->http_request_.body.assign(at, length);
+    hp->http_req_.method = HTTP_POST;
+    hp->http_req_.body.assign(at, length);
 
     return 0;
 }
@@ -315,11 +320,11 @@ int HTTPParser::OnMessageComplete(http_parser* parser)
     LOG_TRACE("HTTPParser::OnMessageComplete");
 
     HTTPParser* hp = static_cast<HTTPParser*>(parser->data);
-    LOG_DEBUG(hp->http_request_.Dump());
+    LOG_DEBUG(hp->http_req_.Dump());
 
     if (hp->http_ws_raw_tcp_common_logic_ != nullptr)
     {
-        hp->http_ws_raw_tcp_common_logic_->OnHTTPReq(hp->conn_id_, hp->http_request_);
+        hp->http_ws_raw_tcp_common_logic_->OnHTTPReq(hp->conn_id_, hp->http_req_);
     }
 
     return 0;

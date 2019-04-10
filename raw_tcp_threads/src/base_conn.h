@@ -55,6 +55,11 @@ public:
         data_.clear();
     }
 
+    std::string& GetData() override
+    {
+        return data_;
+    }
+
     void SetConnCenter(ConnCenter* conn_center)
     {
         conn_center_ = conn_center;

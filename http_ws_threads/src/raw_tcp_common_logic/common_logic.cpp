@@ -6,6 +6,7 @@
 #include "log_util.h"
 #include "mem_util.h"
 #include "raw_tcp_scheduler_interface.h"
+#include "ws_frame_maker.h"
 
 namespace tcp
 {
@@ -21,6 +22,7 @@ HTTPWSCommonLogic::HTTPWSCommonLogic() : http_ws_logic_args_(), http_ws_common_l
     part_msg_mgr_(), http_conn_map_()
 {
     http_ws_common_logic_ = nullptr;
+    upgrade_ = false;
 }
 
 HTTPWSCommonLogic::~HTTPWSCommonLogic()
@@ -238,7 +240,17 @@ void HTTPWSCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* 
         return;
     }
 
-    it->second.http_parser.Execute((const char*) data, len);
+    HTTPConn& http_conn = it->second;
+
+    if (!upgrade_)
+    {
+        http_conn.http_parser.Execute((const char*) data, len);
+    }
+    else
+    {
+        http_conn.conn->AppendData((const char*) data, len);
+        ProcessWSData(http_conn);
+    }
 
 
 //    ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_guid->conn_id);
@@ -375,6 +387,42 @@ void HTTPWSCommonLogic::OnHTTPReq(ConnID conn_id, const http::HTTPReq& http_req)
     }
 }
 
+void HTTPWSCommonLogic::OnUpgrade(ConnID conn_id, const http::HTTPReq& http_req, const char* data, size_t len)
+{
+    HTTPConnMap::iterator it = http_conn_map_.find(conn_id);
+    if (it == http_conn_map_.end())
+    {
+        LOG_ERROR("failed to find conn by id: " << conn_id);
+        return;
+    }
+
+    HTTPConn& http_conn = it->second;
+    ConnInterface* conn = http_conn.conn;
+    const ConnGUID* conn_guid = conn->GetConnGUID();
+
+    // 检查upgrade头，不符合标准则关闭连接
+    if (http_conn.ws_parser.CheckUpgrade(http_req) != 0)
+    {
+        scheduler_.CloseClient(conn_guid); // 服务器主动关闭连接
+        return;
+    }
+
+    // 回复握手信息
+    const std::string handshake = http_conn.ws_parser.MakeHandshake();
+    LOG_DEBUG("handshake: " << handshake);
+
+    scheduler_.SendToClient(conn_guid, handshake.data(), handshake.size());
+
+    // 将帧数据记录下来（如果有）
+    upgrade_ = true;
+
+    if (len > 0)
+    {
+        conn->AppendData((const char*) data, len);
+        ProcessWSData(http_conn);
+    }
+}
+
 int HTTPWSCommonLogic::LoadHTTPWSCommonLogic()
 {
     const std::string common_logic_so = http_ws_logic_args_.app_frame_conf_mgr->GetHTTPWSCommonLogicSo();
@@ -491,52 +539,98 @@ int HTTPWSCommonLogic::LoadHTTPWSLogicGroup()
     return 0;
 }
 
-void HTTPWSCommonLogic::OnRecvClientMsg(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head, const void* msg_body, size_t msg_body_len)
+void HTTPWSCommonLogic::ProcessWSData(HTTPConn& http_conn)
 {
-//    if (http_ws_logic_item_vec_.size() > 0)
-//    {
-//        // 内置心跳消息处理
-//        if (MSG_ID_HEARTBEAT_REQ == msg_head.msg_id)
-//        {
-//            ::proto::MsgHead rsp_msg_head = msg_head;
-//            rsp_msg_head.msg_id = MSG_ID_HEARTBEAT_RSP;
+    do
+    {
+        ConnInterface* conn = http_conn.conn;
+        const ConnGUID* conn_guid = conn->GetConnGUID();
 
-//            scheduler_.SendToClient(conn_guid, rsp_msg_head, nullptr, 0);
-//            return;
-//        }
+        std::string& d = conn->GetData();
+        const char* dp = d.data();
+        const size_t dl = d.size();
+        size_t offset = 0;
 
-//        if (0 == msg_dispatcher_.DispatchMsg(conn_guid, msg_head, msg_body, msg_body_len))
-//        {
-//            LOG_TRACE("dispatch msg ok, " << conn_guid << ", msg id: " << msg_head.msg_id);
-//            return;
-//        }
-//    }
+        const tcp::ws::FrameType frame_type = http_conn.ws_parser.ParseFrame(offset, dp, dl);
 
-//    // 没有io logic或者io logic派发失败，把任务均匀分配给work线程
-//    if (nullptr == http_ws_logic_args_.related_thread_groups->work_thread_group ||
-//            0 == http_ws_logic_args_.related_thread_groups->work_thread_group->GetThreadCount())
-//    {
-//        LOG_ERROR("no work threads, failed to dispatch msg, " << conn_guid << ", msg id: " << msg_head.msg_id);
+        if (offset > 0)
+        {
+            if (offset == dl)
+            {
+                conn->ClearData();
+            }
+            else
+            {
+                d.assign(dp + offset, dl - offset);
+            }
+        }
+        else
+        {
+            // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
+            part_msg_mgr_.UpsertRecord(conn, *conn_guid, http_ws_logic_args_.app_frame_conf_mgr->GetHTTPWSPartMsgConnLife());
+            break;
+        }
 
-//        ::proto::MsgHead rsp_msg_head = msg_head;
-//        rsp_msg_head.msg_id = MSG_ID_NONE_HANDLER_FOUND;
+        switch (frame_type)
+        {
+            case tcp::ws::ERROR:
+            case tcp::ws::CLOSE_FRAME:
+            {
+                tcp::ws::FrameMaker frame_maker;
+                const std::string close_frame = frame_maker.SetFin(true).SetFrameType(tcp::ws::FrameMaker::CONNECTION_CLOSE).MakeFrame(nullptr, 0);
+                scheduler_.SendToClient(conn_guid, close_frame.data(), close_frame.size());
 
-//        scheduler_.SendToClient(conn_guid, rsp_msg_head, nullptr, 0);
-//        return;
-//    }
+                scheduler_.CloseClient(conn_guid);
+                return;
+            }
+            break;
 
-//    LOG_TRACE("forward to work thread");
+            case tcp::ws::PING_FRAME:
+            {
+                tcp::ws::FrameMaker frame_maker;
+                const std::string pong_frame = frame_maker.SetFin(true).SetFrameType(tcp::ws::FrameMaker::PONG).MakeFrame(nullptr, 0);
+                scheduler_.SendToClient(conn_guid, pong_frame.data(), pong_frame.size());
+                part_msg_mgr_.RemoveRecord(conn);
 
-//    if (scheduler_.SendToWorkThread(conn_guid, msg_head, msg_body, msg_body_len, -1) != 0)
-//    {
-//        LOG_ERROR("failed to send to work thread");
+                return;
+            }
+            break;
 
-//        ::proto::MsgHead rsp_msg_head = msg_head;
-//        rsp_msg_head.msg_id = MSG_ID_SCHEDULE_FAILED;
+            case tcp::ws::INCOMPLETE:
+            {
+                // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
+                part_msg_mgr_.UpsertRecord(conn, *conn_guid, http_ws_logic_args_.app_frame_conf_mgr->GetHTTPWSPartMsgConnLife());
 
-//        scheduler_.SendToClient(conn_guid, rsp_msg_head, nullptr, 0);
-//        return;
-//    }
+                continue;
+            }
+            break;
+
+            case tcp::ws::TEXT_FRAME:
+            case tcp::ws::BINARY_FRAME:
+            {
+                if (http_ws_common_logic_ != nullptr)
+                {
+                    http_ws_common_logic_->OnWSMsg(conn_guid,
+                                                   http_conn.ws_parser.payloads.data(), http_conn.ws_parser.payloads.size());
+                }
+
+                for (HTTPWSLogicItemVec::iterator it = http_ws_logic_item_vec_.begin(); it != http_ws_logic_item_vec_.end(); ++it)
+                {
+                    it->logic->OnWSMsg(conn_guid,
+                                       http_conn.ws_parser.payloads.data(), http_conn.ws_parser.payloads.size());
+                }
+
+                part_msg_mgr_.RemoveRecord(conn);
+                return;
+            }
+            break;
+
+            default:
+            {
+            }
+            break;
+        }
+    } while (1);
 }
 }
 }

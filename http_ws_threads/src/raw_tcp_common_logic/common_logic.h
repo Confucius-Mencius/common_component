@@ -1,7 +1,6 @@
 #ifndef HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_COMMON_LOGIC_H_
 #define HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_COMMON_LOGIC_H_
 
-#include "hash_util.h"
 #include "http.h"
 #include "http_msg_dispatcher.h"
 #include "http_ws_logic_args.h"
@@ -12,6 +11,7 @@
 #include "proto_msg_codec.h"
 #include "raw_tcp_logic_interface.h"
 #include "scheduler.h"
+#include "ws_parser.h"
 
 namespace tcp
 {
@@ -57,11 +57,31 @@ public:
     ///////////////////////// TimerSinkInterface /////////////////////////
     void OnTimer(TimerID timer_id, void* data, size_t len, int times);
 
-    void OnHTTPReq(ConnID conn_id, const tcp::http::HTTPReq& http_req);
+    void OnHTTPReq(ConnID conn_id, const http::HTTPReq& http_req);
+    void OnUpgrade(ConnID conn_id, const http::HTTPReq& http_req, const char* data, size_t len);
 
 private:
     int LoadHTTPWSCommonLogic();
     int LoadHTTPWSLogicGroup();
+
+private:
+    struct HTTPConn
+    {
+        ConnInterface* conn;
+        tcp::http::HTTPParser http_parser;
+        tcp::ws::WSParser ws_parser;
+
+        HTTPConn() : http_parser(), ws_parser()
+        {
+            conn = nullptr;
+        }
+    };
+
+    typedef std::map<int, HTTPConn> HTTPConnMap;
+
+private:
+    void ProcessWSData(HTTPConn& http_conn);
+
     void OnRecvClientMsg(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
                          const void* msg_body, size_t msg_body_len);
 
@@ -79,19 +99,8 @@ private:
 
     tcp::http_ws::PartMsgMgr part_msg_mgr_; // TODO
 
-    struct HTTPConn
-    {
-        ConnInterface* conn;
-        tcp::http::HTTPParser http_parser;
-
-        HTTPConn() : http_parser()
-        {
-            conn = nullptr;
-        }
-    };
-
-    typedef __hash_map <int, HTTPConn> HTTPConnMap;
     HTTPConnMap http_conn_map_;
+    bool upgrade_;
 };
 }
 }

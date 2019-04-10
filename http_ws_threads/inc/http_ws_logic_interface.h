@@ -132,8 +132,8 @@ public:
     {
     }
 
-    // TODO http get, http post, 完整的ws消息
-    virtual void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
+    // 完整的ws消息
+    virtual void OnWSMsg(const ConnGUID* conn_guid, const void* data, size_t len)
     {
     }
 

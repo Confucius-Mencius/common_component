@@ -79,9 +79,9 @@ private:
     static int OnMessageComplete(struct http_parser* parser); // 解析完成调用
 
 private:
-    struct http_parser_settings settings_;
-    struct http_parser parser_;
-    HTTPReq http_request_;
+    struct http_parser_settings parser_settings_;
+    struct http_parser http_parser_;
+    HTTPReq http_req_;
     std::string last_header_name_;
     tcp::raw::HTTPWSCommonLogic* http_ws_raw_tcp_common_logic_;
     ConnID conn_id_;

@@ -123,6 +123,7 @@ public:
     // 缓存收到的数据
     virtual std::string& AppendData(const char* data, size_t len) = 0;
     virtual void ClearData() = 0;
+    virtual std::string& GetData() = 0;
 };
 
 
