@@ -12,38 +12,42 @@ namespace raw
 class HTTPWSCommonLogic;
 }
 
+namespace http_ws
+{
 namespace http
 {
-class HTTPReq
+struct Req
 {
-public:
-    HTTPReq();
-    ~HTTPReq();
+    Req();
+    ~Req();
 
-    http_method method;
-    std::string client_ip;
-    std::string url;
-    std::string path;
-    QueryParams query_params;
-    Headers headers;
-    std::string body;
+    http_method Method;
+    unsigned short MajorVersion;
+    unsigned short MinorVersion;
+    std::string ClientIP;
+    std::string Path;
+    QueryMap Queries;
+    HeaderMap Headers;
+    std::string Body;
 
-    void ParseURL();
+    void ParseURL(const char* at, size_t length);
 
     void AddHeader(const std::string& name, const std::string& value)
     {
-        headers.insert(std::make_pair(name, value));
+        this->Headers.insert(HeaderMap::value_type(name, value));
     }
 
     void ParseClientIP();
 
+    void AppendBody(const char* buffer, size_t count)
+    {
+        this->Body.append(buffer, count);
+    }
+
     std::string Dump();
 
 private:
-    void ParseQuery();
-
-    unsigned short major_version_;
-    unsigned short minor_version_;
+    void ParseQuery(const char* at, size_t length);
 
     std::string schema_;
     std::string host_;
@@ -53,11 +57,11 @@ private:
     std::string user_info_;
 };
 
-class HTTPParser
+class Parser
 {
 public:
-    HTTPParser();
-    ~HTTPParser();
+    Parser();
+    ~Parser();
 
     void SetRawTCPCommonLogic(tcp::raw::HTTPWSCommonLogic* http_ws_raw_tcp_common_logic)
     {
@@ -71,7 +75,16 @@ public:
 
     int Execute(const char* buffer, size_t count);
 
-private:
+    void SetLastHeaderName(const char* buffer, size_t count)
+    {
+        last_header_name_.assign(buffer, count);
+    }
+
+    const std::string& GetLastHeaderName() const
+    {
+        return last_header_name_;
+    }
+
     static int OnMessageBegin(struct http_parser* parser); // 解析开始的时候调用
     static int OnURL(struct http_parser* parser, const char* at, size_t length); // 解析url的时候调用
     static int OnHeaderField(struct http_parser* parser, const char* at, size_t length); // 解析http header的field调用
@@ -81,13 +94,16 @@ private:
     static int OnMessageComplete(struct http_parser* parser); // 解析完成调用
 
 private:
-    struct http_parser_settings parser_settings_;
-    struct http_parser http_parser_;
-    HTTPReq http_req_;
-    std::string last_header_name_;
     tcp::raw::HTTPWSCommonLogic* http_ws_raw_tcp_common_logic_;
     ConnID conn_id_;
+
+    struct http_parser_settings settings_;
+    struct http_parser parser_;
+    Req http_req_;
+    std::string last_header_name_;
+    bool complete_;
 };
+}
 }
 }
 

@@ -4,6 +4,8 @@
 
 namespace tcp
 {
+namespace http_ws
+{
 namespace http
 {
 MsgDispatcher::MsgDispatcher() : msg_handler_map_()
@@ -54,12 +56,12 @@ void MsgDispatcher::DetachMsgHandler(const char* path)
     }
 }
 
-int MsgDispatcher::DispatchMsg(const ConnInterface* conn, const HTTPReq& http_req)
+int MsgDispatcher::DispatchMsg(const ConnInterface* conn, const Req& http_req)
 {
-    MsgHandlerMap::iterator it = msg_handler_map_.find(http_req.path);
+    MsgHandlerMap::iterator it = msg_handler_map_.find(http_req.Path);
     if (it == msg_handler_map_.end())
     {
-        LOG_WARN("failed to get msg handler, path: " << http_req.path);
+        LOG_WARN("failed to get msg handler, path: " << http_req.Path);
         return -1;
     }
 
@@ -69,16 +71,16 @@ int MsgDispatcher::DispatchMsg(const ConnInterface* conn, const HTTPReq& http_re
 
     const ConnGUID* conn_guid = conn->GetConnGUID();
 
-    if (HTTP_GET == http_req.method)
+    if (HTTP_GET == http_req.Method)
     {
-        it->second->OnGet(conn_guid, http_req.client_ip.empty() ? conn->GetClientIP() : http_req.client_ip.c_str(),
-                          http_req.query_params, http_req.headers);
+        it->second->OnGet(conn_guid, http_req.ClientIP.empty() ? conn->GetClientIP() : http_req.ClientIP.c_str(),
+                          http_req.Queries, http_req.Headers);
     }
-    else if (HTTP_POST == http_req.method)
+    else if (HTTP_POST == http_req.Method)
     {
-        it->second->OnPost(conn_guid, http_req.client_ip.empty() ? conn->GetClientIP() : http_req.client_ip.c_str(),
-                           http_req.query_params, http_req.headers,
-                           http_req.body.data(), http_req.body.size());
+        it->second->OnPost(conn_guid, http_req.ClientIP.empty() ? conn->GetClientIP() : http_req.ClientIP.c_str(),
+                           http_req.Queries, http_req.Headers,
+                           http_req.Body.data(), http_req.Body.size());
     }
 
     struct timeval end_time;
@@ -86,8 +88,9 @@ int MsgDispatcher::DispatchMsg(const ConnInterface* conn, const HTTPReq& http_re
     const long end_millisecond = end_time.tv_sec * 1000 + end_time.tv_usec / 1000;
 
     LOG_INFO("msg process time: " << end_millisecond - begin_millisecond << " milliseconds. "
-             << conn_guid << ", path " << http_req.path);
+             << conn_guid << ", path " << http_req.Path);
     return 0;
+}
 }
 }
 }

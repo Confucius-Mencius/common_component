@@ -6,6 +6,8 @@
 
 namespace tcp
 {
+namespace http_ws
+{
 namespace http
 {
 class RspMaker
@@ -13,20 +15,20 @@ class RspMaker
 public:
     RspMaker() : headers_()
     {
-        status_ = HTTP_STATUS_OK;
+        status_code_ = HTTP_STATUS_OK;
     }
 
     ~RspMaker() {}
 
-    RspMaker& SetStatus(http_status status)
+    RspMaker& SetStatusCode(http_status status_code)
     {
-        status_ = status;
+        status_code_ = status_code;
         return *this;
     }
 
     RspMaker& SetContentType(const std::string& content_type)
     {
-        headers_.insert(std::make_pair("Content-Type", content_type));
+        headers_.insert(HeaderMap::value_type("Content-Type", content_type));
         return *this;
     }
 
@@ -34,11 +36,11 @@ public:
     {
         if (on)
         {
-            headers_.insert(std::make_pair("Connection",  "Keep-Alive"));
+            headers_.insert(HeaderMap::value_type("Connection",  "Keep-Alive"));
         }
         else
         {
-            headers_.insert(std::make_pair("Connection", "close"));
+            headers_.insert(HeaderMap::value_type("Connection", "close"));
         }
 
         return *this;
@@ -46,32 +48,23 @@ public:
 
     RspMaker& SetNoCache()
     {
-        headers_.insert(std::make_pair("Cache-Control", "no-cache"));
-        headers_.insert(std::make_pair("Pragma", "no-cache"));
+        headers_.insert(HeaderMap::value_type("Cache-Control", "no-cache"));
+        headers_.insert(HeaderMap::value_type("Pragma", "no-cache"));
         return *this;
     }
 
     RspMaker& AddHeader(const std::string& name, const std::string& value)
     {
-        headers_.insert(std::make_pair(name, value));
+        headers_.insert(HeaderMap::value_type(name, value));
         return *this;
     }
 
     std::string MakeRsp(const void* body, size_t len)
     {
         char buf[1024] = "";
-        int n = snprintf(buf, sizeof(buf), "HTTP/1.1 %d %s\r\n", status_, http_status_str(status_));
+        int n = snprintf(buf, sizeof(buf), "HTTP/1.1 %d %s\r\n", status_code_, http_status_str(status_code_));
 
-        std::string rsp;
-        rsp.append(buf, n);
-
-        auto it = headers_.cbegin();
-        while (it != headers_.cend())
-        {
-            n = snprintf(buf, sizeof(buf), "%s: %s\r\n", it->first.c_str(), it->second.c_str());
-            rsp.append(buf, n);
-            ++it;
-        }
+        std::string rsp(buf, n);
 
         if (nullptr == body || 0 == len)
         {
@@ -79,7 +72,13 @@ public:
         }
 
         n = snprintf(buf, sizeof(buf), "%lu", len);
-        headers_.insert(make_pair("Content-Length", std::string(buf, n)));
+        headers_.insert(HeaderMap::value_type("Content-Length", std::string(buf, n)));
+
+        for (HeaderMap::const_iterator it = headers_.cbegin(); it != headers_.cend(); ++it)
+        {
+            n = snprintf(buf, sizeof(buf), "%s: %s\r\n", it->first.c_str(), it->second.c_str());
+            rsp.append(buf, n);
+        }
 
         rsp.append("\r\n");
         rsp.append((const char*) body, len);
@@ -88,9 +87,10 @@ public:
     }
 
 private:
-    http_status status_;
-    Headers headers_;
+    http_status status_code_;
+    HeaderMap headers_;
 };
+}
 }
 }
 

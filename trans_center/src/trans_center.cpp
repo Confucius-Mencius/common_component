@@ -190,7 +190,7 @@ void TransCenter::CancelTrans(TransID trans_id)
 TransCtx* TransCenter::GetTransCtx(TransID trans_id) const
 {
     TransHashMap::const_iterator it = trans_hash_map_.find(trans_id);
-    if (it == trans_hash_map_.end())
+    if (it == trans_hash_map_.cend())
     {
         return nullptr;
     }

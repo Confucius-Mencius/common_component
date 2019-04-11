@@ -280,7 +280,7 @@ bool IOThreadSink::CanExit() const
         can_exit &= (common_logic_->CanExit() ? 1 : 0);
     }
 
-    for (ProtoLogicItemVec::const_iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::const_iterator it = logic_item_vec_.cbegin(); it != logic_item_vec_.cend(); ++it)
     {
         can_exit &= (it->logic->CanExit() ? 1 : 0);
     }
@@ -405,7 +405,7 @@ int IOThreadSink::LoadLogicGroup()
     // logic so group
     const StrGroup& logic_so_group = threads_ctx_->conf.logic_so_group;
 
-    for (StrGroup::const_iterator it = logic_so_group.begin(); it != logic_so_group.end(); ++it)
+    for (StrGroup::const_iterator it = logic_so_group.cbegin(); it != logic_so_group.cend(); ++it)
     {
         char logic_so_path[MAX_PATH_LEN] = "";
         GetAbsolutePath(logic_so_path, sizeof(logic_so_path), (*it).c_str(), threads_ctx_->cur_working_dir);

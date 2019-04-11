@@ -23,15 +23,15 @@ class MsgDispatcherInterface;
 
 namespace tcp
 {
-namespace http
-{
-class MsgDispatcherInterface;
-}
-
 namespace http_ws
 {
 class SchedulerInterface;
 class CommonLogicInterface;
+
+namespace http
+{
+class MsgDispatcherInterface;
+}
 
 struct LogicCtx
 {
@@ -133,7 +133,7 @@ public:
     }
 
     // 完整的ws消息
-    virtual void OnWSMsg(const ConnGUID* conn_guid, const void* data, size_t len)
+    virtual void OnWSMsg(const ConnGUID* conn_guid, int frame_type, const void* data, size_t len)
     {
     }
 

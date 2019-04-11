@@ -66,6 +66,8 @@ int ProtoCommonLogic::Initialize(const void* ctx)
     scheduler_.SetRawTCPScheduler(logic_ctx_.scheduler);
     scheduler_.SetMsgCodec(&msg_codec_);
 
+    part_msg_mgr_.SetScheduler(&scheduler_);
+
     if (part_msg_mgr_.Initialize(logic_ctx_.timer_axis, { proto_logic_args_.app_frame_conf_mgr->GetProtoPartMsgCheckInterval(), 0 }) != 0)
     {
         return -1;
@@ -211,6 +213,8 @@ void ProtoCommonLogic::OnClientClosed(const ConnGUID* conn_guid)
     {
         it->logic->OnClientClosed(conn_guid);
     }
+
+    part_msg_mgr_.RemoveRecord(conn);
 }
 
 void ProtoCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
@@ -324,7 +328,7 @@ void ProtoCommonLogic::OnTimer(TimerID timer_id, void* data, size_t len, int tim
         can_exit &= (proto_tcp_common_logic_->CanExit() ? 1 : 0);
     }
 
-    for (ProtoLogicItemVec::const_iterator it = proto_tcp_logic_item_vec_.begin(); it != proto_tcp_logic_item_vec_.end(); ++it)
+    for (ProtoLogicItemVec::const_iterator it = proto_tcp_logic_item_vec_.cbegin(); it != proto_tcp_logic_item_vec_.cend(); ++it)
     {
         can_exit &= (it->logic->CanExit() ? 1 : 0);
     }
@@ -395,7 +399,7 @@ int ProtoCommonLogic::LoadProtoTCPLogicGroup()
 
     const StrGroup proto_tcp_logic_so_group = proto_logic_args_.app_frame_conf_mgr->GetProtoTCPLogicSoGroup();
 
-    for (StrGroup::const_iterator it = proto_tcp_logic_so_group.begin(); it != proto_tcp_logic_so_group.end(); ++it)
+    for (StrGroup::const_iterator it = proto_tcp_logic_so_group.cbegin(); it != proto_tcp_logic_so_group.cend(); ++it)
     {
         char logic_so_path[MAX_PATH_LEN] = "";
         GetAbsolutePath(logic_so_path, sizeof(logic_so_path), (*it).c_str(), logic_ctx_.cur_working_dir);

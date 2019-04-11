@@ -106,7 +106,7 @@ public:
         }
 
         // 通知外部移除相关数据结构
-        for (typename RecordHashMap::const_iterator it = timeout_records.begin(); it != timeout_records.end(); ++it)
+        for (typename RecordHashMap::const_iterator it = timeout_records.cbegin(); it != timeout_records.cend(); ++it)
         {
             OnTimeout(it->first, it->second.v, it->second.timeout_sec);
         }
@@ -115,7 +115,7 @@ public:
     bool RecordExist(const Key& k)
     {
         typename RecordHashMap::const_iterator it = record_hash_map_.find(k);
-        return (it != record_hash_map_.end());
+        return (it != record_hash_map_.cend());
     }
 
     /**
@@ -156,7 +156,7 @@ public:
         LOG_CPP("current time: " << time(nullptr));
         LOG_CPP("record count: " << record_hash_map_.size());
 
-        for (typename RecordHashMap::const_iterator it = record_hash_map_.begin(); it != record_hash_map_.end(); ++it)
+        for (typename RecordHashMap::const_iterator it = record_hash_map_.cbegin(); it != record_hash_map_.cend(); ++it)
         {
             LOG_CPP(it->first << ", " << it->second);
         }

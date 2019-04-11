@@ -57,30 +57,42 @@ public:
     ///////////////////////// TimerSinkInterface /////////////////////////
     void OnTimer(TimerID timer_id, void* data, size_t len, int times);
 
-    void OnHTTPReq(ConnID conn_id, const http::HTTPReq& http_req);
-    void OnUpgrade(ConnID conn_id, const http::HTTPReq& http_req, const char* data, size_t len);
+    void OnHTTPReq(ConnID conn_id, const tcp::http_ws::http::Req& http_req);
+    void OnUpgrade(ConnID conn_id, const tcp::http_ws::http::Req& http_req, const char* data, size_t len);
 
 private:
     int LoadHTTPWSCommonLogic();
     int LoadHTTPWSLogicGroup();
 
 private:
-    struct HTTPConn
+    struct HTTPConnCtx
     {
         ConnInterface* conn;
-        tcp::http::HTTPParser http_parser;
-        tcp::ws::WSParser ws_parser;
+        tcp::http_ws::http::Parser http_parser;
+        bool upgrade_;
+        tcp::http_ws::ws::Parser ws_parser;
 
-        HTTPConn() : http_parser(), ws_parser()
+        HTTPConnCtx() : http_parser(), ws_parser()
         {
             conn = nullptr;
+            upgrade_ = false;
+        }
+
+        static HTTPConnCtx* Create()
+        {
+            return new HTTPConnCtx();
+        }
+
+        void Release()
+        {
+            delete this;
         }
     };
 
-    typedef std::map<int, HTTPConn> HTTPConnMap;
+    typedef __hash_map<ConnID, HTTPConnCtx*> HTTPConnCtxMap;
 
 private:
-    void ProcessWSData(HTTPConn& http_conn);
+    void ProcessWSData(HTTPConnCtx* http_conn_ctx);
 
 private:
     HTTPWSLogicArgs http_ws_logic_args_;
@@ -92,12 +104,11 @@ private:
     ::proto::MsgCodec msg_codec_;
     tcp::http_ws::Scheduler scheduler_;
     tcp::http_ws::MsgDispatcher msg_dispatcher_; // proto msg dispatcher
-    tcp::http::MsgDispatcher http_msg_dispatcher_;
+    tcp::http_ws::http::MsgDispatcher http_msg_dispatcher_;
 
-    tcp::http_ws::PartMsgMgr part_msg_mgr_; // TODO
+    tcp::http_ws::PartMsgMgr part_msg_mgr_;
 
-    HTTPConnMap http_conn_map_;
-    bool upgrade_;
+    HTTPConnCtxMap http_conn_ctx_map_;
 };
 }
 }

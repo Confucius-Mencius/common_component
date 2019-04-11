@@ -23,7 +23,7 @@ public:
     void Test004();
 
 private:
-    tcp::http::HTTPParser http_parser_;
+    tcp::http_ws::http::Parser http_parser_;
 };
 }
 }

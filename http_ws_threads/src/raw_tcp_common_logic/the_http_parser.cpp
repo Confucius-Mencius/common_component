@@ -4,78 +4,77 @@
 
 namespace tcp
 {
+namespace http_ws
+{
 namespace http
 {
-HTTPReq::HTTPReq() : client_ip(), url(), path(), query_params(), headers(),
-    body(), schema_(), host_(), query_(), fragment_(), user_info_()
+Req::Req() : ClientIP(), Path(), Queries(), Headers(),
+    Body(), schema_(), host_(), query_(), fragment_(), user_info_()
 {
-    method = HTTP_GET;
-    major_version_ = 1;
-    minor_version_ = 1;
+    Method = HTTP_GET;
+    MajorVersion = 1;
+    MinorVersion = 1;
     port_ = 0;
 }
 
-HTTPReq::~HTTPReq()
+Req::~Req()
 {
 }
 
-void HTTPReq::ParseURL()
+void Req::ParseURL(const char* at, size_t length)
 {
-    if (!schema_.empty())
-    {
-        return;
-    }
+    std::string url(at, length);
 
     struct http_parser_url u;
     http_parser_url_init(&u);
 
     if (http_parser_parse_url(url.c_str(), url.length(), 0, &u) != 0)
     {
-        LOG_ERROR("parse url error: " << url.c_str());
+        LOG_ERROR("parse url error: " << std::string(at, length));
         return;
     }
 
     if (u.field_set & (1 << UF_SCHEMA))
     {
-        schema_ = url.substr(u.field_data[UF_SCHEMA].off, u.field_data[UF_SCHEMA].len);
+        this->schema_ = url.substr(u.field_data[UF_SCHEMA].off, u.field_data[UF_SCHEMA].len);
     }
 
     if (u.field_set & (1 << UF_HOST))
     {
-        host_ = url.substr(u.field_data[UF_HOST].off, u.field_data[UF_HOST].len);
+        this->host_ = url.substr(u.field_data[UF_HOST].off, u.field_data[UF_HOST].len);
     }
 
     if (u.field_set & (1 << UF_PORT))
     {
-        port_ = u.port;
+        this->port_ = u.port;
     }
 
     if (u.field_set & (1 << UF_PATH))
     {
-        path = url.substr(u.field_data[UF_PATH].off, u.field_data[UF_PATH].len);
+        this->Path = url.substr(u.field_data[UF_PATH].off, u.field_data[UF_PATH].len);
     }
 
     if (u.field_set & (1 << UF_QUERY))
     {
-        query_ = url.substr(u.field_data[UF_QUERY].off, u.field_data[UF_QUERY].len);
-        ParseQuery();
+        this->query_ = url.substr(u.field_data[UF_QUERY].off, u.field_data[UF_QUERY].len);
+        ParseQuery(query_.data(), query_.size());
     }
 
     if (u.field_set & (1 << UF_FRAGMENT))
     {
-        fragment_ = url.substr(u.field_data[UF_FRAGMENT].off, u.field_data[UF_FRAGMENT].len);
+        this->fragment_ = url.substr(u.field_data[UF_FRAGMENT].off, u.field_data[UF_FRAGMENT].len);
     }
 
     if (u.field_set & (1 << UF_USERINFO))
     {
-        user_info_ = url.substr(u.field_data[UF_USERINFO].off, u.field_data[UF_USERINFO].len);
+        this->user_info_ = url.substr(u.field_data[UF_USERINFO].off, u.field_data[UF_USERINFO].len);
     }
 }
 
-void HTTPReq::ParseClientIP()
+void Req::ParseClientIP()
 {
-    Headers::const_iterator it =  headers.find("X-Forwarded-For");
-    if (it != headers.end())
+    HeaderMap::const_iterator it =  this->Headers.find("X-Forwarded-For");
+    if (it != this->Headers.cend())
     {
         const char* x_forwarded_for = it->second.c_str();
         LOG_DEBUG("X-Forwarded-For: " << x_forwarded_for);
@@ -83,29 +82,32 @@ void HTTPReq::ParseClientIP()
         const char* p = strchr(x_forwarded_for, ',');
         if (nullptr == p)
         {
-            client_ip.assign(x_forwarded_for);
+            this->ClientIP.assign(x_forwarded_for);
         }
         else
         {
-            client_ip.assign(x_forwarded_for, p - x_forwarded_for);
+            this->ClientIP.assign(x_forwarded_for, p - x_forwarded_for);
         }
     }
 }
 
-void HTTPReq::ParseQuery()
+void Req::ParseQuery(const char* at, size_t length)
 {
-    if (query_.empty() || !query_params.empty())
-    {
-        return;
-    }
-
     char* str1, *str2, *token, *subtoken;
     char* saveptr1, *saveptr2;
     int j;
 
-    std::string q = query_;
+    std::unique_ptr<char[]> query(new char[length + 1]);
+    if (nullptr == query)
+    {
+        LOG_ERROR("failed to alloc memory");
+        return;
+    }
 
-    for (j = 1, str1 = (char*) q.c_str(); ; ++j, str1 = NULL)
+    memcpy(query.get(), at, length);
+    query[length] = '\0';
+
+    for (j = 1, str1 = query.get(); ; ++j, str1 = NULL)
     {
         token = strtok_r(str1, "&", &saveptr1);
         if (token == NULL)
@@ -135,78 +137,79 @@ void HTTPReq::ParseQuery()
         }
 
         LOG_DEBUG("key: " << key << ", value: " << value);
-        query_params.insert(make_pair(key, value));
+        this->Queries.insert(QueryMap::value_type(key, value));
     }
 }
 
-std::string HTTPReq::Dump()
+std::string Req::Dump()
 {
     char buf[1024] = "";
     int n = 0;
 
-    if (path.empty())
+    if (this->Path.empty())
     {
-        path = "/";
+        this->Path = "/";
     }
 
     if (query_.empty())
     {
         n = snprintf(buf, sizeof(buf), "%s %s HTTP/%d.%d\r\n",
-                     http_method_str(method), path.c_str(), major_version_, minor_version_);
+                     http_method_str(this->Method), this->Path.c_str(),
+                     this->MajorVersion, this->MinorVersion);
     }
     else
     {
         n = snprintf(buf, sizeof(buf), "%s %s?%s HTTP/%d.%d\r\n",
-                     http_method_str(method), path.c_str(), query_.c_str(), major_version_, minor_version_);
+                     http_method_str(this->Method), this->Path.c_str(), this->query_.c_str(),
+                     this->MajorVersion, this->MinorVersion);
     }
 
-    std::string str;
-    str.append(buf, n);
+    std::string s(buf, n);
 
-    auto iter = headers.cbegin();
-    while (iter != headers.cend())
+    HeaderMap::const_iterator it = this->Headers.cbegin();
+    while (it != this->Headers.cend())
     {
-        int n = snprintf(buf, sizeof(buf), "%s: %s\r\n", iter->first.c_str(), iter->second.c_str());
-        str.append(buf, n);
-        ++iter;
+        int n = snprintf(buf, sizeof(buf), "%s: %s\r\n", it->first.c_str(), it->second.c_str());
+        s.append(buf, n);
+        ++it;
     }
 
-    str.append("\r\n");
-    str.append(body);
+    s.append("\r\n");
+    s.append(this->Body);
 
-    return str;
+    return s;
 }
 
-HTTPParser::HTTPParser() : http_req_(), last_header_name_()
+Parser::Parser() : http_req_(), last_header_name_()
 {
-    parser_settings_.on_message_begin = HTTPParser::OnMessageBegin;
-    parser_settings_.on_url = HTTPParser::OnURL;
-    parser_settings_.on_status = nullptr;
-    parser_settings_.on_header_field = HTTPParser::OnHeaderField;
-    parser_settings_.on_header_value = HTTPParser::OnHeaderValue;
-    parser_settings_.on_headers_complete = HTTPParser::OnHeadersComplete;
-    parser_settings_.on_body = HTTPParser::OnBody;
-    parser_settings_.on_message_complete = HTTPParser::OnMessageComplete;
-    parser_settings_.on_chunk_header = nullptr;
-    parser_settings_.on_chunk_complete = nullptr;
-
-    http_parser_init(&http_parser_, HTTP_REQUEST);
-    http_parser_.data = this;
-
     http_ws_raw_tcp_common_logic_ = nullptr;
     conn_id_ = INVALID_CONN_ID;
+
+    http_parser_settings_init(&settings_);
+    settings_.on_message_begin = Parser::OnMessageBegin;
+    settings_.on_url = Parser::OnURL;
+    settings_.on_header_field = Parser::OnHeaderField;
+    settings_.on_header_value = Parser::OnHeaderValue;
+    settings_.on_headers_complete = Parser::OnHeadersComplete;
+    settings_.on_body = Parser::OnBody;
+    settings_.on_message_complete = Parser::OnMessageComplete;
+
+    http_parser_init(&parser_, HTTP_REQUEST);
+    parser_.data = this;
+
+    complete_ = false;
 }
 
-HTTPParser::~HTTPParser()
+Parser::~Parser()
 {
 }
 
-int HTTPParser::Execute(const char* buffer, size_t count)
+int Parser::Execute(const char* buffer, size_t count)
 {
-    size_t n = http_parser_execute(&http_parser_, &parser_settings_, buffer, count);
-    if (http_parser_.upgrade)
+    size_t n = http_parser_execute(&parser_, &settings_, buffer, count);
+    if (parser_.upgrade)
     {
-        LOG_TRACE("upgrade");
+        LOG_TRACE("upgrade to websocket");
 
         if (http_ws_raw_tcp_common_logic_ != nullptr)
         {
@@ -218,92 +221,100 @@ int HTTPParser::Execute(const char* buffer, size_t count)
     else if (n != count)
     {
         LOG_ERROR("parser error: " << std::string(buffer, count));
-        return http_parser_.http_errno;
+        return parser_.http_errno;
     }
 
-    return 0;
-}
-
-int HTTPParser::OnMessageBegin(http_parser* parser)
-{
-    LOG_TRACE("HTTPParser::OnMessageBegin");
-    return 0;
-}
-
-int HTTPParser::OnURL(http_parser* parser, const char* at, size_t length)
-{
-    LOG_TRACE("HTTPParser::OnURL");
-
-    HTTPParser* hp = static_cast<HTTPParser*>(parser->data);
-    hp->http_req_.url.assign(at, length);
-    hp->http_req_.ParseURL();
-
-    return 0;
-}
-
-int HTTPParser::OnHeaderField(http_parser* parser, const char* at, size_t length)
-{
-    LOG_TRACE("HTTPParser::OnHeaderField");
-
-    HTTPParser* hp = static_cast<HTTPParser*>(parser->data);
-    hp->last_header_name_.assign(at, length);
-
-    return 0;
-}
-
-int HTTPParser::OnHeaderValue(http_parser* parser, const char* at, size_t length)
-{
-    LOG_TRACE("HTTPParser::OnHeaderValue");
-
-    HTTPParser* hp = static_cast<HTTPParser*>(parser->data);
-
-    if (hp->last_header_name_.empty())
+    if (complete_)
     {
-        LOG_ERROR("error");
-        return -1;
+        if (http_ws_raw_tcp_common_logic_ != nullptr)
+        {
+            http_ws_raw_tcp_common_logic_->OnHTTPReq(conn_id_, http_req_);
+        }
     }
 
-    hp->http_req_.AddHeader(hp->last_header_name_, std::string(at, length));
-    hp->last_header_name_ = "";
+    return 0;
+}
+
+int Parser::OnMessageBegin(http_parser* parser)
+{
+    LOG_TRACE("Parser::OnMessageBegin");
+
+    Parser* hp = static_cast<Parser*>(parser->data);
+    hp->complete_ = false;
 
     return 0;
 }
 
-int HTTPParser::OnHeadersComplete(http_parser* parser)
+int Parser::OnURL(http_parser* parser, const char* at, size_t length)
 {
-    LOG_TRACE("HTTPParser::OnHeadersComplete");
+    LOG_TRACE("Parser::OnURL");
 
-    HTTPParser* hp = static_cast<HTTPParser*>(parser->data);
+    Parser* hp = static_cast<Parser*>(parser->data);
+    hp->http_req_.ParseURL(at, length);
+
+    return 0;
+}
+
+int Parser::OnHeaderField(http_parser* parser, const char* at, size_t length)
+{
+    LOG_TRACE("Parser::OnHeaderField");
+
+    Parser* hp = static_cast<Parser*>(parser->data);
+    hp->SetLastHeaderName(at, length);
+
+    return 0;
+}
+
+int Parser::OnHeaderValue(http_parser* parser, const char* at, size_t length)
+{
+    LOG_TRACE("Parser::OnHeaderValue");
+
+    Parser* hp = static_cast<Parser*>(parser->data);
+    hp->http_req_.AddHeader(hp->GetLastHeaderName(), std::string(at, length));
+
+    return 0;
+}
+
+int Parser::OnHeadersComplete(http_parser* parser)
+{
+    // Scalar valued message information such as status_code, method, and the HTTP version are stored in the parser structure.
+    // This data is only temporally stored in http_parser and gets reset on each new message.
+    // If this information is needed later, copy it out of the structure during the headers_complete callback
+
+    LOG_TRACE("Parser::OnHeadersComplete");
+    Parser* hp = static_cast<Parser*>(parser->data);
+
+    hp->http_req_.Method = (http_method) parser->method;
+    hp->http_req_.MajorVersion = parser->http_major;
+    hp->http_req_.MinorVersion = parser->http_minor;
+
     hp->http_req_.ParseClientIP();
-    hp->last_header_name_ = "";
 
     return 0;
 }
 
-int HTTPParser::OnBody(http_parser* parser, const char* at, size_t length)
+int Parser::OnBody(http_parser* parser, const char* at, size_t length)
 {
-    LOG_TRACE("HTTPParser::OnBody");
+    // 注意：body回调可能不止调用一次
+    LOG_TRACE("Parser::OnBody");
 
-    HTTPParser* hp = static_cast<HTTPParser*>(parser->data);
-    hp->http_req_.method = HTTP_POST;
-    hp->http_req_.body.assign(at, length);
+    Parser* hp = static_cast<Parser*>(parser->data);
+    hp->http_req_.AppendBody(at, length);
 
     return 0;
 }
 
-int HTTPParser::OnMessageComplete(http_parser* parser)
+int Parser::OnMessageComplete(http_parser* parser)
 {
-    LOG_TRACE("HTTPParser::OnMessageComplete");
+    LOG_TRACE("Parser::OnMessageComplete");
 
-    HTTPParser* hp = static_cast<HTTPParser*>(parser->data);
+    Parser* hp = static_cast<Parser*>(parser->data);
+    hp->complete_ = true;
+
     LOG_DEBUG(hp->http_req_.Dump());
 
-    if (hp->http_ws_raw_tcp_common_logic_ != nullptr)
-    {
-        hp->http_ws_raw_tcp_common_logic_->OnHTTPReq(hp->conn_id_, hp->http_req_);
-    }
-
     return 0;
+}
 }
 }
 }

@@ -196,7 +196,7 @@ void ConnCenter::DestroyConn(int sock_fd)
 int ConnCenter::UpdateConnStatus(ConnID conn_id, bool in)
 {
     ConnIDHashMap::const_iterator it = conn_id_hash_map_.find(conn_id);
-    if (it != conn_id_hash_map_.end())
+    if (it != conn_id_hash_map_.cend())
     {
         if (in)
         {
@@ -240,7 +240,7 @@ int ConnCenter::UpdateConnStatus(ConnID conn_id, bool in)
 ConnInterface* ConnCenter::GetConnBySockFD(int sock_fd) const
 {
     ConnHashMap::const_iterator it = conn_hash_map_.find(sock_fd);
-    if (it != conn_hash_map_.end())
+    if (it != conn_hash_map_.cend())
     {
         return it->second.conn;
     }
@@ -251,7 +251,7 @@ ConnInterface* ConnCenter::GetConnBySockFD(int sock_fd) const
 ConnInterface* ConnCenter::GetConnByID(ConnID conn_id) const
 {
     ConnIDHashMap::const_iterator it = conn_id_hash_map_.find(conn_id);
-    if (it != conn_id_hash_map_.end())
+    if (it != conn_id_hash_map_.cend())
     {
         return it->second;
     }

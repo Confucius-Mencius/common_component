@@ -19,10 +19,9 @@ enum
 
 HTTPWSCommonLogic::HTTPWSCommonLogic() : http_ws_logic_args_(), http_ws_common_logic_loader_(),
     http_ws_logic_item_vec_(), msg_codec_(), scheduler_(), msg_dispatcher_(), http_msg_dispatcher_(),
-    part_msg_mgr_(), http_conn_map_()
+    part_msg_mgr_(), http_conn_ctx_map_()
 {
     http_ws_common_logic_ = nullptr;
-    upgrade_ = false;
 }
 
 HTTPWSCommonLogic::~HTTPWSCommonLogic()
@@ -69,6 +68,8 @@ int HTTPWSCommonLogic::Initialize(const void* ctx)
     scheduler_.SetRawTCPScheduler(logic_ctx_.scheduler);
     scheduler_.SetMsgCodec(&msg_codec_);
 
+    part_msg_mgr_.SetScheduler(&scheduler_);
+
     if (part_msg_mgr_.Initialize(logic_ctx_.timer_axis, { http_ws_logic_args_.app_frame_conf_mgr->GetHTTPWSPartMsgCheckInterval(), 0 }) != 0)
     {
         return -1;
@@ -96,6 +97,13 @@ void HTTPWSCommonLogic::Finalize()
 
     SAFE_FINALIZE(http_ws_common_logic_);
     part_msg_mgr_.Finalize();
+
+    for (HTTPConnCtxMap::iterator it = http_conn_ctx_map_.begin(); it != http_conn_ctx_map_.end(); ++it)
+    {
+        it->second->Release();
+    }
+
+    http_conn_ctx_map_.clear();
 }
 
 int HTTPWSCommonLogic::Activate()
@@ -181,12 +189,18 @@ void HTTPWSCommonLogic::OnClientConnected(const ConnGUID* conn_guid)
 
     conn->ClearData();
 
-    HTTPConn http_conn;
-    http_conn.conn = conn;
-    http_conn.http_parser.SetRawTCPCommonLogic(this);
-    http_conn.http_parser.SetConnID(conn_guid->conn_id);
+    HTTPConnCtx* http_conn_ctx = HTTPConnCtx::Create();
+    if (nullptr == http_conn_ctx)
+    {
+        LOG_ERROR("failed to alloc memory");
+        return;
+    }
 
-    if (!http_conn_map_.insert(HTTPConnMap::value_type(conn_guid->conn_id, http_conn)).second)
+    http_conn_ctx->conn = conn;
+    http_conn_ctx->http_parser.SetRawTCPCommonLogic(this);
+    http_conn_ctx->http_parser.SetConnID(conn_guid->conn_id);
+
+    if (!http_conn_ctx_map_.insert(HTTPConnCtxMap::value_type(conn_guid->conn_id, http_conn_ctx)).second)
     {
         LOG_ERROR("failed to insert to map, conn id: " << conn_guid->conn_id);
         return;
@@ -226,30 +240,38 @@ void HTTPWSCommonLogic::OnClientClosed(const ConnGUID* conn_guid)
         it->logic->OnClientClosed(conn_guid);
     }
 
-    http_conn_map_.erase(conn_guid->conn_id);
+    HTTPConnCtxMap::iterator it = http_conn_ctx_map_.find(conn_guid->conn_id);
+    if (it != http_conn_ctx_map_.end())
+    {
+        it->second->Release();
+        http_conn_ctx_map_.erase(conn_guid->conn_id);
+    }
+
+    part_msg_mgr_.RemoveRecord(conn);
 }
 
 void HTTPWSCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
 {
     LOG_DEBUG("HTTPWSCommonLogic::OnRecvClientData, " << conn_guid << ", data: " << data << ", len: " << len);
 
-    HTTPConnMap::iterator it = http_conn_map_.find(conn_guid->conn_id);
-    if (it == http_conn_map_.end())
+    HTTPConnCtxMap::iterator it = http_conn_ctx_map_.find(conn_guid->conn_id);
+    if (it == http_conn_ctx_map_.end())
     {
         LOG_ERROR("failed to find conn by id: " << conn_guid->conn_id);
         return;
     }
 
-    HTTPConn& http_conn = it->second;
+    HTTPConnCtx* http_conn_ctx = it->second;
 
-    if (!upgrade_)
+    if (!http_conn_ctx->upgrade_)
     {
-        http_conn.http_parser.Execute((const char*) data, len);
+        http_conn_ctx->http_parser.Execute((const char*) data, len);
     }
     else
     {
-        http_conn.conn->AppendData((const char*) data, len);
-        ProcessWSData(http_conn);
+        ConnInterface* conn = http_conn_ctx->conn;
+        conn->AppendData((const char*) data, len);
+        ProcessWSData(http_conn_ctx);
     }
 }
 
@@ -298,7 +320,7 @@ void HTTPWSCommonLogic::OnTimer(TimerID timer_id, void* data, size_t len, int ti
         can_exit &= (http_ws_common_logic_->CanExit() ? 1 : 0);
     }
 
-    for (HTTPWSLogicItemVec::const_iterator it = http_ws_logic_item_vec_.begin(); it != http_ws_logic_item_vec_.end(); ++it)
+    for (HTTPWSLogicItemVec::const_iterator it = http_ws_logic_item_vec_.cbegin(); it != http_ws_logic_item_vec_.cend(); ++it)
     {
         can_exit &= (it->logic->CanExit() ? 1 : 0);
     }
@@ -309,7 +331,7 @@ void HTTPWSCommonLogic::OnTimer(TimerID timer_id, void* data, size_t len, int ti
     }
 }
 
-void HTTPWSCommonLogic::OnHTTPReq(ConnID conn_id, const http::HTTPReq& http_req)
+void HTTPWSCommonLogic::OnHTTPReq(ConnID conn_id, const tcp::http_ws::http::Req& http_req)
 {
     ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_id);
     if (nullptr == conn)
@@ -318,46 +340,50 @@ void HTTPWSCommonLogic::OnHTTPReq(ConnID conn_id, const http::HTTPReq& http_req)
         return;
     }
 
-    if (0 == http_msg_dispatcher_.DispatchMsg(conn, http_req))
+    if (http_msg_dispatcher_.DispatchMsg(conn, http_req) != 0)
     {
-        LOG_TRACE("dispatch http req ok, path: " << http_req.path);
+        LOG_ERROR("failed to dispatch http req, path: " << http_req.Path << ", method: " << http_method_str(http_req.Method));
         return;
     }
+
+    LOG_TRACE("dispatch http req ok, path: " << http_req.Path << ", method: " << http_method_str(http_req.Method));
 }
 
-void HTTPWSCommonLogic::OnUpgrade(ConnID conn_id, const http::HTTPReq& http_req, const char* data, size_t len)
+void HTTPWSCommonLogic::OnUpgrade(ConnID conn_id, const tcp::http_ws::http::Req& http_req, const char* data, size_t len)
 {
-    HTTPConnMap::iterator it = http_conn_map_.find(conn_id);
-    if (it == http_conn_map_.end())
+    HTTPConnCtxMap::iterator it = http_conn_ctx_map_.find(conn_id);
+    if (it == http_conn_ctx_map_.end())
     {
         LOG_ERROR("failed to find conn by id: " << conn_id);
         return;
     }
 
-    HTTPConn& http_conn = it->second;
-    ConnInterface* conn = http_conn.conn;
+    HTTPConnCtx* http_conn_ctx = it->second;
+    ConnInterface* conn = http_conn_ctx->conn;
     const ConnGUID* conn_guid = conn->GetConnGUID();
 
     // 检查upgrade头，不符合标准则关闭连接
-    if (http_conn.ws_parser.CheckUpgrade(http_req) != 0)
+    if (http_conn_ctx->ws_parser.CheckUpgrade(http_req) != 0)
     {
         scheduler_.CloseClient(conn_guid); // 服务器主动关闭连接
         return;
     }
 
     // 回复握手信息
-    const std::string handshake = http_conn.ws_parser.MakeHandshake();
+    const std::string handshake = http_conn_ctx->ws_parser.MakeHandshake();
     LOG_DEBUG("handshake: " << handshake);
 
     scheduler_.SendToClient(conn_guid, handshake.data(), handshake.size());
 
     // 将帧数据记录下来（如果有）
-    upgrade_ = true;
+    http_conn_ctx->upgrade_ = true;
 
+    LOG_DEBUG("len: " << len);
     if (len > 0)
     {
+        LOG_DEBUG("data: " << data << ", len: " << len);
         conn->AppendData((const char*) data, len);
-        ProcessWSData(http_conn);
+        ProcessWSData(http_conn_ctx);
     }
 }
 
@@ -422,7 +448,7 @@ int HTTPWSCommonLogic::LoadHTTPWSLogicGroup()
 
     const StrGroup logic_so_group = http_ws_logic_args_.app_frame_conf_mgr->GetHTTPWSLogicSoGroup();
 
-    for (StrGroup::const_iterator it = logic_so_group.begin(); it != logic_so_group.end(); ++it)
+    for (StrGroup::const_iterator it = logic_so_group.cbegin(); it != logic_so_group.cend(); ++it)
     {
         char logic_so_path[MAX_PATH_LEN] = "";
         GetAbsolutePath(logic_so_path, sizeof(logic_so_path), (*it).c_str(), logic_ctx_.cur_working_dir);
@@ -479,19 +505,22 @@ int HTTPWSCommonLogic::LoadHTTPWSLogicGroup()
     return 0;
 }
 
-void HTTPWSCommonLogic::ProcessWSData(HTTPConn& http_conn)
+void HTTPWSCommonLogic::ProcessWSData(HTTPConnCtx* http_conn_ctx)
 {
     do
     {
-        ConnInterface* conn = http_conn.conn;
+        ConnInterface* conn = http_conn_ctx->conn;
         const ConnGUID* conn_guid = conn->GetConnGUID();
 
         std::string& d = conn->GetData();
         const char* dp = d.data();
         const size_t dl = d.size();
+        LOG_DEBUG("data: " << dp << ", len: " << dl);
+
         size_t offset = 0;
 
-        const tcp::ws::ParseResult parse_result = http_conn.ws_parser.ParseFrame(offset, dp, dl);
+        const tcp::http_ws::ws::ParseResult parse_result = http_conn_ctx->ws_parser.ParseFrame(offset, dp, dl);
+        LOG_DEBUG("offset: " << offset);
 
         if (offset > 0)
         {
@@ -511,13 +540,17 @@ void HTTPWSCommonLogic::ProcessWSData(HTTPConn& http_conn)
             break;
         }
 
+        LOG_DEBUG("parse result: " << parse_result);
+
         switch (parse_result)
         {
-            case tcp::ws::ERROR:
-            case tcp::ws::CLOSE_FRAME:
+            case tcp::http_ws::ws::ERROR:
+            case tcp::http_ws::ws::CLOSE_FRAME:
             {
-                tcp::ws::FrameMaker frame_maker;
-                const std::string close_frame = frame_maker.SetFin(true).SetFrameType(tcp::ws::FrameMaker::CONNECTION_CLOSE).MakeFrame(nullptr, 0);
+                tcp::http_ws::ws::FrameMaker frame_maker;
+                const std::string close_frame = frame_maker.SetFin(true)
+                                                .SetFrameType(tcp::http_ws::ws::CONNECTION_CLOSE)
+                                                .MakeFrame(nullptr, 0);
                 scheduler_.SendToClient(conn_guid, close_frame.data(), close_frame.size());
 
                 scheduler_.CloseClient(conn_guid);
@@ -525,10 +558,12 @@ void HTTPWSCommonLogic::ProcessWSData(HTTPConn& http_conn)
             }
             break;
 
-            case tcp::ws::PING_FRAME:
+            case tcp::http_ws::ws::PING_FRAME:
             {
-                tcp::ws::FrameMaker frame_maker;
-                const std::string pong_frame = frame_maker.SetFin(true).SetFrameType(tcp::ws::FrameMaker::PONG).MakeFrame(nullptr, 0);
+                tcp::http_ws::ws::FrameMaker frame_maker;
+                const std::string pong_frame = frame_maker.SetFin(true)
+                                               .SetFrameType(tcp::http_ws::ws::PONG)
+                                               .MakeFrame(nullptr, 0);
                 scheduler_.SendToClient(conn_guid, pong_frame.data(), pong_frame.size());
                 part_msg_mgr_.RemoveRecord(conn);
 
@@ -536,7 +571,7 @@ void HTTPWSCommonLogic::ProcessWSData(HTTPConn& http_conn)
             }
             break;
 
-            case tcp::ws::INCOMPLETE:
+            case tcp::http_ws::ws::INCOMPLETE:
             {
                 // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
                 part_msg_mgr_.UpsertRecord(conn, *conn_guid, http_ws_logic_args_.app_frame_conf_mgr->GetHTTPWSPartMsgConnLife());
@@ -545,19 +580,20 @@ void HTTPWSCommonLogic::ProcessWSData(HTTPConn& http_conn)
             }
             break;
 
-            case tcp::ws::TEXT_FRAME:
-            case tcp::ws::BINARY_FRAME:
+            case tcp::http_ws::ws::TEXT_FRAME:
+            case tcp::http_ws::ws::BINARY_FRAME:
             {
+                const int frame_type = parse_result == tcp::http_ws::ws::TEXT_FRAME ? tcp::http_ws::ws::TEXT : tcp::http_ws::ws::BINARY;
+
+                const std::string& payloads = http_conn_ctx->ws_parser.Payloads;
                 if (http_ws_common_logic_ != nullptr)
                 {
-                    http_ws_common_logic_->OnWSMsg(conn_guid,
-                                                   http_conn.ws_parser.payloads.data(), http_conn.ws_parser.payloads.size());
+                    http_ws_common_logic_->OnWSMsg(conn_guid, frame_type, payloads.data(), payloads.size());
                 }
 
                 for (HTTPWSLogicItemVec::iterator it = http_ws_logic_item_vec_.begin(); it != http_ws_logic_item_vec_.end(); ++it)
                 {
-                    it->logic->OnWSMsg(conn_guid,
-                                       http_conn.ws_parser.payloads.data(), http_conn.ws_parser.payloads.size());
+                    it->logic->OnWSMsg(conn_guid, frame_type, payloads.data(), payloads.size());
                 }
 
                 part_msg_mgr_.RemoveRecord(conn);
@@ -570,7 +606,7 @@ void HTTPWSCommonLogic::ProcessWSData(HTTPConn& http_conn)
             }
             break;
         }
-    } while (1);
+    } while (true);
 }
 }
 }

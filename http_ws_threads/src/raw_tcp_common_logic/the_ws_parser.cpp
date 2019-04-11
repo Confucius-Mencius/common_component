@@ -9,6 +9,8 @@
 
 namespace tcp
 {
+namespace http_ws
+{
 namespace ws
 {
 static int Base64Encode(unsigned char* out, const unsigned char* in, int len)
@@ -33,58 +35,58 @@ static int Base64Encode(unsigned char* out, const unsigned char* in, int len)
     return size;
 }
 
-WSParser::WSParser() : key(), protocol(), payloads()
+Parser::Parser() : Payloads(), key_(), protocol_()
 {
-    is_text_frame = false;
+    is_text_frame_ = false;
 }
 
-WSParser::~WSParser()
+Parser::~Parser()
 {
 }
 
-int WSParser::CheckUpgrade(const http::HTTPReq& http_req)
+int Parser::CheckUpgrade(const http::Req& http_req)
 {
-    http::Headers::const_iterator it = http_req.headers.find("Upgrade");
-    if (it == http_req.headers.end() || it->second != "websocket")
+    http::HeaderMap::const_iterator it = http_req.Headers.find("Upgrade");
+    if (it == http_req.Headers.cend() || it->second != "websocket")
     {
         LOG_ERROR("should have header: { Upgrade: websocket }");
         return -1;
     }
 
-    it = http_req.headers.find("Connection");
-    if (it == http_req.headers.end() || it->second != "upgrade")
+    it = http_req.Headers.find("Connection");
+    if (it == http_req.Headers.cend() || (it->second != "Upgrade" && it->second != "upgrade"))
     {
-        LOG_ERROR("should have header: { Connection: upgrade }");
+        LOG_ERROR("should have header: { Connection: Upgrade }");
         return -1;
     }
 
-    it = http_req.headers.find("Sec-Websocket-Version");
-    if (it == http_req.headers.end() || it->second != "13") // 13表示RFC6455
+    it = http_req.Headers.find("Sec-Websocket-Version");
+    if (it == http_req.Headers.cend() || it->second != "13") // 13表示RFC6455
     {
         LOG_ERROR("should have header: { Sec-Websocket-Version: 13 }");
         return -1;
     }
 
-    it = http_req.headers.find("Sec-Websocket-Key");
-    if (it == http_req.headers.end())
+    it = http_req.Headers.find("Sec-Websocket-Key");
+    if (it == http_req.Headers.cend())
     {
         LOG_ERROR("no Sec-Websocket-Key header");
         return -1;
     }
 
-    this->key = it->second;
+    this->key_ = it->second;
 
-    it = http_req.headers.find("Sec-Websocket-Protocol");
-    if (it != http_req.headers.end())
+    it = http_req.Headers.find("Sec-Websocket-Protocol");
+    if (it != http_req.Headers.cend())
     {
         LOG_DEBUG("Sec-Websocket-Protocol: " << it->second);
-        this->protocol = it->second;
+        this->protocol_ = it->second;
     }
 
     return 0;
 }
 
-std::string WSParser::MakeHandshake()
+std::string Parser::MakeHandshake()
 {
     std::string handshake;
     handshake.reserve(128);
@@ -96,56 +98,72 @@ std::string WSParser::MakeHandshake()
     std::string accept_key;
     accept_key.reserve(128);
 
-    accept_key += this->key;
+    accept_key += this->key_;
     accept_key += "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"; // RFC6544_MAGIC_KEY
 
     unsigned char digest[20] = ""; // 160 bit sha1 digest
     SHA1((const unsigned char*) accept_key.data(), (accept_key.size()), (unsigned char*) digest);
 
-    // little endian to big endian
-    for (int i = 0; i < 20; i += 4)
-    {
-        unsigned char c;
-
-        c = digest[i];
-        digest[i] = digest[i + 3];
-        digest[i + 3] = c;
-
-        c = digest[i + 1];
-        digest[i + 1] = digest[i + 2];
-        digest[i + 2] = c;
-    }
-
     unsigned char out[128] = "";
-    Base64Encode(out, digest, 20);
+    int size = Base64Encode(out, digest, 20);
 
     handshake += "Sec-WebSocket-Accept: ";
-    handshake += (char*) out;
+    handshake.append((const char*) out, size - 1); // 去掉结尾的\n
     handshake += "\r\n";
 
-    if (this->protocol.length() > 0)
+    if (this->protocol_.length() > 0)
     {
-        handshake += "Sec-WebSocket-Protocol: " + (this->protocol) + "\r\n"; // 如果客户端请求的protocol有多个，服务器只回复一个？
+        handshake += "Sec-WebSocket-Protocol: " + (this->protocol_) + "\r\n"; // 如果客户端请求的protocol有多个，服务器只回复一个？
     }
 
-    handshake += "\r\n";
+    time_t now;
+    struct tm* tm_now;
+    char time_str[256] = "";
+
+    time(&now);
+    tm_now = localtime(&now);
+    strftime(time_str, sizeof(time_str), "Date: %a, %d %b %Y %T %Z", tm_now);
+
+    handshake.append(time_str);
+    handshake += "\r\n\r\n";
+
     return handshake;
 }
 
-ParseResult WSParser::ParseFrame(size_t& offset, const char* data, size_t len)
+/*
+0               1               2               3
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-------+-+-------------+-------------------------------+
+|F|R|R|R| opcode|M| Payload len |    Extended payload length    |
+|I|S|S|S|  (4)  |A|     (7)     |             (16/64)           |
+|N|V|V|V|       |S|             |   (if payload len==126/127)   |
+| |1|2|3|       |K|             |                               |
++-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
+|     Extended payload length continued, if payload len == 127  |
++ - - - - - - - - - - - - - - - +-------------------------------+
+|                               |Masking-key, if MASK set to 1  |
++-------------------------------+-------------------------------+
+| Masking-key (continued)       |          Payload Data         |
++-------------------------------- - - - - - - - - - - - - - - - +
+:                     Payload Data continued ...                :
++ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
+|                     Payload Data continued ...                |
++---------------------------------------------------------------+
+*/
+ParseResult Parser::ParseFrame(size_t& offset, const char* data, size_t len)
 {
     if (len < 3)
     {
         return INCOMPLETE;
     }
 
-    unsigned char msg_opcode = data[0] & 0x0F; // 表示被传输帧的类型：x0 表示一个后续帧；x1 表示一个文本帧；x2 表示一个二进制帧；x3-7 为以后的非控制帧保留；x8 表示一个连接关闭；x9 表示一个ping；xA 表示一个pong；xB-F 为以后的控制帧保留。
-    unsigned char msg_fin = (data[0] >> 7) & 0x01; // 表示此帧是否是消息的最后帧，第一帧也可能是最后帧。
-    unsigned char msg_masked = (data[1] >> 7) & 0x01; // 表示净荷是否有掩码（只适用于客户端发送给服务器的消息）。【从客户端进行发送的帧必须置此位为1，从服务器发送的帧必须置为0。如果任何一方收到的帧不符合此要求，则发送关闭帧(Close frame)关闭连接】
+    unsigned char fin = (data[0] >> 7) & 0x01; // 表示此帧是否是消息的最后帧，第一帧也可能是最后帧。
+    unsigned char opcode = data[0] & 0x0F; // 表示被传输帧的类型：x0 表示一个后续帧；x1 表示一个文本帧；x2 表示一个二进制帧；x3-7 为以后的非控制帧保留；x8 表示一个连接关闭；x9 表示一个ping；xA 表示一个pong；xB-F 为以后的控制帧保留。
+    unsigned char masked = (data[1] >> 7) & 0x01; // 表示净荷是否有掩码（只适用于客户端发送给服务器的消息）。【从客户端进行发送的帧必须置此位为1，从服务器发送的帧必须置为0。如果任何一方收到的帧不符合此要求，则发送关闭帧(Close frame)关闭连接】
 
     uint64_t payload_length = 0; // 净荷长度由可变长度字段表示： 如果是 0~125，就是净荷长度；如果是 126，则接下来 2 字节表示的 16 位无符号整数才是这一帧的长度； 如果是 127，则接下来 8 字节表示的 64 位无符号整数才是这一帧的长度
     int pos = 2;
-    int length_field = data[1] & (~0x80);
+    uint8_t length_field = data[1] & 0x7F;
     unsigned int mask = 0;
 
     if (length_field <= 125)
@@ -154,7 +172,7 @@ ParseResult WSParser::ParseFrame(size_t& offset, const char* data, size_t len)
     }
     else if (length_field == 126)  // msglen is 16bit!
     {
-        payload_length = (data[2] << 8) | data[3];
+        payload_length = (uint16_t(data[2]) << 8) | uint16_t(data[3]);
         pos += 2;
     }
     else if (length_field == 127)  // msglen is 64bit!
@@ -175,7 +193,7 @@ ParseResult WSParser::ParseFrame(size_t& offset, const char* data, size_t len)
         return INCOMPLETE;
     }
 
-    if (msg_masked)
+    if (masked)
     {
         mask = *((unsigned int*)(data + pos)); // 用于给净荷加掩护，客户端到服务器标记。
         pos += 4;
@@ -190,45 +208,54 @@ ParseResult WSParser::ParseFrame(size_t& offset, const char* data, size_t len)
 
     if (payload_length > 0)
     {
-        this->payloads.append(data + pos, payload_length); // CLOSE PING PONG是否有payload？
+        this->Payloads.append(data + pos, payload_length); // CLOSE PING PONG是否有payload？
     }
 
     offset = pos + payload_length;
 
-    if (msg_fin)
+    if (fin)
     {
-        if (msg_opcode == 0x0)
+        if (opcode == 0x0)
         {
-            return (this->is_text_frame ? TEXT_FRAME : BINARY_FRAME);
+            return (this->is_text_frame_ ? TEXT_FRAME : BINARY_FRAME);
         }
-        if (msg_opcode == 0x8)
+        if (opcode == 0x1)
+        {
+            return TEXT_FRAME;
+        }
+        if (opcode == 0x2)
+        {
+            return BINARY_FRAME;
+        }
+        if (opcode == 0x8)
         {
             return CLOSE_FRAME;
         }
-        if (msg_opcode == 0x9)
+        if (opcode == 0x9)
         {
             return PING_FRAME;
         }
-        if (msg_opcode == 0xA)
+        if (opcode == 0xA)
         {
             return PONG_FRAME;
         }
     }
     else
     {
-        if (msg_opcode == 0x1)
+        if (opcode == 0x1)
         {
-            this->is_text_frame = true;
+            this->is_text_frame_ = true;
         }
-        if (msg_opcode == 0x2)
+        if (opcode == 0x2)
         {
-            this->is_text_frame = false;
+            this->is_text_frame_ = false;
         }
 
         return INCOMPLETE;
     }
 
     return ERROR;
+}
 }
 }
 }

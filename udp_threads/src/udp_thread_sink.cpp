@@ -399,7 +399,7 @@ bool ThreadSink::CanExit() const
 {
     int can_exit = 1;
 
-    for (LogicItemVec::const_iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+    for (LogicItemVec::const_iterator it = logic_item_vec_.cbegin(); it != logic_item_vec_.cend(); ++it)
     {
         can_exit &= (it->logic->CanExit() ? 1 : 0);
     }
@@ -653,8 +653,7 @@ int ThreadSink::LoadLogicGroup()
 
     const StrGroup logic_so_group = threads_ctx_->conf_mgr->GetUdpLogicSoGroup();
 
-    for (StrGroup::const_iterator it = logic_so_group.begin();
-            it != logic_so_group.end(); ++it)
+    for (StrGroup::const_iterator it = logic_so_group.cbegin(); it != logic_so_group.cend(); ++it)
     {
         logic_item.logic_so_path = GetAbsolutePath((*it).c_str(), threads_ctx_->cur_working_dir);
         logic_item_vec_.push_back(logic_item);

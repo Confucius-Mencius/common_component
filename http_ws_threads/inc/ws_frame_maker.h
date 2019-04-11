@@ -1,26 +1,29 @@
 #ifndef HTTP_WS_THREADS_INC_WS_FRAME_MAKER_H_
 #define HTTP_WS_THREADS_INC_WS_FRAME_MAKER_H_
 
+#include <string.h>
 #include <string>
 #include "std_int.h"
 
 namespace tcp
 {
+namespace http_ws
+{
 namespace ws
 {
+enum
+{
+    CONTINUATION = 0x00,
+    TEXT = 0x01,
+    BINARY = 0x02,
+    CONNECTION_CLOSE = 0x08,
+    PING = 0x09,
+    PONG = 0xa
+};
+
 class FrameMaker
 {
 public:
-    enum
-    {
-        CONTINUATION = 0x00,
-        TEXT = 0x01,
-        BINARY = 0x02,
-        CONNECTION_CLOSE = 0x08,
-        PING = 0x09,
-        PONG = 0xa
-    };
-
     FrameMaker() : frame_header_()
     {
     }
@@ -52,8 +55,10 @@ public:
         return *this;
     }
 
-    std::string MakeFrame(const char* data, size_t len)
+    std::string MakeFrame(const void* data, size_t len)
     {
+        const char* p = (const char*) data;
+
         std::string frame;
         int externded_payload_len = (len <= 125 ? 0 : (len <= 65535 ? 2 : 8));
         int mask_key_len = ((len && frame_header_.mask) ? 4 : 0);
@@ -118,12 +123,12 @@ public:
             unsigned char* mask = ptr + offset - 4;
             for (uint32_t i = 0; i < len; i++)
             {
-                ptr[offset++] = data[i] ^ mask[i % 4];
+                ptr[offset++] = p[i] ^ mask[i % 4];
             }
         }
         else
         {
-            memcpy((void*)(ptr + offset), data, (size_t)len);
+            memcpy((void*)(ptr + offset), p, (size_t)len);
             offset += len;
         }
 
@@ -149,6 +154,7 @@ private:
 
     FrameHeader frame_header_;
 };
+}
 }
 }
 

@@ -130,7 +130,7 @@ bool TimerAxis::TimerExist(TimerSinkInterface* sink, TimerID timer_id)
     timer_key.timer_id = timer_id;
 
     TimerHashMap::const_iterator it = timer_hash_map_.find(timer_key);
-    if (it == timer_hash_map_.end())
+    if (it == timer_hash_map_.cend())
     {
         return false;
     }

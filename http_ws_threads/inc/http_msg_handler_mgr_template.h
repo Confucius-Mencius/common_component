@@ -6,6 +6,8 @@
 
 namespace tcp
 {
+namespace http_ws
+{
 namespace http
 {
 template<typename MsgHandler>
@@ -102,6 +104,7 @@ void MsgHandlerMgrTemplate<MsgHandler>::Freeze()
     {
         (*it)->Freeze();
     }
+}
 }
 }
 }

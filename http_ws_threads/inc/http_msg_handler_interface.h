@@ -13,7 +13,6 @@ namespace tcp
 namespace http_ws
 {
 class LogicCtx;
-}
 
 namespace http
 {
@@ -25,8 +24,8 @@ struct CaseKeyCmp
     }
 };
 
-typedef std::multimap<std::string, std::string, CaseKeyCmp> Headers;
-typedef std::multimap<std::string, std::string> QueryParams;
+typedef std::multimap<std::string, std::string, CaseKeyCmp> HeaderMap;
+typedef std::multimap<std::string, std::string> QueryMap;
 
 class MsgHandlerInterface
 {
@@ -52,7 +51,7 @@ public:
             return -1;
         }
 
-        logic_ctx_ = (tcp::http_ws::LogicCtx*) ctx;
+        logic_ctx_ = (LogicCtx*) ctx;
         return 0;
     }
 
@@ -71,12 +70,13 @@ public:
 
     virtual const char* GetPath() = 0;
     virtual void OnGet(const ConnGUID* conn_guid, const char* client_ip,
-                       const QueryParams& query_params, const Headers& headers) {}
+                       const QueryMap& queries, const HeaderMap& headers) {}
     virtual void OnPost(const ConnGUID* conn_guid, const char* client_ip,
-                        const QueryParams& query_params, const Headers& headers, const char* body, size_t len) {}
+                        const QueryMap& queries, const HeaderMap& headers,
+                        const char* body, size_t len) {}
 
 protected:
-    tcp::http_ws::LogicCtx* logic_ctx_;
+    LogicCtx* logic_ctx_;
 };
 
 class MsgDispatcherInterface
@@ -110,6 +110,7 @@ public:
 protected:
     MsgDispatcherInterface* msg_dispatcher_;
 };
+}
 }
 }
 

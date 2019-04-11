@@ -115,7 +115,7 @@ bool ThreadGroup::CanExit() const
 {
     int can_exit = 1;
 
-    for (ThreadVec::const_iterator it = thread_vec_.begin(); it != thread_vec_.end(); ++it)
+    for (ThreadVec::const_iterator it = thread_vec_.cbegin(); it != thread_vec_.cend(); ++it)
     {
         can_exit &= ((*it)->CanExit() ? 1 : 0);
     }

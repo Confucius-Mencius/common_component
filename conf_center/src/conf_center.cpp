@@ -656,7 +656,7 @@ void ConfCenter::GetConf(ValueGroupType& result, ValueGroupMapType& value_group_
     std::lock_guard<std::mutex> lock(mutex_);
 
     typename ValueGroupMapType::const_iterator it = value_group_map.find(xpath);
-    if (it != value_group_map.end())
+    if (it != value_group_map.cend())
     {
         // 内存中有则从内存中读
         const ValueGroupType& value_group = it->second;
@@ -680,7 +680,7 @@ void ConfCenter::GetConf(ValueGroupType& result, ValueGroupMapType& value_group_
 
     // 从xml中读到了，放入内存中以便下次使用
     ValueGroupType& value_group = value_group_map[xpath];
-    for (VariantVec::const_iterator it_entry = entries.begin(); it_entry != entries.end(); ++it_entry)
+    for (VariantVec::const_iterator it_entry = entries.cbegin(); it_entry != entries.cend(); ++it_entry)
     {
         value_group.push_back(it_entry->GetValue(Type2Type<DataType>()));
     }
@@ -694,7 +694,7 @@ void ConfCenter::GetConf(StrGroup& result, ConfCenter::StrValueGroupMap& value_g
     std::lock_guard<std::mutex> lock(mutex_);
 
     typename StrValueGroupMap::const_iterator it = value_group_map.find(xpath);
-    if (it != value_group_map.end())
+    if (it != value_group_map.cend())
     {
         // 内存中有则从内存中读
         const StrGroup& value_group = it->second;
@@ -718,7 +718,7 @@ void ConfCenter::GetConf(StrGroup& result, ConfCenter::StrValueGroupMap& value_g
 
     // 从xml中读到了，放入内存中以便下次使用
     StrGroup& value_group = value_group_map[xpath];
-    for (VariantVec::const_iterator it_entry = entries.begin(); it_entry != entries.end(); ++it_entry)
+    for (VariantVec::const_iterator it_entry = entries.cbegin(); it_entry != entries.cend(); ++it_entry)
     {
         value_group.push_back(it_entry->GetValue(Type2Type<const char*>()).data);
     }
