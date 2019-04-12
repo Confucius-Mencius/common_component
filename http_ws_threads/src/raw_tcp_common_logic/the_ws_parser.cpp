@@ -82,6 +82,10 @@ Parser::Parser() : key_(), protocol_()
 
 Parser::~Parser()
 {
+    if (parser_ != nullptr)
+    {
+        free(parser_);
+    }
 }
 
 int Parser::CheckUpgrade(const http::Req& http_req)
