@@ -6,7 +6,6 @@
 #include "log_util.h"
 #include "mem_util.h"
 #include "raw_tcp_scheduler_interface.h"
-#include "ws_frame_maker.h"
 #include "hex_dump.h"
 
 namespace tcp

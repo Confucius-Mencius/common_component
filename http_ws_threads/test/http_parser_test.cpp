@@ -84,9 +84,9 @@ void HTTPParserTest::Test004()
     http_parser_.Execute(http_get_req, strlen(http_get_req));
 }
 
-//ADD_TEST_F(HTTPParserTest, Test001);
-//ADD_TEST_F(HTTPParserTest, Test002);
+ADD_TEST_F(HTTPParserTest, Test001);
+ADD_TEST_F(HTTPParserTest, Test002);
 ADD_TEST_F(HTTPParserTest, Test003);
-//ADD_TEST_F(HTTPParserTest, Test004);
+ADD_TEST_F(HTTPParserTest, Test004);
 }
 }

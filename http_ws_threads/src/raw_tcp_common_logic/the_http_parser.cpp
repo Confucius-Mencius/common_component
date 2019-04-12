@@ -1,6 +1,7 @@
 #include "the_http_parser.h"
 #include "common_logic.h"
 #include "log_util.h"
+#include "singleton.h"
 
 namespace tcp
 {
@@ -180,34 +181,62 @@ std::string Req::Dump()
     return s;
 }
 
+class ParserSettings
+{
+public:
+    ParserSettings()
+    {
+        http_parser_settings_init(&settings_);
+        settings_.on_message_begin = Parser::OnMessageBegin;
+        settings_.on_url = Parser::OnURL;
+        settings_.on_header_field = Parser::OnHeaderField;
+        settings_.on_header_value = Parser::OnHeaderValue;
+        settings_.on_headers_complete = Parser::OnHeadersComplete;
+        settings_.on_body = Parser::OnBody;
+        settings_.on_message_complete = Parser::OnMessageComplete;
+    }
+
+    const struct http_parser_settings* Get() const
+    {
+        return &settings_;
+    }
+
+private:
+    struct http_parser_settings settings_;
+};
+
+#define HTTPParserSettings Singleton<ParserSettings>::Instance()
+
 Parser::Parser() : http_req_(), last_header_name_()
 {
     http_ws_raw_tcp_common_logic_ = nullptr;
     conn_id_ = INVALID_CONN_ID;
 
-    http_parser_settings_init(&settings_);
-    settings_.on_message_begin = Parser::OnMessageBegin;
-    settings_.on_url = Parser::OnURL;
-    settings_.on_header_field = Parser::OnHeaderField;
-    settings_.on_header_value = Parser::OnHeaderValue;
-    settings_.on_headers_complete = Parser::OnHeadersComplete;
-    settings_.on_body = Parser::OnBody;
-    settings_.on_message_complete = Parser::OnMessageComplete;
+    parser_ = (struct http_parser*) malloc(sizeof(struct http_parser));
+    if (nullptr == parser_)
+    {
+        LOG_ERROR("failed to alloc http parser");
+        return;
+    }
 
-    http_parser_init(&parser_, HTTP_REQUEST);
-    parser_.data = this;
+    http_parser_init(parser_, HTTP_REQUEST);
+    parser_->data = this;
 
     complete_ = false;
 }
 
 Parser::~Parser()
 {
+    if (parser_ != nullptr)
+    {
+        free(parser_);
+    }
 }
 
 int Parser::Execute(const char* buffer, size_t count)
 {
-    size_t n = http_parser_execute(&parser_, &settings_, buffer, count);
-    if (parser_.upgrade)
+    size_t n = http_parser_execute(parser_, HTTPParserSettings->Get(), buffer, count);
+    if (parser_->upgrade)
     {
         LOG_TRACE("upgrade to websocket");
 
@@ -221,7 +250,7 @@ int Parser::Execute(const char* buffer, size_t count)
     else if (n != count)
     {
         LOG_ERROR("parser error: " << std::string(buffer, count));
-        return parser_.http_errno;
+        return parser_->http_errno;
     }
 
     if (complete_)

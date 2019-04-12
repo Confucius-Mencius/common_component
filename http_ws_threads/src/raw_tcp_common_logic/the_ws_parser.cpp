@@ -7,6 +7,7 @@
 #include "common_logic.h"
 #include "log_util.h"
 #include "the_http_parser.h"
+#include "singleton.h"
 
 namespace tcp
 {
@@ -36,18 +37,42 @@ static int Base64Encode(unsigned char* out, const unsigned char* in, int len)
     return size;
 }
 
+class ParserSettings
+{
+public:
+    ParserSettings()
+    {
+        websocket_parser_settings_init(&settings_);
+        settings_.on_frame_header = Parser::OnFrameHeader;
+        settings_.on_frame_body = Parser::OnFrameBody;
+        settings_.on_frame_end = Parser::OnFrameEnd;
+    }
+
+    const struct websocket_parser_settings* Get() const
+    {
+        return &settings_;
+    }
+
+private:
+    struct websocket_parser_settings settings_;
+};
+
+#define WSParserSettings Singleton<ParserSettings>::Instance()
+
 Parser::Parser() : key_(), protocol_()
 {
     http_ws_raw_tcp_common_logic_ = nullptr;
     conn_id_ = INVALID_CONN_ID;
 
-    websocket_parser_settings_init(&settings_);
-    settings_.on_frame_header = Parser::OnFrameHeader;
-    settings_.on_frame_body = Parser::OnFrameBody;
-    settings_.on_frame_end = Parser::OnFrameEnd;
+    parser_ = (struct websocket_parser*) malloc(sizeof(struct websocket_parser));
+    if (nullptr == parser_)
+    {
+        LOG_ERROR("failed to alloc ws parser");
+        return;
+    }
 
-    websocket_parser_init(&parser_);
-    parser_.data = this;
+    websocket_parser_init(parser_);
+    parser_->data = this;
 
     opcode_ = 0;
     is_final_ = 0;
@@ -147,7 +172,7 @@ std::string Parser::MakeHandshake()
 
 int Parser::Execute(const char* buffer, size_t count)
 {
-    size_t n = websocket_parser_execute(&parser_, &settings_, buffer, count);
+    size_t n = websocket_parser_execute(parser_, WSParserSettings->Get(), buffer, count);
     if (n != count)
     {
         LOG_ERROR("parser error: " << std::string(buffer, count));
