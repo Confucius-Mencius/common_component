@@ -3,7 +3,7 @@
 
 #include <http_parser.h>
 #include "conn.h"
-#include "http_msg_handler_interface.h"
+#include "http_ws.h"
 
 namespace tcp
 {

@@ -311,7 +311,7 @@ int Parser::OnMessageComplete(http_parser* parser)
     Parser* hp = static_cast<Parser*>(parser->data);
     hp->complete_ = true;
 
-    LOG_DEBUG(hp->http_req_.Dump());
+    LOG_DEBUG("http req =>\n" << hp->http_req_.Dump());
 
     return 0;
 }

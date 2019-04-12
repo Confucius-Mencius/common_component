@@ -2,7 +2,7 @@
 #define HTTP_WS_THREADS_INC_HTTP_WS_LOGIC_INTERFACE_H_
 
 #include <atomic>
-#include <stddef.h>
+#include "http_ws.h"
 #include "module_interface.h"
 
 class ConfCenterInterface;
@@ -133,7 +133,7 @@ public:
     }
 
     // 完整的ws消息
-    virtual void OnWSMsg(const ConnGUID* conn_guid, int frame_type, const void* data, size_t len)
+    virtual void OnWSMsg(const ConnGUID* conn_guid, ws::FrameType frame_type, const void* data, size_t len)
     {
     }
 

@@ -2,6 +2,7 @@
 #define HTTP_THREADS_SRC_RAW_TCP_COMMON_LOGIC_HTTP_MSG_DISPATCHER_H_
 
 #include "the_http_parser.h"
+#include "http_msg_handler_interface.h"
 
 namespace tcp
 {

@@ -1,6 +1,7 @@
 #include "scheduler.h"
 #include <memory>
 #include "log_util.h"
+#include "websocket_parser.h"
 
 namespace tcp
 {
@@ -19,6 +20,26 @@ Scheduler::~Scheduler()
 int Scheduler::SendToClient(const ConnGUID* conn_guid, const void* data, size_t len)
 {
     return raw_tcp_scheduler_->SendToClient(conn_guid, data, len);
+}
+
+int Scheduler::SendWSMsgToClient(const ConnGUID* conn_guid, ws::FrameType frame_type, const void* data, size_t len)
+{
+    // TODO len超过多少时分帧发送？
+    const int flags = (ws::TEXT_FRAME == frame_type ? WS_OP_TEXT : WS_OP_BINARY) | WS_FINAL_FRAME;
+    const size_t frame_len = websocket_calc_frame_size((websocket_flags) flags, len);
+
+    char* frame = (char*) malloc(frame_len);
+    if (nullptr == frame)
+    {
+        LOG_ERROR("failed to alloc memory");
+        return -1;
+    }
+
+    websocket_build_frame(frame, (websocket_flags) flags, nullptr, (const char*) data, len);
+    raw_tcp_scheduler_->SendToClient(conn_guid, frame, frame_len);
+    free(frame);
+
+    return 0;
 }
 
 int Scheduler::CloseClient(const ConnGUID* conn_guid)

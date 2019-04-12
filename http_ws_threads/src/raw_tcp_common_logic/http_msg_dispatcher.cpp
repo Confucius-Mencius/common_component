@@ -1,4 +1,5 @@
 #include "http_msg_dispatcher.h"
+#include <string.h>
 #include <sys/time.h>
 #include "log_util.h"
 

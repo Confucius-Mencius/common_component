@@ -2,7 +2,7 @@
 #define HTTP_WS_THREADS_INC_HTTP_RSP_MAKER_H_
 
 #include <http_parser.h>
-#include "http_msg_handler_interface.h"
+#include "http_ws.h"
 
 namespace tcp
 {

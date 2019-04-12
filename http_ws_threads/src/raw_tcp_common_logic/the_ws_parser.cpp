@@ -4,6 +4,7 @@
 #include <openssl/pem.h>
 #include <openssl/bio.h>
 #include <openssl/evp.h>
+#include "common_logic.h"
 #include "log_util.h"
 #include "the_http_parser.h"
 
@@ -35,9 +36,23 @@ static int Base64Encode(unsigned char* out, const unsigned char* in, int len)
     return size;
 }
 
-Parser::Parser() : Payloads(), key_(), protocol_()
+Parser::Parser() : key_(), protocol_()
 {
-    is_text_frame_ = false;
+    http_ws_raw_tcp_common_logic_ = nullptr;
+    conn_id_ = INVALID_CONN_ID;
+
+    websocket_parser_settings_init(&settings_);
+    settings_.on_frame_header = Parser::OnFrameHeader;
+    settings_.on_frame_body = Parser::OnFrameBody;
+    settings_.on_frame_end = Parser::OnFrameEnd;
+
+    websocket_parser_init(&parser_);
+    parser_.data = this;
+
+    opcode_ = 0;
+    is_final_ = 0;
+    body_ = nullptr;
+    body_len_ = 0;
 }
 
 Parser::~Parser()
@@ -47,7 +62,7 @@ Parser::~Parser()
 int Parser::CheckUpgrade(const http::Req& http_req)
 {
     http::HeaderMap::const_iterator it = http_req.Headers.find("Upgrade");
-    if (it == http_req.Headers.cend() || it->second != "websocket")
+    if (it == http_req.Headers.cend() || (it->second != "websocket" && it->second != "WebSocket" && it->second != "Websocket"))
     {
         LOG_ERROR("should have header: { Upgrade: websocket }");
         return -1;
@@ -60,14 +75,14 @@ int Parser::CheckUpgrade(const http::Req& http_req)
         return -1;
     }
 
-    it = http_req.Headers.find("Sec-Websocket-Version");
+    it = http_req.Headers.find("Sec-WebSocket-Version");
     if (it == http_req.Headers.cend() || it->second != "13") // 13表示RFC6455
     {
         LOG_ERROR("should have header: { Sec-Websocket-Version: 13 }");
         return -1;
     }
 
-    it = http_req.Headers.find("Sec-Websocket-Key");
+    it = http_req.Headers.find("Sec-WebSocket-Key");
     if (it == http_req.Headers.cend())
     {
         LOG_ERROR("no Sec-Websocket-Key header");
@@ -76,10 +91,10 @@ int Parser::CheckUpgrade(const http::Req& http_req)
 
     this->key_ = it->second;
 
-    it = http_req.Headers.find("Sec-Websocket-Protocol");
+    it = http_req.Headers.find("Sec-WebSocket-Protocol");
     if (it != http_req.Headers.cend())
     {
-        LOG_DEBUG("Sec-Websocket-Protocol: " << it->second);
+        LOG_DEBUG("Sec-WebSocket-Protocol: " << it->second);
         this->protocol_ = it->second;
     }
 
@@ -130,131 +145,75 @@ std::string Parser::MakeHandshake()
     return handshake;
 }
 
-/*
-0               1               2               3
-0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-------+-+-------------+-------------------------------+
-|F|R|R|R| opcode|M| Payload len |    Extended payload length    |
-|I|S|S|S|  (4)  |A|     (7)     |             (16/64)           |
-|N|V|V|V|       |S|             |   (if payload len==126/127)   |
-| |1|2|3|       |K|             |                               |
-+-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
-|     Extended payload length continued, if payload len == 127  |
-+ - - - - - - - - - - - - - - - +-------------------------------+
-|                               |Masking-key, if MASK set to 1  |
-+-------------------------------+-------------------------------+
-| Masking-key (continued)       |          Payload Data         |
-+-------------------------------- - - - - - - - - - - - - - - - +
-:                     Payload Data continued ...                :
-+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
-|                     Payload Data continued ...                |
-+---------------------------------------------------------------+
-*/
-ParseResult Parser::ParseFrame(size_t& offset, const char* data, size_t len)
+int Parser::Execute(const char* buffer, size_t count)
 {
-    if (len < 3)
+    size_t n = websocket_parser_execute(&parser_, &settings_, buffer, count);
+    if (n != count)
     {
-        return INCOMPLETE;
+        LOG_ERROR("parser error: " << std::string(buffer, count));
+        return -1;
     }
 
-    unsigned char fin = (data[0] >> 7) & 0x01; // 表示此帧是否是消息的最后帧，第一帧也可能是最后帧。
-    unsigned char opcode = data[0] & 0x0F; // 表示被传输帧的类型：x0 表示一个后续帧；x1 表示一个文本帧；x2 表示一个二进制帧；x3-7 为以后的非控制帧保留；x8 表示一个连接关闭；x9 表示一个ping；xA 表示一个pong；xB-F 为以后的控制帧保留。
-    unsigned char masked = (data[1] >> 7) & 0x01; // 表示净荷是否有掩码（只适用于客户端发送给服务器的消息）。【从客户端进行发送的帧必须置此位为1，从服务器发送的帧必须置为0。如果任何一方收到的帧不符合此要求，则发送关闭帧(Close frame)关闭连接】
+    return 0;
+}
 
-    uint64_t payload_length = 0; // 净荷长度由可变长度字段表示： 如果是 0~125，就是净荷长度；如果是 126，则接下来 2 字节表示的 16 位无符号整数才是这一帧的长度； 如果是 127，则接下来 8 字节表示的 64 位无符号整数才是这一帧的长度
-    int pos = 2;
-    uint8_t length_field = data[1] & 0x7F;
-    unsigned int mask = 0;
+int Parser::OnFrameHeader(websocket_parser* parser)
+{
+    LOG_TRACE("Parser::OnFrameHeader");
+    Parser* wsp = static_cast<Parser*>(parser->data);
 
-    if (length_field <= 125)
-    {
-        payload_length = length_field;
-    }
-    else if (length_field == 126)  // msglen is 16bit!
-    {
-        payload_length = (uint16_t(data[2]) << 8) | uint16_t(data[3]);
-        pos += 2;
-    }
-    else if (length_field == 127)  // msglen is 64bit!
-    {
-        payload_length = (uint64_t(data[2]) << 56)
-                         | (uint64_t(data[3]) << 48)
-                         | (uint64_t(data[4]) << 40)
-                         | (uint64_t(data[5]) << 32)
-                         | (uint64_t(data[6]) << 24)
-                         | (uint64_t(data[7]) << 16)
-                         | (uint64_t(data[8]) << 8)
-                         | uint64_t(data[9]);
-        pos += 8;
-    }
+    wsp->opcode_ = parser->flags & WS_OP_MASK; // gets opcode
+    wsp->is_final_ = parser->flags & WS_FIN;   // checks is final frame
 
-    if (len < payload_length + pos)
+    if (parser->length)
     {
-        return INCOMPLETE;
-    }
-
-    if (masked)
-    {
-        mask = *((unsigned int*)(data + pos)); // 用于给净荷加掩护，客户端到服务器标记。
-        pos += 4;
-
-        // unmask data
-        char* c = (char*) (data + pos);
-        for (uint64_t i = 0; i < payload_length; ++i)
+        wsp->body_len_ = parser->length;
+        wsp->body_ = (char*) malloc(wsp->body_len_); // allocate memory for frame body, if body exists
+        if (nullptr == wsp->body_)
         {
-            c[i] = c[i] ^ ((char*)(&mask))[i % 4];
+            LOG_ERROR("failed to alloc memory");
+            return -1;
         }
     }
 
-    if (payload_length > 0)
-    {
-        this->Payloads.append(data + pos, payload_length); // CLOSE PING PONG是否有payload？
-    }
+    return 0;
+}
 
-    offset = pos + payload_length;
+int Parser::OnFrameBody(websocket_parser* parser, const char* at, size_t length)
+{
+    LOG_TRACE("Parser::OnFrameBody");
+    Parser* wsp = static_cast<Parser*>(parser->data);
 
-    if (fin)
+    if (parser->flags & WS_HAS_MASK)
     {
-        if (opcode == 0x0)
-        {
-            return (this->is_text_frame_ ? TEXT_FRAME : BINARY_FRAME);
-        }
-        if (opcode == 0x1)
-        {
-            return TEXT_FRAME;
-        }
-        if (opcode == 0x2)
-        {
-            return BINARY_FRAME;
-        }
-        if (opcode == 0x8)
-        {
-            return CLOSE_FRAME;
-        }
-        if (opcode == 0x9)
-        {
-            return PING_FRAME;
-        }
-        if (opcode == 0xA)
-        {
-            return PONG_FRAME;
-        }
+        // if frame has mask, we have to copy and decode data via websocket_parser_copy_masked function
+        websocket_parser_decode(&wsp->body_[parser->offset], at, length, parser);
     }
     else
     {
-        if (opcode == 0x1)
-        {
-            this->is_text_frame_ = true;
-        }
-        if (opcode == 0x2)
-        {
-            this->is_text_frame_ = false;
-        }
-
-        return INCOMPLETE;
+        memcpy(&wsp->body_[parser->offset], at, length);
     }
 
-    return ERROR;
+    return 0;
+}
+
+int Parser::OnFrameEnd(websocket_parser* parser)
+{
+    LOG_TRACE("Parser::OnFrameEnd");
+
+    Parser* wsp = static_cast<Parser*>(parser->data);
+    LOG_DEBUG("payload: " << std::string(wsp->body_, wsp->body_len_) << ", len: " << wsp->body_len_);
+
+    if (wsp->http_ws_raw_tcp_common_logic_ != nullptr)
+    {
+        wsp->http_ws_raw_tcp_common_logic_->OnWSMsg(wsp->conn_id_, wsp->opcode_, wsp->body_, wsp->body_len_);
+    }
+
+    free(wsp->body_);
+    wsp->body_ = nullptr;
+    wsp->body_len_ = 0;
+
+    return 0;
 }
 }
 }

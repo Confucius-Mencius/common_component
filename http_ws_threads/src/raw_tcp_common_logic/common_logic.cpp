@@ -7,6 +7,7 @@
 #include "mem_util.h"
 #include "raw_tcp_scheduler_interface.h"
 #include "ws_frame_maker.h"
+#include "hex_dump.h"
 
 namespace tcp
 {
@@ -187,8 +188,6 @@ void HTTPWSCommonLogic::OnClientConnected(const ConnGUID* conn_guid)
         return;
     }
 
-    conn->ClearData();
-
     HTTPConnCtx* http_conn_ctx = HTTPConnCtx::Create();
     if (nullptr == http_conn_ctx)
     {
@@ -199,6 +198,8 @@ void HTTPWSCommonLogic::OnClientConnected(const ConnGUID* conn_guid)
     http_conn_ctx->conn = conn;
     http_conn_ctx->http_parser.SetRawTCPCommonLogic(this);
     http_conn_ctx->http_parser.SetConnID(conn_guid->conn_id);
+    http_conn_ctx->ws_parser.SetRawTCPCommonLogic(this);
+    http_conn_ctx->ws_parser.SetConnID(conn_guid->conn_id);
 
     if (!http_conn_ctx_map_.insert(HTTPConnCtxMap::value_type(conn_guid->conn_id, http_conn_ctx)).second)
     {
@@ -227,8 +228,6 @@ void HTTPWSCommonLogic::OnClientClosed(const ConnGUID* conn_guid)
         LOG_ERROR("failed to get conn by id: " << conn_guid);
         return;
     }
-
-    conn->ClearData();
 
     if (http_ws_common_logic_ != nullptr)
     {
@@ -269,9 +268,7 @@ void HTTPWSCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* 
     }
     else
     {
-        ConnInterface* conn = http_conn_ctx->conn;
-        conn->AppendData((const char*) data, len);
-        ProcessWSData(http_conn_ctx);
+        http_conn_ctx->ws_parser.Execute((const char*) data, len);
     }
 }
 
@@ -371,19 +368,117 @@ void HTTPWSCommonLogic::OnUpgrade(ConnID conn_id, const tcp::http_ws::http::Req&
 
     // 回复握手信息
     const std::string handshake = http_conn_ctx->ws_parser.MakeHandshake();
-    LOG_DEBUG("handshake: " << handshake);
+    LOG_DEBUG("handshake =>\n" << handshake);
 
-    scheduler_.SendToClient(conn_guid, handshake.data(), handshake.size());
+    if (scheduler_.SendToClient(conn_guid, handshake.data(), handshake.size()) != 0)
+    {
+        scheduler_.CloseClient(conn_guid);
+        return;
+    }
 
-    // 将帧数据记录下来（如果有）
+    LOG_TRACE("send handshake ok, " << conn_guid);
     http_conn_ctx->upgrade_ = true;
 
     LOG_DEBUG("len: " << len);
     if (len > 0)
     {
         LOG_DEBUG("data: " << data << ", len: " << len);
-        conn->AppendData((const char*) data, len);
-        ProcessWSData(http_conn_ctx);
+        http_conn_ctx->ws_parser.Execute(data, len);
+    }
+}
+
+void HTTPWSCommonLogic::OnWSMsg(ConnID conn_id, int opcode, const char* data, size_t len)
+{
+    HTTPConnCtxMap::iterator it = http_conn_ctx_map_.find(conn_id);
+    if (it == http_conn_ctx_map_.end())
+    {
+        LOG_ERROR("failed to find conn by id: " << conn_id);
+        return;
+    }
+
+    HTTPConnCtx* http_conn_ctx = it->second;
+    ConnInterface* conn = http_conn_ctx->conn;
+    const ConnGUID* conn_guid = conn->GetConnGUID();
+
+    switch (opcode)
+    {
+        case WS_OP_TEXT:
+        case WS_OP_BINARY:
+        {
+            const tcp::http_ws::ws::FrameType frame_type = (WS_OP_TEXT == opcode) ? tcp::http_ws::ws::TEXT_FRAME : tcp::http_ws::ws::BINARY_FRAME;
+            if (http_ws_common_logic_ != nullptr)
+            {
+                http_ws_common_logic_->OnWSMsg(conn_guid, frame_type, data, len);
+            }
+
+            for (HTTPWSLogicItemVec::iterator it = http_ws_logic_item_vec_.begin(); it != http_ws_logic_item_vec_.end(); ++it)
+            {
+                it->logic->OnWSMsg(conn_guid, frame_type, data, len);
+            }
+        }
+        break;
+
+        case WS_OP_CLOSE:
+        {
+            const int flags = WS_OP_CLOSE | WS_FINAL_FRAME;
+            const size_t frame_len = websocket_calc_frame_size((websocket_flags) flags, 0);
+
+            char* frame = (char*) malloc(frame_len);
+            if (nullptr == frame)
+            {
+                LOG_ERROR("failed to alloc memory");
+                return;
+            }
+
+            websocket_build_frame(frame, (websocket_flags) flags, nullptr, nullptr, 0);
+
+            if (0 == scheduler_.SendToClient(conn_guid, frame, frame_len))
+            {
+                LOG_TRACE("send close frame ok, " << conn_guid);
+            }
+
+            free(frame);
+            scheduler_.CloseClient(conn_guid);
+        }
+        break;
+
+        case WS_OP_PING:
+        {
+            const int flags = WS_OP_PONG | WS_FINAL_FRAME;
+            const size_t frame_len = websocket_calc_frame_size((websocket_flags) flags, len);
+
+            char* frame = (char*) malloc(frame_len);
+            if (nullptr == frame)
+            {
+                LOG_ERROR("failed to alloc memory");
+                return;
+            }
+
+            websocket_build_frame(frame, (websocket_flags) flags, nullptr, data, len);
+
+            char buf[1024] = "";
+            HexDump(buf, sizeof(buf), frame, frame_len);
+            LOG_DEBUG("\n" << buf);
+
+            if (0 == scheduler_.SendToClient(conn_guid, frame, frame_len))
+            {
+                LOG_TRACE("send pong ok, " << conn_guid);
+            }
+
+            free(frame);
+        }
+        break;
+
+        case WS_OP_PONG:
+        {
+            // 什么都不做(丢弃内容)
+        }
+        break;
+
+        default:
+        {
+        }
+        break;
     }
 }
 
@@ -505,108 +600,135 @@ int HTTPWSCommonLogic::LoadHTTPWSLogicGroup()
     return 0;
 }
 
-void HTTPWSCommonLogic::ProcessWSData(HTTPConnCtx* http_conn_ctx)
-{
-    do
-    {
-        ConnInterface* conn = http_conn_ctx->conn;
-        const ConnGUID* conn_guid = conn->GetConnGUID();
+//void HTTPWSCommonLogic::ProcessWSData(HTTPConnCtx* http_conn_ctx)
+//{
+//    do
+//    {
+//        ConnInterface* conn = http_conn_ctx->conn;
+//        const ConnGUID* conn_guid = conn->GetConnGUID();
 
-        std::string& d = conn->GetData();
-        const char* dp = d.data();
-        const size_t dl = d.size();
-        LOG_DEBUG("data: " << dp << ", len: " << dl);
+//        std::string& d = conn->GetData();
+//        const char* dp = d.data();
+//        const size_t dl = d.size();
+//        LOG_DEBUG("data: " << dp << ", len: " << dl);
 
-        size_t offset = 0;
+//        size_t offset = 0;
 
-        const tcp::http_ws::ws::ParseResult parse_result = http_conn_ctx->ws_parser.ParseFrame(offset, dp, dl);
-        LOG_DEBUG("offset: " << offset);
+//        const tcp::http_ws::ws::ParseResult parse_result = http_conn_ctx->ws_parser.ParseFrame(offset, dp, dl);
+//        LOG_DEBUG("offset: " << offset);
 
-        if (offset > 0)
-        {
-            if (offset == dl)
-            {
-                conn->ClearData();
-            }
-            else
-            {
-                d.assign(dp + offset, dl - offset);
-            }
-        }
-        else
-        {
-            // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
-            part_msg_mgr_.UpsertRecord(conn, *conn_guid, http_ws_logic_args_.app_frame_conf_mgr->GetHTTPWSPartMsgConnLife());
-            break;
-        }
+//        if (offset > 0)
+//        {
+//            if (offset == dl)
+//            {
+//                conn->ClearData();
+//            }
+//            else
+//            {
+//                d.assign(dp + offset, dl - offset);
+//            }
+//        }
+//        else
+//        {
+//            // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
+//            part_msg_mgr_.UpsertRecord(conn, *conn_guid, http_ws_logic_args_.app_frame_conf_mgr->GetHTTPWSPartMsgConnLife());
+//            break;
+//        }
 
-        LOG_DEBUG("parse result: " << parse_result);
+//        LOG_DEBUG("parse result: " << parse_result);
 
-        switch (parse_result)
-        {
-            case tcp::http_ws::ws::ERROR:
-            case tcp::http_ws::ws::CLOSE_FRAME:
-            {
-                tcp::http_ws::ws::FrameMaker frame_maker;
-                const std::string close_frame = frame_maker.SetFin(true)
-                                                .SetFrameType(tcp::http_ws::ws::CONNECTION_CLOSE)
-                                                .MakeFrame(nullptr, 0);
-                scheduler_.SendToClient(conn_guid, close_frame.data(), close_frame.size());
+//        switch (parse_result)
+//        {
+//            case tcp::http_ws::ws::ERROR:
+//            case tcp::http_ws::ws::CLOSE_FRAME:
+//            {
+//                tcp::http_ws::ws::FrameMaker frame_maker;
+//                const std::string close_frame = frame_maker.SetFin(true)
+//                                                .SetFrameType(tcp::http_ws::ws::CONNECTION_CLOSE)
+//                                                .MakeFrame(nullptr, 0);
+//                if (0 == scheduler_.SendToClient(conn_guid, close_frame.data(), close_frame.size()))
+//                {
+//                    LOG_TRACE("send close frame ok, " << conn_guid);
+//                }
 
-                scheduler_.CloseClient(conn_guid);
-                return;
-            }
-            break;
+//                scheduler_.CloseClient(conn_guid);
+//                return;
+//            }
+//            break;
 
-            case tcp::http_ws::ws::PING_FRAME:
-            {
-                tcp::http_ws::ws::FrameMaker frame_maker;
-                const std::string pong_frame = frame_maker.SetFin(true)
-                                               .SetFrameType(tcp::http_ws::ws::PONG)
-                                               .MakeFrame(nullptr, 0);
-                scheduler_.SendToClient(conn_guid, pong_frame.data(), pong_frame.size());
-                part_msg_mgr_.RemoveRecord(conn);
+//            case tcp::http_ws::ws::PING_FRAME:
+//            {
+//                const char* pong = nullptr;
+//                size_t len = 0;
 
-                return;
-            }
-            break;
+//                if (http_conn_ctx->ws_parser.Payloads.size() > 0)
+//                {
+//                    pong = http_conn_ctx->ws_parser.Payloads.data();
+//                    len = http_conn_ctx->ws_parser.Payloads.size();
+//                }
 
-            case tcp::http_ws::ws::INCOMPLETE:
-            {
-                // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
-                part_msg_mgr_.UpsertRecord(conn, *conn_guid, http_ws_logic_args_.app_frame_conf_mgr->GetHTTPWSPartMsgConnLife());
+//                tcp::http_ws::ws::FrameMaker frame_maker;
+//                const std::string pong_frame = frame_maker.SetFin(true)
+//                                               .SetFrameType(tcp::http_ws::ws::PONG)
+//                                               .MakeFrame(pong, len);
 
-                continue;
-            }
-            break;
+//                if (0 == scheduler_.SendToClient(conn_guid, pong_frame.data(), pong_frame.size()))
+//                {
+//                    LOG_TRACE("send pong ok, " << conn_guid);
+//                }
 
-            case tcp::http_ws::ws::TEXT_FRAME:
-            case tcp::http_ws::ws::BINARY_FRAME:
-            {
-                const int frame_type = parse_result == tcp::http_ws::ws::TEXT_FRAME ? tcp::http_ws::ws::TEXT : tcp::http_ws::ws::BINARY;
+//                http_conn_ctx->ws_parser.ClearPayloads();
+//                part_msg_mgr_.RemoveRecord(conn);
+//                return;
+//            }
+//            break;
 
-                const std::string& payloads = http_conn_ctx->ws_parser.Payloads;
-                if (http_ws_common_logic_ != nullptr)
-                {
-                    http_ws_common_logic_->OnWSMsg(conn_guid, frame_type, payloads.data(), payloads.size());
-                }
+//            case tcp::http_ws::ws::PONG_FRAME:
+//            {
+//                // 什么都不做，丢弃内容
+//                http_conn_ctx->ws_parser.ClearPayloads();
+//                part_msg_mgr_.RemoveRecord(conn);
+//            }
+//            break;
 
-                for (HTTPWSLogicItemVec::iterator it = http_ws_logic_item_vec_.begin(); it != http_ws_logic_item_vec_.end(); ++it)
-                {
-                    it->logic->OnWSMsg(conn_guid, frame_type, payloads.data(), payloads.size());
-                }
+//            case tcp::http_ws::ws::INCOMPLETE:
+//            {
+//                // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
+//                part_msg_mgr_.UpsertRecord(conn, *conn_guid, http_ws_logic_args_.app_frame_conf_mgr->GetHTTPWSPartMsgConnLife());
 
-                part_msg_mgr_.RemoveRecord(conn);
-                return;
-            }
-            break;
+//                continue;
+//            }
+//            break;
 
-            default:
-            {
-            }
-            break;
-        }
-    } while (true);
-}
+//            case tcp::http_ws::ws::TEXT_FRAME:
+//            case tcp::http_ws::ws::BINARY_FRAME:
+//            {
+//                const int frame_type = (tcp::http_ws::ws::TEXT_FRAME == parse_result ? tcp::http_ws::ws::TEXT : tcp::http_ws::ws::BINARY);
+
+//                const std::string& payloads = http_conn_ctx->ws_parser.Payloads;
+//                if (http_ws_common_logic_ != nullptr)
+//                {
+//                    http_ws_common_logic_->OnWSMsg(conn_guid, frame_type, payloads.data(), payloads.size());
+//                }
+
+//                for (HTTPWSLogicItemVec::iterator it = http_ws_logic_item_vec_.begin(); it != http_ws_logic_item_vec_.end(); ++it)
+//                {
+//                    it->logic->OnWSMsg(conn_guid, frame_type, payloads.data(), payloads.size());
+//                }
+
+//                http_conn_ctx->ws_parser.ClearPayloads();
+//                part_msg_mgr_.RemoveRecord(conn);
+
+//                return;
+//            }
+//            break;
+
+//            default:
+//            {
+//            }
+//            break;
+//        }
+//    } while (true);
+//}
 }
 }

@@ -7,7 +7,9 @@ cmake_minimum_required(VERSION 2.8)
 ###############################################################################
 # project name
 set(PROJ_NAME http_ws_threads)
-project(${PROJ_NAME} CXX)
+project(${PROJ_NAME} CXX C)
+
+add_compile_options(-Wno-sign-compare)
 
 set(CXX_LANGUAGE on CACHE INTERNAL "this is a cxx language project")
 

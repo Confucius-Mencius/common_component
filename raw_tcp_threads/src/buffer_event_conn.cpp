@@ -221,7 +221,7 @@ int BufferEventConn::Send(const void* data, size_t len)
     }
     else
     {
-        LOG_TRACE("send to client " << client_ip_ << ":" << client_port_ << " ok, socket fd: " << sock_fd_ << ", " << &conn_guid_);
+        LOG_TRACE("send to client " << client_ip_ << ":" << client_port_ << " ok, socket fd: " << sock_fd_ << ", " << &conn_guid_ << ", len: " << len);
 
         BaseConn* conn = static_cast<BaseConn*>(conn_center_->GetConnBySockFD(sock_fd_));
         if (nullptr == conn)

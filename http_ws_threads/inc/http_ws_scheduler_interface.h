@@ -1,7 +1,7 @@
 #ifndef HTTP_WS_THREADS_INC_HTTP_WS_SCHEDULER_INTERFACE_H_
 #define HTTP_WS_THREADS_INC_HTTP_WS_SCHEDULER_INTERFACE_H_
 
-#include <stddef.h>
+#include "http_ws.h"
 
 struct ConnGUID;
 
@@ -26,6 +26,8 @@ public:
      * @return
      */
     virtual int SendToClient(const ConnGUID* conn_guid, const void* data, size_t len) = 0;
+
+    virtual int SendWSMsgToClient(const ConnGUID* conn_guid, ws::FrameType frame_type, const void* data, size_t len) = 0;
 
     /**
      * @brief 断开与客户端的连接，可以关闭其它io线程管理的客户端

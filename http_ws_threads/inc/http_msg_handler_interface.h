@@ -1,10 +1,7 @@
 #ifndef HTTP_WS_THREADS_INC_HTTP_MSG_HANDLER_INTERFACE_H_
 #define HTTP_WS_THREADS_INC_HTTP_MSG_HANDLER_INTERFACE_H_
 
-#include <map>
-#include <string.h>
-#include <string>
-#include <vector>
+#include "http_ws.h"
 
 struct ConnGUID;
 
@@ -16,17 +13,6 @@ class LogicCtx;
 
 namespace http
 {
-struct CaseKeyCmp
-{
-    bool operator() (const std::string& p1, const std::string& p2) const
-    {
-        return strcasecmp(p1.c_str(), p2.c_str()) < 0;
-    }
-};
-
-typedef std::multimap<std::string, std::string, CaseKeyCmp> HeaderMap;
-typedef std::multimap<std::string, std::string> QueryMap;
-
 class MsgHandlerInterface
 {
 public:
