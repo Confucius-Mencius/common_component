@@ -1,9 +1,9 @@
 #include "scheduler.h"
 #include "app_frame_conf_mgr_interface.h"
-#include "io_thread_sink.h"
 #include "num_util.h"
 #include "proto_msg_codec.h"
 #include "task_type.h"
+#include "thread_sink.h"
 
 namespace tcp
 {
@@ -57,7 +57,7 @@ void Scheduler::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_group
 
 int Scheduler::SendToClient(const ConnGUID* conn_guid, const void* data, size_t len)
 {
-    ThreadInterface* tcp_thread = thread_sink_->GetIOThreadGroup()->GetThread(conn_guid->io_thread_idx);
+    ThreadInterface* tcp_thread = thread_sink_->GetTCPThreadGroup()->GetThread(conn_guid->io_thread_idx);
     if (tcp_thread == thread_sink_->GetThread())
     {
         // 是自己
@@ -86,7 +86,7 @@ int Scheduler::SendToClient(const ConnGUID* conn_guid, const void* data, size_t 
 
 int Scheduler::CloseClient(const ConnGUID* conn_guid)
 {
-    ThreadInterface* tcp_thread = thread_sink_->GetIOThreadGroup()->GetThread(conn_guid->io_thread_idx);
+    ThreadInterface* tcp_thread = thread_sink_->GetTCPThreadGroup()->GetThread(conn_guid->io_thread_idx);
     if (tcp_thread == thread_sink_->GetThread())
     {
         BaseConn* conn = static_cast<BaseConn*>(thread_sink_->GetConnCenter()->GetConnByID(conn_guid->conn_id));
@@ -96,7 +96,7 @@ int Scheduler::CloseClient(const ConnGUID* conn_guid)
             return -1;
         }
 
-        thread_sink_->OnClientClosed(conn, TASK_TYPE_TCP_CONN_CLOSED);
+        thread_sink_->OnClientClosed(conn);
         return 0;
     }
 
@@ -145,7 +145,7 @@ int Scheduler::GetScheduleWorkThreadIdx(int work_thread_idx)
 
 int Scheduler::GetScheduleTCPThreadIdx(int tcp_thread_idx)
 {
-    const int tcp_thread_count = thread_sink_->GetIOThreadGroup()->GetThreadCount();
+    const int tcp_thread_count = thread_sink_->GetTCPThreadGroup()->GetThreadCount();
 
     if (INVALID_IDX(tcp_thread_idx, 0, tcp_thread_count))
     {
@@ -187,7 +187,7 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const ::
 
         case THREAD_TYPE_TCP:
         {
-            thread_group = thread_sink_->GetIOThreadGroup();
+            thread_group = thread_sink_->GetTCPThreadGroup();
             if (nullptr == thread_group)
             {
                 LOG_ERROR("no such threads, thread type: " << thread_type);

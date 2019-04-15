@@ -2,9 +2,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <iomanip>
-#include "io_thread_sink.h"
 #include "log_util.h"
 #include "task_type.h"
+#include "thread_sink.h"
 
 #if !defined(USE_BUFFEREVENT)
 namespace tcp

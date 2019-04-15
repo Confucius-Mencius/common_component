@@ -3,9 +3,9 @@
 #include <iomanip>
 #include <event2/buffer.h>
 #include <event2/event.h>
-#include "io_thread_sink.h"
 #include "log_util.h"
 #include "task_type.h"
+#include "thread_sink.h"
 
 #if defined(USE_BUFFEREVENT)
 namespace tcp
@@ -19,7 +19,7 @@ void BufferEventConn::EventCallback(struct bufferevent* buffer_event, short even
 {
     const int err = EVUTIL_SOCKET_ERROR();
     const evutil_socket_t sock_fd = bufferevent_getfd(buffer_event);
-    IOThreadSink* thread_sink = static_cast<BufferEventConn*>(arg)->thread_sink_;
+    ThreadSink* thread_sink = static_cast<BufferEventConn*>(arg)->thread_sink_;
 
     LOG_TRACE("events occured on socket, fd: " << sock_fd << ", events: "
               << setiosflags(std::ios::showbase) << std::hex << events);
@@ -84,7 +84,7 @@ void BufferEventConn::EventCallback(struct bufferevent* buffer_event, short even
 
     if (closed)
     {
-        thread_sink->OnClientClosed(conn, TASK_TYPE_TCP_CONN_CLOSED);
+        thread_sink->OnClientClosed(conn);
     }
 }
 
@@ -95,7 +95,7 @@ void BufferEventConn::ReadCallback(struct bufferevent* buffer_event, void* arg)
     const evutil_socket_t sock_fd = bufferevent_getfd(buffer_event);
     LOG_TRACE("recv data, socket fd: " << sock_fd << ", len: " << len);
 
-    IOThreadSink* thread_sink = static_cast<BufferEventConn*>(arg)->thread_sink_;
+    ThreadSink* thread_sink = static_cast<BufferEventConn*>(arg)->thread_sink_;
 
     if (thread_sink->GetThread()->IsStopping())
     {
@@ -113,7 +113,7 @@ void BufferEventConn::ReadCallback(struct bufferevent* buffer_event, void* arg)
 
     if (conn_mgr->UpdateConnStatus(conn->GetConnGUID()->conn_id, true) != 0)
     {
-        thread_sink->OnClientClosed(conn, TASK_TYPE_TCP_CONN_CLOSED_NET_STORM);
+        thread_sink->OnClientClosed(conn);
         return;
     }
 

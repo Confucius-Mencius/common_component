@@ -2,10 +2,10 @@
 #include <string.h>
 #include "log_util.h"
 #include "buffer_event_conn.h"
-#include "io_thread_sink.h"
 #include "mem_util.h"
 #include "normal_conn.h"
 #include "task_type.h"
+#include "thread_sink.h"
 
 namespace tcp
 {
@@ -273,7 +273,7 @@ void ConnCenter::Clear(BaseConn* conn)
 void ConnCenter::OnTimeout(const ConnID& k, BaseConn* const& v, int timeout_sec)
 {
     LOG_TRACE("ConnMgr::OnTimeout, key: " << k << ", val: " << v << ", timeout: " << timeout_sec);
-    thread_sink_->OnClientClosed(v, TASK_TYPE_TCP_CONN_CLOSED);
+    thread_sink_->OnClientClosed(v);
     Clear(v);
 }
 }

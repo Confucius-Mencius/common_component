@@ -1,6 +1,7 @@
-#ifndef RAW_TCP_THREADS_SRC_IO_THREAD_SINK_H_
-#define RAW_TCP_THREADS_SRC_IO_THREAD_SINK_H_
+#ifndef RAW_TCP_THREADS_SRC_THREAD_SINK_H_
+#define RAW_TCP_THREADS_SRC_THREAD_SINK_H_
 
+#include <event2/listener.h>
 #include "conn_center.h"
 #include "mem_util.h"
 #include "msg_dispatcher.h"
@@ -28,13 +29,17 @@ struct LogicItem
 
 typedef std::vector<LogicItem> LogicItemVec;
 
-class IOThreadSink : public ThreadSinkInterface
+class ThreadSink : public ThreadSinkInterface
 {
-    CREATE_FUNC(IOThreadSink)
+    CREATE_FUNC(ThreadSink)
+
+    static void OnAccept(struct evconnlistener* listener, evutil_socket_t sock_fd,
+                         struct sockaddr* sock_addr, int sock_addr_len, void* arg);
+    static void OnListenError(struct evconnlistener* listener, void* arg);
 
 public:
-    IOThreadSink();
-    virtual ~IOThreadSink();
+    ThreadSink();
+    virtual ~ThreadSink();
 
     ///////////////////////// ThreadSinkInterface /////////////////////////
     void Release() override;
@@ -49,19 +54,14 @@ public:
     bool CanExit() const override;
 
 public:
-    void SetListenThread(ThreadInterface* listen_thread)
+    void SetTCPThreadGroup(ThreadGroupInterface* tcp_thread_group)
     {
-        listen_thread_ = listen_thread;
+        tcp_thread_group_ = tcp_thread_group;
     }
 
-    void SetIOThreadGroup(ThreadGroupInterface* io_thread_group)
+    ThreadGroupInterface* GetTCPThreadGroup()
     {
-        io_thread_group_ = io_thread_group;
-    }
-
-    ThreadGroupInterface* GetIOThreadGroup()
-    {
-        return io_thread_group_;
+        return tcp_thread_group_;
     }
 
     void SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups);
@@ -71,7 +71,7 @@ public:
         return &conn_center_;
     }
 
-    void OnClientClosed(const BaseConn* conn, int task_type);
+    void OnClientClosed(const BaseConn* conn);
     void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len);
 
 private:
@@ -81,8 +81,10 @@ private:
 
 private:
     const ThreadsCtx* threads_ctx_;
-    ThreadInterface* listen_thread_;
-    ThreadGroupInterface* io_thread_group_;
+    struct evconnlistener* listener_;
+    int online_tcp_conn_count_;
+    int max_online_tcp_conn_count_;
+    ThreadGroupInterface* tcp_thread_group_;
     RelatedThreadGroups* related_thread_group_;
 
     ModuleLoader common_logic_loader_;
@@ -98,4 +100,4 @@ private:
 }
 }
 
-#endif // RAW_TCP_THREADS_SRC_IO_THREAD_SINK_H_
+#endif // RAW_TCP_THREADS_SRC_THREAD_SINK_H_

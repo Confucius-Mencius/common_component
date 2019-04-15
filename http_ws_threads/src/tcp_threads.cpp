@@ -93,14 +93,9 @@ void Threads::SetRelatedThreadGroups(const tcp::RelatedThreadGroups* related_thr
     related_thread_groups_ = *related_thread_groups;
 }
 
-ThreadGroupInterface* Threads::GetListenThreadGroup() const
+ThreadGroupInterface* Threads::GetTCPThreadGroup() const
 {
-    return raw_tcp_threads_->GetListenThreadGroup();
-}
-
-ThreadGroupInterface* Threads::GetIOThreadGroup() const
-{
-    return raw_tcp_threads_->GetIOThreadGroup();
+    return raw_tcp_threads_->GetTCPThreadGroup();
 }
 
 int Threads::LoadRawTCPThreads()

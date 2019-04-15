@@ -8,7 +8,7 @@ namespace tcp
 {
 namespace raw
 {
-class IOThreadSink;
+class ThreadSink;
 
 struct ConnCenterCtx
 {
@@ -40,7 +40,7 @@ public:
     int Activate();
     void Freeze();
 
-    void SetThreadSink(IOThreadSink* sink)
+    void SetThreadSink(ThreadSink* sink)
     {
         thread_sink_ = sink;
     }
@@ -62,7 +62,7 @@ private:
 
 private:
     ConnCenterCtx conn_mgr_ctx_;
-    IOThreadSink* thread_sink_;
+    ThreadSink* thread_sink_;
 
     struct ClientCtx
     {

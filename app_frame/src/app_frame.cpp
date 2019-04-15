@@ -248,12 +248,7 @@ int AppFrame::Activate()
 
     if (raw_tcp_threads_ != nullptr)
     {
-        if (raw_tcp_threads_->GetIOThreadGroup()->Start() != 0)
-        {
-            return -1;
-        }
-
-        if (raw_tcp_threads_->GetListenThreadGroup()->Start() != 0)
+        if (raw_tcp_threads_->GetTCPThreadGroup()->Start() != 0)
         {
             return -1;
         }
@@ -261,12 +256,7 @@ int AppFrame::Activate()
 
     if (proto_tcp_threads_ != nullptr)
     {
-        if (proto_tcp_threads_->GetIOThreadGroup()->Start() != 0)
-        {
-            return -1;
-        }
-
-        if (proto_tcp_threads_->GetListenThreadGroup()->Start() != 0)
+        if (proto_tcp_threads_->GetTCPThreadGroup()->Start() != 0)
         {
             return -1;
         }
@@ -274,12 +264,7 @@ int AppFrame::Activate()
 
     if (http_ws_threads_ != nullptr)
     {
-        if (http_ws_threads_->GetIOThreadGroup()->Start() != 0)
-        {
-            return -1;
-        }
-
-        if (http_ws_threads_->GetListenThreadGroup()->Start() != 0)
+        if (http_ws_threads_->GetTCPThreadGroup()->Start() != 0)
         {
             return -1;
         }
@@ -326,40 +311,25 @@ int AppFrame::NotifyStop()
 
     if (raw_tcp_threads_ != nullptr)
     {
-        if (raw_tcp_threads_->GetListenThreadGroup() != nullptr)
+        if (raw_tcp_threads_->GetTCPThreadGroup() != nullptr)
         {
-            raw_tcp_threads_->GetListenThreadGroup()->NotifyStop();
-        }
-
-        if (raw_tcp_threads_->GetIOThreadGroup() != nullptr)
-        {
-            raw_tcp_threads_->GetIOThreadGroup()->NotifyStop();
+            raw_tcp_threads_->GetTCPThreadGroup()->NotifyStop();
         }
     }
 
     if (proto_tcp_threads_ != nullptr)
     {
-        if (proto_tcp_threads_->GetListenThreadGroup() != nullptr)
+        if (proto_tcp_threads_->GetTCPThreadGroup() != nullptr)
         {
-            proto_tcp_threads_->GetListenThreadGroup()->NotifyStop();
-        }
-
-        if (proto_tcp_threads_->GetIOThreadGroup() != nullptr)
-        {
-            proto_tcp_threads_->GetIOThreadGroup()->NotifyStop();
+            proto_tcp_threads_->GetTCPThreadGroup()->NotifyStop();
         }
     }
 
     if (http_ws_threads_ != nullptr)
     {
-        if (http_ws_threads_->GetListenThreadGroup() != nullptr)
+        if (http_ws_threads_->GetTCPThreadGroup() != nullptr)
         {
-            http_ws_threads_->GetListenThreadGroup()->NotifyStop();
-        }
-
-        if (http_ws_threads_->GetIOThreadGroup() != nullptr)
-        {
-            http_ws_threads_->GetIOThreadGroup()->NotifyStop();
+            http_ws_threads_->GetTCPThreadGroup()->NotifyStop();
         }
     }
 
@@ -439,20 +409,17 @@ int AppFrame::NotifyReload()
 
     if (raw_tcp_threads_ != nullptr)
     {
-        raw_tcp_threads_->GetListenThreadGroup()->NotifyReload();
-        raw_tcp_threads_->GetIOThreadGroup()->NotifyReload();
+        raw_tcp_threads_->GetTCPThreadGroup()->NotifyReload();
     }
 
     if (proto_tcp_threads_ != nullptr)
     {
-        proto_tcp_threads_->GetListenThreadGroup()->NotifyReload();
-        proto_tcp_threads_->GetIOThreadGroup()->NotifyReload();
+        proto_tcp_threads_->GetTCPThreadGroup()->NotifyReload();
     }
 
     if (http_ws_threads_ != nullptr)
     {
-        http_ws_threads_->GetListenThreadGroup()->NotifyReload();
-        http_ws_threads_->GetIOThreadGroup()->NotifyReload();
+        http_ws_threads_->GetTCPThreadGroup()->NotifyReload();
     }
 
 //    if (ws_threads_ != nullptr)
@@ -503,28 +470,19 @@ bool AppFrame::CanExit() const
 
     if (raw_tcp_threads_ != nullptr)
     {
-        can_exit &= (raw_tcp_threads_->GetListenThreadGroup()->CanExit() ? 1 : 0);
-        LOG_ALWAYS("raw tcp listen thread can exit: " << can_exit);
-
-        can_exit &= (raw_tcp_threads_->GetIOThreadGroup()->CanExit() ? 1 : 0);
+        can_exit &= (raw_tcp_threads_->GetTCPThreadGroup()->CanExit() ? 1 : 0);
         LOG_ALWAYS("raw tcp threads can exit: " << can_exit);
     }
 
     if (proto_tcp_threads_ != nullptr)
     {
-        can_exit &= (proto_tcp_threads_->GetListenThreadGroup()->CanExit() ? 1 : 0);
-        LOG_ALWAYS("proto tcp listen thread can exit: " << can_exit);
-
-        can_exit &= (proto_tcp_threads_->GetIOThreadGroup()->CanExit() ? 1 : 0);
+        can_exit &= (proto_tcp_threads_->GetTCPThreadGroup()->CanExit() ? 1 : 0);
         LOG_ALWAYS("proto tcp threads can exit: " << can_exit);
     }
 
     if (http_ws_threads_ != nullptr)
     {
-        can_exit &= (http_ws_threads_->GetListenThreadGroup()->CanExit() ? 1 : 0);
-        LOG_ALWAYS("http-ws listen thread can exit: " << can_exit);
-
-        can_exit &= (http_ws_threads_->GetIOThreadGroup()->CanExit() ? 1 : 0);
+        can_exit &= (http_ws_threads_->GetTCPThreadGroup()->CanExit() ? 1 : 0);
         LOG_ALWAYS("http-ws threads can exit: " << can_exit);
     }
 
@@ -575,38 +533,31 @@ int AppFrame::NotifyExitAndJoin()
     if (work_threads_ != nullptr && work_threads_->GetWorkThreadGroup() != nullptr)
     {
         work_threads_->GetWorkThreadGroup()->NotifyExit();
+        work_threads_->GetWorkThreadGroup()->Join();
     }
 
     if (burden_threads_ != nullptr && burden_threads_->GetBurdenThreadGroup() != nullptr)
     {
         burden_threads_->GetBurdenThreadGroup()->NotifyExit();
+        burden_threads_->GetBurdenThreadGroup()->Join();
     }
 
     if (raw_tcp_threads_ != nullptr)
     {
-        raw_tcp_threads_->GetListenThreadGroup()->NotifyExit();
-        raw_tcp_threads_->GetListenThreadGroup()->Join();
-
-        raw_tcp_threads_->GetIOThreadGroup()->NotifyExit();
-        raw_tcp_threads_->GetIOThreadGroup()->Join();
+        raw_tcp_threads_->GetTCPThreadGroup()->NotifyExit();
+        raw_tcp_threads_->GetTCPThreadGroup()->Join();
     }
 
     if (proto_tcp_threads_ != nullptr)
     {
-        proto_tcp_threads_->GetListenThreadGroup()->NotifyExit();
-        proto_tcp_threads_->GetListenThreadGroup()->Join();
-
-        proto_tcp_threads_->GetIOThreadGroup()->NotifyExit();
-        proto_tcp_threads_->GetIOThreadGroup()->Join();
+        proto_tcp_threads_->GetTCPThreadGroup()->NotifyExit();
+        proto_tcp_threads_->GetTCPThreadGroup()->Join();
     }
 
     if (http_ws_threads_ != nullptr)
     {
-        http_ws_threads_->GetListenThreadGroup()->NotifyExit();
-        http_ws_threads_->GetListenThreadGroup()->Join();
-
-        http_ws_threads_->GetIOThreadGroup()->NotifyExit();
-        http_ws_threads_->GetIOThreadGroup()->Join();
+        http_ws_threads_->GetTCPThreadGroup()->NotifyExit();
+        http_ws_threads_->GetTCPThreadGroup()->Join();
     }
 
 //    if (ws_threads_ != nullptr)
@@ -676,9 +627,6 @@ int AppFrame::LoadAndCheckConf()
     {
         raw_tcp_exist = true;
 
-        LOG_ALWAYS("raw tcp listen thread count: 1");
-        ++app_frame_threads_count_; // listen thread
-
         if (0 == conf_mgr_.GetRawTCPThreadCount())
         {
             LOG_ERROR("there must be at least one raw tcp thread");
@@ -705,9 +653,6 @@ int AppFrame::LoadAndCheckConf()
     {
         proto_tcp_exist = true;
 
-        LOG_ALWAYS("proto tcp listen thread count: 1");
-        ++app_frame_threads_count_; // listen thread
-
         if (0 == conf_mgr_.GetProtoTCPThreadCount())
         {
             LOG_ERROR("there must be at least one proto tcp thread");
@@ -733,9 +678,6 @@ int AppFrame::LoadAndCheckConf()
     if (conf_mgr_.GetHTTPWSAddr().length() > 0)
     {
         http_ws_exist = true;
-
-        LOG_ALWAYS("http-ws listen thread count: 1");
-        ++app_frame_threads_count_; // listen thread
 
         if (0 == conf_mgr_.GetHTTPWSThreadCount())
         {
@@ -1440,17 +1382,17 @@ void AppFrame::SetThreadsRelationship()
 
         if (raw_tcp_threads_ != nullptr)
         {
-            related_thread_groups.raw_tcp_thread_group = raw_tcp_threads_->GetIOThreadGroup();
+            related_thread_groups.raw_tcp_thread_group = raw_tcp_threads_->GetTCPThreadGroup();
         }
 
         if (proto_tcp_threads_ != nullptr)
         {
-            related_thread_groups.proto_tcp_thread_group = proto_tcp_threads_->GetIOThreadGroup();
+            related_thread_groups.proto_tcp_thread_group = proto_tcp_threads_->GetTCPThreadGroup();
         }
 
         if (http_ws_threads_ != nullptr)
         {
-            related_thread_groups.http_ws_thread_group = http_ws_threads_->GetIOThreadGroup();
+            related_thread_groups.http_ws_thread_group = http_ws_threads_->GetTCPThreadGroup();
         }
 
         global_threads_->SetRelatedThreadGroups(&related_thread_groups);
@@ -1473,17 +1415,17 @@ void AppFrame::SetThreadsRelationship()
 
         if (raw_tcp_threads_ != nullptr)
         {
-            related_thread_groups.raw_tcp_thread_group = raw_tcp_threads_->GetIOThreadGroup();
+            related_thread_groups.raw_tcp_thread_group = raw_tcp_threads_->GetTCPThreadGroup();
         }
 
         if (proto_tcp_threads_ != nullptr)
         {
-            related_thread_groups.proto_tcp_thread_group = proto_tcp_threads_->GetIOThreadGroup();
+            related_thread_groups.proto_tcp_thread_group = proto_tcp_threads_->GetTCPThreadGroup();
         }
 
         if (http_ws_threads_ != nullptr)
         {
-            related_thread_groups.http_ws_thread_group = http_ws_threads_->GetIOThreadGroup();
+            related_thread_groups.http_ws_thread_group = http_ws_threads_->GetTCPThreadGroup();
         }
 
 //        if (udp_threads_ != nullptr)

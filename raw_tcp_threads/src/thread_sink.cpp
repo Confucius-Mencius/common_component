@@ -1,4 +1,4 @@
-#include "io_thread_sink.h"
+#include "thread_sink.h"
 #include <unistd.h>
 #include "app_frame_conf_mgr_interface.h"
 #include "file_util.h"
@@ -9,21 +9,74 @@ namespace tcp
 {
 namespace raw
 {
-IOThreadSink::IOThreadSink() : common_logic_loader_(), logic_item_vec_(), conn_center_(),
+void ThreadSink::OnAccept(struct evconnlistener* listener, evutil_socket_t sock_fd,
+                          struct sockaddr* sock_addr, int sock_addr_len, void* arg)
+{
+    ThreadSink* sink = static_cast<ThreadSink*>(arg);
+
+    if (sink->GetThread()->IsStopping())
+    {
+        LOG_WARN("in stopping status, refuse all new connections");
+        evutil_closesocket(sock_fd);
+        return;
+    }
+
+    const int tcp_conn_count_limit = sink->threads_ctx_->app_frame_conf_mgr->GetTCPConnCountLimit();
+    if (tcp_conn_count_limit > 0 && sink->online_tcp_conn_count_ >= tcp_conn_count_limit)
+    {
+        LOG_ERROR("refuse new connection, online tcp conn count: " << sink->online_tcp_conn_count_
+                  << ", the limit is: " << tcp_conn_count_limit);
+        evutil_closesocket(sock_fd);
+        return;
+    }
+
+    struct sockaddr_in* client_addr = (struct sockaddr_in*) sock_addr;
+//    char peer_ip[INET_ADDRSTRLEN] = "";
+    NewConnCtx new_conn_ctx;
+    new_conn_ctx.client_sock_fd = sock_fd;
+
+    if (nullptr == evutil_inet_ntop(AF_INET, &(client_addr->sin_addr),
+                                    new_conn_ctx.client_ip, sizeof(new_conn_ctx.client_ip)))
+    {
+        LOG_ERROR("failed to get client ip, socket fd: " << sock_fd);
+    }
+    else
+    {
+        new_conn_ctx.client_port = ntohs(client_addr->sin_port);
+        LOG_DEBUG("client connected, client ip: " << new_conn_ctx.client_ip << ", port: " << new_conn_ctx.client_port
+                  << ", socket fd: " << sock_fd);
+    }
+
+    sink->OnClientConnected(&new_conn_ctx);
+}
+
+void ThreadSink::OnListenError(evconnlistener* listener, void* arg)
+{
+    // 当ulimit -n较低时会报错： errno: 24, err msg: Too many open files
+    const int err = EVUTIL_SOCKET_ERROR();
+    evutil_socket_t sock_fd = evconnlistener_get_fd(listener);
+
+    LOG_ERROR("err occured on socket, fd: " << sock_fd << ", errno: " << err
+              << ", err msg: " << evutil_socket_error_to_string(err));
+}
+
+ThreadSink::ThreadSink() : common_logic_loader_(), logic_item_vec_(), conn_center_(),
     msg_codec_(), scheduler_(), msg_dispatcher_()
 {
     threads_ctx_ = nullptr;
-    listen_thread_ = nullptr;
-    io_thread_group_ = nullptr;
+    listener_ = nullptr;
+    online_tcp_conn_count_ = 0;
+    max_online_tcp_conn_count_ = 0;
+    tcp_thread_group_ = nullptr;
     related_thread_group_ = nullptr;
     common_logic_ = nullptr;
 }
 
-IOThreadSink::~IOThreadSink()
+ThreadSink::~ThreadSink()
 {
 }
 
-void IOThreadSink::Release()
+void ThreadSink::Release()
 {
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
@@ -37,7 +90,7 @@ void IOThreadSink::Release()
     delete this;
 }
 
-int IOThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
+int ThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 {
     if (ThreadSinkInterface::OnInitialize(thread, ctx) != 0)
     {
@@ -45,6 +98,43 @@ int IOThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
     }
 
     threads_ctx_ = static_cast<const ThreadsCtx*>(ctx);
+
+    const std::string tcp_addr_port = threads_ctx_->conf.addr + ":" + std::to_string(threads_ctx_->conf.port);
+    LOG_ALWAYS("listen addr port: " << tcp_addr_port);
+
+    struct sockaddr_in listen_sock_addr;
+    int listen_sock_addr_len = sizeof(listen_sock_addr);
+
+    // TODO 测试 ip:port, 域名:port
+    if (evutil_parse_sockaddr_port(tcp_addr_port.c_str(),
+                                   (struct sockaddr*) &listen_sock_addr, &listen_sock_addr_len) != 0)
+    {
+        const int err = EVUTIL_SOCKET_ERROR();
+        LOG_ERROR("failed to parse tcp listen socket addr port: " << tcp_addr_port
+                  << ", errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
+        return -1;
+    }
+
+    // http://www.blogjava.net/yongboy/archive/2015/02/12/422893.html
+    // SO_REUSEPORT(Linux kernel 3.9)支持多个进程或者线程绑定到同一端口，提高服务器程序的性能，解决的问题：
+    // 1. 允许多个套接字 bind()/listen() 同一个TCP/UDP端口
+    //      每一个线程拥有自己的服务器套接字
+    //      在服务器套接字上没有了锁的竞争
+    // 2. 内核层面实现负载均衡
+    // 3. 安全层面，监听同一个端口的套接字只能位于同一个用户下面(effective UID)
+    // 4. 可用于实现服务的无缝切换（更新）
+    listener_ = evconnlistener_new_bind(self_thread_->GetThreadEvBase(), ThreadSink::OnAccept, this,
+                                        LEV_OPT_REUSEABLE | LEV_OPT_REUSEABLE_PORT | LEV_OPT_CLOSE_ON_EXEC
+                                        | LEV_OPT_CLOSE_ON_FREE | LEV_OPT_DEFERRED_ACCEPT, -1,
+                                        (struct sockaddr*) &listen_sock_addr, listen_sock_addr_len);
+    if (nullptr == listener_)
+    {
+        const int err = EVUTIL_SOCKET_ERROR();
+        LOG_ERROR("failed to create listener, errno: " << err << ", err msg: " << evutil_socket_error_to_string(err));
+        return -1;
+    }
+
+    evconnlistener_set_error_cb(listener_, ThreadSink::OnListenError);
 
     ::proto::MsgCodecCtx msg_codec_ctx;
     msg_codec_ctx.max_msg_body_len = threads_ctx_->app_frame_conf_mgr->GetProtoMaxMsgBodyLen();
@@ -92,7 +182,7 @@ int IOThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
     return 0;
 }
 
-void IOThreadSink::OnFinalize()
+void ThreadSink::OnFinalize()
 {
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
@@ -103,10 +193,16 @@ void IOThreadSink::OnFinalize()
     scheduler_.Finalize();
     conn_center_.Finalize();
 
+    if (listener_ != nullptr)
+    {
+        evconnlistener_free(listener_);
+        listener_ = nullptr;
+    }
+
     ThreadSinkInterface::OnFinalize();
 }
 
-int IOThreadSink::OnActivate()
+int ThreadSink::OnActivate()
 {
     if (ThreadSinkInterface::OnActivate() != 0)
     {
@@ -134,7 +230,7 @@ int IOThreadSink::OnActivate()
     return 0;
 }
 
-void IOThreadSink::OnFreeze()
+void ThreadSink::OnFreeze()
 {
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
@@ -146,7 +242,7 @@ void IOThreadSink::OnFreeze()
     ThreadSinkInterface::OnFreeze();
 }
 
-void IOThreadSink::OnThreadStartOK()
+void ThreadSink::OnThreadStartOK()
 {
     ThreadSinkInterface::OnThreadStartOK();
 
@@ -156,7 +252,7 @@ void IOThreadSink::OnThreadStartOK()
     pthread_mutex_unlock(threads_ctx_->app_frame_threads_sync_mutex);
 }
 
-void IOThreadSink::OnStop()
+void ThreadSink::OnStop()
 {
     ThreadSinkInterface::OnStop();
 
@@ -171,7 +267,7 @@ void IOThreadSink::OnStop()
     }
 }
 
-void IOThreadSink::OnReload()
+void ThreadSink::OnReload()
 {
     ThreadSinkInterface::OnReload();
 
@@ -186,20 +282,12 @@ void IOThreadSink::OnReload()
     }
 }
 
-void IOThreadSink::OnTask(const ThreadTask* task)
+void ThreadSink::OnTask(const ThreadTask* task)
 {
     ThreadSinkInterface::OnTask(task);
 
     switch (task->GetType())
     {
-        case TASK_TYPE_TCP_CONN_CONNECTED:
-        {
-            NewConnCtx new_conn_ctx;
-            memcpy(&new_conn_ctx, task->GetData().data(), task->GetData().size());
-            OnClientConnected(&new_conn_ctx);
-        }
-        break;
-
         case TASK_TYPE_SEND_TO_CLIENT:
         {
             scheduler_.SendToClient(task->GetConnGUID(), task->GetData().data(), task->GetData().size());
@@ -271,7 +359,7 @@ void IOThreadSink::OnTask(const ThreadTask* task)
     }
 }
 
-bool IOThreadSink::CanExit() const
+bool ThreadSink::CanExit() const
 {
     int can_exit = 1;
 
@@ -288,7 +376,7 @@ bool IOThreadSink::CanExit() const
     return (can_exit != 0);
 }
 
-void IOThreadSink::OnClientClosed(const BaseConn* conn, int task_type)
+void ThreadSink::OnClientClosed(const BaseConn* conn)
 {
     if (common_logic_ != nullptr)
     {
@@ -300,22 +388,11 @@ void IOThreadSink::OnClientClosed(const BaseConn* conn, int task_type)
         (*it).logic->OnClientClosed(conn->GetConnGUID());
     }
 
-    char client_ctx_buf[128] = "";
-    const int n = StrPrintf(client_ctx_buf, sizeof(client_ctx_buf), "%s:%u, socket fd: %d",
-                            conn->GetClientIP(), conn->GetClientPort(), conn->GetSockFD());
-
-    ThreadTask* task = new ThreadTask(task_type, self_thread_, nullptr, client_ctx_buf, n);
-    if (nullptr == task)
-    {
-        LOG_ERROR("failed to create tcp conn closed task");
-        return;
-    }
-
-    listen_thread_->PushTask(task);
     conn_center_.DestroyConn(conn->GetSockFD());
+    --online_tcp_conn_count_;
 }
 
-void IOThreadSink::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
+void ThreadSink::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
 {
     if (common_logic_ != nullptr)
     {
@@ -328,7 +405,7 @@ void IOThreadSink::OnRecvClientData(const ConnGUID* conn_guid, const void* data,
     }
 }
 
-void IOThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups)
+void ThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups)
 {
     related_thread_group_ = related_thread_groups;
 
@@ -349,7 +426,7 @@ void IOThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_gr
     scheduler_.SetRelatedThreadGroups(related_thread_groups);
 }
 
-int IOThreadSink::LoadCommonLogic()
+int ThreadSink::LoadCommonLogic()
 {
     const std::string& common_logic_so = threads_ctx_->conf.common_logic_so;
     if (0 == common_logic_so.length())
@@ -400,7 +477,7 @@ int IOThreadSink::LoadCommonLogic()
     return 0;
 }
 
-int IOThreadSink::LoadLogicGroup()
+int ThreadSink::LoadLogicGroup()
 {
     // logic so group
     const StrGroup& logic_so_group = threads_ctx_->conf.logic_so_group;
@@ -462,33 +539,29 @@ int IOThreadSink::LoadLogicGroup()
     return 0;
 }
 
-int IOThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
+int ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
 {
     BaseConn* conn = static_cast<BaseConn*>(conn_center_.GetConnBySockFD(new_conn_ctx->client_sock_fd));
     if (conn != nullptr)
     {
         LOG_WARN("tcp conn already exist, socket fd: " << new_conn_ctx->client_sock_fd << ", destroy it first");
         conn_center_.DestroyConn(conn->GetSockFD());
+        --online_tcp_conn_count_;
     }
 
     conn = conn_center_.CreateConn(threads_ctx_->conf.io_type, self_thread_->GetThreadIdx(), new_conn_ctx->client_ip,
                                    new_conn_ctx->client_port, new_conn_ctx->client_sock_fd);
     if (nullptr == conn)
     {
-        char client_ctx_buf[128] = "";
-        const int n = StrPrintf(client_ctx_buf, sizeof(client_ctx_buf), "%s:%u, socket fd: %d",
-                                new_conn_ctx->client_ip, new_conn_ctx->client_port,
-                                new_conn_ctx->client_sock_fd);
-
-        ThreadTask* task = new ThreadTask(TASK_TYPE_TCP_CONN_CLOSED, self_thread_, nullptr, client_ctx_buf, n);
-        if (nullptr == task)
-        {
-            LOG_ERROR("failed to create tcp conn closed task");
-            return -1;
-        }
-
-        listen_thread_->PushTask(task);
         return -1;
+    }
+
+    ++online_tcp_conn_count_;
+
+    if (online_tcp_conn_count_ > max_online_tcp_conn_count_)
+    {
+        max_online_tcp_conn_count_ = online_tcp_conn_count_;
+        LOG_WARN("max online tcp conn count: " << max_online_tcp_conn_count_);
     }
 
     if (common_logic_ != nullptr)

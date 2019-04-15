@@ -27,8 +27,7 @@ public:
     ///////////////////////// ThreadsInterface /////////////////////////
     int CreateThreadGroup(const char* name_prefix) override;
     void SetRelatedThreadGroups(const tcp::RelatedThreadGroups* related_thread_groups) override;
-    ThreadGroupInterface* GetListenThreadGroup() const override;
-    ThreadGroupInterface* GetIOThreadGroup() const override;
+    ThreadGroupInterface* GetTCPThreadGroup() const override;
 
 private:
     int LoadRawTCPThreads();

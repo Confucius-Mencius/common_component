@@ -9,7 +9,7 @@ namespace tcp
 {
 namespace raw
 {
-class IOThreadSink;
+class ThreadSink;
 
 class Scheduler : public SchedulerInterface
 {
@@ -17,7 +17,7 @@ public:
     Scheduler();
     virtual ~Scheduler();
 
-    void SetThreadSink(IOThreadSink* sink)
+    void SetThreadSink(ThreadSink* sink)
     {
         thread_sink_ = sink;
     }
@@ -57,7 +57,7 @@ private:
                      const void* msg_body, size_t msg_body_len, int thread_idx);
 
 private:
-    IOThreadSink* thread_sink_;
+    ThreadSink* thread_sink_;
     ::proto::MsgCodec* msg_codec_;
     const ThreadsCtx* threads_ctx_;
     RelatedThreadGroups* related_thread_groups_;
