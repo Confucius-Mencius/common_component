@@ -25,12 +25,22 @@ struct Req
     unsigned short MajorVersion;
     unsigned short MinorVersion;
     std::string ClientIP;
+    std::string URL;
+    std::string Schema;
+    std::string Host;
+    uint16_t Port;
     std::string Path;
+    std::string Query;
     QueryMap Queries;
+    std::string Fragment;
+    std::string UserInfo;
     HeaderMap Headers;
     std::string Body;
 
+    void Reset();
+
     void ParseURL(const char* at, size_t length);
+    void ParseQuery(const char* at, size_t length);
 
     void AddHeader(const std::string& name, const std::string& value)
     {
@@ -45,16 +55,6 @@ struct Req
     }
 
     std::string Dump();
-
-private:
-    void ParseQuery(const char* at, size_t length);
-
-    std::string schema_;
-    std::string host_;
-    uint16_t port_;
-    std::string query_;
-    std::string fragment_;
-    std::string user_info_;
 };
 
 class Parser
@@ -74,16 +74,6 @@ public:
     }
 
     int Execute(const char* buffer, size_t count);
-
-    void SetLastHeaderName(const char* buffer, size_t count)
-    {
-        last_header_name_.assign(buffer, count);
-    }
-
-    const std::string& GetLastHeaderName() const
-    {
-        return last_header_name_;
-    }
 
     static int OnMessageBegin(struct http_parser* parser); // 解析开始的时候调用
     static int OnURL(struct http_parser* parser, const char* at, size_t length); // 解析url的时候调用

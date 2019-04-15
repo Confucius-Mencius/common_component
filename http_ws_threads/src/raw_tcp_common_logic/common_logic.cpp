@@ -6,7 +6,6 @@
 #include "log_util.h"
 #include "mem_util.h"
 #include "raw_tcp_scheduler_interface.h"
-#include "hex_dump.h"
 
 namespace tcp
 {
@@ -454,10 +453,6 @@ void HTTPWSCommonLogic::OnWSMsg(ConnID conn_id, int opcode, const char* data, si
             }
 
             websocket_build_frame(frame, (websocket_flags) flags, nullptr, data, len);
-
-            char buf[1024] = "";
-            HexDump(buf, sizeof(buf), frame, frame_len);
-            LOG_DEBUG("\n" << buf);
 
             if (0 == scheduler_.SendToClient(conn_guid, frame, frame_len))
             {

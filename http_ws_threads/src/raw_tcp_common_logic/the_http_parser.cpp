@@ -9,91 +9,99 @@ namespace http_ws
 {
 namespace http
 {
-Req::Req() : ClientIP(), Path(), Queries(), Headers(),
-    Body(), schema_(), host_(), query_(), fragment_(), user_info_()
+Req::Req() : ClientIP(), URL(), Schema(), Host(), Path(), Query(), Queries(),
+    Fragment(), UserInfo(), Headers(), Body()
 {
     Method = HTTP_GET;
     MajorVersion = 1;
     MinorVersion = 1;
-    port_ = 0;
+    Port = 0;
 }
 
 Req::~Req()
 {
 }
 
+void Req::Reset()
+{
+    Method = HTTP_GET;
+    MajorVersion = 0;
+    MinorVersion = 0;
+    ClientIP = "";
+    URL = "";
+    Schema = "";
+    Host = "";
+    Port = 0;
+    Path = "";
+    Query = "";
+    Queries.clear();
+    Fragment = "";
+    UserInfo = "";
+    Headers.clear();
+    Body = "";
+}
+
 void Req::ParseURL(const char* at, size_t length)
 {
-    std::string url(at, length);
+    this->URL.assign(at, length);
 
     struct http_parser_url u;
     http_parser_url_init(&u);
 
-    if (http_parser_parse_url(url.c_str(), url.length(), 0, &u) != 0)
+    if (http_parser_parse_url(this->URL.c_str(), this->URL.length(), 0, &u) != 0)
     {
-        LOG_ERROR("parse url error: " << std::string(at, length));
+        LOG_ERROR("parse url error: " << this->URL);
         return;
     }
 
     if (u.field_set & (1 << UF_SCHEMA))
     {
-        this->schema_ = url.substr(u.field_data[UF_SCHEMA].off, u.field_data[UF_SCHEMA].len);
+        this->Schema = this->URL.substr(u.field_data[UF_SCHEMA].off, u.field_data[UF_SCHEMA].len);
+        LOG_DEBUG("schema: " << this->Schema);
     }
 
     if (u.field_set & (1 << UF_HOST))
     {
-        this->host_ = url.substr(u.field_data[UF_HOST].off, u.field_data[UF_HOST].len);
+        this->Host = this->URL.substr(u.field_data[UF_HOST].off, u.field_data[UF_HOST].len);
+        LOG_DEBUG("host: " << this->Host);
     }
 
     if (u.field_set & (1 << UF_PORT))
     {
-        this->port_ = u.port;
+        this->Port = u.port;
+        LOG_DEBUG("port: " << this->Port);
     }
 
     if (u.field_set & (1 << UF_PATH))
     {
-        this->Path = url.substr(u.field_data[UF_PATH].off, u.field_data[UF_PATH].len);
+        this->Path = this->URL.substr(u.field_data[UF_PATH].off, u.field_data[UF_PATH].len);
+        LOG_DEBUG("path: " << this->Path);
     }
 
     if (u.field_set & (1 << UF_QUERY))
     {
-        this->query_ = url.substr(u.field_data[UF_QUERY].off, u.field_data[UF_QUERY].len);
-        ParseQuery(query_.data(), query_.size());
+        this->Query = this->URL.substr(u.field_data[UF_QUERY].off, u.field_data[UF_QUERY].len);
+        LOG_DEBUG("query: " << this->Query);
+        ParseQuery(Query.data(), Query.size());
     }
 
     if (u.field_set & (1 << UF_FRAGMENT))
     {
-        this->fragment_ = url.substr(u.field_data[UF_FRAGMENT].off, u.field_data[UF_FRAGMENT].len);
+        this->Fragment = this->URL.substr(u.field_data[UF_FRAGMENT].off, u.field_data[UF_FRAGMENT].len);
+        LOG_DEBUG("fragment: " << this->Fragment);
     }
 
     if (u.field_set & (1 << UF_USERINFO))
     {
-        this->user_info_ = url.substr(u.field_data[UF_USERINFO].off, u.field_data[UF_USERINFO].len);
-    }
-}
-
-void Req::ParseClientIP()
-{
-    HeaderMap::const_iterator it =  this->Headers.find("X-Forwarded-For");
-    if (it != this->Headers.cend())
-    {
-        const char* x_forwarded_for = it->second.c_str();
-        LOG_DEBUG("X-Forwarded-For: " << x_forwarded_for);
-
-        const char* p = strchr(x_forwarded_for, ',');
-        if (nullptr == p)
-        {
-            this->ClientIP.assign(x_forwarded_for);
-        }
-        else
-        {
-            this->ClientIP.assign(x_forwarded_for, p - x_forwarded_for);
-        }
+        this->UserInfo = this->URL.substr(u.field_data[UF_USERINFO].off, u.field_data[UF_USERINFO].len);
+        LOG_DEBUG("user info: " << this->UserInfo);
     }
 }
 
 void Req::ParseQuery(const char* at, size_t length)
 {
+    this->Query.assign(at, length);
+
     char* str1, *str2, *token, *subtoken;
     char* saveptr1, *saveptr2;
     int j;
@@ -137,8 +145,28 @@ void Req::ParseQuery(const char* at, size_t length)
             }
         }
 
-        LOG_DEBUG("key: " << key << ", value: " << value);
+        LOG_DEBUG("query key: " << key << ", value: " << value);
         this->Queries.insert(QueryMap::value_type(key, value));
+    }
+}
+
+void Req::ParseClientIP()
+{
+    HeaderMap::const_iterator it =  this->Headers.find("X-Forwarded-For");
+    if (it != this->Headers.cend())
+    {
+        const char* x_forwarded_for = it->second.c_str();
+        LOG_DEBUG("X-Forwarded-For: " << x_forwarded_for);
+
+        const char* p = strchr(x_forwarded_for, ',');
+        if (nullptr == p)
+        {
+            this->ClientIP.assign(x_forwarded_for);
+        }
+        else
+        {
+            this->ClientIP.assign(x_forwarded_for, p - x_forwarded_for);
+        }
     }
 }
 
@@ -152,7 +180,7 @@ std::string Req::Dump()
         this->Path = "/";
     }
 
-    if (query_.empty())
+    if (Query.empty())
     {
         n = snprintf(buf, sizeof(buf), "%s %s HTTP/%d.%d\r\n",
                      http_method_str(this->Method), this->Path.c_str(),
@@ -161,7 +189,7 @@ std::string Req::Dump()
     else
     {
         n = snprintf(buf, sizeof(buf), "%s %s?%s HTTP/%d.%d\r\n",
-                     http_method_str(this->Method), this->Path.c_str(), this->query_.c_str(),
+                     http_method_str(this->Method), this->Path.c_str(), this->Query.c_str(),
                      this->MajorVersion, this->MinorVersion);
     }
 
@@ -238,7 +266,7 @@ int Parser::Execute(const char* buffer, size_t count)
     size_t n = http_parser_execute(parser_, HTTPParserSettings->Get(), buffer, count);
     if (parser_->upgrade)
     {
-        LOG_TRACE("upgrade to websocket");
+        LOG_TRACE("** upgrade to websocket **");
 
         if (http_ws_raw_tcp_common_logic_ != nullptr)
         {
@@ -249,7 +277,7 @@ int Parser::Execute(const char* buffer, size_t count)
     }
     else if (n != count)
     {
-        LOG_ERROR("parser error: " << std::string(buffer, count));
+        LOG_ERROR(std::string(buffer, count) << " parse failed: " << http_errno_description((http_errno) parser_->http_errno));
         return parser_->http_errno;
     }
 
@@ -259,6 +287,11 @@ int Parser::Execute(const char* buffer, size_t count)
         {
             http_ws_raw_tcp_common_logic_->OnHTTPReq(conn_id_, http_req_);
         }
+
+        // 反复使用
+        http_req_.Reset();
+        last_header_name_ = "";
+        complete_ = false;
     }
 
     return 0;
@@ -267,10 +300,6 @@ int Parser::Execute(const char* buffer, size_t count)
 int Parser::OnMessageBegin(http_parser* parser)
 {
     LOG_TRACE("Parser::OnMessageBegin");
-
-    Parser* hp = static_cast<Parser*>(parser->data);
-    hp->complete_ = false;
-
     return 0;
 }
 
@@ -289,7 +318,7 @@ int Parser::OnHeaderField(http_parser* parser, const char* at, size_t length)
     LOG_TRACE("Parser::OnHeaderField");
 
     Parser* hp = static_cast<Parser*>(parser->data);
-    hp->SetLastHeaderName(at, length);
+    hp->last_header_name_.assign(at, length);
 
     return 0;
 }
@@ -299,7 +328,7 @@ int Parser::OnHeaderValue(http_parser* parser, const char* at, size_t length)
     LOG_TRACE("Parser::OnHeaderValue");
 
     Parser* hp = static_cast<Parser*>(parser->data);
-    hp->http_req_.AddHeader(hp->GetLastHeaderName(), std::string(at, length));
+    hp->http_req_.AddHeader(hp->last_header_name_, std::string(at, length));
 
     return 0;
 }
@@ -316,8 +345,12 @@ int Parser::OnHeadersComplete(http_parser* parser)
     hp->http_req_.Method = (http_method) parser->method;
     hp->http_req_.MajorVersion = parser->http_major;
     hp->http_req_.MinorVersion = parser->http_minor;
-
     hp->http_req_.ParseClientIP();
+
+    LOG_DEBUG("method: " << hp->http_req_.Method
+              << ", major version: " << hp->http_req_.MajorVersion
+              << ", minor version: " << hp->http_req_.MinorVersion
+              << ", client ip: " << hp->http_req_.ClientIP);
 
     return 0;
 }
@@ -339,7 +372,6 @@ int Parser::OnMessageComplete(http_parser* parser)
 
     Parser* hp = static_cast<Parser*>(parser->data);
     hp->complete_ = true;
-
     LOG_DEBUG("http req =>\n" << hp->http_req_.Dump());
 
     return 0;

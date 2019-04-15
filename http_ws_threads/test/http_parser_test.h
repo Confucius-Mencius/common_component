@@ -1,5 +1,5 @@
-#ifndef CONF_CENTER_TEST_CONF_CENTER_TEST_H_
-#define CONF_CENTER_TEST_CONF_CENTER_TEST_H_
+#ifndef HTTP_WS_THREADS_TEST_HTTP_PARSER_TEST_H_
+#define HTTP_WS_THREADS_TEST_HTTP_PARSER_TEST_H_
 
 #include "the_http_parser.h"
 #include "test_util.h"
@@ -28,4 +28,4 @@ private:
 }
 }
 
-#endif // CONF_CENTER_TEST_CONF_CENTER_TEST_H_
+#endif // HTTP_WS_THREADS_TEST_HTTP_PARSER_TEST_H_

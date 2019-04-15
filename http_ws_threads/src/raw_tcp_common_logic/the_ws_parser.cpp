@@ -59,7 +59,7 @@ private:
 
 #define WSParserSettings Singleton<ParserSettings>::Instance()
 
-Parser::Parser() : key_(), protocol_()
+Parser::Parser() : key_(), protocol_(), body_(), payloads_()
 {
     http_ws_raw_tcp_common_logic_ = nullptr;
     conn_id_ = INVALID_CONN_ID;
@@ -75,9 +75,7 @@ Parser::Parser() : key_(), protocol_()
     parser_->data = this;
 
     opcode_ = 0;
-    is_final_ = 0;
-    body_ = nullptr;
-    body_len_ = 0;
+    fin_ = 0;
 }
 
 Parser::~Parser()
@@ -191,26 +189,17 @@ int Parser::OnFrameHeader(websocket_parser* parser)
     LOG_TRACE("Parser::OnFrameHeader");
     Parser* wsp = static_cast<Parser*>(parser->data);
 
-    wsp->opcode_ = parser->flags & WS_OP_MASK; // gets opcode
-    wsp->is_final_ = parser->flags & WS_FIN;   // checks is final frame
+    wsp->opcode_ = parser->flags & WS_OP_MASK;
+    wsp->fin_ = parser->flags & WS_FIN;
+    wsp->body_.resize(parser->length);
 
-    if (parser->length)
-    {
-        wsp->body_len_ = parser->length;
-        wsp->body_ = (char*) malloc(wsp->body_len_); // allocate memory for frame body, if body exists
-        if (nullptr == wsp->body_)
-        {
-            LOG_ERROR("failed to alloc memory");
-            return -1;
-        }
-    }
-
+    LOG_DEBUG("opcode: " << wsp->opcode_ << ", fin: " << (wsp->fin_ != 0) << ", length: " << parser->length);
     return 0;
 }
 
 int Parser::OnFrameBody(websocket_parser* parser, const char* at, size_t length)
 {
-    LOG_TRACE("Parser::OnFrameBody");
+    LOG_TRACE("Parser::OnFrameBody, length: " << length);
     Parser* wsp = static_cast<Parser*>(parser->data);
 
     if (parser->flags & WS_HAS_MASK)
@@ -231,16 +220,25 @@ int Parser::OnFrameEnd(websocket_parser* parser)
     LOG_TRACE("Parser::OnFrameEnd");
 
     Parser* wsp = static_cast<Parser*>(parser->data);
-    LOG_DEBUG("payload: " << std::string(wsp->body_, wsp->body_len_) << ", len: " << wsp->body_len_);
+    LOG_DEBUG("body: " << wsp->body_ << ", length: " << wsp->body_.size());
 
-    if (wsp->http_ws_raw_tcp_common_logic_ != nullptr)
+    if (wsp->body_.size() > 0)
     {
-        wsp->http_ws_raw_tcp_common_logic_->OnWSMsg(wsp->conn_id_, wsp->opcode_, wsp->body_, wsp->body_len_);
+        wsp->payloads_.append(wsp->body_);
     }
 
-    free(wsp->body_);
-    wsp->body_ = nullptr;
-    wsp->body_len_ = 0;
+    if (wsp->fin_)
+    {
+        LOG_DEBUG("payloads: " << wsp->payloads_);
+
+        if (wsp->http_ws_raw_tcp_common_logic_ != nullptr)
+        {
+            wsp->http_ws_raw_tcp_common_logic_->OnWSMsg(
+                wsp->conn_id_, wsp->opcode_, wsp->payloads_.data(), wsp->payloads_.size());
+        }
+
+        wsp->payloads_ = "";
+    }
 
     return 0;
 }

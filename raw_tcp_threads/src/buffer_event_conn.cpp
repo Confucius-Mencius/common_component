@@ -91,8 +91,9 @@ void BufferEventConn::EventCallback(struct bufferevent* buffer_event, short even
 void BufferEventConn::ReadCallback(struct bufferevent* buffer_event, void* arg)
 {
     struct evbuffer* input_buf = bufferevent_get_input(buffer_event);
+    const size_t len = evbuffer_get_length(input_buf);
     const evutil_socket_t sock_fd = bufferevent_getfd(buffer_event);
-    LOG_TRACE("recv data, socket fd: " << sock_fd << ", input buf len: " << evbuffer_get_length(input_buf));
+    LOG_TRACE("recv data, socket fd: " << sock_fd << ", len: " << len);
 
     IOThreadSink* thread_sink = static_cast<BufferEventConn*>(arg)->thread_sink_;
 
@@ -116,20 +117,17 @@ void BufferEventConn::ReadCallback(struct bufferevent* buffer_event, void* arg)
         return;
     }
 
-    const size_t input_buf_len = evbuffer_get_length(input_buf);
-    LOG_DEBUG("socket fd: " << sock_fd << ", input buf len: " << input_buf_len);
-
-    if (0 == input_buf_len)
+    if (0 == len)
     {
         return;
     }
 
-    unsigned char* data_buf = evbuffer_pullup(input_buf, input_buf_len); // 不用手动释放
+    unsigned char* data = evbuffer_pullup(input_buf, -1); // 不用手动释放
 
     // logic处理
-    thread_sink->OnRecvClientData(conn->GetConnGUID(), data_buf, input_buf_len);
+    thread_sink->OnRecvClientData(conn->GetConnGUID(), data, len);
 
-    if (evbuffer_drain(input_buf, input_buf_len) != 0)
+    if (evbuffer_drain(input_buf, len) != 0)
     {
         const int err = EVUTIL_SOCKET_ERROR();
         LOG_ERROR("failed to drain data from input buffer, errno: " << err

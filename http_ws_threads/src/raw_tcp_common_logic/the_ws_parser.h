@@ -76,10 +76,12 @@ private:
     ConnID conn_id_;
 
     struct websocket_parser* parser_;
+
+public:
     int opcode_;
-    int is_final_;
-    char* body_;
-    size_t body_len_;
+    int fin_;
+    std::string body_;
+    std::string payloads_;
 };
 }
 }
