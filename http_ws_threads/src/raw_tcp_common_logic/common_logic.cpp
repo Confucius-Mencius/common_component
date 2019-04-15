@@ -436,7 +436,6 @@ void HTTPWSCommonLogic::OnWSMsg(ConnID conn_id, int opcode, const char* data, si
             }
 
             free(frame);
-            scheduler_.CloseClient(conn_guid);
         }
         break;
 

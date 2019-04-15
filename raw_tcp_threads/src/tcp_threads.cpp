@@ -13,6 +13,7 @@ Threads::Threads() : threads_ctx_(), related_thread_groups_()
 {
     listen_thread_group_ = nullptr;
     io_thread_group_ = nullptr;
+    tcp_thread_group_ = nullptr;
 }
 
 Threads::~Threads()

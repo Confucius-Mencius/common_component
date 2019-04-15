@@ -33,6 +33,7 @@ private:
     RelatedThreadGroups related_thread_groups_;
     ThreadGroupInterface* listen_thread_group_;
     ThreadGroupInterface* io_thread_group_;
+    ThreadGroupInterface* tcp_thread_group_;
 };
 }
 }

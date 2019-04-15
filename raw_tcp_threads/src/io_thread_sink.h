@@ -14,19 +14,19 @@ namespace tcp
 {
 namespace raw
 {
-struct ProtoLogicItem
+struct LogicItem
 {
     std::string logic_so_path;
     ModuleLoader logic_loader;
     LogicInterface* logic;
 
-    ProtoLogicItem() : logic_so_path(), logic_loader()
+    LogicItem() : logic_so_path(), logic_loader()
     {
         logic = nullptr;
     }
 };
 
-typedef std::vector<ProtoLogicItem> ProtoLogicItemVec;
+typedef std::vector<LogicItem> LogicItemVec;
 
 class IOThreadSink : public ThreadSinkInterface
 {
@@ -87,7 +87,7 @@ private:
 
     ModuleLoader common_logic_loader_;
     CommonLogicInterface* common_logic_;
-    ProtoLogicItemVec logic_item_vec_;
+    LogicItemVec logic_item_vec_;
 
     ConnCenter conn_center_;
 

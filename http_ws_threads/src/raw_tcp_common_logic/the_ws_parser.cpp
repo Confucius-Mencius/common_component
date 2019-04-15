@@ -5,6 +5,7 @@
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include "common_logic.h"
+#include "hex_dump.h"
 #include "log_util.h"
 #include "the_http_parser.h"
 #include "singleton.h"
@@ -64,15 +65,8 @@ Parser::Parser() : key_(), protocol_(), body_(), payloads_()
     http_ws_raw_tcp_common_logic_ = nullptr;
     conn_id_ = INVALID_CONN_ID;
 
-    parser_ = (struct websocket_parser*) malloc(sizeof(struct websocket_parser));
-    if (nullptr == parser_)
-    {
-        LOG_ERROR("failed to alloc ws parser");
-        return;
-    }
-
-    websocket_parser_init(parser_);
-    parser_->data = this;
+    websocket_parser_init(&parser_);
+    parser_.data = this;
 
     opcode_ = 0;
     fin_ = 0;
@@ -80,10 +74,6 @@ Parser::Parser() : key_(), protocol_(), body_(), payloads_()
 
 Parser::~Parser()
 {
-    if (parser_ != nullptr)
-    {
-        free(parser_);
-    }
 }
 
 int Parser::CheckUpgrade(const http::Req& http_req)
@@ -174,10 +164,12 @@ std::string Parser::MakeHandshake()
 
 int Parser::Execute(const char* buffer, size_t count)
 {
-    size_t n = websocket_parser_execute(parser_, WSParserSettings->Get(), buffer, count);
+    LOG_TRACE("websocket parser execute");
+
+    size_t n = websocket_parser_execute(&parser_, WSParserSettings->Get(), buffer, count);
     if (n != count)
     {
-        LOG_ERROR("parser error: " << std::string(buffer, count));
+        LOG_ERROR("failed to parse " << std::string(buffer, count));
         return -1;
     }
 
@@ -220,7 +212,15 @@ int Parser::OnFrameEnd(websocket_parser* parser)
     LOG_TRACE("Parser::OnFrameEnd");
 
     Parser* wsp = static_cast<Parser*>(parser->data);
-    LOG_DEBUG("body: " << wsp->body_ << ", length: " << wsp->body_.size());
+
+    if (WS_OP_TEXT == wsp->opcode_)
+    {
+        LOG_DEBUG("body: " << wsp->body_ << ", length: " << wsp->body_.size());
+    }
+    else
+    {
+        LOG_DEBUG("body length: " << wsp->body_.size());
+    }
 
     if (wsp->body_.size() > 0)
     {
@@ -229,7 +229,14 @@ int Parser::OnFrameEnd(websocket_parser* parser)
 
     if (wsp->fin_)
     {
-        LOG_DEBUG("payloads: " << wsp->payloads_);
+        if (WS_OP_TEXT == wsp->opcode_)
+        {
+            LOG_DEBUG("payloads: " << wsp->payloads_ << ", length: " << wsp->payloads_.size());
+        }
+        else
+        {
+            LOG_DEBUG("payloads length: " << wsp->payloads_.size());
+        }
 
         if (wsp->http_ws_raw_tcp_common_logic_ != nullptr)
         {
@@ -237,7 +244,7 @@ int Parser::OnFrameEnd(websocket_parser* parser)
                 wsp->conn_id_, wsp->opcode_, wsp->payloads_.data(), wsp->payloads_.size());
         }
 
-        wsp->payloads_ = "";
+        wsp->payloads_.clear();
     }
 
     return 0;

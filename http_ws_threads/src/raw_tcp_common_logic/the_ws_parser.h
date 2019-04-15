@@ -75,9 +75,7 @@ private:
     tcp::raw::HTTPWSCommonLogic* http_ws_raw_tcp_common_logic_;
     ConnID conn_id_;
 
-    struct websocket_parser* parser_;
-
-public:
+    struct websocket_parser parser_;
     int opcode_;
     int fin_;
     std::string body_;

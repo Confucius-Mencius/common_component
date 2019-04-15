@@ -87,7 +87,7 @@ private:
     tcp::raw::HTTPWSCommonLogic* http_ws_raw_tcp_common_logic_;
     ConnID conn_id_;
 
-    struct http_parser* parser_;
+    struct http_parser parser_;
     Req http_req_;
     std::string last_header_name_;
     bool complete_;

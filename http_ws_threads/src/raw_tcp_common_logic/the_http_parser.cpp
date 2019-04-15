@@ -28,17 +28,17 @@ void Req::Reset()
     MajorVersion = 0;
     MinorVersion = 0;
     ClientIP = "";
-    URL = "";
-    Schema = "";
-    Host = "";
+    URL.clear();
+    Schema.clear();
+    Host.clear();
     Port = 0;
-    Path = "";
-    Query = "";
+    Path.clear();
+    Query.clear();
     Queries.clear();
-    Fragment = "";
-    UserInfo = "";
+    Fragment.clear();
+    UserInfo.clear();
     Headers.clear();
-    Body = "";
+    Body.clear();
 }
 
 void Req::ParseURL(const char* at, size_t length)
@@ -240,31 +240,22 @@ Parser::Parser() : http_req_(), last_header_name_()
     http_ws_raw_tcp_common_logic_ = nullptr;
     conn_id_ = INVALID_CONN_ID;
 
-    parser_ = (struct http_parser*) malloc(sizeof(struct http_parser));
-    if (nullptr == parser_)
-    {
-        LOG_ERROR("failed to alloc http parser");
-        return;
-    }
-
-    http_parser_init(parser_, HTTP_REQUEST);
-    parser_->data = this;
+    http_parser_init(&parser_, HTTP_REQUEST);
+    parser_.data = this;
 
     complete_ = false;
 }
 
 Parser::~Parser()
 {
-    if (parser_ != nullptr)
-    {
-        free(parser_);
-    }
 }
 
 int Parser::Execute(const char* buffer, size_t count)
 {
-    size_t n = http_parser_execute(parser_, HTTPParserSettings->Get(), buffer, count);
-    if (parser_->upgrade)
+    LOG_TRACE("http parser execute");
+
+    size_t n = http_parser_execute(&parser_, HTTPParserSettings->Get(), buffer, count);
+    if (parser_.upgrade)
     {
         LOG_TRACE("** upgrade to websocket **");
 
@@ -277,8 +268,9 @@ int Parser::Execute(const char* buffer, size_t count)
     }
     else if (n != count)
     {
-        LOG_ERROR(std::string(buffer, count) << " parse failed: " << http_errno_description((http_errno) parser_->http_errno));
-        return parser_->http_errno;
+        LOG_ERROR("failed to parse " << std::string(buffer, count)
+                  << ", err msg: " << http_errno_description((http_errno) parser_.http_errno));
+        return parser_.http_errno;
     }
 
     if (complete_)
