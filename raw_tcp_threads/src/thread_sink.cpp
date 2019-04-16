@@ -326,7 +326,7 @@ void ThreadSink::OnTask(const ThreadTask* task)
             {
                 if (conn_guid != nullptr)
                 {
-                    LOG_TRACE("dispatch msg ok, " << conn_guid << ", msg id: " << msg_head.msg_id);
+                    LOG_TRACE("dispatch msg ok, " << *conn_guid << ", msg id: " << msg_head.msg_id);
                 }
                 else
                 {
@@ -378,6 +378,8 @@ bool ThreadSink::CanExit() const
 
 void ThreadSink::OnClientClosed(const BaseConn* conn)
 {
+    LOG_TRACE("ThreadSink::OnClientClosed");
+
     if (common_logic_ != nullptr)
     {
         common_logic_->OnClientClosed(conn->GetConnGUID());

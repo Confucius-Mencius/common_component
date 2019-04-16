@@ -1,5 +1,5 @@
-#ifndef UDP_THREADS_SRC_UDP_SCHEDULER_H_
-#define UDP_THREADS_SRC_UDP_SCHEDULER_H_
+#ifndef UDP_THREADS_SRC_SCHEDULER_H_
+#define UDP_THREADS_SRC_SCHEDULER_H_
 
 #include "thread_center_interface.h"
 #include "udp_scheduler_interface.h"
@@ -45,7 +45,7 @@ public:
         thread_sink_ = sink;
     }
 
-    void SetRelatedThreadGroup(RelatedThreadGroup* related_thread_group);
+    void SetRelatedThreadGroup(RelatedThreadGroups* related_thread_group);
 
 private:
     int GetScheduleUdpThreadIdx(int udp_thread_idx);
@@ -54,11 +54,11 @@ private:
 private:
     const ThreadsCtx* threads_ctx_;
     ThreadSink* thread_sink_;
-    RelatedThreadGroup* related_thread_group_;
+    RelatedThreadGroups* related_thread_group_;
 
     int last_udp_thread_idx_;
     int last_work_thread_idx_;
 };
 }
 
-#endif // UDP_THREADS_SRC_UDP_SCHEDULER_H_
+#endif // UDP_THREADS_SRC_SCHEDULER_H_

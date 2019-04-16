@@ -1,8 +1,8 @@
-#include "udp_scheduler.h"
+#include "scheduler.h"
 #include "app_frame_conf_mgr_interface.h"
 #include "num_util.h"
 #include "trans_center_interface.h"
-#include "udp_thread_sink.h"
+#include "thread_sink.h"
 
 namespace udp
 {
@@ -158,7 +158,7 @@ int Scheduler::SendToClient(const ConnGuid* conn_guid, const MsgHead& msg_head, 
         ConnInterface* conn = thread_sink_->GetConnCenter()->GetConnByConnId(conn_guid->conn_id);
         if (nullptr == conn)
         {
-            LOG_ERROR("failed to get udp conn by id: " << conn_guid->conn_id);
+            LOG_ERROR("failed to get udp conn by id: " ->conn_id);
             return -1;
         }
 
@@ -202,7 +202,7 @@ int Scheduler::CloseClient(const ConnGuid* conn_guid)
         ConnInterface* conn = thread_sink_->GetConnCenter()->GetConnByConnId(conn_guid->conn_id);
         if (nullptr == conn)
         {
-            LOG_ERROR("failed to get udp conn by id: " << conn_guid->conn_id);
+            LOG_ERROR("failed to get udp conn by id: " ->conn_id);
             return -1;
         }
 
@@ -347,7 +347,7 @@ int Scheduler::SendToGlobalThread(const ConnGuid* conn_guid, const MsgHead& msg_
     return 0;
 }
 
-void Scheduler::SetRelatedThreadGroup(RelatedThreadGroup* related_thread_group)
+void Scheduler::SetRelatedThreadGroup(RelatedThreadGroups* related_thread_group)
 {
     related_thread_group_ = related_thread_group;
 

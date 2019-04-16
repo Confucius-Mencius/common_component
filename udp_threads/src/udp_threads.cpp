@@ -1,12 +1,11 @@
 #include "udp_threads.h"
 #include "app_frame_conf_mgr_interface.h"
-#include "container_util.h"
-#include "str_util.h"
+#include "thread_sink.h"
 #include "version.h"
 
 namespace udp
 {
-Threads::Threads() : threads_ctx_(), udp_thread_vec_(), udp_thread_sink_vec_(), related_thread_group_()
+Threads::Threads() : threads_ctx_(), udp_thread_vec_(), udp_thread_sink_vec_(), related_thread_groups_()
 {
     udp_thread_group_ = nullptr;
 }
@@ -62,7 +61,7 @@ void Threads::Freeze()
     // 由thread center集中管理
 }
 
-int Threads::CreateThreadGroup()
+int Threads::CreateThreadGroup(const char* name_prefix)
 {
     int ret = -1;
 
@@ -98,18 +97,18 @@ ThreadGroupInterface* Threads::GetUdpThreadGroup() const
     return udp_thread_group_;
 }
 
-void Threads::SetRelatedThreadGroup(const RelatedThreadGroup* related_thread_group)
+void Threads::SetRelatedThreadGroup(const RelatedThreadGroups* related_thread_group)
 {
     if (nullptr == related_thread_group)
     {
         return;
     }
 
-    related_thread_group_ = *related_thread_group;
+    related_thread_groups_ = *related_thread_group;
 
     for (UdpThreadSinkVec::iterator it = udp_thread_sink_vec_.begin(); it != udp_thread_sink_vec_.end(); ++it)
     {
-        (*it)->SetRelatedThreadGroup(&related_thread_group_);
+        (*it)->SetRelatedThreadGroup(&related_thread_groups_);
     }
 }
 

@@ -1,4 +1,4 @@
-#include "udp_thread_sink.h"
+#include "thread_sink.h"
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
 #include <event2/event_struct.h>
@@ -493,7 +493,7 @@ void ThreadSink::OnRecvClientMsg(evutil_socket_t fd, const struct sockaddr_in* c
     scheduler_.SendToWorkThread(&udp_conn->GetConnGuid(), msg_head, msg_body, msg_body_len, -1);
 }
 
-void ThreadSink::SetRelatedThreadGroup(RelatedThreadGroup* related_thread_group)
+void ThreadSink::SetRelatedThreadGroup(RelatedThreadGroups* related_thread_group)
 {
     related_thread_group_ = related_thread_group;
 

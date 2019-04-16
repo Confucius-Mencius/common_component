@@ -1,5 +1,5 @@
-#ifndef UDP_THREADS_SRC_UDP_THREAD_SINK_H_
-#define UDP_THREADS_SRC_UDP_THREAD_SINK_H_
+#ifndef UDP_THREADS_SRC_THREAD_SINK_H_
+#define UDP_THREADS_SRC_THREAD_SINK_H_
 
 #include <event2/event.h>
 #include "conn_center_mgr_interface.h"
@@ -8,7 +8,7 @@
 #include "module_loader.h"
 #include "thread_center_interface.h"
 #include "udp_logic_interface.h"
-#include "udp_scheduler.h"
+#include "scheduler.h"
 #include "udp_threads_interface.h"
 
 namespace udp
@@ -98,7 +98,7 @@ public:
         return udp_thread_group_;
     }
 
-    void SetRelatedThreadGroup(RelatedThreadGroup* related_thread_group);
+    void SetRelatedThreadGroup(RelatedThreadGroups* related_thread_group);
 
 private:
     int BindUdpSocket();
@@ -128,8 +128,8 @@ private:
 
     LogicItemVec logic_item_vec_;
 
-    RelatedThreadGroup* related_thread_group_;
+    RelatedThreadGroups* related_thread_group_;
 };
 }
 
-#endif // UDP_THREADS_SRC_UDP_THREAD_SINK_H_
+#endif // UDP_THREADS_SRC_THREAD_SINK_H_

@@ -134,7 +134,7 @@ int MsgDispatcher::DispatchMsg(const ConnGUID* conn_guid, const ::proto::MsgHead
     const long end_millisecond = end_time.tv_sec * 1000 + end_time.tv_usec / 1000; \
  \
     LOG_INFO("msg process time: " << end_millisecond - begin_millisecond << " milliseconds. " \
-              << conn_guid << ", " << msg_head << ", msg body len: " << msg_body_len); \
+              << *conn_guid << ", " << msg_head << ", msg body len: " << msg_body_len); \
     return 0; \
 }
 

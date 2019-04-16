@@ -6,27 +6,26 @@
 
 class ConfCenterInterface;
 class TimerAxisInterface;
-class TimeServiceInterface;
-class RandomEngineInterface;
+class ConnCenterInterface;
 struct event_base;
-
-namespace base
-{
-class MsgDispatcherInterface;
-}
-
-struct ConnGuid;
+struct ConnGUID;
+class ThreadInterface;
 
 namespace global
 {
 class LogicInterface;
 }
 
+namespace proto
+{
+class MsgDispatcherInterface;
+}
+
 namespace udp
 {
-class ConnCenterInterface;
 class SchedulerInterface;
-class LocalLogicInterface;
+class MsgDispatcherInterface;
+class CommonLogicInterface;
 
 struct LogicCtx
 {
@@ -37,13 +36,13 @@ struct LogicCtx
     const char* app_name;
     ConfCenterInterface* conf_center;
     TimerAxisInterface* timer_axis;
-    TimeServiceInterface* time_service;
-    RandomEng#include <atomic>ineInterface* random_engine;
     ConnCenterInterface* conn_center;
-    base::MsgDispatcherInterface* msg_dispatcher;
     SchedulerInterface* scheduler;
-    LocalLogicInterface* local_logic;
+    ::proto::MsgDispatcherInterface* msg_dispatcher;
+    CommonLogicInterface* common_logic;
     struct event_base* thread_ev_base;
+    int thread_idx;
+    const void* logic_args;
 
     LogicCtx()
     {
@@ -54,13 +53,13 @@ struct LogicCtx
         app_name = nullptr;
         conf_center = nullptr;
         timer_axis = nullptr;
-        time_service = nullptr;
-        random_engine = nullptr;
         conn_center = nullptr;
-        msg_dispatcher = nullptr;
         scheduler = nullptr;
-        local_logic = nullptr;
+        msg_dispatcher = nullptr;
+        common_logic = nullptr;
         thread_ev_base = nullptr;
+        thread_idx = -1;
+        logic_args = nullptr;
     }
 };
 
@@ -109,6 +108,30 @@ public:
     bool CanExit() const
     {
         return can_exit_;
+    }
+
+    /**
+     * 连接管理接口，当有新的客户端连上来时会回调到这里
+     * @param conn_guid
+     */
+    virtual void OnClientConnected(const ConnGUID* conn_guid)
+    {
+    }
+
+    /**
+     * 连接管理接口，当有客户端连接断开时会回调到这里，包括服务器主动关闭的连接
+     * @param conn_guid
+     */
+    virtual void OnClientClosed(const ConnGUID* conn_guid)
+    {
+    }
+
+    virtual void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
+    {
+    }
+
+    virtual void OnTask(const ConnGUID* conn_guid, ThreadInterface* source_thread, const void* data, size_t len)
+    {
     }
 
 protected:

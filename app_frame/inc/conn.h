@@ -102,7 +102,7 @@ public:
     virtual const ConnGUID* GetConnGUID() const = 0;
     virtual const char* GetClientIP() const = 0;
     virtual unsigned short GetClientPort() const = 0;
-    virtual int GetSockFD() const = 0;
+    // virtual int GetSockFD() const = 0;
 
     // 缓存收到的数据
     virtual std::string& AppendData(const char* data, size_t len) = 0;

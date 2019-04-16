@@ -1,6 +1,7 @@
 #ifndef RAW_TCP_THREADS_SRC_BASE_CONN_H_
 #define RAW_TCP_THREADS_SRC_BASE_CONN_H_
 
+#include <event2/util.h>
 #include "conn.h"
 
 namespace tcp
@@ -38,11 +39,6 @@ public:
     unsigned short GetClientPort() const override
     {
         return client_port_;
-    }
-
-    int GetSockFD() const override
-    {
-        return sock_fd_;
     }
 
     std::string& AppendData(const char* data, size_t len) override
@@ -97,6 +93,11 @@ public:
         sock_fd_ = sock_fd;
     }
 
+    int GetSockFD() const
+    {
+        return sock_fd_;
+    }
+
     void SetThreadSink(ThreadSink* sink)
     {
         thread_sink_ = sink;
@@ -108,7 +109,7 @@ protected:
     ConnGUID conn_guid_;
     std::string client_ip_;
     unsigned short client_port_;
-    int sock_fd_;
+    evutil_socket_t sock_fd_;
     ThreadSink* thread_sink_;
     std::string data_;
 };

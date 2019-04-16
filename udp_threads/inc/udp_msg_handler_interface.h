@@ -1,13 +1,13 @@
 #ifndef UDP_THREADS_INC_UDP_MSG_HANDLER_INTERFACE_H_
 #define UDP_THREADS_INC_UDP_MSG_HANDLER_INTERFACE_H_
 
-#include "msg_handler_interface.h"
+#include "proto_msg_handler_interface.h"
 
 namespace udp
 {
 class LogicCtx;
 
-class MsgHandlerInterface : public base::MsgHandlerInterface
+class MsgHandlerInterface : public ::proto::MsgHandlerInterface
 {
 public:
     MsgHandlerInterface()

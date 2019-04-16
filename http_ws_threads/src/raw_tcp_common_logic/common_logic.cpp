@@ -177,12 +177,12 @@ void HTTPWSCommonLogic::OnReload()
 
 void HTTPWSCommonLogic::OnClientConnected(const ConnGUID* conn_guid)
 {
-    LOG_TRACE("HTTPWSCommonLogic::OnClientConnected, " << conn_guid);
+    LOG_TRACE("HTTPWSCommonLogic::OnClientConnected, " << *conn_guid);
 
     ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_guid->conn_id);
     if (nullptr == conn)
     {
-        LOG_ERROR("failed to get conn by id: " << conn_guid);
+        LOG_ERROR("failed to get conn by id: " << conn_guid->conn_id);
         return;
     }
 
@@ -218,12 +218,12 @@ void HTTPWSCommonLogic::OnClientConnected(const ConnGUID* conn_guid)
 
 void HTTPWSCommonLogic::OnClientClosed(const ConnGUID* conn_guid)
 {
-    LOG_TRACE("HTTPWSCommonLogic::OnClientClosed, " << conn_guid);
+    LOG_TRACE("HTTPWSCommonLogic::OnClientClosed, " << *conn_guid);
 
     ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_guid->conn_id);
     if (nullptr == conn)
     {
-        LOG_ERROR("failed to get conn by id: " << conn_guid);
+        LOG_ERROR("failed to get conn by id: " << conn_guid->conn_id);
         return;
     }
 
@@ -249,7 +249,7 @@ void HTTPWSCommonLogic::OnClientClosed(const ConnGUID* conn_guid)
 
 void HTTPWSCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
 {
-    LOG_DEBUG("HTTPWSCommonLogic::OnRecvClientData, " << conn_guid << ", data: " << data << ", len: " << len);
+    LOG_DEBUG("HTTPWSCommonLogic::OnRecvClientData, " << *conn_guid << ", data: " << data << ", len: " << len);
 
     HTTPConnCtxMap::iterator it = http_conn_ctx_map_.find(conn_guid->conn_id);
     if (it == http_conn_ctx_map_.end())
@@ -292,7 +292,7 @@ void HTTPWSCommonLogic::OnTask(const ConnGUID* conn_guid, ThreadInterface* sourc
     {
         if (conn_guid != nullptr)
         {
-            LOG_TRACE("dispatch msg ok, " << conn_guid << ", msg id: " << msg_head.msg_id);
+            LOG_TRACE("dispatch msg ok, " << *conn_guid << ", msg id: " << msg_head.msg_id);
         }
         else
         {
@@ -376,7 +376,7 @@ void HTTPWSCommonLogic::OnUpgrade(ConnID conn_id, const tcp::http_ws::http::Req&
         return;
     }
 
-    LOG_TRACE("send handshake ok, " << conn_guid);
+    LOG_TRACE("send handshake ok, " << *conn_guid);
     http_conn_ctx->upgrade_ = true;
 
     LOG_DEBUG("len: " << len);
@@ -437,7 +437,7 @@ void HTTPWSCommonLogic::OnWSMsg(ConnID conn_id, int opcode, const char* data, si
 
             if (0 == scheduler_.SendToClient(conn_guid, frame, frame_len))
             {
-                LOG_TRACE("send close frame ok, " << conn_guid);
+                LOG_TRACE("send close frame ok, " << *conn_guid);
             }
 
             free(frame);
@@ -460,7 +460,7 @@ void HTTPWSCommonLogic::OnWSMsg(ConnID conn_id, int opcode, const char* data, si
 
             if (0 == scheduler_.SendToClient(conn_guid, frame, frame_len))
             {
-                LOG_TRACE("send pong ok, " << conn_guid);
+                LOG_TRACE("send pong ok, " << *conn_guid);
             }
 
             free(frame);

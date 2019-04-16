@@ -2,9 +2,9 @@
 #define UDP_THREADS_INC_UDP_THREADS_INTERFACE_H_
 
 #include "thread_center_interface.h"
+#include "vector_types.h"
 
 class ConfCenterInterface;
-class MsgCodecCenterInterface;
 
 namespace global
 {
@@ -18,6 +18,23 @@ class ConfMgrInterface;
 
 namespace udp
 {
+struct Conf
+{
+    IOType io_type;
+    std::string addr;
+    unsigned int port;
+    int thread_count;
+    std::string common_logic_so;
+    StrGroup logic_so_group;
+
+    Conf() : addr(), common_logic_so(), logic_so_group()
+    {
+        io_type = IO_TYPE_MIN;
+        port = 0;
+        thread_count = 0;
+    }
+};
+
 struct ThreadsCtx
 {
     int argc;
@@ -26,14 +43,15 @@ struct ThreadsCtx
     const char* cur_working_dir;
     const char* app_name;
     ConfCenterInterface* conf_center;
-    MsgCodecCenterInterface* msg_codec_center;
     ThreadCenterInterface* thread_center;
+    app_frame::ConfMgrInterface* app_frame_conf_mgr;
+    int* app_frame_threads_count;
+    pthread_mutex_t* app_frame_threads_sync_mutex;
+    pthread_cond_t* app_frame_threads_sync_cond;
 
-    app_frame::ConfMgrInterface* conf_mgr;
-
-    int* frame_threads_count;
-    pthread_mutex_t* frame_threads_mutex;
-    pthread_cond_t* frame_threads_cond;
+    // 下面两个字段是为了支持多种类型的udp io
+    Conf conf;
+    const void* logic_args;
 
     ThreadsCtx()
     {
@@ -43,22 +61,22 @@ struct ThreadsCtx
         cur_working_dir = nullptr;
         app_name = nullptr;
         conf_center = nullptr;
-        msg_codec_center = nullptr;
         thread_center = nullptr;
-        conf_mgr = nullptr;
-        frame_threads_count = nullptr;
-        frame_threads_mutex = nullptr;
-        frame_threads_cond = nullptr;
+        app_frame_conf_mgr = nullptr;
+        app_frame_threads_count = nullptr;
+        app_frame_threads_sync_mutex = nullptr;
+        app_frame_threads_sync_cond = nullptr;
+        logic_args = nullptr;
     }
 };
 
-struct RelatedThreadGroup
+struct RelatedThreadGroups
 {
     ThreadInterface* global_thread;
     global::LogicInterface* global_logic;
     ThreadGroupInterface* work_thread_group;
 
-    RelatedThreadGroup()
+    RelatedThreadGroups()
     {
         global_thread = nullptr;
         global_logic = nullptr;
@@ -73,10 +91,9 @@ public:
     {
     }
 
-    virtual int CreateThreadGroup() = 0;
-    virtual ThreadGroupInterface* GetUdpThreadGroup() const = 0;
-
-    virtual void SetRelatedThreadGroup(const RelatedThreadGroup* related_thread_group) = 0;
+    virtual int CreateThreadGroup(const char* name_prefix) = 0;
+    virtual void SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups) = 0;
+    virtual ThreadGroupInterface* GetUDPThreadGroup() const = 0;
 };
 }
 

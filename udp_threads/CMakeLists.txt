@@ -35,13 +35,11 @@ set(BASE_LIB_DIR ${OUTPUT_DIR})
 set(BASE_LIB_NAME base)
 
 set(LOG_ENGINE_INC_DIR ${PROJECT_SOURCE_DIR}/../log_engine/inc)
-set(THREAD_CENTER_INC_DIR ${PROJECT_SOURCE_DIR}/../thread_center/inc)
-set(MSG_CODEC_CENTER_INC_DIR ${PROJECT_SOURCE_DIR}/../msg_codec_center/inc)
-set(CONN_CENTER_MGR_INC_DIR ${PROJECT_SOURCE_DIR}/../conn_center_mgr/inc)
-set(CLIENT_CENTER_MGR_INC_DIR ${PROJECT_SOURCE_DIR}/../client_center_mgr/inc)
+set(CONF_CENTER_INC_DIR ${PROJECT_SOURCE_DIR}/../conf_center/inc)
 set(TIMER_AXIS_INC_DIR ${PROJECT_SOURCE_DIR}/../timer_axis/inc)
-set(TRANS_CENTER_INC_DIR ${PROJECT_SOURCE_DIR}/../trans_center/inc)
+set(THREAD_CENTER_INC_DIR ${PROJECT_SOURCE_DIR}/../thread_center/inc)
 set(APP_FRAME_INC_DIR ${PROJECT_SOURCE_DIR}/../app_frame/inc)
+set(PROTO_MSG_CODEC_INC_DIR ${PROJECT_SOURCE_DIR}/../proto_msg_codec/inc)
 
 ###############################################################################
 # project inc dir

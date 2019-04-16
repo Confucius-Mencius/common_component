@@ -89,7 +89,7 @@ int MsgDispatcher::DispatchMsg(const ConnInterface* conn, const Req& http_req)
     const long end_millisecond = end_time.tv_sec * 1000 + end_time.tv_usec / 1000;
 
     LOG_INFO("msg process time: " << end_millisecond - begin_millisecond << " milliseconds. "
-             << conn_guid << ", path " << http_req.Path);
+             << *conn_guid << ", path " << http_req.Path);
     return 0;
 }
 }

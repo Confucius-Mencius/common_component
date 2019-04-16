@@ -169,12 +169,12 @@ void ProtoCommonLogic::OnReload()
 
 void ProtoCommonLogic::OnClientConnected(const ConnGUID* conn_guid)
 {
-    LOG_TRACE("ProtoCommonLogic::OnClientConnected, " << conn_guid);
+    LOG_TRACE("ProtoCommonLogic::OnClientConnected, " << *conn_guid);
 
     ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_guid->conn_id);
     if (nullptr == conn)
     {
-        LOG_ERROR("failed to get conn by id: " << conn_guid);
+        LOG_ERROR("failed to get conn by id: " << *conn_guid);
         return;
     }
 
@@ -193,12 +193,12 @@ void ProtoCommonLogic::OnClientConnected(const ConnGUID* conn_guid)
 
 void ProtoCommonLogic::OnClientClosed(const ConnGUID* conn_guid)
 {
-    LOG_TRACE("ProtoCommonLogic::OnClientClosed, " << conn_guid);
+    LOG_TRACE("ProtoCommonLogic::OnClientClosed, " << *conn_guid);
 
     ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_guid->conn_id);
     if (nullptr == conn)
     {
-        LOG_ERROR("failed to get conn by id: " << conn_guid);
+        LOG_ERROR("failed to get conn by id: " << *conn_guid);
         return;
     }
 
@@ -219,12 +219,12 @@ void ProtoCommonLogic::OnClientClosed(const ConnGUID* conn_guid)
 
 void ProtoCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
 {
-    LOG_DEBUG("ProtoCommonLogic::OnRecvClientData, " << conn_guid << ", data: " << data << ", len: " << len);
+    LOG_DEBUG("ProtoCommonLogic::OnRecvClientData, " << *conn_guid << ", data: " << data << ", len: " << len);
 
     ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_guid->conn_id);
     if (nullptr == conn)
     {
-        LOG_ERROR("failed to get conn by id, " << conn_guid);
+        LOG_ERROR("failed to get conn by id, " << *conn_guid);
         return;
     }
 
@@ -247,7 +247,7 @@ void ProtoCommonLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* d
 
             scheduler_.SendToClient(conn_guid, msg_head, nullptr, 0);
 
-            LOG_INFO("close proto tcp conn, " << conn_guid << ", err msg id: " << err_msg_id);
+            LOG_INFO("close proto tcp conn, " << *conn_guid << ", err msg id: " << err_msg_id);
             scheduler_.CloseClient(conn_guid); // 服务器主动关闭连接
 
             return;
@@ -305,7 +305,7 @@ void ProtoCommonLogic::OnTask(const ConnGUID* conn_guid, ThreadInterface* source
     {
         if (conn_guid != nullptr)
         {
-            LOG_TRACE("dispatch msg ok, " << conn_guid << ", msg id: " << msg_head.msg_id);
+            LOG_TRACE("dispatch msg ok, " << *conn_guid << ", msg id: " << msg_head.msg_id);
         }
         else
         {
@@ -471,7 +471,7 @@ void ProtoCommonLogic::OnRecvClientMsg(const ConnGUID* conn_guid, const ::proto:
 
         if (0 == msg_dispatcher_.DispatchMsg(conn_guid, msg_head, msg_body, msg_body_len))
         {
-            LOG_TRACE("dispatch msg ok, " << conn_guid << ", msg id: " << msg_head.msg_id);
+            LOG_TRACE("dispatch msg ok, " << *conn_guid << ", msg id: " << msg_head.msg_id);
             return;
         }
     }
@@ -480,7 +480,7 @@ void ProtoCommonLogic::OnRecvClientMsg(const ConnGUID* conn_guid, const ::proto:
     if (nullptr == proto_logic_args_.related_thread_groups->work_thread_group ||
             0 == proto_logic_args_.related_thread_groups->work_thread_group->GetThreadCount())
     {
-        LOG_ERROR("no work threads, failed to dispatch msg, " << conn_guid << ", msg id: " << msg_head.msg_id);
+        LOG_ERROR("no work threads, failed to dispatch msg, " << *conn_guid << ", msg id: " << msg_head.msg_id);
 
         ::proto::MsgHead rsp_msg_head = msg_head;
         rsp_msg_head.msg_id = MSG_ID_NONE_HANDLER_FOUND;
@@ -489,7 +489,7 @@ void ProtoCommonLogic::OnRecvClientMsg(const ConnGUID* conn_guid, const ::proto:
         return;
     }
 
-    LOG_TRACE("forward to work thread");
+    LOG_TRACE("** forward to work thread **");
 
     if (scheduler_.SendToWorkThread(conn_guid, msg_head, msg_body, msg_body_len, -1) != 0)
     {
