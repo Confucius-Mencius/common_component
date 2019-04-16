@@ -44,8 +44,9 @@ class Req;
 
 namespace ws
 {
-struct Parser
+class Parser
 {
+public:
     Parser();
     ~Parser();
 
@@ -77,6 +78,8 @@ private:
 
     struct websocket_parser parser_;
     int opcode_;
+    bool is_text_; // 因为存在分帧，不能简单地用opcode确定帧的类型
+    bool is_binary_;
     int fin_;
     std::string body_;
     std::string payloads_;

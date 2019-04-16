@@ -83,27 +83,11 @@ struct ConnGUID
         }
     }
 
-//    friend std::ostream& operator<<(std::ostream& os, const ConnGUID& instance)
-//    {
-//        os << "conn guid => { io type: " << instance.io_type
-//           << ", io thread idx: " << instance.io_thread_idx
-//           << ", conn id: " << instance.conn_id << " }";
-//        return os;
-//    }
-
-    friend std::ostream& operator<<(std::ostream& os, const ConnGUID* instance)
+    friend std::ostream& operator<<(std::ostream& os, const ConnGUID& instance)
     {
-        if (nullptr == instance)
-        {
-            os << "conn guid => null";
-        }
-        else
-        {
-            os << "conn guid => { io type: " << instance->io_type
-               << ", io thread idx: " << instance->io_thread_idx
-               << ", conn id: " << instance->conn_id << " }";
-        }
-
+        os << "conn guid => { io type: " << instance.io_type
+           << ", io thread idx: " << instance.io_thread_idx
+           << ", conn id: " << instance.conn_id << " }";
         return os;
     }
 };

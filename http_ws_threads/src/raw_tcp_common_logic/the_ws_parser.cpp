@@ -69,6 +69,8 @@ Parser::Parser() : key_(), protocol_(), body_(), payloads_()
     parser_.data = this;
 
     opcode_ = 0;
+    is_text_ = false;
+    is_binary_ = false;
     fin_ = 0;
 }
 
@@ -182,10 +184,26 @@ int Parser::OnFrameHeader(websocket_parser* parser)
     Parser* wsp = static_cast<Parser*>(parser->data);
 
     wsp->opcode_ = parser->flags & WS_OP_MASK;
+
+    if (WS_OP_TEXT == wsp->opcode_)
+    {
+        wsp->is_text_ = true;
+    }
+    else if (WS_OP_BINARY == wsp->opcode_)
+    {
+        wsp->is_binary_ = true;
+    }
+
     wsp->fin_ = parser->flags & WS_FIN;
     wsp->body_.resize(parser->length);
 
     LOG_DEBUG("opcode: " << wsp->opcode_ << ", fin: " << (wsp->fin_ != 0) << ", length: " << parser->length);
+
+    if (wsp->http_ws_raw_tcp_common_logic_ != nullptr)
+    {
+        wsp->http_ws_raw_tcp_common_logic_->RecordPartMsg(wsp->conn_id_);
+    }
+
     return 0;
 }
 
@@ -204,6 +222,11 @@ int Parser::OnFrameBody(websocket_parser* parser, const char* at, size_t length)
         memcpy(&wsp->body_[parser->offset], at, length);
     }
 
+    if (wsp->http_ws_raw_tcp_common_logic_ != nullptr)
+    {
+        wsp->http_ws_raw_tcp_common_logic_->RecordPartMsg(wsp->conn_id_);
+    }
+
     return 0;
 }
 
@@ -213,7 +236,7 @@ int Parser::OnFrameEnd(websocket_parser* parser)
 
     Parser* wsp = static_cast<Parser*>(parser->data);
 
-    if (WS_OP_TEXT == wsp->opcode_)
+    if (wsp->is_text_)
     {
         LOG_DEBUG("body: " << wsp->body_ << ", length: " << wsp->body_.size());
     }
@@ -229,7 +252,7 @@ int Parser::OnFrameEnd(websocket_parser* parser)
 
     if (wsp->fin_)
     {
-        if (WS_OP_TEXT == wsp->opcode_)
+        if (wsp->is_text_)
         {
             LOG_DEBUG("payloads: " << wsp->payloads_ << ", length: " << wsp->payloads_.size());
         }
@@ -238,13 +261,33 @@ int Parser::OnFrameEnd(websocket_parser* parser)
             LOG_DEBUG("payloads length: " << wsp->payloads_.size());
         }
 
+        if (WS_OP_CLOSE == wsp->opcode_)
+        {
+            char s[2];
+            s[0] = wsp->payloads_[1];
+            s[1] = wsp->payloads_[0];
+            uint16_t cc = *((uint16_t*) s);
+            LOG_DEBUG("close code: " << cc);
+        }
+
         if (wsp->http_ws_raw_tcp_common_logic_ != nullptr)
         {
-            wsp->http_ws_raw_tcp_common_logic_->OnWSMsg(
-                wsp->conn_id_, wsp->opcode_, wsp->payloads_.data(), wsp->payloads_.size());
+            int opcode = wsp->opcode_;
+            if (wsp->is_text_)
+            {
+                opcode = WS_OP_TEXT;
+            }
+            else if (wsp->is_binary_)
+            {
+                opcode = WS_OP_BINARY;
+            }
+
+            wsp->http_ws_raw_tcp_common_logic_->OnWSMsg(wsp->conn_id_, opcode, wsp->payloads_.data(), wsp->payloads_.size());
         }
 
         wsp->payloads_.clear();
+        wsp->is_text_ = false;
+        wsp->is_binary_ = false;
     }
 
     return 0;

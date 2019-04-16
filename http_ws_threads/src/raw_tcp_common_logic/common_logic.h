@@ -61,6 +61,8 @@ public:
     void OnUpgrade(ConnID conn_id, const tcp::http_ws::http::Req& http_req, const char* data, size_t len);
     void OnWSMsg(ConnID conn_id, int opcode, const char* data, size_t len);
 
+    void RecordPartMsg(ConnID conn_id);
+
 private:
     int LoadHTTPWSCommonLogic();
     int LoadHTTPWSLogicGroup();
@@ -91,9 +93,6 @@ private:
     };
 
     typedef __hash_map<ConnID, HTTPConnCtx*> HTTPConnCtxMap;
-
-private:
-//    void ProcessWSData(HTTPConnCtx* http_conn_ctx);
 
 private:
     HTTPWSLogicArgs http_ws_logic_args_;

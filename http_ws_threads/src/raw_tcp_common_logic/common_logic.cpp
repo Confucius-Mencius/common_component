@@ -335,6 +335,8 @@ void HTTPWSCommonLogic::OnHTTPReq(ConnID conn_id, const tcp::http_ws::http::Req&
         return;
     }
 
+    part_msg_mgr_.RemoveRecord(conn);
+
     if (http_msg_dispatcher_.DispatchMsg(conn, http_req) != 0)
     {
         LOG_ERROR("failed to dispatch http req, path: " << http_req.Path << ", method: " << http_method_str(http_req.Method));
@@ -398,6 +400,9 @@ void HTTPWSCommonLogic::OnWSMsg(ConnID conn_id, int opcode, const char* data, si
     ConnInterface* conn = http_conn_ctx->conn;
     const ConnGUID* conn_guid = conn->GetConnGUID();
 
+    part_msg_mgr_.RemoveRecord(conn);
+
+    // TODO 完善websocket cs消息交互流程
     switch (opcode)
     {
         case WS_OP_TEXT:
@@ -473,6 +478,19 @@ void HTTPWSCommonLogic::OnWSMsg(ConnID conn_id, int opcode, const char* data, si
         }
         break;
     }
+}
+
+void HTTPWSCommonLogic::RecordPartMsg(ConnID conn_id)
+{
+    ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_id);
+    if (nullptr == conn)
+    {
+        LOG_ERROR("failed to get conn by id: " << conn_id);
+        return;
+    }
+
+    // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
+    part_msg_mgr_.UpsertRecord(conn, *conn->GetConnGUID(), http_ws_logic_args_.app_frame_conf_mgr->GetHTTPWSPartMsgConnLife());
 }
 
 int HTTPWSCommonLogic::LoadHTTPWSCommonLogic()
@@ -592,136 +610,5 @@ int HTTPWSCommonLogic::LoadHTTPWSLogicGroup()
 
     return 0;
 }
-
-//void HTTPWSCommonLogic::ProcessWSData(HTTPConnCtx* http_conn_ctx)
-//{
-//    do
-//    {
-//        ConnInterface* conn = http_conn_ctx->conn;
-//        const ConnGUID* conn_guid = conn->GetConnGUID();
-
-//        std::string& d = conn->GetData();
-//        const char* dp = d.data();
-//        const size_t dl = d.size();
-//        LOG_DEBUG("data: " << dp << ", len: " << dl);
-
-//        size_t offset = 0;
-
-//        const tcp::http_ws::ws::ParseResult parse_result = http_conn_ctx->ws_parser.ParseFrame(offset, dp, dl);
-//        LOG_DEBUG("offset: " << offset);
-
-//        if (offset > 0)
-//        {
-//            if (offset == dl)
-//            {
-//                conn->ClearData();
-//            }
-//            else
-//            {
-//                d.assign(dp + offset, dl - offset);
-//            }
-//        }
-//        else
-//        {
-//            // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
-//            part_msg_mgr_.UpsertRecord(conn, *conn_guid, http_ws_logic_args_.app_frame_conf_mgr->GetHTTPWSPartMsgConnLife());
-//            break;
-//        }
-
-//        LOG_DEBUG("parse result: " << parse_result);
-
-//        switch (parse_result)
-//        {
-//            case tcp::http_ws::ws::ERROR:
-//            case tcp::http_ws::ws::CLOSE_FRAME:
-//            {
-//                tcp::http_ws::ws::FrameMaker frame_maker;
-//                const std::string close_frame = frame_maker.SetFin(true)
-//                                                .SetFrameType(tcp::http_ws::ws::CONNECTION_CLOSE)
-//                                                .MakeFrame(nullptr, 0);
-//                if (0 == scheduler_.SendToClient(conn_guid, close_frame.data(), close_frame.size()))
-//                {
-//                    LOG_TRACE("send close frame ok, " << conn_guid);
-//                }
-
-//                scheduler_.CloseClient(conn_guid);
-//                return;
-//            }
-//            break;
-
-//            case tcp::http_ws::ws::PING_FRAME:
-//            {
-//                const char* pong = nullptr;
-//                size_t len = 0;
-
-//                if (http_conn_ctx->ws_parser.Payloads.size() > 0)
-//                {
-//                    pong = http_conn_ctx->ws_parser.Payloads.data();
-//                    len = http_conn_ctx->ws_parser.Payloads.size();
-//                }
-
-//                tcp::http_ws::ws::FrameMaker frame_maker;
-//                const std::string pong_frame = frame_maker.SetFin(true)
-//                                               .SetFrameType(tcp::http_ws::ws::PONG)
-//                                               .MakeFrame(pong, len);
-
-//                if (0 == scheduler_.SendToClient(conn_guid, pong_frame.data(), pong_frame.size()))
-//                {
-//                    LOG_TRACE("send pong ok, " << conn_guid);
-//                }
-
-//                http_conn_ctx->ws_parser.ClearPayloads();
-//                part_msg_mgr_.RemoveRecord(conn);
-//                return;
-//            }
-//            break;
-
-//            case tcp::http_ws::ws::PONG_FRAME:
-//            {
-//                // 什么都不做，丢弃内容
-//                http_conn_ctx->ws_parser.ClearPayloads();
-//                part_msg_mgr_.RemoveRecord(conn);
-//            }
-//            break;
-
-//            case tcp::http_ws::ws::INCOMPLETE:
-//            {
-//                // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
-//                part_msg_mgr_.UpsertRecord(conn, *conn_guid, http_ws_logic_args_.app_frame_conf_mgr->GetHTTPWSPartMsgConnLife());
-
-//                continue;
-//            }
-//            break;
-
-//            case tcp::http_ws::ws::TEXT_FRAME:
-//            case tcp::http_ws::ws::BINARY_FRAME:
-//            {
-//                const int frame_type = (tcp::http_ws::ws::TEXT_FRAME == parse_result ? tcp::http_ws::ws::TEXT : tcp::http_ws::ws::BINARY);
-
-//                const std::string& payloads = http_conn_ctx->ws_parser.Payloads;
-//                if (http_ws_common_logic_ != nullptr)
-//                {
-//                    http_ws_common_logic_->OnWSMsg(conn_guid, frame_type, payloads.data(), payloads.size());
-//                }
-
-//                for (HTTPWSLogicItemVec::iterator it = http_ws_logic_item_vec_.begin(); it != http_ws_logic_item_vec_.end(); ++it)
-//                {
-//                    it->logic->OnWSMsg(conn_guid, frame_type, payloads.data(), payloads.size());
-//                }
-
-//                http_conn_ctx->ws_parser.ClearPayloads();
-//                part_msg_mgr_.RemoveRecord(conn);
-
-//                return;
-//            }
-//            break;
-
-//            default:
-//            {
-//            }
-//            break;
-//        }
-//    } while (true);
-//}
 }
 }

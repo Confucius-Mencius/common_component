@@ -292,6 +292,13 @@ int Parser::Execute(const char* buffer, size_t count)
 int Parser::OnMessageBegin(http_parser* parser)
 {
     LOG_TRACE("Parser::OnMessageBegin");
+    Parser* hp = static_cast<Parser*>(parser->data);
+
+    if (hp->http_ws_raw_tcp_common_logic_ != nullptr)
+    {
+        hp->http_ws_raw_tcp_common_logic_->RecordPartMsg(hp->conn_id_);
+    }
+
     return 0;
 }
 
@@ -301,6 +308,11 @@ int Parser::OnURL(http_parser* parser, const char* at, size_t length)
 
     Parser* hp = static_cast<Parser*>(parser->data);
     hp->http_req_.ParseURL(at, length);
+
+    if (hp->http_ws_raw_tcp_common_logic_ != nullptr)
+    {
+        hp->http_ws_raw_tcp_common_logic_->RecordPartMsg(hp->conn_id_);
+    }
 
     return 0;
 }
@@ -312,6 +324,11 @@ int Parser::OnHeaderField(http_parser* parser, const char* at, size_t length)
     Parser* hp = static_cast<Parser*>(parser->data);
     hp->last_header_name_.assign(at, length);
 
+    if (hp->http_ws_raw_tcp_common_logic_ != nullptr)
+    {
+        hp->http_ws_raw_tcp_common_logic_->RecordPartMsg(hp->conn_id_);
+    }
+
     return 0;
 }
 
@@ -321,6 +338,11 @@ int Parser::OnHeaderValue(http_parser* parser, const char* at, size_t length)
 
     Parser* hp = static_cast<Parser*>(parser->data);
     hp->http_req_.AddHeader(hp->last_header_name_, std::string(at, length));
+
+    if (hp->http_ws_raw_tcp_common_logic_ != nullptr)
+    {
+        hp->http_ws_raw_tcp_common_logic_->RecordPartMsg(hp->conn_id_);
+    }
 
     return 0;
 }
@@ -344,6 +366,11 @@ int Parser::OnHeadersComplete(http_parser* parser)
               << ", minor version: " << hp->http_req_.MinorVersion
               << ", client ip: " << hp->http_req_.ClientIP);
 
+    if (hp->http_ws_raw_tcp_common_logic_ != nullptr)
+    {
+        hp->http_ws_raw_tcp_common_logic_->RecordPartMsg(hp->conn_id_);
+    }
+
     return 0;
 }
 
@@ -354,6 +381,11 @@ int Parser::OnBody(http_parser* parser, const char* at, size_t length)
 
     Parser* hp = static_cast<Parser*>(parser->data);
     hp->http_req_.AppendBody(at, length);
+
+    if (hp->http_ws_raw_tcp_common_logic_ != nullptr)
+    {
+        hp->http_ws_raw_tcp_common_logic_->RecordPartMsg(hp->conn_id_);
+    }
 
     return 0;
 }

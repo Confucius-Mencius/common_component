@@ -1,7 +1,6 @@
 #ifndef RAW_TCP_THREADS_SRC_TCP_THREADS_H_
 #define RAW_TCP_THREADS_SRC_TCP_THREADS_H_
 
-//#include <event2/util.h>
 #include "raw_tcp_threads_interface.h"
 
 namespace tcp
@@ -31,7 +30,6 @@ public:
 private:
     ThreadsCtx threads_ctx_;
     RelatedThreadGroups related_thread_groups_;
-//    evutil_socket_t listen_sock_fd_;
     ThreadGroupInterface* tcp_thread_group_;
 };
 }

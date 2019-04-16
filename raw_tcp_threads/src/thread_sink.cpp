@@ -31,7 +31,7 @@ void ThreadSink::OnAccept(struct evconnlistener* listener, evutil_socket_t sock_
     }
 
     struct sockaddr_in* client_addr = (struct sockaddr_in*) sock_addr;
-//    char peer_ip[INET_ADDRSTRLEN] = "";
+
     NewConnCtx new_conn_ctx;
     new_conn_ctx.client_sock_fd = sock_fd;
 
