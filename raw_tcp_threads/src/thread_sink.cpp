@@ -143,20 +143,21 @@ int ThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
 
     conn_center_.SetThreadSink(this);
 
-    ConnCenterCtx conn_mgr_ctx;
-    conn_mgr_ctx.timer_axis = self_thread_->GetTimerAxis();
+    ConnCenterCtx conn_center_ctx;
+    conn_center_ctx.timer_axis = self_thread_->GetTimerAxis();
+    conn_center_ctx.use_bufferevent = threads_ctx_->conf.use_bufferevent;
 
-    conn_mgr_ctx.inactive_conn_check_interval =
+    conn_center_ctx.inactive_conn_check_interval =
     {
         threads_ctx_->app_frame_conf_mgr->GetTCPInactiveConnCheckIntervalSec(),
         threads_ctx_->app_frame_conf_mgr->GetTCPInactiveConnCheckIntervalUsec()
     };
 
-    conn_mgr_ctx.inactive_conn_life = threads_ctx_->app_frame_conf_mgr->GetTCPInactiveConnLife();
-    conn_mgr_ctx.storm_interval = threads_ctx_->app_frame_conf_mgr->GetTCPStormInterval();
-    conn_mgr_ctx.storm_threshold = threads_ctx_->app_frame_conf_mgr->GetTCPStormThreshold();
+    conn_center_ctx.inactive_conn_life = threads_ctx_->app_frame_conf_mgr->GetTCPInactiveConnLife();
+    conn_center_ctx.storm_interval = threads_ctx_->app_frame_conf_mgr->GetTCPStormInterval();
+    conn_center_ctx.storm_threshold = threads_ctx_->app_frame_conf_mgr->GetTCPStormThreshold();
 
-    if (conn_center_.Initialize(&conn_mgr_ctx) != 0)
+    if (conn_center_.Initialize(&conn_center_ctx) != 0)
     {
         return -1;
     }

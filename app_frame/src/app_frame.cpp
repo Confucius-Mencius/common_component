@@ -1027,6 +1027,7 @@ int AppFrame::LoadRawTCPThreads()
     threads_ctx.app_frame_threads_sync_mutex = &g_app_frame_threads_sync_mutex;
     threads_ctx.app_frame_threads_sync_cond = &g_app_frame_threads_sync_cond;
     threads_ctx.conf.io_type = IO_TYPE_RAW_TCP;
+    threads_ctx.conf.use_bufferevent = conf_mgr_.RawTCPUseBufferevent();
     threads_ctx.conf.addr = conf_mgr_.GetRawTCPAddr();
     threads_ctx.conf.port = conf_mgr_.GetRawTCPPort();
     threads_ctx.conf.thread_count = conf_mgr_.GetRawTCPThreadCount();

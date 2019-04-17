@@ -30,11 +30,13 @@ int ConfMgr::Load()
     tcp_inactive_conn_life_ = 0;
     tcp_storm_interval_ = 0;
     tcp_storm_threshold_ = 0;
+    raw_tcp_use_bufferevent_ = false;
     raw_tcp_addr_ = "";
     raw_tcp_port_ = 0;
     raw_tcp_thread_count_ = 0;
     raw_tcp_common_logic_so_ = "";
     raw_tcp_logic_so_group_.clear();
+    proto_tcp_use_bufferevent_ = false;
     proto_do_checksum_ = false;
     proto_max_msg_body_len_ = 0;
     proto_part_msg_check_interval_ = 0;
@@ -44,6 +46,7 @@ int ConfMgr::Load()
     proto_tcp_thread_count_ = 0;
     proto_tcp_common_logic_so_ = "";
     proto_tcp_logic_so_group_.clear();
+    http_ws_use_bufferevent_ = false;
     http_ws_part_msg_check_interval_ = 0;
     http_ws_part_msg_conn_life_ = 0;
     http_ws_addr_ = "";
@@ -143,6 +146,11 @@ int ConfMgr::Load()
         return -1;
     }
 
+    if (LoadRawTCPUseBufferevent() != 0)
+    {
+        return -1;
+    }
+
     if (LoadRawTCPAddr() != 0)
     {
         return -1;
@@ -164,6 +172,11 @@ int ConfMgr::Load()
     }
 
     if (LoadRawTCPLogicSoGroup() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadProtoTCPUseBufferevent() != 0)
     {
         return -1;
     }
@@ -209,6 +222,11 @@ int ConfMgr::Load()
     }
 
     if (LoadProtoTCPLogicSoGroup() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadHTTPWSUseBufferevent() != 0)
     {
         return -1;
     }

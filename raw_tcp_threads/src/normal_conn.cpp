@@ -6,7 +6,6 @@
 #include "task_type.h"
 #include "thread_sink.h"
 
-#if !defined(USE_BUFFEREVENT)
 namespace tcp
 {
 namespace raw
@@ -363,4 +362,3 @@ int NormalConn::Send(const void* data, size_t len)
 }
 }
 }
-#endif

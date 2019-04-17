@@ -11,7 +11,7 @@ namespace tcp
 {
 namespace raw
 {
-ConnCenter::ConnCenter() : conn_mgr_ctx_(), conn_hash_map_(), conn_id_seq_(), conn_id_hash_map_()
+ConnCenter::ConnCenter() : conn_center_ctx_(), conn_hash_map_(), conn_id_seq_(), conn_id_hash_map_()
 {
     thread_sink_ = nullptr;
     max_online_conn_count_ = 0;
@@ -43,10 +43,10 @@ int ConnCenter::Initialize(const ConnCenterCtx* ctx)
         return -1;
     }
 
-    conn_mgr_ctx_ = *(static_cast<const ConnCenterCtx*>(ctx));
+    conn_center_ctx_ = *(static_cast<const ConnCenterCtx*>(ctx));
 
-    if (RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*>::Initialize(conn_mgr_ctx_.timer_axis,
-            conn_mgr_ctx_.inactive_conn_check_interval) != 0)
+    if (RecordTimeoutMgr<ConnID, std::hash<ConnID>, BaseConn*>::Initialize(conn_center_ctx_.timer_axis,
+            conn_center_ctx_.inactive_conn_check_interval) != 0)
     {
         return -1;
     }
@@ -86,11 +86,16 @@ void ConnCenter::Freeze()
 
 BaseConn* ConnCenter::CreateConn(IOType io_type, int io_thread_idx, const char* ip, unsigned short port, int sock_fd)
 {
-#if defined(USE_BUFFEREVENT)
-    BufferEventConn* conn = BufferEventConn::Create();
-#else
-    NormalConn* conn = NormalConn::Create();
-#endif
+    BaseConn* conn = nullptr;
+
+    if (conn_center_ctx_.use_bufferevent)
+    {
+        conn = BufferEventConn::Create();
+    }
+    else
+    {
+        conn = NormalConn::Create();
+    }
 
     if (nullptr == conn)
     {
@@ -143,7 +148,7 @@ BaseConn* ConnCenter::CreateConn(IOType io_type, int io_thread_idx, const char* 
         conn_hash_map_[sock_fd].start_time = now;
         conn_hash_map_[sock_fd].recv_count = 0;
 
-        UpsertRecord(conn_id, conn, conn_mgr_ctx_.inactive_conn_life);
+        UpsertRecord(conn_id, conn, conn_center_ctx_.inactive_conn_life);
 
         ret = 0;
     } while (0);
@@ -210,12 +215,12 @@ int ConnCenter::UpdateConnStatus(ConnID conn_id, bool in)
             LOG_DEBUG("socket fd: " << sock_fd << ", now: " << now
                       << ", start_time: " << conn_hash_map_[sock_fd].start_time
                       << ", recv count: " << conn_hash_map_[sock_fd].recv_count
-                      << ", storm interval: " << conn_mgr_ctx_.storm_interval
-                      << ", storm threshold: " << conn_mgr_ctx_.storm_threshold);
+                      << ", storm interval: " << conn_center_ctx_.storm_interval
+                      << ", storm threshold: " << conn_center_ctx_.storm_threshold);
 
-            if ((now - conn_hash_map_[sock_fd].start_time) >= conn_mgr_ctx_.storm_interval)
+            if ((now - conn_hash_map_[sock_fd].start_time) >= conn_center_ctx_.storm_interval)
             {
-                if (conn_hash_map_[sock_fd].recv_count >= conn_mgr_ctx_.storm_threshold)
+                if (conn_hash_map_[sock_fd].recv_count >= conn_center_ctx_.storm_threshold)
                 {
                     // TODO 网络风暴测试
                     LOG_WARN("net storm! conn id: " << conn_id << ", now: " << now << ", start time: "
@@ -231,7 +236,7 @@ int ConnCenter::UpdateConnStatus(ConnID conn_id, bool in)
             }
         }
 
-        UpsertRecord(conn_id, it->second, conn_mgr_ctx_.inactive_conn_life);
+        UpsertRecord(conn_id, it->second, conn_center_ctx_.inactive_conn_life);
     }
 
     return 0;

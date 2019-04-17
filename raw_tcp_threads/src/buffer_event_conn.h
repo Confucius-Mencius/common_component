@@ -5,7 +5,6 @@
 #include "base_conn.h"
 #include "mem_util.h"
 
-#if defined(USE_BUFFEREVENT)
 namespace tcp
 {
 namespace raw
@@ -37,6 +36,5 @@ private:
 };
 }
 }
-#endif
 
 #endif // RAW_TCP_THREADS_SRC_BUFFER_EVENT_CONN_H_

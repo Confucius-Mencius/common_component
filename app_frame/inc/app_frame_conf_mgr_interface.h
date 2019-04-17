@@ -28,11 +28,13 @@ public:
     virtual int GetTCPInactiveConnLife() = 0;
     virtual int GetTCPStormInterval() = 0;
     virtual int GetTCPStormThreshold() = 0;
+    virtual bool RawTCPUseBufferevent() = 0;
     virtual std::string GetRawTCPAddr() = 0;
     virtual int GetRawTCPPort() = 0;
     virtual int GetRawTCPThreadCount() = 0;
     virtual std::string GetRawTCPCommonLogicSo() = 0;
     virtual StrGroup GetRawTCPLogicSoGroup() = 0;
+    virtual bool ProtoTCPUseBufferevent() = 0;
     virtual bool ProtoDoChecksum() = 0;
     virtual int GetProtoMaxMsgBodyLen() = 0;
     virtual int GetProtoPartMsgCheckInterval() = 0;
@@ -42,6 +44,7 @@ public:
     virtual int GetProtoTCPThreadCount() = 0;
     virtual std::string GetProtoTCPCommonLogicSo() = 0;
     virtual StrGroup GetProtoTCPLogicSoGroup() = 0;
+    virtual bool HTTPWSUseBufferevent() = 0;
     virtual int GetHTTPWSPartMsgCheckInterval() = 0;
     virtual int GetHTTPWSPartMsgConnLife() = 0;
     virtual std::string GetHTTPWSAddr() = 0;

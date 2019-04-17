@@ -13,6 +13,7 @@ class ThreadSink;
 struct ConnCenterCtx
 {
     TimerAxisInterface* timer_axis;
+    bool use_bufferevent;
     struct timeval inactive_conn_check_interval;
     int inactive_conn_life;
     int storm_interval;
@@ -21,6 +22,7 @@ struct ConnCenterCtx
     ConnCenterCtx()
     {
         timer_axis = nullptr;
+        use_bufferevent = true;
         inactive_conn_check_interval.tv_sec = inactive_conn_check_interval.tv_usec = 0;
         inactive_conn_life = 0;
         storm_interval = 0;
@@ -61,7 +63,7 @@ private:
     void Clear(BaseConn* conn);
 
 private:
-    ConnCenterCtx conn_mgr_ctx_;
+    ConnCenterCtx conn_center_ctx_;
     ThreadSink* thread_sink_;
 
     struct ClientCtx

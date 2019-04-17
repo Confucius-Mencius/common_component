@@ -119,6 +119,7 @@ int Threads::LoadRawTCPThreads()
 
     tcp::ThreadsCtx raw_threads_ctx = threads_ctx_;
     raw_threads_ctx.conf.io_type = IO_TYPE_HTTP_WS;
+    raw_threads_ctx.conf.use_bufferevent = threads_ctx_.app_frame_conf_mgr->HTTPWSUseBufferevent();
     raw_threads_ctx.conf.addr = threads_ctx_.app_frame_conf_mgr->GetHTTPWSAddr();
     raw_threads_ctx.conf.port = threads_ctx_.app_frame_conf_mgr->GetHTTPWSPort();
     raw_threads_ctx.conf.thread_count = threads_ctx_.app_frame_conf_mgr->GetHTTPWSThreadCount();

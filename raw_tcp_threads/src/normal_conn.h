@@ -6,7 +6,6 @@
 #include "base_conn.h"
 #include "mem_util.h"
 
-#if !defined(USE_BUFFEREVENT)
 namespace tcp
 {
 namespace raw
@@ -43,6 +42,5 @@ private:
 };
 }
 }
-#endif
 
 #endif // RAW_TCP_THREADS_SRC_NORMAL_CONN_H_

@@ -122,6 +122,12 @@ public:
         return tcp_storm_threshold_;
     }
 
+    bool RawTCPUseBufferevent() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return raw_tcp_use_bufferevent_;
+    }
+
     std::string GetRawTCPAddr() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
@@ -150,6 +156,12 @@ public:
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return raw_tcp_logic_so_group_;
+    }
+
+    bool ProtoTCPUseBufferevent() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return proto_tcp_use_bufferevent_;
     }
 
     bool ProtoDoChecksum() override
@@ -204,6 +216,12 @@ public:
     {
         AUTO_THREAD_RLOCK(rwlock_);
         return proto_tcp_logic_so_group_;
+    }
+
+    bool HTTPWSUseBufferevent() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return http_ws_use_bufferevent_;
     }
 
     int GetHTTPWSPartMsgCheckInterval() override
@@ -515,6 +533,18 @@ private:
         return 0;
     }
 
+    int LoadRawTCPUseBufferevent()
+    {
+        int raw_tcp_use_bufferevent = 0;
+        if (conf_center_->GetConf(raw_tcp_use_bufferevent, RAW_TCP_USE_BUFFEREVENT_XPATH, true, 1) != 0)
+        {
+            LOG_ERROR("failed to get " << RAW_TCP_USE_BUFFEREVENT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        raw_tcp_use_bufferevent_ = (raw_tcp_use_bufferevent != 0);
+        return 0;
+    }
+
     int LoadRawTCPAddr()
     {
         char* raw_tcp_addr = nullptr;
@@ -581,6 +611,18 @@ private:
             }
         }
         conf_center_->ReleaseConf(&raw_tcp_logic_so, n);
+        return 0;
+    }
+
+    int LoadProtoTCPUseBufferevent()
+    {
+        int proto_tcp_use_bufferevent = 0;
+        if (conf_center_->GetConf(proto_tcp_use_bufferevent, PROTO_TCP_USE_BUFFEREVENT_XPATH, true, 1) != 0)
+        {
+            LOG_ERROR("failed to get " << PROTO_TCP_USE_BUFFEREVENT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        proto_tcp_use_bufferevent_ = (proto_tcp_use_bufferevent != 0);
         return 0;
     }
 
@@ -692,6 +734,18 @@ private:
             }
         }
         conf_center_->ReleaseConf(&proto_tcp_logic_so, n);
+        return 0;
+    }
+
+    int LoadHTTPWSUseBufferevent()
+    {
+        int http_ws_use_bufferevent = 0;
+        if (conf_center_->GetConf(http_ws_use_bufferevent, HTTP_WS_USE_BUFFEREVENT_XPATH, true, 1) != 0)
+        {
+            LOG_ERROR("failed to get " << HTTP_WS_USE_BUFFEREVENT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        http_ws_use_bufferevent_ = (http_ws_use_bufferevent != 0);
         return 0;
     }
 
@@ -939,11 +993,13 @@ private:
     int tcp_inactive_conn_life_;
     int tcp_storm_interval_;
     int tcp_storm_threshold_;
+    bool raw_tcp_use_bufferevent_;
     std::string raw_tcp_addr_;
     int raw_tcp_port_;
     int raw_tcp_thread_count_;
     std::string raw_tcp_common_logic_so_;
     StrGroup raw_tcp_logic_so_group_;
+    bool proto_tcp_use_bufferevent_;
     bool proto_do_checksum_;
     int proto_max_msg_body_len_;
     int proto_part_msg_check_interval_;
@@ -953,6 +1009,7 @@ private:
     int proto_tcp_thread_count_;
     std::string proto_tcp_common_logic_so_;
     StrGroup proto_tcp_logic_so_group_;
+    bool http_ws_use_bufferevent_;
     int http_ws_part_msg_check_interval_;
     int http_ws_part_msg_conn_life_;
     std::string http_ws_addr_;
