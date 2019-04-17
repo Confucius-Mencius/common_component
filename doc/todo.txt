@@ -1,20 +1,10 @@
 
 base lib中用c++实现的，尽量换成c实现
 
-
 @copyright 统一替换
-
 
 设置cpu亲和力提高性能 [终极优化]
 
-io线程和work线程的初始化能否并行做？可以加快启动速度
-
-统计每个连接的发包速度，剔除恶意攻击的连接，如每30s清0重新统计
-
-socketpair的性能很低，已经换成了pipe，增加了自我保护，使用的是阻塞式的读写。可以考虑换成非阻塞式，write失败且errno为11时起定时器，将任务暂存起来，在定时器中write
-
-
-对client/conn/http conn对象做内存池，释放时不真正释放，而是放入free list中供下次直接使用,减少内存分配 [tcmalloc底层已经做了对象池，上层不需要再做了]
 
 一个连接上的数据很多时，循环接收直至不完整的包，会导致该线程的其它连接饿死，考虑优化。做实验：两个连接，一个连接send大量数据，另一个连接循环send少量数据，sleep一下再send，观察这两个连接的recv情况
 
@@ -22,63 +12,16 @@ writev代替write/send，看libevent有没有类似的发送和接收接口
 
 整理kcachegrind的使用方法
 
-定时清理inactive client和timeout msg时，按时间排序，循环到第一个不满足的entry时即可退出循环，不需要遍历全部
-
 将通过栈上拷贝的std::string等大结构改为用new分配，传递指针。
 
 tcp和http监听要支持域名方式访问，测试一下
 
-消息体只发送一部分,看libevent的回调.(比如消息体是20字节,只发送10字节)
-
-消息体不按protobuf打包,但是长度一致(可以先用protobuf打包,再修改其中的几个字节),服务器怎么处理?
-
-http监听是否均匀的测试，测试并给出数据
-
-在内部ScheduleTask时增加接收回复时的回调，方便work将结果交给io，由io继续处理；或者burden对work也这样。
-
+ET模式的实验与对比（bufferevent和normal）
 libevent水平触发or边缘触发测试：可读时不读完 【搜索mongodb的代码发现是边缘触发的，可以简单写用例验证】
-进入改进每次不是读完消息，而是只读取一定数量，避免独占导致别人饿死
-
-gperftools cpu/mem profiling测试与重构
-
-
-对pipe中最大容纳的字符数要做测试
-
-http长连接，一个连接上发多个请求测试
-
-内存使用共享内存，重启时不丢数据
-
-reload配置时如果支持改变监听端口，则需要重启，像nginx那样有个master管理
+每次不是读完消息，而是只读取一定数量，避免独占导致别人饿死?
 
 set_directory_properties
 ADDITIONAL_MAKE_CLEAN_FILES
-
-aes加密时的padding方式
-rsa加密时的padding方式
-
-
-当有两个以上类似功能时，用namespace区分接口名和类名。
-框架代码中，各个目录里的文件名一样，类名外加上namespace。【避免类名过长】
-
-将udp和http conn加到conn factory中去。
-
-去掉tcp的listen thread，改为由libevent自行调度。
-
-为了实现tcp、udp的ScheduleBuddyTask功能，需要各个tcp线程和主线程建立通信，还应当增加一个内部消息分发器，与外部的IO消息隔离开。外部的IO消息分发器只处理来自真实客户端的消息。
-
-
-为安全考虑，内外部的消息分发器要分开，特别是接收客户端的消息分发器。
-
-消息加密方案。可配置
-
-将zookeeper的操作做一个单独的模块出来。
-
-
-
-
-
-3，以memcheck启动时跑用例报错的问题，buffer event方式
-日志中能否有一种不受级别影响的日志，不管调成什么级别都会打？
 
 4，增加回包限速设置：
    //用户可能设置了限速，如果没有限速，那么atmost将返回16384(16K)  
@@ -102,37 +45,45 @@ bufferevent_get_write_max_(struct bufferevent_private *bev)
 	/** Rate-limiting information for this bufferevent */
 	struct bufferevent_rate_limit *rate_limiting;
 
+限速可以参考nginx limit_rate配置
 
 
 5,demo server中的远程调用都改为本地127.0.0.1的调用，方便跑用例
 
 
-收报频率限制，达到一定频率就断掉连接，且一段时间内拒绝该ip的连接。
-限速可以参考nginx limit_rate配置
-
-
-
 等以后有了名字服务,增加一个调试模式配置，调试模式时读配置直连其他server，不通过名字服务获取服务地址。
 
 
-搜todo TODO
-
-
-ET模式的实验与对比（bufferevent和normal）
-event_new选项排查
-
-
-
-common_component:
-搜LOG_TRACE LOG_DEBUG LOG_INFO LOG_WARN，统一
-
-
-网络风暴测试
+网络风暴测试，达到一定频率就断掉连接，且一段时间内拒绝该ip的连接。
 
 chdir_to_root测试，看程序运行对不对
 
 
-common component 和 echo proj中，将py_tools和sh_tools作为submodule，调整目录
+在自己的proj中，将py_tools和sh_tools作为submodule，调整目录
+[huangguangcheng@luna workspace]$ cd luna/
+[huangguangcheng@luna luna]$ ll
+total 8
+drwxrwxr-x  5 huangguangcheng huangguangcheng  154 Mar  9  2018 clusterweb
+drwxrwxr-x  9 huangguangcheng huangguangcheng 4096 Mar 13 17:23 doc
+drwxrwxr-x 11 huangguangcheng huangguangcheng  238 Mar  9  2018 py_tools
+-rw-rw-r--  1 huangguangcheng huangguangcheng  358 Jul  2  2018 readme.md
+drwxrwxr-x  7 huangguangcheng huangguangcheng  191 Mar  9  2018 server_proj
+drwxrwxr-x  3 huangguangcheng huangguangcheng   35 Mar  9  2018 sh_tools
+[huangguangcheng@luna luna]$ cd server_proj/
+[huangguangcheng@luna server_proj]$ ll
+total 24
+drwxrwxr-x  3 huangguangcheng huangguangcheng 4096 Dec 14 16:09 conf
+drwxrwxr-x  3 huangguangcheng huangguangcheng  268 Mar  9  2018 doc
+-rw-rw-r--  1 huangguangcheng huangguangcheng  434 Mar  9  2018 proxy_server_conf.csv
+drwxrwxr-x 10 huangguangcheng huangguangcheng  164 Mar  9  2018 py_test
+-rw-rw-r--  1 huangguangcheng huangguangcheng   13 Mar  9  2018 README.md
+drwxrwxr-x  2 huangguangcheng huangguangcheng 4096 Nov 14 19:04 scripts
+drwxrwxr-x 11 huangguangcheng huangguangcheng  164 Mar  9  2018 src
+-rw-rw-r--  1 huangguangcheng huangguangcheng  652 Mar  9  2018 status_server_conf.csv
+-rw-rw-r--  1 huangguangcheng huangguangcheng  695 Mar  9  2018 web_server_conf.csv
+[huangguangcheng@luna server_proj]$ 
+
+
 
 
 udp threads先不做；
