@@ -59,7 +59,7 @@ void Threads::Finalize()
 
 int Threads::Activate()
 {
-    if (SAFE_ACTIVATE_FAILED(raw_tcp_threads_) != 0)
+    if (SAFE_ACTIVATE_FAILED(raw_tcp_threads_))
     {
         return -1;
     }

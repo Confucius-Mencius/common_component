@@ -68,7 +68,7 @@ ThreadSink::ThreadSink() : common_logic_loader_(), logic_item_vec_(), conn_cente
     online_tcp_conn_count_ = 0;
     max_online_tcp_conn_count_ = 0;
     tcp_thread_group_ = nullptr;
-    related_thread_group_ = nullptr;
+    related_thread_groups_ = nullptr;
     common_logic_ = nullptr;
 }
 
@@ -410,19 +410,19 @@ void ThreadSink::OnRecvClientData(const ConnGUID* conn_guid, const void* data, s
 
 void ThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups)
 {
-    related_thread_group_ = related_thread_groups;
+    related_thread_groups_ = related_thread_groups;
 
-    if (related_thread_group_->global_logic != nullptr)
+    if (related_thread_groups_->global_logic != nullptr)
     {
         if (common_logic_ != nullptr)
         {
-            common_logic_->SetGlobalLogic(related_thread_group_->global_logic);
+            common_logic_->SetGlobalLogic(related_thread_groups_->global_logic);
         }
 
         for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
         {
             LogicItem& logic_item = *it;
-            logic_item.logic->SetGlobalLogic(related_thread_group_->global_logic);
+            logic_item.logic->SetGlobalLogic(related_thread_groups_->global_logic);
         }
     }
 

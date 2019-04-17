@@ -2,18 +2,9 @@
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
 #include <event2/event_struct.h>
-
-#if defined(NDEBUG)
-#include <gperftools/profiler.h>
-#endif
-
 #include "app_frame_conf_mgr_interface.h"
-#include "msg_codec_center_interface.h"
-#include "msg_codec_interface.h"
-#include "msg_handler_interface.h"
 #include "str_util.h"
-
-// todo udp是数据报协议，是否不需要处理粘包和拆包？ 如果是这样，udp_raw就没有必要了
+#include "task_type.h"
 
 namespace udp
 {
@@ -412,6 +403,27 @@ bool ThreadSink::CanExit() const
     return (can_exit != 0);
 }
 
+void ThreadSink::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups)
+{
+    related_thread_group_ = related_thread_groups;
+
+    if (related_thread_group_->global_logic != nullptr)
+    {
+        if (local_logic_ != nullptr)
+        {
+            local_logic_->SetGlobalLogic(related_thread_group_->global_logic);
+        }
+
+        for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+        {
+            LogicItem& logic_item = *it;
+            logic_item.logic->SetGlobalLogic(related_thread_group_->global_logic);
+        }
+    }
+
+    scheduler_.SetRelatedThreadGroup(related_thread_groups);
+}
+
 void ThreadSink::OnRecvNfy(const Peer& peer, const MsgHead& msg_head, const void* msg_body, size_t msg_body_len)
 {
     if (logic_item_vec_.size() > 0)
@@ -491,27 +503,6 @@ void ThreadSink::OnRecvClientMsg(evutil_socket_t fd, const struct sockaddr_in* c
 
     // 没有io logic或者io logic派发失败，把任务均匀分配给work线程
     scheduler_.SendToWorkThread(&udp_conn->GetConnGuid(), msg_head, msg_body, msg_body_len, -1);
-}
-
-void ThreadSink::SetRelatedThreadGroup(RelatedThreadGroups* related_thread_group)
-{
-    related_thread_group_ = related_thread_group;
-
-    if (related_thread_group_->global_logic != nullptr)
-    {
-        if (local_logic_ != nullptr)
-        {
-            local_logic_->SetGlobalLogic(related_thread_group_->global_logic);
-        }
-
-        for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
-        {
-            LogicItem& logic_item = *it;
-            logic_item.logic->SetGlobalLogic(related_thread_group_->global_logic);
-        }
-    }
-
-    scheduler_.SetRelatedThreadGroup(related_thread_group);
 }
 
 int ThreadSink::BindUdpSocket()

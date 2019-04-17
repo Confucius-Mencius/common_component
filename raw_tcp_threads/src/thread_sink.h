@@ -6,7 +6,6 @@
 #include "mem_util.h"
 #include "msg_dispatcher.h"
 #include "module_loader.h"
-#include "new_conn.h"
 #include "proto_msg_codec.h"
 #include "raw_tcp_logic_interface.h"
 #include "scheduler.h"
@@ -75,6 +74,21 @@ public:
     void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len);
 
 private:
+    struct NewConnCtx
+    {
+        char client_ip[INET_ADDRSTRLEN];
+        unsigned short client_port;
+        int client_sock_fd;
+
+        NewConnCtx()
+        {
+            client_ip[0] = '\0';
+            client_port = 0;
+            client_sock_fd = -1;
+        }
+    };
+
+private:
     int LoadCommonLogic();
     int LoadLogicGroup();
     int OnClientConnected(const NewConnCtx* new_conn_ctx);
@@ -85,7 +99,7 @@ private:
     int online_tcp_conn_count_;
     int max_online_tcp_conn_count_;
     ThreadGroupInterface* tcp_thread_group_;
-    RelatedThreadGroups* related_thread_group_;
+    RelatedThreadGroups* related_thread_groups_;
 
     ModuleLoader common_logic_loader_;
     CommonLogicInterface* common_logic_;

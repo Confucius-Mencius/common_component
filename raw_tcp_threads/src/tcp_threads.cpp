@@ -50,7 +50,7 @@ void Threads::Finalize()
 
 int Threads::Activate()
 {
-    if (SAFE_ACTIVATE_FAILED(tcp_thread_group_) != 0)
+    if (SAFE_ACTIVATE_FAILED(tcp_thread_group_))
     {
         return -1;
     }

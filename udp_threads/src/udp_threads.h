@@ -1,8 +1,6 @@
 #ifndef UDP_THREADS_SRC_UDP_THREADS_H_
 #define UDP_THREADS_SRC_UDP_THREADS_H_
 
-#include "module_loader.h"
-#include "thread_sink.h"
 #include "udp_threads_interface.h"
 
 namespace udp
