@@ -5,7 +5,7 @@
 
 namespace udp
 {
-Threads::Threads() : threads_ctx_(), udp_thread_vec_(), udp_thread_sink_vec_(), related_thread_groups_()
+Threads::Threads() : threads_ctx_(), related_thread_groups_()
 {
     udp_thread_group_ = nullptr;
 }

@@ -13,6 +13,10 @@ class ConsoleLogEngine : public LogEngineInterface
 public:
     ConsoleLogEngine() : log_engine_ctx_()
     {
+        // register our custom log level
+        log4cplus::getLogLevelManager().pushToStringMethod(alwaysToStringMethod);
+        log4cplus::getLogLevelManager().pushFromStringMethod(alwaysFromStringMethod);
+
         // 定义Logger
         logger_ = log4cplus::Logger::getInstance("console_logger");
 
@@ -20,7 +24,7 @@ public:
         log4cplus::SharedAppenderPtr console_appender(new log4cplus::ConsoleAppender());
 
         // layout
-        log4cplus::tstring pattern = LOG4CPLUS_TEXT("[%-5p %c %t %D{%Y-%m-%d %H:%M:%S %Q} %b:%L] %m%n");
+        log4cplus::tstring pattern = LOG4CPLUS_TEXT("[%-5p %c %t(%T) %D{%Y-%m-%d %H:%M:%S %q} %b:%L] %m%n");
         console_appender->setLayout(std::unique_ptr<log4cplus::Layout>(new log4cplus::PatternLayout(pattern)));
 
         // 将需要关联Logger的Appender添加到Logger上

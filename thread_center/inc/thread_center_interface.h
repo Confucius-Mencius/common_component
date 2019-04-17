@@ -9,8 +9,6 @@
 #define THREAD_CENTER_INC_THREAD_CENTER_INTERFACE_H_
 
 #include <pthread.h>
-#include <sys/syscall.h>
-#include <unistd.h>
 #include <functional>
 #include "module_interface.h"
 #include "thread_task.h"
@@ -130,7 +128,7 @@ public:
      */
     virtual void OnThreadStartOK()
     {
-        LOG_ALWAYS(self_thread_->GetThreadName() << " OnThreadStartOK, sink: " << this << ", pid: " << syscall(SYS_gettid));
+        LOG_ALWAYS(self_thread_->GetThreadName() << " OnThreadStartOK, sink: " << this);
     }
 
     virtual void OnStop()

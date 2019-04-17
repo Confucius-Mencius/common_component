@@ -10,7 +10,9 @@
 
 #include <pthread.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/time.h>
+#include <sys/syscall.h>
 #include <iomanip>
 #include <iostream>
 
@@ -43,8 +45,9 @@ extern pthread_mutex_t g_simple_log_mutex;
         gettimeofday(&tv, nullptr);\
         struct tm* p = localtime(&tv.tv_sec);\
         pthread_mutex_lock(&g_simple_log_mutex);\
-        fprintf(stdout, "[%#lx %04d-%02d-%02d %02d:%02d:%02d %03ld %s:%d %s] " format "\n", pthread_self(), (1900 + p->tm_year), (1 + p->tm_mon), \
-                p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec / 1000, basename(__FILE__), __LINE__, __FUNCTION__, ##__VA_ARGS__);\
+        fprintf(stdout, "[%#lx(%ld) %04d-%02d-%02d %02d:%02d:%02d %03ld %s:%d %s] " format "\n", pthread_self(), syscall(SYS_gettid),\
+                (1900 + p->tm_year), (1 + p->tm_mon), p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec / 1000,\
+                basename(__FILE__), __LINE__, __FUNCTION__, ##__VA_ARGS__);\
         pthread_mutex_unlock(&g_simple_log_mutex);\
     } while (0)
 
@@ -57,8 +60,9 @@ extern pthread_mutex_t g_simple_log_mutex;
         gettimeofday(&tv, nullptr);\
         struct tm* p = localtime(&tv.tv_sec);\
         pthread_mutex_lock(&g_simple_log_mutex);\
-        fprintf(stderr, "[%#lx %04d-%02d-%02d %02d:%02d:%02d %03ld %s:%d %s] " format "\n", pthread_self(), (1900 + p->tm_year), (1 + p->tm_mon), \
-                p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec / 1000, basename(__FILE__), __LINE__, __FUNCTION__, ##__VA_ARGS__);\
+        fprintf(stderr, "[%#lx(%ld) %04d-%02d-%02d %02d:%02d:%02d %03ld %s:%d %s] " format "\n", pthread_self(), syscall(SYS_gettid),\
+                (1900 + p->tm_year), (1 + p->tm_mon), p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec / 1000,\
+                basename(__FILE__), __LINE__, __FUNCTION__, ##__VA_ARGS__);\
         pthread_mutex_unlock(&g_simple_log_mutex);\
     } while (0)
 
@@ -78,7 +82,7 @@ extern pthread_mutex_t g_simple_log_mutex;
         gettimeofday(&tv, nullptr);\
         struct tm* p = localtime(&tv.tv_sec);\
         std::ostringstream result("");\
-        result << "[" << std::hex << std::showbase << pthread_self() << " "\
+        result << "[" << std::hex << std::showbase << pthread_self() << "(" << syscall(SYS_gettid) << ")"\
                << std::dec << std::setfill('0') << std::setw(4) << (1900 + p->tm_year) << "-" << std::setw(2) << (1 + p->tm_mon) << "-" << std::setw(2) << p->tm_mday\
                << " " << std::setw(2) << p->tm_hour << ":" << std::setw(2) << p->tm_min << ":" << std::setw(2) << p->tm_sec << " " << std::setw(3) << tv.tv_usec / 1000\
                << " " << basename(__FILE__) << ":" << __LINE__ << " " << __FUNCTION__ << "] " << msg;\
@@ -96,7 +100,7 @@ extern pthread_mutex_t g_simple_log_mutex;
         gettimeofday(&tv, nullptr);\
         struct tm* p = localtime(&tv.tv_sec);\
         std::ostringstream result("");\
-        result << "[" << std::hex << std::showbase << pthread_self() << " "\
+        result << "[" << std::hex << std::showbase << pthread_self() << "(" << syscall(SYS_gettid) << ")"\
                << std::dec << std::setfill('0') << std::setw(4) << (1900 + p->tm_year) << "-" << std::setw(2) << (1 + p->tm_mon) << "-" << std::setw(2) << p->tm_mday\
                << " " << std::setw(2) << p->tm_hour << ":" << std::setw(2) << p->tm_min << ":" << std::setw(2) << p->tm_sec << " " << std::setw(3) << tv.tv_usec / 1000\
                << " " << basename(__FILE__) << ":" << __LINE__ << " " << __FUNCTION__ << "] " << msg;\

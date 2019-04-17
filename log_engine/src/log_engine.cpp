@@ -42,6 +42,10 @@ int LogEngine::Initialize(const void* ctx)
 
     try
     {
+        // register our custom log level
+        log4cplus::getLogLevelManager().pushToStringMethod(alwaysToStringMethod);
+        log4cplus::getLogLevelManager().pushFromStringMethod(alwaysFromStringMethod);
+
         // 从配置文件中获取logger、appender和layout
         log4cplus::PropertyConfigurator::doConfigure(LOG4CPLUS_C_STR_TO_TSTRING(log_engine_ctx_.log_conf_file_path));
 
