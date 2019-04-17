@@ -133,3 +133,8 @@ chdir_to_root测试，看程序运行对不对
 
 
 common component 和 echo proj中，将py_tools和sh_tools作为submodule，调整目录
+
+
+udp threads先不做；
+基于raw tcp threads开发io threads，raw tcp、proto tcp、http-ws threads均基于io threads开发，以后加udp也只是改io threads，udp threads也是基于io threads开发；
+完善work threads，将global thread和burden均基于work threads开发；
