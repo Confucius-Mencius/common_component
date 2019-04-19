@@ -16,6 +16,19 @@ namespace http_ws
 {
 namespace http
 {
+typedef void (*free_body_parser) (void*);
+
+struct http_request_state
+{
+    void* body_processor;
+    free_body_parser free_body_parser_func;
+
+    char* last_header_name;
+    int parsed; // parsed / content_length就是进度
+    int content_length;
+    int socket_fd;
+};
+
 struct Req
 {
     Req();
@@ -36,6 +49,7 @@ struct Req
     std::string UserInfo;
     HeaderMap Headers;
     std::string Body;
+    struct http_request_state _s;
 
     void Reset();
 
@@ -82,6 +96,7 @@ public:
     static int OnHeadersComplete(struct http_parser* parser); // 解析完成http header调用
     static int OnBody(struct http_parser* parser, const char* at, size_t length); // 解析http body调用
     static int OnMessageComplete(struct http_parser* parser); // 解析完成调用
+    static int mpart_body_process(struct http_parser* parser, const char* at, size_t length);
 
 private:
     tcp::raw::HTTPWSCommonLogic* http_ws_raw_tcp_common_logic_;

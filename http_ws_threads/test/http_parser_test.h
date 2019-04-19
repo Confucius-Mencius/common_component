@@ -21,6 +21,8 @@ public:
     void Test002();
     void Test003();
     void Test004();
+    void Test005();
+    void Test006();
 
 private:
     tcp::http_ws::http::Parser http_parser_;

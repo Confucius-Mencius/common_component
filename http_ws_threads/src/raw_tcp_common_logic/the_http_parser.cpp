@@ -1,6 +1,7 @@
 #include "the_http_parser.h"
 #include "common_logic.h"
 #include "log_util.h"
+#include "mpart_body_processor.h"
 #include "singleton.h"
 
 namespace tcp
@@ -366,6 +367,18 @@ int Parser::OnHeadersComplete(http_parser* parser)
               << ", minor version: " << hp->http_req_.MinorVersion
               << ", client ip: " << hp->http_req_.ClientIP);
 
+    HeaderMap::const_iterator it = hp->http_req_.Headers.find("Content-Type");
+    if (it != hp->http_req_.Headers.end())
+    {
+        if (0 == strncasecmp(it->second.c_str(), "multipart/form-data", strlen("multipart/form-data")))
+        {
+            hp->http_req_._s.body_processor = mpart_body_processor_init(&(hp->http_req_));
+            hp->http_req_._s.free_body_parser_func = (free_body_parser) mpart_body_processor_free;
+
+            const_cast<struct http_parser_settings*>(HTTPParserSettings->Get())->on_body = Parser::mpart_body_process;
+        }
+    }
+
     if (hp->http_ws_raw_tcp_common_logic_ != nullptr)
     {
         hp->http_ws_raw_tcp_common_logic_->RecordPartMsg(hp->conn_id_);
@@ -397,6 +410,15 @@ int Parser::OnMessageComplete(http_parser* parser)
     Parser* hp = static_cast<Parser*>(parser->data);
     hp->complete_ = true;
     LOG_DEBUG("http req =>\n" << hp->http_req_.Dump());
+
+    return 0;
+}
+
+int Parser::mpart_body_process(http_parser* parser, const char* at, size_t length)
+{
+    Parser* hp = static_cast<Parser*>(parser->data);
+    mpart_body_processor* processor = (mpart_body_processor*) hp->http_req_._s.body_processor;
+    hp->http_req_._s.parsed += multipart_parser_execute(processor->parser, at, length);
 
     return 0;
 }

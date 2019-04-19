@@ -43,20 +43,6 @@ do {                                                                   \
 #define LF 10
 #define CR 13
 
-struct multipart_parser {
-  void * data;
-
-  size_t index;
-  size_t boundary_length;
-
-  unsigned char state;
-
-  const multipart_parser_settings* settings;
-
-  char* lookbehind;
-  char multipart_boundary[1];
-};
-
 enum state {
   s_uninitialized = 1,
   s_start,
