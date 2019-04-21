@@ -5,15 +5,15 @@
 string(TOLOWER ${CMAKE_BUILD_TYPE} BUILD_TYPE)
 set(THIRD_PARTY_INSTALL_PREFIX /opt/third_party/${BUILD_TYPE})
 
-set(BOOST_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/boost/include)
-set(BOOST_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/boost/lib)
-set(BOOST_LIB_NAME boost_system boost_thread boost_filesystem boost_program_options boost_locale)
-
 set(CURL_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/curl/include)
 set(CURL_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/curl/lib)
 set(CURL_BIN_DIR ${THIRD_PARTY_INSTALL_PREFIX}/curl/bin)
 set(CURL_LIB_NAME curl)
 set(CURL_BIN_NAME curl)
+
+set(BOOST_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/boost/include)
+set(BOOST_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/boost/lib)
+set(BOOST_LIB_NAME boost_system boost_thread boost_filesystem boost_program_options boost_locale)
 
 set(ZLIB_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/zlib/include)
 set(ZLIB_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/zlib/lib)
@@ -70,10 +70,6 @@ set(JSONCPP_LIB_NAME jsoncpp)
 set(LIBEVENT_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libevent/include)
 set(LIBEVENT_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libevent/lib)
 set(LIBEVENT_LIB_NAME event_core event_extra event_pthreads)
-
-set(LIBEVHTP_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libevhtp/include)
-set(LIBEVHTP_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libevhtp/lib)
-set(LIBEVHTP_LIB_NAME evhtp)
 
 set(LIBJPEG_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libjpeg/include)
 set(LIBJPEG_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libjpeg/lib)
@@ -180,10 +176,6 @@ set(UDT_LIB_NAME udt)
 set(MYSQL_CLIENT_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/mysql_client/include)
 set(MYSQL_CLIENT_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/mysql_client/lib)
 set(MYSQL_CLIENT_LIB_NAME mysqlclient)
-
-set(LIBWEBSOCKETS_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libwebsockets/include)
-set(LIBWEBSOCKETS_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libwebsockets/lib)
-set(LIBWEBSOCKETS_LIB_NAME websockets)
 
 set(LEVELDB_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/leveldb/include)
 set(LEVELDB_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/leveldb/lib)
