@@ -135,7 +135,7 @@ ADD_TEST_F(HTTPParserTest, Test001);
 ADD_TEST_F(HTTPParserTest, Test002);
 ADD_TEST_F(HTTPParserTest, Test003);
 ADD_TEST_F(HTTPParserTest, Test004);
-ADD_TEST_F(HTTPParserTest, Test005);
-ADD_TEST_F(HTTPParserTest, Test006);
+//ADD_TEST_F(HTTPParserTest, Test005); TODO
+//ADD_TEST_F(HTTPParserTest, Test006);
 }
 }

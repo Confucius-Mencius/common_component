@@ -120,24 +120,24 @@ int MsgDispatcher::DispatchMsg(const ConnGUID* conn_guid, const ::proto::MsgHead
     gettimeofday(&begin_time, nullptr); \
     const long begin_millisecond = begin_time.tv_sec * 1000 + begin_time.tv_usec / 1000; \
  \
-    const ConnGUID* real_conn_guid = nullptr; \
- \
-    if (conn_guid != nullptr && conn_guid->conn_id != INVALID_CONN_ID) \
-    { \
-        real_conn_guid = conn_guid; \
-    } \
- \
-    it->second->OnMsg(real_conn_guid, msg_head, msg_body, msg_body_len); \
+    it->second->OnMsg(conn_guid, msg_head, msg_body, msg_body_len); \
  \
     struct timeval end_time; \
     gettimeofday(&end_time, nullptr); \
     const long end_millisecond = end_time.tv_sec * 1000 + end_time.tv_usec / 1000; \
  \
-    LOG_INFO("msg process time: " << end_millisecond - begin_millisecond << " milliseconds. " \
-              << *conn_guid << ", " << msg_head << ", msg body len: " << msg_body_len); \
+    if (conn_guid != nullptr) \
+    { \
+        LOG_INFO("msg process time: " << end_millisecond - begin_millisecond << " milliseconds. " \
+                  << *conn_guid << ", " << msg_head << ", msg body len: " << msg_body_len); \
+    } \
+    else \
+    { \
+        LOG_INFO("msg process time: " << end_millisecond - begin_millisecond << " milliseconds. " \
+                  << msg_head << ", msg body len: " << msg_body_len); \
+    } \
+\
     return 0; \
 }
-
-// TODO real_conn_guid 需要吗?
 
 #endif // PROTO_MSG_CODEC_INC_PROTO_MSG_HANDLER_INTERFACE_H_
