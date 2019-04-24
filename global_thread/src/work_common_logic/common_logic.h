@@ -30,6 +30,7 @@ public:
     ///////////////////////// tcp::LogicInterface /////////////////////////
     void OnStop() override;
     void OnReload() override;
+    void OnTask(const ConnGUID* conn_guid, ThreadInterface* source_thread, const void* data, size_t len) override;
 
     ///////////////////////// TimerSinkInterface /////////////////////////
     void OnTimer(TimerID timer_id, void* data, size_t len, int times);

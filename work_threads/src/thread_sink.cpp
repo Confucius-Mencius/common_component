@@ -200,6 +200,7 @@ void ThreadSink::OnTask(const ThreadTask* task)
             const ConnGUID* conn_guid = task->GetConnGUID();
             if (0 == msg_dispatcher_.DispatchMsg(conn_guid, msg_head, msg_body, msg_body_len))
             {
+                // work threads自己的消息分发
                 if (conn_guid != nullptr)
                 {
                     LOG_TRACE("dispatch msg ok, " << *conn_guid << ", msg id: " << msg_head.msg_id);
@@ -213,8 +214,18 @@ void ThreadSink::OnTask(const ThreadTask* task)
             }
             else
             {
-                LOG_ERROR("failed to dispatch msg, msg id: " << msg_head.msg_id);
-                return;
+                // 基于work threads的线程组自己实现的消息分发
+                if (common_logic_ != nullptr)
+                {
+                    common_logic_->OnTask(task->GetConnGUID(), task->GetSourceThread(),
+                                          task->GetData().data(), task->GetData().size());
+                }
+
+                for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
+                {
+                    it->logic->OnTask(task->GetConnGUID(), task->GetSourceThread(),
+                                      task->GetData().data(), task->GetData().size());
+                }
             }
         }
         break;
@@ -280,6 +291,7 @@ int ThreadSink::LoadCommonLogic()
     logic_ctx.conf_center = threads_ctx_->conf_center;
     logic_ctx.timer_axis = self_thread_->GetTimerAxis();
     logic_ctx.scheduler = &scheduler_;
+    logic_ctx.msg_codec = &msg_codec_;
     logic_ctx.msg_dispatcher = &msg_dispatcher_;
     logic_ctx.common_logic = common_logic_;
     logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
@@ -339,6 +351,7 @@ int ThreadSink::LoadLogicGroup()
         logic_ctx.conf_center = threads_ctx_->conf_center;
         logic_ctx.timer_axis = self_thread_->GetTimerAxis();;
         logic_ctx.scheduler = &scheduler_;
+        logic_ctx.msg_codec = &msg_codec_;
         logic_ctx.msg_dispatcher = &msg_dispatcher_;
         logic_ctx.common_logic = common_logic_;
         logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();

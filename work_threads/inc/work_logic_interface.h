@@ -2,15 +2,19 @@
 #define WORK_THREADS_INC_WORK_LOGIC_INTERFACE_H_
 
 #include <atomic>
+#include <stddef.h>
 #include "module_interface.h"
 
 class ConfCenterInterface;
 class TimerAxisInterface;
 struct event_base;
+struct ConnGUID;
+class ThreadInterface;
 
 namespace proto
 {
 class MsgDispatcherInterface;
+class MsgCodec;
 }
 
 namespace global
@@ -33,6 +37,7 @@ struct LogicCtx
     ConfCenterInterface* conf_center;
     TimerAxisInterface* timer_axis;
     SchedulerInterface* scheduler;
+    ::proto::MsgCodec* msg_codec;
     ::proto::MsgDispatcherInterface* msg_dispatcher;
     CommonLogicInterface* common_logic;
     struct event_base* thread_ev_base;
@@ -49,6 +54,7 @@ struct LogicCtx
         conf_center = nullptr;
         timer_axis = nullptr;
         scheduler = nullptr;
+        msg_codec = nullptr;
         msg_dispatcher = nullptr;
         common_logic = nullptr;
         thread_ev_base = nullptr;
@@ -102,6 +108,10 @@ public:
     bool CanExit() const
     {
         return can_exit_;
+    }
+
+    virtual void OnTask(const ConnGUID* conn_guid, ThreadInterface* source_thread, const void* data, size_t len)
+    {
     }
 
 protected:

@@ -5,6 +5,7 @@
 #include "file_util.h"
 #include "log_util.h"
 #include "mem_util.h"
+#include "proto_msg_codec.h"
 #include "work_scheduler_interface.h"
 
 namespace work
@@ -14,8 +15,7 @@ enum
     EXIT_CHECK_TIMER_ID = 1,
 };
 
-GlobalCommonLogic::GlobalCommonLogic() : global_logic_args_(), global_logic_loader_(),
-    scheduler_(), msg_dispatcher_()
+GlobalCommonLogic::GlobalCommonLogic() : global_logic_args_(), global_logic_loader_(), scheduler_(), msg_dispatcher_()
 {
     global_logic_ = nullptr;
 }
@@ -51,6 +51,7 @@ int GlobalCommonLogic::Initialize(const void* ctx)
     global_logic_args_ = *((GlobalLogicArgs*) logic_ctx_.logic_args);
 
     scheduler_.SetWorkScheduler(logic_ctx_.scheduler);
+    scheduler_.SetRelatedThreadGroups(global_logic_args_.related_thread_groups);
 
     if (LoadGlobalLogic() != 0)
     {
@@ -105,6 +106,42 @@ void GlobalCommonLogic::OnReload()
     if (global_logic_ != nullptr)
     {
         global_logic_->OnReload();
+    }
+}
+
+void GlobalCommonLogic::OnTask(const ConnGUID* conn_guid, ThreadInterface* source_thread, const void* data, size_t len)
+{
+    if (nullptr == data || 0 == len)
+    {
+        LOG_ERROR("invalid params");
+        return;
+    }
+
+    ::proto::MsgID err_msg_id;
+    ::proto::MsgHead msg_head;
+    char* msg_body = nullptr;
+    size_t msg_body_len = 0;
+
+    if (logic_ctx_.msg_codec->DecodeMsg(err_msg_id, &msg_head, &msg_body, msg_body_len, (const char*) data, len) != 0)
+    {
+        return;
+    }
+
+    if (0 == msg_dispatcher_.DispatchMsg(conn_guid, msg_head, msg_body, msg_body_len))
+    {
+        if (conn_guid != nullptr)
+        {
+            LOG_TRACE("dispatch msg ok, " << *conn_guid << ", msg id: " << msg_head.msg_id);
+        }
+        else
+        {
+            LOG_TRACE("dispatch msg ok, msg id: " << msg_head.msg_id);
+        }
+    }
+    else
+    {
+        LOG_ERROR("failed to dispatch msg, msg id: " << msg_head.msg_id);
+        return;
     }
 }
 
@@ -167,7 +204,7 @@ int GlobalCommonLogic::LoadGlobalLogic()
         return -1;
     }
 
-    LOG_ALWAYS("load common logic so " << logic_so_path << " end");
+    LOG_ALWAYS("load logic so " << logic_so_path << " end");
     return 0;
 }
 }

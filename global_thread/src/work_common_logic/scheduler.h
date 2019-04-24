@@ -3,6 +3,7 @@
 
 #include "global_scheduler_interface.h"
 #include "work_scheduler_interface.h"
+#include "work_threads_interface.h"
 
 namespace global
 {
@@ -15,6 +16,11 @@ public:
     void SetWorkScheduler(work::SchedulerInterface* scheduler)
     {
         work_scheduler_ = scheduler;
+    }
+
+    void SetRelatedThreadGroups(work::RelatedThreadGroups* related_thread_groups)
+    {
+        related_thread_groups_ = related_thread_groups;
     }
 
     ///////////////////////// SchedulerInterface /////////////////////////
@@ -31,6 +37,7 @@ public:
 
 private:
     work::SchedulerInterface* work_scheduler_;
+    work::RelatedThreadGroups* related_thread_groups_;
 };
 }
 
