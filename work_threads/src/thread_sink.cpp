@@ -247,14 +247,15 @@ bool ThreadSink::CanExit() const
 
 int ThreadSink::LoadCommonLogic()
 {
-    if (0 == threads_ctx_->app_frame_conf_mgr->GetWorkCommonLogicSo().length())
+    const std::string& common_logic_so = threads_ctx_->conf.common_logic_so;
+    if (0 == common_logic_so.length())
     {
         return 0;
     }
 
     char common_logic_so_path[MAX_PATH_LEN] = "";
     GetAbsolutePath(common_logic_so_path, sizeof(common_logic_so_path),
-                    threads_ctx_->app_frame_conf_mgr->GetWorkCommonLogicSo().c_str(), threads_ctx_->cur_working_dir);
+                    common_logic_so.c_str(), threads_ctx_->cur_working_dir);
     LOG_ALWAYS("load common logic so " << common_logic_so_path << " begin");
 
     if (common_logic_loader_.Load(common_logic_so_path) != 0)
@@ -283,6 +284,7 @@ int ThreadSink::LoadCommonLogic()
     logic_ctx.common_logic = common_logic_;
     logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
     logic_ctx.thread_idx = self_thread_->GetThreadIdx();
+    logic_ctx.logic_args = threads_ctx_->logic_args;
 
     if (common_logic_->Initialize(&logic_ctx) != 0)
     {
@@ -296,7 +298,7 @@ int ThreadSink::LoadCommonLogic()
 int ThreadSink::LoadLogicGroup()
 {
     // logic group
-    const StrGroup logic_so_group = threads_ctx_->app_frame_conf_mgr->GetWorkLogicSoGroup();
+    const StrGroup& logic_so_group = threads_ctx_->conf.logic_so_group;
 
     for (StrGroup::const_iterator it = logic_so_group.cbegin(); it != logic_so_group.cend(); ++it)
     {
@@ -341,6 +343,7 @@ int ThreadSink::LoadLogicGroup()
         logic_ctx.common_logic = common_logic_;
         logic_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
         logic_ctx.thread_idx = self_thread_->GetThreadIdx();
+        logic_ctx.logic_args = threads_ctx_->logic_args;
 
         if (logic_item.logic->Initialize(&logic_ctx) != 0)
         {

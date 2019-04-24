@@ -92,6 +92,7 @@ Thread::Thread() : thread_ctx_(), write_fd_mutex_(), tq_(), pending_notify_list_
     read_event_ = nullptr;
     stopping_ = false;
     timer_axis_ = nullptr;
+    reload_finished_ = false;
 }
 
 Thread::~Thread()
@@ -371,6 +372,7 @@ void Thread::NotifyReload()
 void Thread::OnReload()
 {
     thread_ctx_.sink->OnReload();
+    reload_finished_ = true;
 }
 
 bool Thread::CanExit() const

@@ -41,7 +41,7 @@ void Scheduler::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_group
 {
     related_thread_groups_ = related_thread_groups;
 
-    const int work_thread_count = thread_sink_->GetWorkThreadGroup()->GetThreadCount();
+    const int work_thread_count = related_thread_groups_->work_thread_group->GetThreadCount();
     if (work_thread_count > 0)
     {
         last_work_thread_idx_ = rand() % work_thread_count;
@@ -344,7 +344,7 @@ int Scheduler::SendToHTTPWSThread(const ConnGUID* conn_guid, const proto::MsgHea
 
 int Scheduler::GetScheduleWorkThreadIdx(int work_thread_idx)
 {
-    const int work_thread_count = thread_sink_->GetWorkThreadGroup()->GetThreadCount();
+    const int work_thread_count = related_thread_groups_->work_thread_group->GetThreadCount();
 
     if (INVALID_IDX(work_thread_idx, 0, work_thread_count))
     {
@@ -424,7 +424,7 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const pr
 
         case THREAD_TYPE_WORK:
         {
-            thread_group = thread_sink_->GetWorkThreadGroup();
+            thread_group = related_thread_groups_->work_thread_group;
             if (nullptr == thread_group)
             {
                 LOG_ERROR("no such threads, thread type: " << thread_type);
@@ -521,7 +521,7 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const pr
         return -1;
     }
 
-    ThreadTask* task = new ThreadTask(TASK_TYPE_NORMAL, thread_sink_->GetThread(), conn_guid, 
+    ThreadTask* task = new ThreadTask(TASK_TYPE_NORMAL, thread_sink_->GetThread(), conn_guid,
                                       data + TOTAL_MSG_LEN_FIELD_LEN, len - TOTAL_MSG_LEN_FIELD_LEN); // 内部的消息不发送4个字节的长度字段
     if (nullptr == task)
     {

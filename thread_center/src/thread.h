@@ -91,6 +91,16 @@ public:
 
     void PushTask(ThreadTask* task) override;
 
+    void SetReloadFinish(bool flag) override
+    {
+        reload_finished_ = flag;
+    }
+
+    bool ReloadFinished() const override
+    {
+        return reload_finished_;
+    }
+
     ///////////////////////// TimerSinkInterface /////////////////////////
     void OnTimer(TimerID timer_id, void* data, size_t len, int times) override;
 
@@ -137,6 +147,8 @@ private:
 
     ModuleLoader timer_axis_loader_;
     TimerAxisInterface* timer_axis_;
+
+    std::atomic_bool reload_finished_;
 };
 } // namespace thread_center
 

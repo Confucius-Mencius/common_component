@@ -3,7 +3,7 @@
 
 #include "global_threads_interface.h"
 #include "module_loader.h"
-#include "thread_sink.h"
+#include "work_common_logic/global_logic_args.h"
 
 namespace global
 {
@@ -24,20 +24,21 @@ public:
 
     ///////////////////////// ThreadsInterface /////////////////////////
     int CreateThreadGroup() override;
-    void SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups) override;
+    void SetRelatedThreadGroups(const work::RelatedThreadGroups* related_thread_groups) override;
     ThreadGroupInterface* GetGlobalThreadGroup() const override;
     LogicInterface* GetLogic() const override;
-    void SetReloadFinish(bool finished) override;
-    bool ReloadFinished() override;
 
 private:
-    int CreateGlobalThread();
+    int LoadWorkThreads();
 
 private:
-    ThreadsCtx threads_ctx_;
-    ThreadGroupInterface* global_thread_group_;
-    ThreadSink* global_thread_sink_;
-    RelatedThreadGroups related_thread_groups_;
+    work::ThreadsCtx threads_ctx_;
+    work::RelatedThreadGroups related_thread_groups_;
+
+    ModuleLoader work_threads_loader_;
+    work::ThreadsInterface* work_threads_;
+
+    work::GlobalLogicArgs global_logic_args_;
 };
 }
 

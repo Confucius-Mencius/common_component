@@ -40,17 +40,6 @@ public:
                         const void* msg_body, size_t msg_body_len, int tcp_thread_idx) override;
 
 private:
-    enum
-    {
-        THREAD_TYPE_GLOBAL,
-        THREAD_TYPE_WORK,
-        THREAD_TYPE_TCP,
-    };
-
-    int SendToThread(int thread_type, const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
-                     const void* msg_body, size_t msg_body_len, int thread_idx);
-
-private:
     tcp::raw::SchedulerInterface* raw_tcp_scheduler_;
     ::proto::MsgCodec* msg_codec_;
 };

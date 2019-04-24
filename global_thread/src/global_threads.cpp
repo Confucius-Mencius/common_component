@@ -1,13 +1,15 @@
 #include "global_threads.h"
 #include "app_frame_conf_mgr_interface.h"
+#include "file_util.h"
+#include "mem_util.h"
+#include "str_util.h"
 #include "version.h"
 
 namespace global
 {
-Threads::Threads() : threads_ctx_(), related_thread_groups_()
+Threads::Threads() : threads_ctx_(), related_thread_groups_(), work_threads_loader_(), global_logic_args_()
 {
-    global_thread_group_ = nullptr;
-    global_thread_sink_ = nullptr;
+    work_threads_ = nullptr;
 }
 
 Threads::~Threads()
@@ -26,7 +28,7 @@ const char* Threads::GetLastErrMsg() const
 
 void Threads::Release()
 {
-    SAFE_RELEASE(global_thread_group_);
+    SAFE_RELEASE(work_threads_);
     delete this;
 }
 
@@ -37,18 +39,24 @@ int Threads::Initialize(const void* ctx)
         return -1;
     }
 
-    threads_ctx_ = *(static_cast<const ThreadsCtx*>(ctx));
+    threads_ctx_ = *(static_cast<const work::ThreadsCtx*>(ctx));
+
+    if (LoadWorkThreads() != 0)
+    {
+        return -1;
+    }
+
     return 0;
 }
 
 void Threads::Finalize()
 {
-    SAFE_FINALIZE(global_thread_group_);
+    SAFE_FINALIZE(work_threads_);
 }
 
 int Threads::Activate()
 {
-    if (SAFE_ACTIVATE_FAILED(global_thread_group_))
+    if (SAFE_ACTIVATE_FAILED(work_threads_))
     {
         return -1;
     }
@@ -58,77 +66,73 @@ int Threads::Activate()
 
 void Threads::Freeze()
 {
-    SAFE_FREEZE(global_thread_group_);
+    SAFE_FREEZE(work_threads_);
 }
 
 int Threads::CreateThreadGroup()
 {
-    int ret = -1;
-
-    do
+    if (work_threads_->CreateThreadGroup("global") != 0)
     {
-        ThreadGroupCtx thread_group_ctx;
-        thread_group_ctx.common_component_dir = threads_ctx_.common_component_dir;
-        thread_group_ctx.enable_cpu_profiling = threads_ctx_.app_frame_conf_mgr->EnableCPUProfiling();
-        thread_group_ctx.thread_name = "global thread";
-        thread_group_ctx.thread_count = 1;
-        thread_group_ctx.thread_sink_creator = ThreadSink::Create;
-        thread_group_ctx.threads_ctx = &threads_ctx_;
-
-        global_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup(&thread_group_ctx);
-        if (nullptr == global_thread_group_)
-        {
-            break;
-        }
-
-        global_thread_sink_ = static_cast<ThreadSink*>(global_thread_group_->GetThread(0)->GetThreadSink());
-
-        ret = 0;
-    } while (0);
-
-    if (ret != 0)
-    {
-        if (global_thread_group_ != nullptr)
-        {
-            SAFE_DESTROY(global_thread_group_);
-        }
+        return -1;
     }
 
-    return ret;
+    return 0;
 }
 
-void Threads::SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups)
+void Threads::SetRelatedThreadGroups(const work::RelatedThreadGroups* related_thread_groups)
 {
     if (nullptr == related_thread_groups)
     {
         return;
     }
 
+    work_threads_->SetRelatedThreadGroups(related_thread_groups);
     related_thread_groups_ = *related_thread_groups;
-
-    if (global_thread_sink_ != nullptr)
-    {
-        global_thread_sink_->SetRelatedThreadGroups(&related_thread_groups_);
-    }
 }
 
 ThreadGroupInterface* Threads::GetGlobalThreadGroup() const
 {
-    return global_thread_group_;
+    return work_threads_->GetWorkThreadGroup();
 }
 
 LogicInterface* Threads::GetLogic() const
 {
-    return global_thread_sink_->GetLogic();
+    return global_logic_args_.global_logic;
 }
 
-void Threads::SetReloadFinish(bool finished)
+int Threads::LoadWorkThreads()
 {
-    global_thread_sink_->SetReloadFinish(finished);
-}
+    char WORK_THREADS_SO_PATH[MAX_PATH_LEN] = "";
+    StrPrintf(WORK_THREADS_SO_PATH, sizeof(WORK_THREADS_SO_PATH), "%s/libwork_threads.so",
+              threads_ctx_.common_component_dir);
 
-bool Threads::ReloadFinished()
-{
-    return global_thread_sink_->ReloadFinished();
+    if (work_threads_loader_.Load(WORK_THREADS_SO_PATH) != 0)
+    {
+        LOG_ERROR(work_threads_loader_.GetLastErrMsg());
+        return -1;
+    }
+
+    work_threads_ = static_cast<work::ThreadsInterface*>(work_threads_loader_.GetModuleInterface());
+    if (nullptr == work_threads_)
+    {
+        LOG_ERROR(work_threads_loader_.GetLastErrMsg());
+        return -1;
+    }
+
+    work::ThreadsCtx work_threads_ctx = threads_ctx_;
+    work_threads_ctx.conf.thread_count = 1;
+    work_threads_ctx.conf.common_logic_so = std::string(threads_ctx_.common_component_dir) + "/libglobal_work_common_logic.so";
+
+    global_logic_args_.app_frame_conf_mgr = threads_ctx_.app_frame_conf_mgr;
+    global_logic_args_.related_thread_groups = &related_thread_groups_;
+
+    work_threads_ctx.logic_args = &global_logic_args_;
+
+    if (work_threads_->Initialize(&work_threads_ctx) != 0)
+    {
+        return -1;
+    }
+
+    return 0;
 }
 }

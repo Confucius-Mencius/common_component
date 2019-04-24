@@ -1,37 +1,20 @@
-#ifndef GLOBAL_THREAD_SRC_SCHEDULER_H_
-#define GLOBAL_THREAD_SRC_SCHEDULER_H_
+#ifndef GLOBAL_THREADS_SRC_WORK_COMMON_LOGIC_SCHEDULER_H_
+#define GLOBAL_THREADS_SRC_WORK_COMMON_LOGIC_SCHEDULER_H_
 
 #include "global_scheduler_interface.h"
-#include "global_threads_interface.h"
-#include "proto_msg_codec.h"
-#include "thread_center_interface.h"
+#include "work_scheduler_interface.h"
 
 namespace global
 {
-class ThreadSink;
-
 class Scheduler : public SchedulerInterface
 {
 public:
     Scheduler();
     virtual ~Scheduler();
 
-    void SetThreadSink(ThreadSink* sink)
+    void SetWorkScheduler(work::SchedulerInterface* scheduler)
     {
-        thread_sink_ = sink;
-    }
-
-    void SetMsgCodec(::proto::MsgCodec* msg_codec)
-    {
-        msg_codec_ = msg_codec;
-    }
-
-    int Initialize(const void* ctx);
-    void Finalize();
-
-    void SetRelatedThreadGroups(RelatedThreadGroups* related_thread_groups)
-    {
-        related_thread_groups_ = related_thread_groups;
+        work_scheduler_ = scheduler;
     }
 
     ///////////////////////// SchedulerInterface /////////////////////////
@@ -47,24 +30,8 @@ public:
                            const void* msg_body, size_t msg_body_len, int http_ws_thread_idx) override;
 
 private:
-    enum
-    {
-        THREAD_TYPE_WORK,
-        THREAD_TYPE_BURDEN,
-        THREAD_TYPE_RAW_TCP,
-        THREAD_TYPE_PROTO_TCP,
-        THREAD_TYPE_HTTP_WS,
-    };
-
-    int SendToThread(int thread_type, const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
-                     const void* msg_body, size_t msg_body_len, int thread_idx);
-
-private:
-    ThreadSink* thread_sink_;
-    ::proto::MsgCodec* msg_codec_;
-    const ThreadsCtx* threads_ctx_;
-    RelatedThreadGroups* related_thread_groups_;
+    work::SchedulerInterface* work_scheduler_;
 };
 }
 
-#endif // GLOBAL_THREAD_SRC_SCHEDULER_H_
+#endif // GLOBAL_THREADS_SRC_WORK_COMMON_LOGIC_SCHEDULER_H_

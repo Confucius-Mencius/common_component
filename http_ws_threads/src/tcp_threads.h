@@ -25,7 +25,7 @@ public:
     void Freeze() override;
 
     ///////////////////////// ThreadsInterface /////////////////////////
-    int CreateThreadGroup(const char* name_prefix) override;
+    int CreateThreadGroup() override;
     void SetRelatedThreadGroups(const tcp::RelatedThreadGroups* related_thread_groups) override;
     ThreadGroupInterface* GetTCPThreadGroup() const override;
 

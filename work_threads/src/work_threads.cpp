@@ -6,7 +6,7 @@
 
 namespace work
 {
-Threads::Threads() : threads_ctx_(), related_thread_groups_(), thread_sink_vec_()
+Threads::Threads() : threads_ctx_(), related_thread_groups_()
 {
     work_thread_group_ = nullptr;
 }
@@ -62,7 +62,7 @@ void Threads::Freeze()
     SAFE_FREEZE(work_thread_group_);
 }
 
-int Threads::CreateThreadGroup()
+int Threads::CreateThreadGroup(const char* name_prefix)
 {
     int ret = -1;
 
@@ -71,8 +71,8 @@ int Threads::CreateThreadGroup()
         ThreadGroupCtx thread_group_ctx;
         thread_group_ctx.common_component_dir = threads_ctx_.common_component_dir;
         thread_group_ctx.enable_cpu_profiling = threads_ctx_.app_frame_conf_mgr->EnableCPUProfiling();
-        thread_group_ctx.thread_name = "work thread";
-        thread_group_ctx.thread_count = threads_ctx_.app_frame_conf_mgr->GetWorkThreadCount();
+        thread_group_ctx.thread_name = std::string(name_prefix) + " thread";
+        thread_group_ctx.thread_count = threads_ctx_.conf.thread_count;
         thread_group_ctx.thread_sink_creator = ThreadSink::Create;
         thread_group_ctx.threads_ctx = &threads_ctx_;
 
@@ -86,7 +86,6 @@ int Threads::CreateThreadGroup()
         {
             ThreadSink* thread_sink = static_cast<ThreadSink*>(work_thread_group_->GetThread(i)->GetThreadSink());
             thread_sink->SetWorkThreadGroup(work_thread_group_);
-            thread_sink_vec_.push_back(thread_sink);
         }
 
         ret = 0;
@@ -112,9 +111,10 @@ void Threads::SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_g
 
     related_thread_groups_ = *related_thread_groups;
 
-    for (ThreadSinkVec::iterator it = thread_sink_vec_.begin(); it != thread_sink_vec_.end(); ++it)
+    for (int i = 0; i < work_thread_group_->GetThreadCount(); ++i)
     {
-        (*it)->SetRelatedThreadGroups(&related_thread_groups_);
+        ThreadSink* thread_sink = static_cast<ThreadSink*>(work_thread_group_->GetThread(i)->GetThreadSink());
+        thread_sink->SetRelatedThreadGroups(&related_thread_groups_);
     }
 }
 

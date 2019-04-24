@@ -37,6 +37,7 @@ struct LogicCtx
     CommonLogicInterface* common_logic;
     struct event_base* thread_ev_base;
     int thread_idx;
+    const void* logic_args;
 
     LogicCtx()
     {
@@ -52,6 +53,7 @@ struct LogicCtx
         common_logic = nullptr;
         thread_ev_base = nullptr;
         thread_idx = -1;
+        logic_args = nullptr;
     }
 };
 

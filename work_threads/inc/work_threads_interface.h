@@ -2,6 +2,7 @@
 #define WORK_THREADS_INC_WORK_THREADS_INTERFACE_H_
 
 #include "thread_center_interface.h"
+#include "vector_types.h"
 
 class ConfCenterInterface;
 
@@ -17,6 +18,18 @@ class ConfMgrInterface;
 
 namespace work
 {
+struct Conf
+{
+    int thread_count;
+    std::string common_logic_so;
+    StrGroup logic_so_group;
+
+    Conf() : common_logic_so(), logic_so_group()
+    {
+        thread_count = 0;
+    }
+};
+
 struct ThreadsCtx
 {
     int argc;
@@ -31,7 +44,11 @@ struct ThreadsCtx
     pthread_mutex_t* app_frame_threads_sync_mutex;
     pthread_cond_t* app_frame_threads_sync_cond;
 
-    ThreadsCtx()
+    // 下面两个字段是为了支持多种类型的工作线程
+    Conf conf;
+    const void* logic_args;
+
+    ThreadsCtx() : conf()
     {
         argc = 0;
         argv = nullptr;
@@ -44,6 +61,7 @@ struct ThreadsCtx
         app_frame_threads_count = nullptr;
         app_frame_threads_sync_mutex = nullptr;
         app_frame_threads_sync_cond = nullptr;
+        logic_args = nullptr;
     }
 };
 
@@ -51,6 +69,7 @@ struct RelatedThreadGroups
 {
     ThreadInterface* global_thread;
     global::LogicInterface* global_logic;
+    ThreadGroupInterface* work_thread_group;
     ThreadGroupInterface* burden_thread_group;
     ThreadGroupInterface* raw_tcp_thread_group;
     ThreadGroupInterface* proto_tcp_thread_group;
@@ -60,6 +79,7 @@ struct RelatedThreadGroups
     {
         global_thread = nullptr;
         global_logic = nullptr;
+        work_thread_group = nullptr;
         burden_thread_group = nullptr;
         raw_tcp_thread_group = nullptr;
         proto_tcp_thread_group = nullptr;
@@ -73,7 +93,7 @@ public:
     {
     }
 
-    virtual int CreateThreadGroup() = 0;
+    virtual int CreateThreadGroup(const char* name_prefix) = 0;
     virtual void SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups) = 0;
     virtual ThreadGroupInterface* GetWorkThreadGroup() const = 0;
 };

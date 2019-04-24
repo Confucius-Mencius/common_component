@@ -387,11 +387,13 @@ int AppFrame::NotifyReload()
 
     if (global_threads_ != nullptr)
     {
-        global_threads_->SetReloadFinish(false);
+        ThreadInterface* global_thread = global_threads_->GetGlobalThreadGroup()->GetThread(0);
+        global_thread->SetReloadFinish(false);
+
         global_threads_->GetGlobalThreadGroup()->NotifyReload();
 
         // 等待global thread完成reload
-        while (!global_threads_->ReloadFinished())
+        while (!global_thread->ReloadFinished())
         {
             usleep(20); // TODO
         }
@@ -879,7 +881,7 @@ int AppFrame::LoadGlobalThread()
         return -1;
     }
 
-    global::ThreadsCtx threads_ctx;
+    work::ThreadsCtx threads_ctx;
     threads_ctx.argc = app_frame_ctx_.argc;
     threads_ctx.argv = app_frame_ctx_.argv;
     threads_ctx.common_component_dir = app_frame_ctx_.common_component_dir;
@@ -936,6 +938,10 @@ int AppFrame::LoadWorkThreads()
     threads_ctx.app_frame_threads_count = &g_app_frame_threads_count;
     threads_ctx.app_frame_threads_sync_mutex = &g_app_frame_threads_sync_mutex;
     threads_ctx.app_frame_threads_sync_cond = &g_app_frame_threads_sync_cond;
+    threads_ctx.conf.thread_count = conf_mgr_.GetWorkThreadCount();
+    threads_ctx.conf.common_logic_so = conf_mgr_.GetWorkCommonLogicSo();
+    threads_ctx.conf.logic_so_group = conf_mgr_.GetWorkLogicSoGroup();
+    threads_ctx.logic_args = nullptr;
 
     if (work_threads_->Initialize(&threads_ctx) != 0)
     {
@@ -1288,7 +1294,7 @@ int AppFrame::CreateAllThreads()
 
     if (conf_mgr_.GetWorkThreadCount() > 0)
     {
-        if (work_threads_->CreateThreadGroup() != 0)
+        if (work_threads_->CreateThreadGroup("work") != 0)
         {
             return -1;
         }
@@ -1312,7 +1318,7 @@ int AppFrame::CreateAllThreads()
 
     if (conf_mgr_.GetProtoTCPThreadCount() > 0)
     {
-        if (proto_tcp_threads_->CreateThreadGroup("proto tcp") != 0)
+        if (proto_tcp_threads_->CreateThreadGroup() != 0)
         {
             return -1;
         }
@@ -1320,7 +1326,7 @@ int AppFrame::CreateAllThreads()
 
     if (conf_mgr_.GetHTTPWSThreadCount() > 0)
     {
-        if (http_ws_threads_->CreateThreadGroup("http-ws") != 0)
+        if (http_ws_threads_->CreateThreadGroup() != 0)
         {
             return -1;
         }
@@ -1369,7 +1375,7 @@ void AppFrame::SetThreadsRelationship()
     // 各线程组互相访问
     if (global_threads_ != nullptr)
     {
-        global::RelatedThreadGroups related_thread_groups;
+        work::RelatedThreadGroups related_thread_groups;
 
         if (work_threads_ != nullptr)
         {
@@ -1408,6 +1414,8 @@ void AppFrame::SetThreadsRelationship()
             related_thread_groups.global_thread = global_threads_->GetGlobalThreadGroup()->GetThread(0);
             related_thread_groups.global_logic = global_threads_->GetLogic();
         }
+
+        related_thread_groups.work_thread_group = work_threads_->GetWorkThreadGroup();
 
         if (burden_threads_ != nullptr)
         {

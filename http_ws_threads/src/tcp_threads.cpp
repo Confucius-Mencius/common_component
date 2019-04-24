@@ -72,9 +72,9 @@ void Threads::Freeze()
     SAFE_FREEZE(raw_tcp_threads_);
 }
 
-int Threads::CreateThreadGroup(const char* name_prefix)
+int Threads::CreateThreadGroup()
 {
-    if (raw_tcp_threads_->CreateThreadGroup(name_prefix) != 0)
+    if (raw_tcp_threads_->CreateThreadGroup("http-ws") != 0)
     {
         return -1;
     }

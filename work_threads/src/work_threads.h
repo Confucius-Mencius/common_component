@@ -23,7 +23,7 @@ public:
     void Freeze() override;
 
     ///////////////////////// ThreadsInterface /////////////////////////
-    int CreateThreadGroup() override;
+    int CreateThreadGroup(const char* name_prefix) override;
     void SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_group) override;
     ThreadGroupInterface* GetWorkThreadGroup() const override;
 
@@ -31,9 +31,6 @@ private:
     ThreadsCtx threads_ctx_;
     RelatedThreadGroups related_thread_groups_;
     ThreadGroupInterface* work_thread_group_;
-
-    typedef std::vector<ThreadSink*> ThreadSinkVec;
-    ThreadSinkVec thread_sink_vec_;
 };
 }
 

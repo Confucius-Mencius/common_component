@@ -69,6 +69,8 @@ public:
     virtual ThreadSinkInterface* GetThreadSink() = 0;
     virtual bool IsStopping() const = 0;
     virtual void PushTask(ThreadTask* task) = 0;
+    virtual void SetReloadFinish(bool flag) = 0;
+    virtual bool ReloadFinished() const = 0;
 };
 
 class ThreadSinkInterface
