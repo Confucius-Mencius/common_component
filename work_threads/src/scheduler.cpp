@@ -41,10 +41,13 @@ void Scheduler::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_group
 {
     related_thread_groups_ = related_thread_groups;
 
-    const int work_thread_count = related_thread_groups_->work_thread_group->GetThreadCount();
-    if (work_thread_count > 0)
+    if (related_thread_groups_->work_thread_group != nullptr)
     {
-        last_work_thread_idx_ = rand() % work_thread_count;
+        const int work_thread_count = related_thread_groups_->work_thread_group->GetThreadCount();
+        if (work_thread_count > 0)
+        {
+            last_work_thread_idx_ = rand() % work_thread_count;
+        }
     }
 
     if (related_thread_groups_->burden_thread_group != nullptr)

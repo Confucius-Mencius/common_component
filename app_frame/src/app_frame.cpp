@@ -975,7 +975,7 @@ int AppFrame::LoadBurdenThreads()
         return -1;
     }
 
-    burden::ThreadsCtx threads_ctx;
+    work::ThreadsCtx threads_ctx;
     threads_ctx.argc = app_frame_ctx_.argc;
     threads_ctx.argv = app_frame_ctx_.argv;
     threads_ctx.common_component_dir = app_frame_ctx_.common_component_dir;
@@ -1447,13 +1447,15 @@ void AppFrame::SetThreadsRelationship()
 
     if (burden_threads_ != nullptr)
     {
-        burden::RelatedThreadGroups related_thread_groups;
+        work::RelatedThreadGroups related_thread_groups;
 
         if (global_threads_ != nullptr)
         {
             related_thread_groups.global_thread = global_threads_->GetGlobalThreadGroup()->GetThread(0);
             related_thread_groups.global_logic = global_threads_->GetLogic();
         }
+
+        related_thread_groups.burden_thread_group = burden_threads_->GetBurdenThreadGroup();
 
         burden_threads_->SetRelatedThreadGroups(&related_thread_groups);
     }

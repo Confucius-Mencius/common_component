@@ -3,7 +3,7 @@
 
 #include "burden_threads_interface.h"
 #include "module_loader.h"
-#include "thread_sink.h"
+#include "work_common_logic/burden_logic_args.h"
 
 namespace burden
 {
@@ -24,16 +24,20 @@ public:
 
     ///////////////////////// ThreadsInterface /////////////////////////
     int CreateThreadGroup() override;
-    void SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups) override;
+    void SetRelatedThreadGroups(const work::RelatedThreadGroups* related_thread_groups) override;
     ThreadGroupInterface* GetBurdenThreadGroup() const override;
 
 private:
-    ThreadsCtx threads_ctx_;
-    RelatedThreadGroups related_thread_groups_;
-    ThreadGroupInterface* burden_thread_group_;
+    int LoadWorkThreads();
 
-    typedef std::vector<ThreadSink*> ThreadSinkVec;
-    ThreadSinkVec thread_sink_vec_;
+private:
+    work::ThreadsCtx threads_ctx_;
+    work::RelatedThreadGroups related_thread_groups_;
+
+    ModuleLoader work_threads_loader_;
+    work::ThreadsInterface* work_threads_;
+
+    work::BurdenLogicArgs burden_logic_args_;
 };
 }
 

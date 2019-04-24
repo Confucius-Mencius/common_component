@@ -1,7 +1,4 @@
 #include "common_logic.h"
-#include <errno.h>
-#include <string.h>
-#include <unistd.h>
 #include "file_util.h"
 #include "log_util.h"
 #include "mem_util.h"
@@ -91,7 +88,7 @@ void GlobalCommonLogic::OnStop()
         global_logic_->OnStop();
     }
 
-    // 启动定时器，检查proto tcp logics是否都可以退出了。100毫秒检查一次
+    // 启动定时器，检查global logic是否都可以退出了。100毫秒检查一次
     struct timeval tv = { 0, 100000 };
 
     if (logic_ctx_.timer_axis->SetTimer(this, EXIT_CHECK_TIMER_ID, tv, nullptr, 0) != 0)

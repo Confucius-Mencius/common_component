@@ -38,6 +38,7 @@ set(LOG_ENGINE_INC_DIR ${PROJECT_SOURCE_DIR}/../log_engine/inc)
 set(CONF_CENTER_INC_DIR ${PROJECT_SOURCE_DIR}/../conf_center/inc)
 set(TIMER_AXIS_INC_DIR ${PROJECT_SOURCE_DIR}/../timer_axis/inc)
 set(THREAD_CENTER_INC_DIR ${PROJECT_SOURCE_DIR}/../thread_center/inc)
+set(WORK_THREADS_INC_DIR ${PROJECT_SOURCE_DIR}/../work_threads/inc)
 set(APP_FRAME_INC_DIR ${PROJECT_SOURCE_DIR}/../app_frame/inc)
 set(PROTO_MSG_CODEC_INC_DIR ${PROJECT_SOURCE_DIR}/../proto_msg_codec/inc)
 
@@ -48,3 +49,4 @@ set(PROJ_INC_DIR ${PROJECT_SOURCE_DIR}/inc)
 ###############################################################################
 # sub dir
 add_subdirectory(src)
+add_subdirectory(src/work_common_logic)

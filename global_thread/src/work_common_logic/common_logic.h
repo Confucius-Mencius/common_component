@@ -1,7 +1,6 @@
 #ifndef GLOBAL_THREADS_SRC_WORK_COMMON_LOGIC_COMMON_LOGIC_H_
 #define GLOBAL_THREADS_SRC_WORK_COMMON_LOGIC_COMMON_LOGIC_H_
 
-#include <vector>
 #include "global_logic_args.h"
 #include "global_logic_interface.h"
 #include "module_loader.h"

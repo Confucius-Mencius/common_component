@@ -1,5 +1,4 @@
 #include "scheduler.h"
-#include "log_util.h"
 
 namespace global
 {

@@ -1,14 +1,15 @@
 #include "burden_threads.h"
 #include "app_frame_conf_mgr_interface.h"
-#include "container_util.h"
+#include "file_util.h"
+#include "mem_util.h"
 #include "str_util.h"
 #include "version.h"
 
 namespace burden
 {
-Threads::Threads() : threads_ctx_(), related_thread_groups_(), thread_sink_vec_()
+Threads::Threads() : threads_ctx_(), related_thread_groups_(), work_threads_loader_(), burden_logic_args_()
 {
-    burden_thread_group_ = nullptr;
+    work_threads_ = nullptr;
 }
 
 Threads::~Threads()
@@ -27,7 +28,7 @@ const char* Threads::GetLastErrMsg() const
 
 void Threads::Release()
 {
-    SAFE_RELEASE(burden_thread_group_);
+    SAFE_RELEASE(work_threads_);
     delete this;
 }
 
@@ -38,18 +39,24 @@ int Threads::Initialize(const void* ctx)
         return -1;
     }
 
-    threads_ctx_ = *(static_cast<const ThreadsCtx*>(ctx));
+    threads_ctx_ = *(static_cast<const work::ThreadsCtx*>(ctx));
+
+    if (LoadWorkThreads() != 0)
+    {
+        return -1;
+    }
+
     return 0;
 }
 
 void Threads::Finalize()
 {
-    SAFE_FINALIZE(burden_thread_group_);
+    SAFE_FINALIZE(work_threads_);
 }
 
 int Threads::Activate()
 {
-    if (SAFE_ACTIVATE_FAILED(burden_thread_group_))
+    if (SAFE_ACTIVATE_FAILED(work_threads_))
     {
         return -1;
     }
@@ -59,67 +66,68 @@ int Threads::Activate()
 
 void Threads::Freeze()
 {
-    SAFE_FREEZE(burden_thread_group_);
+    SAFE_FREEZE(work_threads_);
 }
 
 int Threads::CreateThreadGroup()
 {
-    int ret = -1;
-
-    do
+    if (work_threads_->CreateThreadGroup("burden") != 0)
     {
-        ThreadGroupCtx thread_group_ctx;
-        thread_group_ctx.common_component_dir = threads_ctx_.common_component_dir;
-        thread_group_ctx.enable_cpu_profiling = threads_ctx_.app_frame_conf_mgr->EnableCPUProfiling();
-        thread_group_ctx.thread_name = "burden thread";
-        thread_group_ctx.thread_count = threads_ctx_.app_frame_conf_mgr->GetWorkThreadCount();
-        thread_group_ctx.thread_sink_creator = ThreadSink::Create;
-        thread_group_ctx.threads_ctx = &threads_ctx_;
-
-        burden_thread_group_ = threads_ctx_.thread_center->CreateThreadGroup(&thread_group_ctx);
-        if (nullptr == burden_thread_group_)
-        {
-            break;
-        }
-
-        for (int i = 0; i < burden_thread_group_->GetThreadCount(); ++i)
-        {
-            ThreadSink* thread_sink = static_cast<ThreadSink*>(burden_thread_group_->GetThread(i)->GetThreadSink());
-            thread_sink->SetBurdenThreadGroup(burden_thread_group_);
-            thread_sink_vec_.push_back(thread_sink);
-        }
-
-        ret = 0;
-    } while (0);
-
-    if (ret != 0)
-    {
-        if (burden_thread_group_ != nullptr)
-        {
-            SAFE_DESTROY(burden_thread_group_);
-        }
+        return -1;
     }
 
-    return ret;
+    return 0;
 }
 
-void Threads::SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups)
+void Threads::SetRelatedThreadGroups(const work::RelatedThreadGroups* related_thread_groups)
 {
     if (nullptr == related_thread_groups)
     {
         return;
     }
 
+    work_threads_->SetRelatedThreadGroups(related_thread_groups);
     related_thread_groups_ = *related_thread_groups;
-
-    for (ThreadSinkVec::iterator it = thread_sink_vec_.begin(); it != thread_sink_vec_.end(); ++it)
-    {
-        (*it)->SetRelatedThreadGroup(&related_thread_groups_);
-    }
 }
 
 ThreadGroupInterface* Threads::GetBurdenThreadGroup() const
 {
-    return burden_thread_group_;
+    return work_threads_->GetWorkThreadGroup();
+}
+
+int Threads::LoadWorkThreads()
+{
+    char WORK_THREADS_SO_PATH[MAX_PATH_LEN] = "";
+    StrPrintf(WORK_THREADS_SO_PATH, sizeof(WORK_THREADS_SO_PATH), "%s/libwork_threads.so",
+              threads_ctx_.common_component_dir);
+
+    if (work_threads_loader_.Load(WORK_THREADS_SO_PATH) != 0)
+    {
+        LOG_ERROR(work_threads_loader_.GetLastErrMsg());
+        return -1;
+    }
+
+    work_threads_ = static_cast<work::ThreadsInterface*>(work_threads_loader_.GetModuleInterface());
+    if (nullptr == work_threads_)
+    {
+        LOG_ERROR(work_threads_loader_.GetLastErrMsg());
+        return -1;
+    }
+
+    work::ThreadsCtx work_threads_ctx = threads_ctx_;
+    work_threads_ctx.conf.thread_count = threads_ctx_.app_frame_conf_mgr->GetBurdenThreadCount();
+    work_threads_ctx.conf.common_logic_so = std::string(threads_ctx_.common_component_dir) + "/libburden_work_common_logic.so";
+
+    burden_logic_args_.app_frame_conf_mgr = threads_ctx_.app_frame_conf_mgr;
+    burden_logic_args_.related_thread_groups = &related_thread_groups_;
+
+    work_threads_ctx.logic_args = &burden_logic_args_;
+
+    if (work_threads_->Initialize(&work_threads_ctx) != 0)
+    {
+        return -1;
+    }
+
+    return 0;
 }
 }
