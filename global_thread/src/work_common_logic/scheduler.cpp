@@ -49,22 +49,22 @@ int Scheduler::SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgH
     }
 }
 
-int Scheduler::SendToRawTCPThread(const ConnGUID* conn_guid, const proto::MsgHead& msg_head,
-                                  const void* msg_body, size_t msg_body_len, int raw_tcp_thread_idx)
+int Scheduler::SendToTCPThread(const ConnGUID* conn_guid, const proto::MsgHead& msg_head,
+                               const void* msg_body, size_t msg_body_len, int tcp_thread_idx)
 {
-    if (-1 == raw_tcp_thread_idx)
+    if (-1 == tcp_thread_idx)
     {
         // 广播
-        for (int i = 0; i < related_thread_groups_->raw_tcp_thread_group->GetThreadCount(); ++i)
+        for (int i = 0; i < related_thread_groups_->tcp_thread_group->GetThreadCount(); ++i)
         {
-            work_scheduler_->SendToRawTCPThread(conn_guid, msg_head, msg_body, msg_body_len, i);
+            work_scheduler_->SendToTCPThread(conn_guid, msg_head, msg_body, msg_body_len, i);
         }
 
         return 0;
     }
     else
     {
-        return work_scheduler_->SendToRawTCPThread(conn_guid, msg_head, msg_body, msg_body_len, raw_tcp_thread_idx);
+        return work_scheduler_->SendToTCPThread(conn_guid, msg_head, msg_body, msg_body_len, tcp_thread_idx);
     }
 }
 

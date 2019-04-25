@@ -1,5 +1,5 @@
-#ifndef HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_PART_MSG_MGR_H_
-#define HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_PART_MSG_MGR_H_
+#ifndef PROTO_TCP_THREADS_SRC_TCP_COMMON_LOGIC_PART_MSG_MGR_H_
+#define PROTO_TCP_THREADS_SRC_TCP_COMMON_LOGIC_PART_MSG_MGR_H_
 
 #include "conn.h"
 #include "record_timeout_mgr.h"
@@ -7,7 +7,7 @@
 
 namespace tcp
 {
-namespace http_ws
+namespace proto
 {
 // ConnInterface* conn -> int sock_fd
 class PartMsgMgr : public RecordTimeoutMgr<ConnInterface*, std::hash<ConnInterface*>, ConnGUID>
@@ -31,4 +31,4 @@ private:
 }
 }
 
-#endif // HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_PART_MSG_MGR_H_
+#endif // PROTO_TCP_THREADS_SRC_TCP_COMMON_LOGIC_PART_MSG_MGR_H_

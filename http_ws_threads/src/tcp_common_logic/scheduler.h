@@ -1,9 +1,9 @@
-#ifndef HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_SCHEDULER_H_
-#define HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_SCHEDULER_H_
+#ifndef HTTP_WS_THREADS_SRC_TCP_COMMON_LOGIC_SCHEDULER_H_
+#define HTTP_WS_THREADS_SRC_TCP_COMMON_LOGIC_SCHEDULER_H_
 
 #include "http_ws_scheduler_interface.h"
 #include "proto_msg_codec.h"
-#include "raw_tcp_scheduler_interface.h"
+#include "tcp_scheduler_interface.h"
 
 namespace tcp
 {
@@ -17,9 +17,9 @@ public:
     Scheduler();
     ~Scheduler();
 
-    void SetRawTCPScheduler(tcp::raw::SchedulerInterface* scheduler)
+    void SetTCPScheduler(tcp::SchedulerInterface* scheduler)
     {
-        raw_tcp_scheduler_ = scheduler;
+        tcp_scheduler_ = scheduler;
     }
 
     void SetMsgCodec(::proto::MsgCodec* msg_codec)
@@ -50,10 +50,10 @@ private:
                      const void* msg_body, size_t msg_body_len, int thread_idx);
 
 private:
-    tcp::raw::SchedulerInterface* raw_tcp_scheduler_;
+    tcp::SchedulerInterface* tcp_scheduler_;
     ::proto::MsgCodec* msg_codec_;
 };
 }
 }
 
-#endif // HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_SCHEDULER_H_
+#endif // HTTP_WS_THREADS_SRC_TCP_COMMON_LOGIC_SCHEDULER_H_

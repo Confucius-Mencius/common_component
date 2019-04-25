@@ -12,7 +12,7 @@ CreateVersionFile(${CMAKE_CURRENT_SOURCE_DIR} ${PROJ_NAME} ${LIB_NAME})
 ###############################################################################
 # include/link dir
 include_directories(${PROJ_INC_DIR} ${HTTP_WS_THREADS_INC_DIR} ${PROTO_TCP_THREADS_INC_DIR}
-        ${RAW_TCP_THREADS_INC_DIR} ${GLOBAL_THREAD_INC_DIR} ${WORK_THREADS_INC_DIR}
+        ${TCP_THREADS_INC_DIR} ${GLOBAL_THREAD_INC_DIR} ${WORK_THREADS_INC_DIR}
         ${BURDEN_THREADS_INC_DIR} ${THREAD_CENTER_INC_DIR} ${LOG_ENGINE_INC_DIR}
         ${CONF_CENTER_INC_DIR} ${BASE_INC_DIR} ${LIBEVENT_INC_DIR} ${OPENSSL_INC_DIR}
         ${LOG4CPLUS_INC_DIR} ${GPERFTOOLS_INC_DIR})

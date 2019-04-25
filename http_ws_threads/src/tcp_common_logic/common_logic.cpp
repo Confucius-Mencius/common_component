@@ -5,11 +5,9 @@
 #include "file_util.h"
 #include "log_util.h"
 #include "mem_util.h"
-#include "raw_tcp_scheduler_interface.h"
+#include "tcp_scheduler_interface.h"
 
 namespace tcp
-{
-namespace raw
 {
 enum
 {
@@ -64,7 +62,7 @@ int HTTPWSCommonLogic::Initialize(const void* ctx)
     msg_codec_ctx.do_checksum = http_ws_logic_args_.app_frame_conf_mgr->ProtoDoChecksum();
     msg_codec_.SetCtx(&msg_codec_ctx);
 
-    scheduler_.SetRawTCPScheduler(logic_ctx_.scheduler);
+    scheduler_.SetTCPScheduler(logic_ctx_.scheduler);
     scheduler_.SetMsgCodec(&msg_codec_);
 
     part_msg_mgr_.SetScheduler(&scheduler_);
@@ -194,9 +192,9 @@ void HTTPWSCommonLogic::OnClientConnected(const ConnGUID* conn_guid)
     }
 
     http_conn_ctx->conn = conn;
-    http_conn_ctx->http_parser.SetRawTCPCommonLogic(this);
+    http_conn_ctx->http_parser.SetTCPCommonLogic(this);
     http_conn_ctx->http_parser.SetConnID(conn_guid->conn_id);
-    http_conn_ctx->ws_parser.SetRawTCPCommonLogic(this);
+    http_conn_ctx->ws_parser.SetTCPCommonLogic(this);
     http_conn_ctx->ws_parser.SetConnID(conn_guid->conn_id);
 
     if (!http_conn_ctx_map_.insert(HTTPConnCtxMap::value_type(conn_guid->conn_id, http_conn_ctx)).second)
@@ -609,6 +607,5 @@ int HTTPWSCommonLogic::LoadHTTPWSLogicGroup()
     }
 
     return 0;
-}
 }
 }

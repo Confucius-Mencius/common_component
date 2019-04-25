@@ -8,7 +8,7 @@ namespace proto
 {
 Scheduler::Scheduler()
 {
-    raw_tcp_scheduler_ = nullptr;
+    tcp_scheduler_ = nullptr;
     msg_codec_ = nullptr;
 }
 
@@ -34,35 +34,35 @@ int Scheduler::SendToClient(const ConnGUID* conn_guid, const ::proto::MsgHead& m
         return -1;
     }
 
-    return raw_tcp_scheduler_->SendToClient(conn_guid, data, len);
+    return tcp_scheduler_->SendToClient(conn_guid, data, len);
 }
 
 int Scheduler::SendToClient(const ConnGUID* conn_guid, const void* data, size_t len)
 {
-    return raw_tcp_scheduler_->SendToClient(conn_guid, data, len);
+    return tcp_scheduler_->SendToClient(conn_guid, data, len);
 }
 
 int Scheduler::CloseClient(const ConnGUID* conn_guid)
 {
-    return raw_tcp_scheduler_->CloseClient(conn_guid);
+    return tcp_scheduler_->CloseClient(conn_guid);
 }
 
 int Scheduler::SendToGlobalThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
                                   const void* msg_body, size_t msg_body_len)
 {
-    return raw_tcp_scheduler_->SendToGlobalThread(conn_guid, msg_head, msg_body, msg_body_len);
+    return tcp_scheduler_->SendToGlobalThread(conn_guid, msg_head, msg_body, msg_body_len);
 }
 
 int Scheduler::SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
                                 const void* msg_body, size_t msg_body_len, int work_thread_idx)
 {
-    return raw_tcp_scheduler_->SendToWorkThread(conn_guid, msg_head, msg_body, msg_body_len, work_thread_idx);
+    return tcp_scheduler_->SendToWorkThread(conn_guid, msg_head, msg_body, msg_body_len, work_thread_idx);
 }
 
 int Scheduler::SendToTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
                                const void* msg_body, size_t msg_body_len, int tcp_thread_idx)
 {
-    return raw_tcp_scheduler_->SendToTCPThread(conn_guid, msg_head, msg_body, msg_body_len, tcp_thread_idx);
+    return tcp_scheduler_->SendToTCPThread(conn_guid, msg_head, msg_body, msg_body_len, tcp_thread_idx);
 }
 }
 }

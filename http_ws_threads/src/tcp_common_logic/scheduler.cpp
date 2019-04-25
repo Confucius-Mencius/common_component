@@ -9,7 +9,7 @@ namespace http_ws
 {
 Scheduler::Scheduler()
 {
-    raw_tcp_scheduler_ = nullptr;
+    tcp_scheduler_ = nullptr;
     msg_codec_ = nullptr;
 }
 
@@ -19,7 +19,7 @@ Scheduler::~Scheduler()
 
 int Scheduler::SendToClient(const ConnGUID* conn_guid, const void* data, size_t len)
 {
-    return raw_tcp_scheduler_->SendToClient(conn_guid, data, len);
+    return tcp_scheduler_->SendToClient(conn_guid, data, len);
 }
 
 int Scheduler::SendWSMsgToClient(const ConnGUID* conn_guid, ws::FrameType frame_type, const void* data, size_t len)
@@ -36,7 +36,7 @@ int Scheduler::SendWSMsgToClient(const ConnGUID* conn_guid, ws::FrameType frame_
     }
 
     websocket_build_frame(frame, (websocket_flags) flags, nullptr, (const char*) data, len);
-    raw_tcp_scheduler_->SendToClient(conn_guid, frame, frame_len);
+    tcp_scheduler_->SendToClient(conn_guid, frame, frame_len);
     free(frame);
 
     return 0;
@@ -44,7 +44,7 @@ int Scheduler::SendWSMsgToClient(const ConnGUID* conn_guid, ws::FrameType frame_
 
 int Scheduler::CloseClient(const ConnGUID* conn_guid)
 {
-    return raw_tcp_scheduler_->CloseClient(conn_guid);
+    return tcp_scheduler_->CloseClient(conn_guid);
 }
 
 int Scheduler::SendToGlobalThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
@@ -72,19 +72,19 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const ::
     {
         case THREAD_TYPE_GLOBAL:
         {
-            return raw_tcp_scheduler_->SendToGlobalThread(conn_guid, msg_head, msg_body, msg_body_len);
+            return tcp_scheduler_->SendToGlobalThread(conn_guid, msg_head, msg_body, msg_body_len);
         }
         break;
 
         case THREAD_TYPE_WORK:
         {
-            return raw_tcp_scheduler_->SendToWorkThread(conn_guid, msg_head, msg_body, msg_body_len, thread_idx);
+            return tcp_scheduler_->SendToWorkThread(conn_guid, msg_head, msg_body, msg_body_len, thread_idx);
         }
         break;
 
         case THREAD_TYPE_TCP:
         {
-            return raw_tcp_scheduler_->SendToTCPThread(conn_guid, msg_head, msg_body, msg_body_len, thread_idx);
+            return tcp_scheduler_->SendToTCPThread(conn_guid, msg_head, msg_body, msg_body_len, thread_idx);
         }
         break;
 

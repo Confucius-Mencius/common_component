@@ -1,5 +1,5 @@
-#ifndef HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_THE_WS_PARSER_H_
-#define HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_THE_WS_PARSER_H_
+#ifndef HTTP_WS_THREADS_SRC_TCP_COMMON_LOGIC_THE_WS_PARSER_H_
+#define HTTP_WS_THREADS_SRC_TCP_COMMON_LOGIC_THE_WS_PARSER_H_
 
 /*
 0               1               2               3
@@ -30,10 +30,7 @@
 
 namespace tcp
 {
-namespace raw
-{
 class HTTPWSCommonLogic;
-}
 
 namespace http_ws
 {
@@ -53,9 +50,9 @@ public:
     int CheckUpgrade(const http::Req& http_req);
     std::string MakeHandshake();
 
-    void SetRawTCPCommonLogic(tcp::raw::HTTPWSCommonLogic* http_ws_raw_tcp_common_logic)
+    void SetTCPCommonLogic(tcp::HTTPWSCommonLogic* http_ws_tcp_common_logic)
     {
-        http_ws_raw_tcp_common_logic_ = http_ws_raw_tcp_common_logic;
+        http_ws_tcp_common_logic_ = http_ws_tcp_common_logic;
     }
 
     void SetConnID(ConnID conn_id)
@@ -73,7 +70,7 @@ private:
     std::string key_;
     std::string protocol_;
 
-    tcp::raw::HTTPWSCommonLogic* http_ws_raw_tcp_common_logic_;
+    tcp::HTTPWSCommonLogic* http_ws_tcp_common_logic_;
     ConnID conn_id_;
 
     struct websocket_parser parser_;
@@ -88,4 +85,4 @@ private:
 }
 }
 
-#endif // HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_THE_WS_PARSER_H_
+#endif // HTTP_WS_THREADS_SRC_TCP_COMMON_LOGIC_THE_WS_PARSER_H_

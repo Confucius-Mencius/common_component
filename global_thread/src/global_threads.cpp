@@ -102,11 +102,11 @@ LogicInterface* Threads::GetLogic() const
 
 int Threads::LoadWorkThreads()
 {
-    char WORK_THREADS_SO_PATH[MAX_PATH_LEN] = "";
-    StrPrintf(WORK_THREADS_SO_PATH, sizeof(WORK_THREADS_SO_PATH), "%s/libwork_threads.so",
+    char work_threads_so_path[MAX_PATH_LEN] = "";
+    StrPrintf(work_threads_so_path, sizeof(work_threads_so_path), "%s/libwork_threads.so",
               threads_ctx_.common_component_dir);
 
-    if (work_threads_loader_.Load(WORK_THREADS_SO_PATH) != 0)
+    if (work_threads_loader_.Load(work_threads_so_path) != 0)
     {
         LOG_ERROR(work_threads_loader_.GetLastErrMsg());
         return -1;

@@ -28,8 +28,8 @@ public:
                          const void* msg_body, size_t msg_body_len, int work_thread_idx) override;
     int SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
                            const void* msg_body, size_t msg_body_len, int burden_thread_idx) override;
-    int SendToRawTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
-                           const void* msg_body, size_t msg_body_len, int raw_tcp_thread_idx) override;
+    int SendToTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                        const void* msg_body, size_t msg_body_len, int tcp_thread_idx) override;
     int SendToProtoTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
                              const void* msg_body, size_t msg_body_len, int proto_tcp_thread_idx) override;
     int SendToHTTPWSThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,

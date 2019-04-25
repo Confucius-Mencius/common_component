@@ -1,5 +1,5 @@
-#ifndef HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_THE_HTTP_PARSER_H_
-#define HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_THE_HTTP_PARSER_H_
+#ifndef HTTP_WS_THREADS_SRC_TCP_COMMON_LOGIC_THE_HTTP_PARSER_H_
+#define HTTP_WS_THREADS_SRC_TCP_COMMON_LOGIC_THE_HTTP_PARSER_H_
 
 #include <http_parser.h>
 #include "conn.h"
@@ -7,10 +7,7 @@
 
 namespace tcp
 {
-namespace raw
-{
 class HTTPWSCommonLogic;
-}
 
 namespace http_ws
 {
@@ -77,9 +74,9 @@ public:
     Parser();
     ~Parser();
 
-    void SetRawTCPCommonLogic(tcp::raw::HTTPWSCommonLogic* http_ws_raw_tcp_common_logic)
+    void SetTCPCommonLogic(tcp::HTTPWSCommonLogic* http_ws_tcp_common_logic)
     {
-        http_ws_raw_tcp_common_logic_ = http_ws_raw_tcp_common_logic;
+        http_ws_tcp_common_logic_ = http_ws_tcp_common_logic;
     }
 
     void SetConnID(ConnID conn_id)
@@ -99,7 +96,7 @@ public:
     static int mpart_body_process(struct http_parser* parser, const char* at, size_t length);
 
 private:
-    tcp::raw::HTTPWSCommonLogic* http_ws_raw_tcp_common_logic_;
+    tcp::HTTPWSCommonLogic* http_ws_tcp_common_logic_;
     ConnID conn_id_;
 
     struct http_parser parser_;
@@ -111,4 +108,4 @@ private:
 }
 }
 
-#endif // HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_THE_HTTP_PARSER_H_
+#endif // HTTP_WS_THREADS_SRC_TCP_COMMON_LOGIC_THE_HTTP_PARSER_H_

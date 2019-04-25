@@ -5,11 +5,9 @@
 #include "file_util.h"
 #include "log_util.h"
 #include "mem_util.h"
-#include "raw_tcp_scheduler_interface.h"
+#include "tcp_scheduler_interface.h"
 
 namespace tcp
-{
-namespace raw
 {
 enum
 {
@@ -63,7 +61,7 @@ int ProtoCommonLogic::Initialize(const void* ctx)
     msg_codec_ctx.do_checksum = proto_logic_args_.app_frame_conf_mgr->ProtoDoChecksum();
     msg_codec_.SetCtx(&msg_codec_ctx);
 
-    scheduler_.SetRawTCPScheduler(logic_ctx_.scheduler);
+    scheduler_.SetTCPScheduler(logic_ctx_.scheduler);
     scheduler_.SetMsgCodec(&msg_codec_);
 
     part_msg_mgr_.SetScheduler(&scheduler_);
@@ -501,6 +499,5 @@ void ProtoCommonLogic::OnRecvClientMsg(const ConnGUID* conn_guid, const ::proto:
         scheduler_.SendToClient(conn_guid, rsp_msg_head, nullptr, 0);
         return;
     }
-}
 }
 }

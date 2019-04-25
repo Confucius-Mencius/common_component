@@ -67,16 +67,16 @@ public:
                                    const void* msg_body, size_t msg_body_len, int burden_thread_idx) = 0;
 
     /**
-     * @brief SendToRawTCPThread
+     * @brief SendToTCPThread
      * @param conn_guid
      * @param msg_head
      * @param msg_body
      * @param msg_body_len
-     * @param tcp_thread_idx 为-1则由框架自行调度一个proto tcp线程
+     * @param tcp_thread_idx 为-1则由框架自行调度一个tcp线程
      * @return
      */
-    virtual int SendToRawTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
-                                   const void* msg_body, size_t msg_body_len, int raw_tcp_thread_idx) = 0;
+    virtual int SendToTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                                const void* msg_body, size_t msg_body_len, int tcp_thread_idx) = 0;
 
     /**
      * @brief SendToProtoTCPThread

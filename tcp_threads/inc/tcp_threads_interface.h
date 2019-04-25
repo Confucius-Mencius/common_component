@@ -1,5 +1,5 @@
-#ifndef WORK_THREADS_INC_WORK_THREADS_INTERFACE_H_
-#define WORK_THREADS_INC_WORK_THREADS_INTERFACE_H_
+#ifndef TCP_THREADS_INC_TCP_THREADS_INTERFACE_H_
+#define TCP_THREADS_INC_TCP_THREADS_INTERFACE_H_
 
 #include "thread_center_interface.h"
 #include "vector_types.h"
@@ -16,16 +16,23 @@ namespace app_frame
 class ConfMgrInterface;
 }
 
-namespace work
+namespace tcp
 {
 struct Conf
 {
+    IOType io_type;
+    bool use_bufferevent;
+    std::string addr;
+    unsigned int port;
     int thread_count;
     std::string common_logic_so;
     StrGroup logic_so_group;
 
-    Conf() : common_logic_so(), logic_so_group()
+    Conf() : addr(), common_logic_so(), logic_so_group()
     {
+        io_type = IO_TYPE_MIN;
+        use_bufferevent = true;
+        port = 0;
         thread_count = 0;
     }
 };
@@ -44,7 +51,7 @@ struct ThreadsCtx
     pthread_mutex_t* app_frame_threads_sync_mutex;
     pthread_cond_t* app_frame_threads_sync_cond;
 
-    // 下面两个字段是为了支持多种类型的工作线程
+    // 下面两个字段是为了支持多种类型的tcp io
     Conf conf;
     const void* logic_args;
 
@@ -70,19 +77,12 @@ struct RelatedThreadGroups
     ThreadInterface* global_thread;
     global::LogicInterface* global_logic;
     ThreadGroupInterface* work_thread_group;
-    ThreadGroupInterface* burden_thread_group;
-    ThreadGroupInterface* tcp_thread_group;
-    ThreadGroupInterface* proto_tcp_thread_group;
-    ThreadGroupInterface* http_ws_thread_group;
 
     RelatedThreadGroups()
     {
         global_thread = nullptr;
         global_logic = nullptr;
         work_thread_group = nullptr;
-        burden_thread_group = nullptr;
-        tcp_thread_group = nullptr;
-        proto_tcp_thread_group = nullptr;
     }
 };
 
@@ -95,8 +95,8 @@ public:
 
     virtual int CreateThreadGroup(const char* thread_name) = 0;
     virtual void SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups) = 0;
-    virtual ThreadGroupInterface* GetWorkThreadGroup() const = 0;
+    virtual ThreadGroupInterface* GetTCPThreadGroup() const = 0;
 };
 }
 
-#endif // WORK_THREADS_INC_WORK_THREADS_INTERFACE_H_
+#endif // TCP_THREADS_INC_TCP_THREADS_INTERFACE_H_

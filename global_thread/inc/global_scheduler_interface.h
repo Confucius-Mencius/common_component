@@ -43,8 +43,8 @@ public:
     virtual int SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
                                    const void* msg_body, size_t msg_body_len, int burden_thread_idx) = 0;
 
-    virtual int SendToRawTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
-                                   const void* msg_body, size_t msg_body_len, int raw_tcp_thread_idx) = 0;
+    virtual int SendToTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                                const void* msg_body, size_t msg_body_len, int tcp_thread_idx) = 0;
 
     /**
      *

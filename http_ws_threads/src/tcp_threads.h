@@ -3,7 +3,7 @@
 
 #include "http_ws_threads_interface.h"
 #include "module_loader.h"
-#include "raw_tcp_common_logic/http_ws_logic_args.h"
+#include "tcp_common_logic/http_ws_logic_args.h"
 
 namespace tcp
 {
@@ -30,16 +30,16 @@ public:
     ThreadGroupInterface* GetTCPThreadGroup() const override;
 
 private:
-    int LoadRawTCPThreads();
+    int LoadTCPThreads();
 
 private:
     ThreadsCtx threads_ctx_;
     tcp::RelatedThreadGroups related_thread_groups_;
 
-    ModuleLoader raw_tcp_threads_loader_;
-    tcp::raw::ThreadsInterface* raw_tcp_threads_;
+    ModuleLoader tcp_threads_loader_;
+    tcp::ThreadsInterface* tcp_threads_;
 
-    tcp::raw::HTTPWSLogicArgs http_ws_logic_args_;
+    tcp::HTTPWSLogicArgs http_ws_logic_args_;
 };
 }
 }

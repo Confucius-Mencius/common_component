@@ -1,5 +1,5 @@
-#ifndef PROTO_TCP_THREADS_SRC_RAW_TCP_COMMON_LOGIC_COMMON_LOGIC_H_
-#define PROTO_TCP_THREADS_SRC_RAW_TCP_COMMON_LOGIC_COMMON_LOGIC_H_
+#ifndef PROTO_TCP_THREADS_SRC_TCP_COMMON_LOGIC_COMMON_LOGIC_H_
+#define PROTO_TCP_THREADS_SRC_TCP_COMMON_LOGIC_COMMON_LOGIC_H_
 
 #include <vector>
 #include "module_loader.h"
@@ -8,12 +8,10 @@
 #include "proto_logic_args.h"
 #include "proto_msg_codec.h"
 #include "proto_tcp_logic_interface.h"
-#include "raw_tcp_logic_interface.h"
 #include "scheduler.h"
+#include "tcp_logic_interface.h"
 
 namespace tcp
-{
-namespace raw
 {
 struct ProtoLogicItem
 {
@@ -75,6 +73,5 @@ private:
     tcp::proto::PartMsgMgr part_msg_mgr_;
 };
 }
-}
 
-#endif // PROTO_TCP_THREADS_SRC_RAW_TCP_COMMON_LOGIC_COMMON_LOGIC_H_
+#endif // PROTO_TCP_THREADS_SRC_CP_COMMON_LOGIC_COMMON_LOGIC_H_

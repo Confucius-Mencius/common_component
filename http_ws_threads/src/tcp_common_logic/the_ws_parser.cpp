@@ -62,7 +62,7 @@ private:
 
 Parser::Parser() : key_(), protocol_(), body_(), payloads_()
 {
-    http_ws_raw_tcp_common_logic_ = nullptr;
+    http_ws_tcp_common_logic_ = nullptr;
     conn_id_ = INVALID_CONN_ID;
 
     websocket_parser_init(&parser_);
@@ -199,9 +199,9 @@ int Parser::OnFrameHeader(websocket_parser* parser)
 
     LOG_DEBUG("opcode: " << wsp->opcode_ << ", fin: " << (wsp->fin_ != 0) << ", length: " << parser->length);
 
-    if (wsp->http_ws_raw_tcp_common_logic_ != nullptr)
+    if (wsp->http_ws_tcp_common_logic_ != nullptr)
     {
-        wsp->http_ws_raw_tcp_common_logic_->RecordPartMsg(wsp->conn_id_);
+        wsp->http_ws_tcp_common_logic_->RecordPartMsg(wsp->conn_id_);
     }
 
     return 0;
@@ -222,9 +222,9 @@ int Parser::OnFrameBody(websocket_parser* parser, const char* at, size_t length)
         memcpy(&wsp->body_[parser->offset], at, length);
     }
 
-    if (wsp->http_ws_raw_tcp_common_logic_ != nullptr)
+    if (wsp->http_ws_tcp_common_logic_ != nullptr)
     {
-        wsp->http_ws_raw_tcp_common_logic_->RecordPartMsg(wsp->conn_id_);
+        wsp->http_ws_tcp_common_logic_->RecordPartMsg(wsp->conn_id_);
     }
 
     return 0;
@@ -270,7 +270,7 @@ int Parser::OnFrameEnd(websocket_parser* parser)
             LOG_DEBUG("close code: " << cc);
         }
 
-        if (wsp->http_ws_raw_tcp_common_logic_ != nullptr)
+        if (wsp->http_ws_tcp_common_logic_ != nullptr)
         {
             int opcode = wsp->opcode_;
             if (wsp->is_text_)
@@ -282,7 +282,7 @@ int Parser::OnFrameEnd(websocket_parser* parser)
                 opcode = WS_OP_BINARY;
             }
 
-            wsp->http_ws_raw_tcp_common_logic_->OnWSMsg(wsp->conn_id_, opcode, wsp->payloads_.data(), wsp->payloads_.size());
+            wsp->http_ws_tcp_common_logic_->OnWSMsg(wsp->conn_id_, opcode, wsp->payloads_.data(), wsp->payloads_.size());
         }
 
         wsp->payloads_.clear();

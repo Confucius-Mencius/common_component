@@ -1,5 +1,5 @@
-#ifndef HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_COMMON_LOGIC_H_
-#define HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_COMMON_LOGIC_H_
+#ifndef HTTP_WS_THREADS_SRC_TCP_COMMON_LOGIC_COMMON_LOGIC_H_
+#define HTTP_WS_THREADS_SRC_TCP_COMMON_LOGIC_COMMON_LOGIC_H_
 
 #include "http_msg_dispatcher.h"
 #include "http_ws_logic_args.h"
@@ -8,14 +8,12 @@
 #include "module_loader.h"
 #include "part_msg_mgr.h"
 #include "proto_msg_codec.h"
-#include "raw_tcp_logic_interface.h"
 #include "scheduler.h"
+#include "tcp_logic_interface.h"
 #include "the_http_parser.h"
 #include "the_ws_parser.h"
 
 namespace tcp
-{
-namespace raw
 {
 struct HTTPWSLogicItem
 {
@@ -111,6 +109,5 @@ private:
     HTTPConnCtxMap http_conn_ctx_map_;
 };
 }
-}
 
-#endif // HTTP_WS_THREADS_SRC_RAW_TCP_COMMON_LOGIC_COMMON_LOGIC_H_
+#endif // HTTP_WS_THREADS_SRC_TCP_COMMON_LOGIC_COMMON_LOGIC_H_

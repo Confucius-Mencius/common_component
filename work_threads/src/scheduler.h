@@ -41,8 +41,8 @@ public:
                          const void* msg_body, size_t msg_body_len, int work_thread_idx) override;
     int SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
                            const void* msg_body, size_t msg_body_len, int burden_thread_idx) override;
-    int SendToRawTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
-                           const void* msg_body, size_t msg_body_len, int raw_tcp_thread_idx) override;
+    int SendToTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                        const void* msg_body, size_t msg_body_len, int tcp_thread_idx) override;
     int SendToProtoTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
                              const void* msg_body, size_t msg_body_len, int proto_tcp_thread_idx) override;
     int SendToHTTPWSThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
@@ -51,7 +51,7 @@ public:
 private:
     int GetScheduleWorkThreadIdx(int work_thread_idx);
     int GetScheduleBurdenThreadIdx(int burden_thread_idx);
-    int GetScheduleRawTCPThreadIdx(int raw_tcp_thread_idx);
+    int GetScheduleTCPThreadIdx(int tcp_thread_idx);
     int GetScheduleProtoTCPThreadIdx(int proto_tcp_thread_idx);
     int GetScheduleHTTPWSThreadIdx(int http_ws_thread_idx);
 
@@ -60,7 +60,7 @@ private:
         THREAD_TYPE_GLOBAL,
         THREAD_TYPE_WORK,
         THREAD_TYPE_BURDEN,
-        THREAD_TYPE_RAW_TCP,
+        THREAD_TYPE_TCP,
         THREAD_TYPE_PROTO_TCP,
         THREAD_TYPE_HTTP_WS,
     };
@@ -76,7 +76,7 @@ private:
 
     int last_work_thread_idx_;
     int last_burden_thread_idx_;
-    int last_raw_tcp_thread_idx_;
+    int last_tcp_thread_idx_;
     int last_proto_tcp_thread_idx_;
     int last_http_ws_thread_idx_;
 };

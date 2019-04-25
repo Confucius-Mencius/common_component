@@ -49,13 +49,11 @@ private:
     int LoadGlobalThread();
     int LoadWorkThreads();
     int LoadBurdenThreads();
-    int LoadRawTCPThreads();
+    int LoadTCPThreads();
     int LoadProtoTCPThreads();
 
     int LoadHTTPWSThreads();
-//    int LoadHttpThreads();
 //    int LoadUdpThreads();
-//    int LoadRawTcpThreads();
     int CreateAllThreads();
     void SetThreadsRelationship();
 
@@ -74,8 +72,8 @@ private:
     ModuleLoader burden_threads_loader_;
     burden::ThreadsInterface* burden_threads_;
 
-    ModuleLoader raw_tcp_threads_loader_;
-    tcp::raw::ThreadsInterface* raw_tcp_threads_;
+    ModuleLoader tcp_threads_loader_;
+    tcp::ThreadsInterface* tcp_threads_;
 
     ModuleLoader proto_tcp_threads_loader_;
     tcp::proto::ThreadsInterface* proto_tcp_threads_;
@@ -83,12 +81,9 @@ private:
     ModuleLoader http_ws_threads_loader_;
     tcp::http_ws::ThreadsInterface* http_ws_threads_;
 
-//    ModuleLoader http_threads_loader_;
-//    http::ThreadsInterface* http_threads_;
 //    ModuleLoader udp_threads_loader_;
 //    udp::ThreadsInterface* udp_threads_;
-//    ModuleLoader raw_tcp_threads_loader_;
-//    tcp::ThreadsInterface* raw_tcp_threads_;
+
 };
 }
 

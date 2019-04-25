@@ -3,18 +3,6 @@
 
 #include "tcp_threads_interface.h"
 
-class ConfCenterInterface;
-
-namespace global
-{
-class LogicInterface;
-}
-
-namespace app_frame
-{
-class ConfMgrInterface;
-}
-
 namespace tcp
 {
 namespace proto

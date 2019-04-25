@@ -39,8 +39,8 @@ set(CONF_CENTER_INC_DIR ${PROJECT_SOURCE_DIR}/../conf_center/inc)
 set(TIMER_AXIS_INC_DIR ${PROJECT_SOURCE_DIR}/../timer_axis/inc)
 set(THREAD_CENTER_INC_DIR ${PROJECT_SOURCE_DIR}/../thread_center/inc)
 set(APP_FRAME_INC_DIR ${PROJECT_SOURCE_DIR}/../app_frame/inc)
-set(RAW_TCP_THREADS_INC_DIR ${PROJECT_SOURCE_DIR}/../raw_tcp_threads/inc)
 set(PROTO_MSG_CODEC_INC_DIR ${PROJECT_SOURCE_DIR}/../proto_msg_codec/inc)
+set(TCP_THREADS_INC_DIR ${PROJECT_SOURCE_DIR}/../tcp_threads/inc)
 
 ###############################################################################
 # project inc dir
@@ -49,4 +49,4 @@ set(PROJ_INC_DIR ${PROJECT_SOURCE_DIR}/inc)
 ###############################################################################
 # sub dir
 add_subdirectory(src)
-add_subdirectory(src/raw_tcp_common_logic)
+add_subdirectory(src/tcp_common_logic)

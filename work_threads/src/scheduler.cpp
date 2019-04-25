@@ -13,7 +13,7 @@ Scheduler::Scheduler()
     related_thread_groups_ = nullptr;
     last_work_thread_idx_ = 0;
     last_burden_thread_idx_ = 0;
-    last_raw_tcp_thread_idx_ = 0;
+    last_tcp_thread_idx_ = 0;
     last_proto_tcp_thread_idx_ = 0;
     last_http_ws_thread_idx_ = 0;
 }
@@ -59,12 +59,12 @@ void Scheduler::SetRelatedThreadGroups(RelatedThreadGroups* related_thread_group
         }
     }
 
-    if (related_thread_groups->raw_tcp_thread_group != nullptr)
+    if (related_thread_groups->tcp_thread_group != nullptr)
     {
-        const int raw_tcp_thread_count = related_thread_groups_->raw_tcp_thread_group->GetThreadCount();
-        if (raw_tcp_thread_count > 0)
+        const int tcp_thread_count = related_thread_groups_->tcp_thread_group->GetThreadCount();
+        if (tcp_thread_count > 0)
         {
-            last_raw_tcp_thread_idx_ = rand() % raw_tcp_thread_count;
+            last_tcp_thread_idx_ = rand() % tcp_thread_count;
         }
     }
 
@@ -166,9 +166,9 @@ int Scheduler::SendToClient(const ConnGUID* conn_guid, const void* data, size_t 
 
     switch (conn_guid->io_type)
     {
-        case IO_TYPE_RAW_TCP:
+        case IO_TYPE_TCP:
         {
-            thread_group = related_thread_groups_->raw_tcp_thread_group;
+            thread_group = related_thread_groups_->tcp_thread_group;
             if (nullptr == thread_group)
             {
                 LOG_ERROR("no such threads, io type: " << conn_guid->io_type);
@@ -244,9 +244,9 @@ int Scheduler::CloseClient(const ConnGUID* conn_guid)
 
     switch (conn_guid->io_type)
     {
-        case IO_TYPE_RAW_TCP:
+        case IO_TYPE_TCP:
         {
-            thread_group = related_thread_groups_->raw_tcp_thread_group;
+            thread_group = related_thread_groups_->tcp_thread_group;
             if (nullptr == thread_group)
             {
                 LOG_ERROR("no such threads, io type: " << conn_guid->io_type);
@@ -327,10 +327,10 @@ int Scheduler::SendToBurdenThread(const ConnGUID* conn_guid, const ::proto::MsgH
     return SendToThread(THREAD_TYPE_BURDEN, conn_guid, msg_head, msg_body, msg_body_len, burden_thread_idx);
 }
 
-int Scheduler::SendToRawTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
-                                  const void* msg_body, size_t msg_body_len, int raw_tcp_thread_idx)
+int Scheduler::SendToTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                               const void* msg_body, size_t msg_body_len, int tcp_thread_idx)
 {
-    return SendToThread(THREAD_TYPE_RAW_TCP, conn_guid, msg_head, msg_body, msg_body_len, raw_tcp_thread_idx);
+    return SendToThread(THREAD_TYPE_TCP, conn_guid, msg_head, msg_body, msg_body_len, tcp_thread_idx);
 }
 
 int Scheduler::SendToProtoTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
@@ -371,17 +371,17 @@ int Scheduler::GetScheduleBurdenThreadIdx(int burden_thread_idx)
     return burden_thread_idx;
 }
 
-int Scheduler::GetScheduleRawTCPThreadIdx(int raw_tcp_thread_idx)
+int Scheduler::GetScheduleTCPThreadIdx(int tcp_thread_idx)
 {
-    const int raw_tcp_thread_count = related_thread_groups_->raw_tcp_thread_group->GetThreadCount();
+    const int tcp_thread_count = related_thread_groups_->tcp_thread_group->GetThreadCount();
 
-    if (INVALID_IDX(raw_tcp_thread_idx, 0, raw_tcp_thread_count))
+    if (INVALID_IDX(tcp_thread_idx, 0, tcp_thread_count))
     {
-        raw_tcp_thread_idx = last_raw_tcp_thread_idx_;
-        last_raw_tcp_thread_idx_ = (last_raw_tcp_thread_idx_ + 1) % raw_tcp_thread_count;
+        tcp_thread_idx = last_tcp_thread_idx_;
+        last_tcp_thread_idx_ = (last_tcp_thread_idx_ + 1) % tcp_thread_count;
     }
 
-    return raw_tcp_thread_idx;
+    return tcp_thread_idx;
 }
 
 int Scheduler::GetScheduleProtoTCPThreadIdx(int proto_tcp_thread_idx)
@@ -453,16 +453,16 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const pr
         }
         break;
 
-        case THREAD_TYPE_RAW_TCP:
+        case THREAD_TYPE_TCP:
         {
-            thread_group = related_thread_groups_->raw_tcp_thread_group;
+            thread_group = related_thread_groups_->tcp_thread_group;
             if (nullptr == thread_group)
             {
                 LOG_ERROR("no such threads, thread type: " << thread_type);
                 return -1;
             }
 
-            real_thread_idx = GetScheduleRawTCPThreadIdx(thread_idx);
+            real_thread_idx = GetScheduleTCPThreadIdx(thread_idx);
             thread = thread_group->GetThread(real_thread_idx);
         }
         break;

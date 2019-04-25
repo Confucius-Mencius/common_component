@@ -1,12 +1,10 @@
-#ifndef PROTO_TCP_THREADS_SRC_RAW_TCP_COMMON_LOGIC_PROTO_LOGIC_ARGS_H_
-#define PROTO_TCP_THREADS_SRC_RAW_TCP_COMMON_LOGIC_PROTO_LOGIC_ARGS_H_
+#ifndef PROTO_TCP_THREADS_SRC_TCP_COMMON_LOGIC_PROTO_LOGIC_ARGS_H_
+#define PROTO_TCP_THREADS_SRC_TCP_COMMON_LOGIC_PROTO_LOGIC_ARGS_H_
 
 #include "app_frame_conf_mgr_interface.h"
-#include "raw_tcp_threads_interface.h"
+#include "tcp_threads_interface.h"
 
 namespace tcp
-{
-namespace raw
 {
 struct ProtoLogicArgs
 {
@@ -20,6 +18,5 @@ struct ProtoLogicArgs
     }
 };
 }
-}
 
-#endif // PROTO_TCP_THREADS_SRC_RAW_TCP_COMMON_LOGIC_PROTO_LOGIC_ARGS_H_
+#endif // PROTO_TCP_THREADS_SRC_TCP_COMMON_LOGIC_PROTO_LOGIC_ARGS_H_
