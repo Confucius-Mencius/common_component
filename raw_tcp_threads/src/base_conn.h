@@ -1,12 +1,10 @@
-#ifndef RAW_TCP_THREADS_SRC_BASE_CONN_H_
-#define RAW_TCP_THREADS_SRC_BASE_CONN_H_
+#ifndef TCP_THREADS_SRC_BASE_CONN_H_
+#define TCP_THREADS_SRC_BASE_CONN_H_
 
 #include <event2/util.h>
 #include "conn.h"
 
 namespace tcp
-{
-namespace raw
 {
 class ConnCenter;
 class ThreadSink;
@@ -114,6 +112,5 @@ protected:
     std::string data_;
 };
 }
-}
 
-#endif // RAW_TCP_THREADS_SRC_BASE_CONN_H_
+#endif // TCP_THREADS_SRC_BASE_CONN_H_

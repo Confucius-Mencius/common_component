@@ -1,7 +1,7 @@
 #ifndef PROTO_TCP_THREADS_INC_PROTO_TCP_THREADS_INTERFACE_H_
 #define PROTO_TCP_THREADS_INC_PROTO_TCP_THREADS_INTERFACE_H_
 
-#include "raw_tcp_threads_interface.h"
+#include "tcp_threads_interface.h"
 
 class ConfCenterInterface;
 

@@ -1,5 +1,5 @@
-#ifndef RAW_TCP_THREADS_SRC_THREAD_SINK_H_
-#define RAW_TCP_THREADS_SRC_THREAD_SINK_H_
+#ifndef TCP_THREADS_SRC_THREAD_SINK_H_
+#define TCP_THREADS_SRC_THREAD_SINK_H_
 
 #include <event2/listener.h>
 #include "conn_center.h"
@@ -7,12 +7,10 @@
 #include "msg_dispatcher.h"
 #include "module_loader.h"
 #include "proto_msg_codec.h"
-#include "raw_tcp_logic_interface.h"
+#include "tcp_logic_interface.h"
 #include "scheduler.h"
 
 namespace tcp
-{
-namespace raw
 {
 struct LogicItem
 {
@@ -112,6 +110,5 @@ private:
     MsgDispatcher msg_dispatcher_;
 };
 }
-}
 
-#endif // RAW_TCP_THREADS_SRC_THREAD_SINK_H_
+#endif // TCP_THREADS_SRC_THREAD_SINK_H_

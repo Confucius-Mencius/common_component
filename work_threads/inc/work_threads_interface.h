@@ -93,7 +93,7 @@ public:
     {
     }
 
-    virtual int CreateThreadGroup(const char* name_prefix) = 0;
+    virtual int CreateThreadGroup(const char* thread_name) = 0;
     virtual void SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups) = 0;
     virtual ThreadGroupInterface* GetWorkThreadGroup() const = 0;
 };

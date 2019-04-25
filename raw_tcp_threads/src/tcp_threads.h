@@ -1,11 +1,9 @@
-#ifndef RAW_TCP_THREADS_SRC_TCP_THREADS_H_
-#define RAW_TCP_THREADS_SRC_TCP_THREADS_H_
+#ifndef TCP_THREADS_SRC_TCP_THREADS_H_
+#define TCP_THREADS_SRC_TCP_THREADS_H_
 
-#include "raw_tcp_threads_interface.h"
+#include "tcp_threads_interface.h"
 
 namespace tcp
-{
-namespace raw
 {
 class Threads : public ThreadsInterface
 {
@@ -23,7 +21,7 @@ public:
     void Freeze() override;
 
     ///////////////////////// ThreadsInterface /////////////////////////
-    int CreateThreadGroup(const char* name_prefix) override;
+    int CreateThreadGroup(const char* thread_name) override;
     void SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_groups) override;
     ThreadGroupInterface* GetTCPThreadGroup() const override;
 
@@ -33,6 +31,5 @@ private:
     ThreadGroupInterface* tcp_thread_group_;
 };
 }
-}
 
-#endif // RAW_TCP_THREADS_SRC_TCP_THREADS_H_
+#endif // TCP_THREADS_SRC_TCP_THREADS_H_

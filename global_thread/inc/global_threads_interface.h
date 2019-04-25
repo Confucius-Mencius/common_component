@@ -3,13 +3,6 @@
 
 #include "work_threads_interface.h"
 
-class ConfCenterInterface;
-
-namespace app_frame
-{
-class ConfMgrInterface;
-}
-
 namespace global
 {
 class LogicInterface;

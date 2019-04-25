@@ -1,13 +1,11 @@
-#ifndef RAW_TCP_THREADS_SRC_BUFFER_EVENT_CONN_H_
-#define RAW_TCP_THREADS_SRC_BUFFER_EVENT_CONN_H_
+#ifndef TCP_THREADS_SRC_BUFFER_EVENT_CONN_H_
+#define TCP_THREADS_SRC_BUFFER_EVENT_CONN_H_
 
 #include <event2/bufferevent.h>
 #include "base_conn.h"
 #include "mem_util.h"
 
 namespace tcp
-{
-namespace raw
 {
 class ConnCenter;
 
@@ -35,6 +33,5 @@ private:
     struct bufferevent* buffer_event_;
 };
 }
-}
 
-#endif // RAW_TCP_THREADS_SRC_BUFFER_EVENT_CONN_H_
+#endif // TCP_THREADS_SRC_BUFFER_EVENT_CONN_H_

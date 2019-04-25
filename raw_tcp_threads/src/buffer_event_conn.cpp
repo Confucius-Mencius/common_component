@@ -9,11 +9,6 @@
 
 namespace tcp
 {
-namespace raw
-{
-//const static size_t BUFFER_EVENT_MAX_SINGLE_READ = 16384; // 16k
-//const static size_t BUFFER_EVENT_MAX_SINGLE_WRITE = 16384;
-
 void BufferEventConn::EventCallback(struct bufferevent* buffer_event, short events, void* arg)
 {
     const int err = EVUTIL_SOCKET_ERROR();
@@ -230,6 +225,5 @@ int BufferEventConn::Send(const void* data, size_t len)
         conn_center_->UpdateConnStatus(conn_guid_.conn_id, false);
         return 0;
     }
-}
 }
 }

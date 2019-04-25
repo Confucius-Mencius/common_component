@@ -6,8 +6,5 @@
 
 namespace tcp
 {
-namespace raw
-{
 MSG_DISPATCHER_IMPL
-}
 }

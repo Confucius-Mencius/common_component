@@ -3,8 +3,6 @@
 
 namespace tcp
 {
-namespace raw
-{
 BaseConn::BaseConn() : conn_guid_(), client_ip_(), data_()
 {
     conn_center_ = nullptr;
@@ -16,6 +14,5 @@ BaseConn::BaseConn() : conn_guid_(), client_ip_(), data_()
 
 BaseConn::~BaseConn()
 {
-}
 }
 }

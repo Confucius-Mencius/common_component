@@ -62,7 +62,7 @@ void Threads::Freeze()
     SAFE_FREEZE(work_thread_group_);
 }
 
-int Threads::CreateThreadGroup(const char* name_prefix)
+int Threads::CreateThreadGroup(const char* thread_name)
 {
     int ret = -1;
 
@@ -71,7 +71,7 @@ int Threads::CreateThreadGroup(const char* name_prefix)
         ThreadGroupCtx thread_group_ctx;
         thread_group_ctx.common_component_dir = threads_ctx_.common_component_dir;
         thread_group_ctx.enable_cpu_profiling = threads_ctx_.app_frame_conf_mgr->EnableCPUProfiling();
-        thread_group_ctx.thread_name = std::string(name_prefix) + " thread";
+        thread_group_ctx.thread_name.assign(thread_name);
         thread_group_ctx.thread_count = threads_ctx_.conf.thread_count;
         thread_group_ctx.thread_sink_creator = ThreadSink::Create;
         thread_group_ctx.threads_ctx = &threads_ctx_;

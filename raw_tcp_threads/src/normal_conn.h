@@ -1,5 +1,5 @@
-#ifndef RAW_TCP_THREADS_SRC_NORMAL_CONN_H_
-#define RAW_TCP_THREADS_SRC_NORMAL_CONN_H_
+#ifndef TCP_THREADS_SRC_NORMAL_CONN_H_
+#define TCP_THREADS_SRC_NORMAL_CONN_H_
 
 #include <list>
 #include <event2/event.h>
@@ -7,8 +7,6 @@
 #include "mem_util.h"
 
 namespace tcp
-{
-namespace raw
 {
 class ConnCenter;
 
@@ -41,6 +39,5 @@ private:
     struct event* write_event_;
 };
 }
-}
 
-#endif // RAW_TCP_THREADS_SRC_NORMAL_CONN_H_
+#endif // TCP_THREADS_SRC_NORMAL_CONN_H_

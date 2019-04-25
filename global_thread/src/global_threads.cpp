@@ -71,7 +71,7 @@ void Threads::Freeze()
 
 int Threads::CreateThreadGroup()
 {
-    if (work_threads_->CreateThreadGroup("global") != 0)
+    if (work_threads_->CreateThreadGroup("global thread") != 0)
     {
         return -1;
     }

@@ -1294,7 +1294,7 @@ int AppFrame::CreateAllThreads()
 
     if (conf_mgr_.GetWorkThreadCount() > 0)
     {
-        if (work_threads_->CreateThreadGroup("work") != 0)
+        if (work_threads_->CreateThreadGroup("work thread") != 0)
         {
             return -1;
         }

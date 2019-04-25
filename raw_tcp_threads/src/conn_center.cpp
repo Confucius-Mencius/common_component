@@ -9,8 +9,6 @@
 
 namespace tcp
 {
-namespace raw
-{
 ConnCenter::ConnCenter() : conn_center_ctx_(), conn_hash_map_(), conn_id_seq_(), conn_id_hash_map_()
 {
     thread_sink_ = nullptr;
@@ -280,6 +278,5 @@ void ConnCenter::OnTimeout(const ConnID& k, BaseConn* const& v, int timeout_sec)
     LOG_TRACE("ConnMgr::OnTimeout, key: " << k << ", val: " << v << ", timeout: " << timeout_sec);
     thread_sink_->OnClientClosed(v);
     Clear(v);
-}
 }
 }

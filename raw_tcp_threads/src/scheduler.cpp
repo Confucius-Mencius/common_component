@@ -7,8 +7,6 @@
 
 namespace tcp
 {
-namespace raw
-{
 Scheduler::Scheduler()
 {
     thread_sink_ = nullptr;
@@ -239,6 +237,5 @@ int Scheduler::SendToThread(int thread_type, const ConnGUID* conn_guid, const ::
 
     thread->PushTask(task);
     return 0;
-}
 }
 }

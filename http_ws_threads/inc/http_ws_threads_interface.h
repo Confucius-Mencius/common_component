@@ -1,7 +1,7 @@
 #ifndef HTTP_WS_THREADS_INC_HTTP_WS_THREADS_INTERFACE_H_
 #define HTTP_WS_THREADS_INC_HTTP_WS_THREADS_INTERFACE_H_
 
-#include "raw_tcp_threads_interface.h"
+#include "tcp_threads_interface.h"
 
 class ConfCenterInterface;
 

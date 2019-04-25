@@ -7,24 +7,22 @@
 
 namespace tcp
 {
-namespace raw
-{
 void ThreadSink::OnAccept(struct evconnlistener* listener, evutil_socket_t sock_fd,
                           struct sockaddr* sock_addr, int sock_addr_len, void* arg)
 {
-    ThreadSink* sink = static_cast<ThreadSink*>(arg);
+    ThreadSink* thread_sink = static_cast<ThreadSink*>(arg);
 
-    if (sink->GetThread()->IsStopping())
+    if (thread_sink->GetThread()->IsStopping())
     {
         LOG_WARN("in stopping status, refuse all new connections");
         evutil_closesocket(sock_fd);
         return;
     }
 
-    const int tcp_conn_count_limit = sink->threads_ctx_->app_frame_conf_mgr->GetTCPConnCountLimit();
-    if (tcp_conn_count_limit > 0 && sink->online_tcp_conn_count_ >= tcp_conn_count_limit)
+    const int tcp_conn_count_limit = thread_sink->threads_ctx_->app_frame_conf_mgr->GetTCPConnCountLimit();
+    if (tcp_conn_count_limit > 0 && thread_sink->online_tcp_conn_count_ >= tcp_conn_count_limit)
     {
-        LOG_ERROR("refuse new connection, online tcp conn count: " << sink->online_tcp_conn_count_
+        LOG_ERROR("refuse new connection, online tcp conn count: " << thread_sink->online_tcp_conn_count_
                   << ", the limit is: " << tcp_conn_count_limit);
         evutil_closesocket(sock_fd);
         return;
@@ -47,7 +45,7 @@ void ThreadSink::OnAccept(struct evconnlistener* listener, evutil_socket_t sock_
                   << ", socket fd: " << sock_fd);
     }
 
-    sink->OnClientConnected(&new_conn_ctx);
+    thread_sink->OnClientConnected(&new_conn_ctx);
 }
 
 void ThreadSink::OnListenError(evconnlistener* listener, void* arg)
@@ -578,6 +576,5 @@ int ThreadSink::OnClientConnected(const NewConnCtx* new_conn_ctx)
     }
 
     return 0;
-}
 }
 }

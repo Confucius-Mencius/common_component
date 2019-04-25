@@ -71,7 +71,7 @@ void Threads::Freeze()
 
 int Threads::CreateThreadGroup()
 {
-    if (work_threads_->CreateThreadGroup("burden") != 0)
+    if (work_threads_->CreateThreadGroup("burden thread") != 0)
     {
         return -1;
     }

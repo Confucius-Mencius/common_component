@@ -23,7 +23,7 @@ public:
     void Freeze() override;
 
     ///////////////////////// ThreadsInterface /////////////////////////
-    int CreateThreadGroup(const char* name_prefix) override;
+    int CreateThreadGroup(const char* thread_name) override;
     void SetRelatedThreadGroups(const RelatedThreadGroups* related_thread_group) override;
     ThreadGroupInterface* GetWorkThreadGroup() const override;
 
