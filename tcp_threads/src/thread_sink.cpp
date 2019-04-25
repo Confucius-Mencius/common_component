@@ -334,12 +334,6 @@ void ThreadSink::OnTask(const ThreadTask* task)
             }
             else
             {
-                if (common_logic_ != nullptr)
-                {
-                    common_logic_->OnTask(task->GetConnGUID(), task->GetSourceThread(),
-                                          task->GetData().data(), task->GetData().size());
-                }
-
                 for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
                 {
                     it->logic->OnTask(task->GetConnGUID(), task->GetSourceThread(),
@@ -395,11 +389,6 @@ void ThreadSink::OnClientClosed(const BaseConn* conn)
 
 void ThreadSink::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
 {
-    if (common_logic_ != nullptr)
-    {
-        common_logic_->OnRecvClientData(conn_guid, data, len);
-    }
-
     for (LogicItemVec::iterator it = logic_item_vec_.begin(); it != logic_item_vec_.end(); ++it)
     {
         (*it).logic->OnRecvClientData(conn_guid, data, len);

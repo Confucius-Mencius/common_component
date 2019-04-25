@@ -149,6 +149,12 @@ public:
     virtual ~CommonLogicInterface()
     {
     }
+
+private:
+    // common logic不处理消息
+    virtual void OnWSMsg(const ConnGUID* conn_guid, ws::FrameType frame_type, const void* data, size_t len)
+    {
+    }
 };
 }
 }

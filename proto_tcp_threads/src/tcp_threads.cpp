@@ -123,7 +123,7 @@ int Threads::LoadTCPThreads()
     tcp_threads_ctx.conf.addr = threads_ctx_.app_frame_conf_mgr->GetProtoTCPAddr();
     tcp_threads_ctx.conf.port = threads_ctx_.app_frame_conf_mgr->GetProtoTCPPort();
     tcp_threads_ctx.conf.thread_count = threads_ctx_.app_frame_conf_mgr->GetProtoTCPThreadCount();
-    tcp_threads_ctx.conf.common_logic_so = std::string(threads_ctx_.common_component_dir) + "/libproto_tcp_common_logic.so";
+    tcp_threads_ctx.conf.logic_so_group.push_back(std::string(threads_ctx_.common_component_dir) + "/libproto_tcp_logic.so");
 
     proto_logic_args_.app_frame_conf_mgr = threads_ctx_.app_frame_conf_mgr;
     proto_logic_args_.related_thread_groups = &related_thread_groups_;

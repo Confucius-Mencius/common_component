@@ -121,7 +121,7 @@ int Threads::LoadWorkThreads()
 
     work::ThreadsCtx work_threads_ctx = threads_ctx_;
     work_threads_ctx.conf.thread_count = 1;
-    work_threads_ctx.conf.common_logic_so = std::string(threads_ctx_.common_component_dir) + "/libglobal_work_common_logic.so";
+    work_threads_ctx.conf.logic_so_group.push_back(std::string(threads_ctx_.common_component_dir) + "/libglobal_work_logic.so");
 
     global_logic_args_.app_frame_conf_mgr = threads_ctx_.app_frame_conf_mgr;
     global_logic_args_.related_thread_groups = &related_thread_groups_;

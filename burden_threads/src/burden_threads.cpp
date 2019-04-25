@@ -116,7 +116,7 @@ int Threads::LoadWorkThreads()
 
     work::ThreadsCtx work_threads_ctx = threads_ctx_;
     work_threads_ctx.conf.thread_count = threads_ctx_.app_frame_conf_mgr->GetBurdenThreadCount();
-    work_threads_ctx.conf.common_logic_so = std::string(threads_ctx_.common_component_dir) + "/libburden_work_common_logic.so";
+    work_threads_ctx.conf.logic_so_group.push_back(std::string(threads_ctx_.common_component_dir) + "/libburden_work_logic.so");
 
     burden_logic_args_.app_frame_conf_mgr = threads_ctx_.app_frame_conf_mgr;
     burden_logic_args_.related_thread_groups = &related_thread_groups_;

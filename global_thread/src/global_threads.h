@@ -3,7 +3,7 @@
 
 #include "global_threads_interface.h"
 #include "module_loader.h"
-#include "work_common_logic/global_logic_args.h"
+#include "work_logic/global_logic_args.h"
 
 namespace global
 {

@@ -126,6 +126,11 @@ public:
     virtual ~CommonLogicInterface()
     {
     }
+
+private:
+    virtual void OnTask(const ConnGUID* conn_guid, ThreadInterface* source_thread, const void* data, size_t len)
+    {
+    }
 };
 }
 

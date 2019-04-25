@@ -3,7 +3,7 @@
 
 #include "burden_threads_interface.h"
 #include "module_loader.h"
-#include "work_common_logic/burden_logic_args.h"
+#include "work_logic/burden_logic_args.h"
 
 namespace burden
 {

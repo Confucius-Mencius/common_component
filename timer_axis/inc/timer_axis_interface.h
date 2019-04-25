@@ -74,8 +74,8 @@ public:
      * @param sink 定时器回调对象
      * @param timer_id 定时器ID，在回调对象内部唯一
      * @param interval 定时器间隔
-     * @param async_data 回调时使用的异步数据，必须是基本数据类型或者基本数据类型组合的结构体
-     * @param async_data_len 异步数据的长度
+     * @param data 回调时使用的异步数据，必须是基本数据类型或者基本数据类型组合的结构体
+     * @param len 异步数据的长度
      * @param total_times 定时器执行的总次数，=-1表示一直执行
      */
     virtual int SetTimer(TimerSinkInterface* sink, TimerID timer_id, const struct timeval& interval,

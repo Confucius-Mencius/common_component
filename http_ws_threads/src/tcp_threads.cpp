@@ -123,7 +123,7 @@ int Threads::LoadTCPThreads()
     tcp_threads_ctx.conf.addr = threads_ctx_.app_frame_conf_mgr->GetHTTPWSAddr();
     tcp_threads_ctx.conf.port = threads_ctx_.app_frame_conf_mgr->GetHTTPWSPort();
     tcp_threads_ctx.conf.thread_count = threads_ctx_.app_frame_conf_mgr->GetHTTPWSThreadCount();
-    tcp_threads_ctx.conf.common_logic_so = std::string(threads_ctx_.common_component_dir) + "/libhttp_ws_tcp_common_logic.so";
+    tcp_threads_ctx.conf.logic_so_group.push_back(std::string(threads_ctx_.common_component_dir) + "/libhttp_ws_tcp_logic.so");
 
     http_ws_logic_args_.app_frame_conf_mgr = threads_ctx_.app_frame_conf_mgr;
     http_ws_logic_args_.related_thread_groups = &related_thread_groups_;

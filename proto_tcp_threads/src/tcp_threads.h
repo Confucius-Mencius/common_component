@@ -3,7 +3,7 @@
 
 #include "module_loader.h"
 #include "proto_tcp_threads_interface.h"
-#include "tcp_common_logic/proto_logic_args.h"
+#include "tcp_logic/proto_logic_args.h"
 
 namespace tcp
 {

@@ -1,6 +1,7 @@
 #ifndef TRANS_CENTER_INC_PEER_SINK_INTERFACE_H_
 #define TRANS_CENTER_INC_PEER_SINK_INTERFACE_H_
 
+#include <map>
 #include "peer.h"
 #include "proto_msg.h"
 #include "seq_num.h"
@@ -10,6 +11,31 @@ typedef int32_t TransID; /**< TransID类型 */
 typedef I32SeqNum TransIDSeq; /**< TransIDSeq类型 */
 
 #define INVALID_TRANS_ID INVALID_SEQ_NUM
+
+namespace http
+{
+typedef std::map<std::string, std::string> HeaderMap;
+
+struct Rsp
+{
+    bool https; // 是否为https
+    int status_code;
+    const char* status_line;
+    const HeaderMap* headers;
+    const char* rsp_body;
+    size_t rsp_body_len;
+
+    Rsp()
+    {
+        https = false;
+        status_code = -1;
+        status_line = nullptr;
+        headers = nullptr;
+        rsp_body = nullptr;
+        rsp_body_len = 0;
+    }
+};
+}
 
 /**
  * @brief 与对端通信的回调接口
@@ -51,6 +77,8 @@ public:
      */
     virtual void OnRecvRsp(TransID trans_id, const Peer& peer, const ::proto::MsgHead& msg_head,
                            const void* msg_body, size_t msg_body_len, const void* data, size_t len) = 0;
+
+    virtual void OnRecvRsp(TransID trans_id, const Peer& peer, const http::Rsp* http_rsp, const void* data, size_t len) = 0;
 
     /**
      * @brief OnTimeout 超时对端未响应。threads, proto tcp

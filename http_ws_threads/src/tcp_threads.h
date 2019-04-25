@@ -3,7 +3,7 @@
 
 #include "http_ws_threads_interface.h"
 #include "module_loader.h"
-#include "tcp_common_logic/http_ws_logic_args.h"
+#include "tcp_logic/http_ws_logic_args.h"
 
 namespace tcp
 {
