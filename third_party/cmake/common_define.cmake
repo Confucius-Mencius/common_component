@@ -69,7 +69,7 @@ set(JSONCPP_LIB_NAME jsoncpp)
 
 set(LIBEVENT_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libevent/include)
 set(LIBEVENT_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libevent/lib)
-set(LIBEVENT_LIB_NAME event_core event_extra event_pthreads)
+set(LIBEVENT_LIB_NAME event_core event_extra event_pthreads event_openssl)
 
 set(LIBJPEG_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libjpeg/include)
 set(LIBJPEG_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libjpeg/lib)

@@ -4,7 +4,7 @@
 namespace trans_center
 {
 TransCenter::TransCenter() : trans_center_ctx_(), trans_center_sink_set_(), trans_id_seq_(), trans_hash_map_(),
-    peer_trans_id_map_(), need_rsp_msg_mgr_()
+    peer_trans_id_map_(), rsp_msg_mgr_()
 {
 }
 
@@ -46,9 +46,9 @@ int TransCenter::Initialize(const void* ctx)
     }
 
     trans_center_ctx_ = *(static_cast<const TransCenterCtx*>(ctx));
-    need_rsp_msg_mgr_.SetTransCenter(this);
+    rsp_msg_mgr_.SetTransCenter(this);
 
-    if (need_rsp_msg_mgr_.Initialize(trans_center_ctx_.timer_axis, { trans_center_ctx_.need_rsp_msg_check_interval, 0 }) != 0)
+    if (rsp_msg_mgr_.Initialize(trans_center_ctx_.timer_axis, { trans_center_ctx_.rsp_check_interval, 0 }) != 0)
     {
         return -1;
     }
@@ -58,12 +58,12 @@ int TransCenter::Initialize(const void* ctx)
 
 void TransCenter::Finalize()
 {
-    need_rsp_msg_mgr_.Finalize();
+    rsp_msg_mgr_.Finalize();
 }
 
 int TransCenter::Activate()
 {
-    if (need_rsp_msg_mgr_.Activate() != 0)
+    if (rsp_msg_mgr_.Activate() != 0)
     {
         return -1;
     }
@@ -73,7 +73,7 @@ int TransCenter::Activate()
 
 void TransCenter::Freeze()
 {
-    need_rsp_msg_mgr_.Freeze();
+    rsp_msg_mgr_.Freeze();
 }
 
 int TransCenter::AddSink(TransCenterSinkInterface* sink)
@@ -141,7 +141,7 @@ TransID TransCenter::RecordTransCtx(const TransCtx* ctx)
 
         if (ctx->sink != nullptr && ctx->timeout_sec > 0)
         {
-            need_rsp_msg_mgr_.UpsertRecord(trans_id, trans, ctx->timeout_sec);
+            rsp_msg_mgr_.UpsertRecord(trans_id, trans, ctx->timeout_sec);
         }
 
         peer_trans_id_map_[ctx->peer].insert(trans_id);
@@ -179,9 +179,9 @@ void TransCenter::CancelTrans(TransID trans_id)
         return;
     }
 
-    if (need_rsp_msg_mgr_.RecordExist(trans_id))
+    if (rsp_msg_mgr_.RecordExist(trans_id))
     {
-        need_rsp_msg_mgr_.RemoveRecord(trans_id);
+        rsp_msg_mgr_.RemoveRecord(trans_id);
     }
 
     RemoveTrans(trans_id);
@@ -248,7 +248,8 @@ void TransCenter::OnClosed(const Peer& peer)
     }
 }
 
-void TransCenter::OnRecvRsp(TransID trans_id, const ::proto::MsgHead& msg_head, const void* msg_body, size_t msg_body_len)
+void TransCenter::OnRecvRsp(TransID trans_id, const ::proto::MsgHead& msg_head,
+                            const void* msg_body, size_t msg_body_len)
 {
     TransHashMap::iterator it = trans_hash_map_.find(trans_id);
     if (it != trans_hash_map_.end())

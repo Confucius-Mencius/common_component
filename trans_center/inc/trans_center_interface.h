@@ -28,12 +28,12 @@ struct TransCtx
 struct TransCenterCtx
 {
     TimerAxisInterface* timer_axis;
-    int need_rsp_msg_check_interval;
+    int rsp_check_interval;
 
     TransCenterCtx()
     {
         timer_axis = nullptr;
-        need_rsp_msg_check_interval = 0;
+        rsp_check_interval = 0;
     }
 };
 
@@ -71,7 +71,8 @@ public:
     virtual void OnConnected(const Peer& peer) = 0;
     virtual void OnClosed(const Peer& peer) = 0;
 
-    virtual void OnRecvRsp(TransID trans_id, const ::proto::MsgHead& msg_head, const void* msg_body, size_t msg_body_len) = 0;
+    virtual void OnRecvRsp(TransID trans_id, const ::proto::MsgHead& msg_head,
+                           const void* msg_body, size_t msg_body_len) = 0;
 };
 
 #endif // TRANS_CENTER_INC_TRANS_CENTER_INTERFACE_H_

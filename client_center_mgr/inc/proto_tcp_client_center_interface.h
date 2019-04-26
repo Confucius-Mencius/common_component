@@ -23,7 +23,6 @@ struct ClientCenterCtx
     ::proto::MsgCodec* msg_codec;
     TimerAxisInterface* timer_axis;
     TransCenterInterface* trans_center;
-    size_t max_msg_body_len;
     struct timeval reconnect_interval; /**< 重连间隔 */
 
     ClientCenterCtx()
@@ -32,7 +31,6 @@ struct ClientCenterCtx
         msg_codec = nullptr;
         timer_axis = nullptr;
         trans_center = nullptr;
-        max_msg_body_len = 0;
         reconnect_interval.tv_sec = reconnect_interval.tv_usec = 0;
     }
 };

@@ -65,6 +65,11 @@ int ConfMgr::Load()
     udp_thread_count_ = 0;
     udp_common_logic_so_ = "";
     udp_logic_so_group_.clear();
+    peer_rsp_check_interval_ = 0;
+    peer_proto_tcp_conn_interval_sec_ = 0;
+    peer_proto_tcp_conn_interval_usec_ = 0;
+    peer_http_conn_timeout_ = 0;
+    peer_http_conn_max_retry_ = 0;
 
     if (LoadEnableCPUProfiling() != 0)
     {
@@ -317,6 +322,31 @@ int ConfMgr::Load()
     }
 
     if (LoadUDPLogicSoGroup() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadPeerRspCheckInterval() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadPeerProtoTCPConnIntervalSec() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadPeerProtoTCPConnIntervalUsec() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadPeerHTTPConnTimeout() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadPeerHTTPConnMaxRetry() != 0)
     {
         return -1;
     }

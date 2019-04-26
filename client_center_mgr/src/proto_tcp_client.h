@@ -103,7 +103,6 @@ private:
     ClientCenter* client_center_;
     const ClientCenterCtx* client_center_ctx_;
 
-    char* send_buf_;
     std::string recved_data_;
 
     Peer peer_;

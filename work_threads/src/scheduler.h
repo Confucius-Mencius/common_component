@@ -47,6 +47,11 @@ public:
                              const void* msg_body, size_t msg_body_len, int proto_tcp_thread_idx) override;
     int SendToHTTPWSThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
                            const void* msg_body, size_t msg_body_len, int http_ws_thread_idx) override;
+    TransID SendToServer(const Peer& peer, const ::proto::MsgHead& msg_head,
+                         const void* msg_body, size_t msg_body_len, const AsyncCtx* async_ctx) override;
+    TransID HTTPGet(const Peer& peer, const http::GetParams& params, const AsyncCtx* async_ctx) override;
+    TransID HTTPPost(const Peer& peer, const http::PostParams& params, const AsyncCtx* async_ctx) override;
+    void CancelTrans(TransID trans_id) override;
 
 private:
     int GetScheduleWorkThreadIdx(int work_thread_idx);

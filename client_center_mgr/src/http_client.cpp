@@ -37,7 +37,7 @@ void Client::HTTPReqDoneCallback(struct evhttp_request* evhttp_req, void* arg)
     LOG_TRACE("Client::HTTPReqDoneCallback, client: " << callback_arg->http_client << ", "
               << callback_arg->http_client->peer_);
 
-    if (NULL == evhttp_req)
+    if (nullptr == evhttp_req)
     {
         // 对端在处理req时挂掉或者超时后还未返回,则会走到这里
         LOG_TRACE("evhttp req is null");
@@ -65,14 +65,14 @@ void Client::HTTPReqDoneCallback(struct evhttp_request* evhttp_req, void* arg)
 
         const TransID& trans_id = callback_arg->trans_id;
         TransCtx* trans_ctx = callback_arg->http_client->client_center_ctx_->trans_center->GetTransCtx(trans_id);
-        if (NULL == trans_ctx)
+        if (nullptr == trans_ctx)
         {
             LOG_WARN("failed to get trans ctx by trans id: " << trans_id << ", maybe canceled, "
                      << callback_arg->http_client->peer_);
         }
         else
         {
-            if (trans_ctx->sink != NULL)
+            if (trans_ctx->sink != nullptr)
             {
                 trans_ctx->sink->OnClosed(trans_id, callback_arg->http_client->GetPeer(), trans_ctx->data, trans_ctx->len);
             }
@@ -97,7 +97,7 @@ void Client::HTTPReqDoneCallback(struct evhttp_request* evhttp_req, void* arg)
 //    struct event_base* ev_base = callback_arg->http_client->client_center_ctx_->thread_ev_base;
 //
 //    callback_arg->cleanup_event = event_new(ev_base, -1, EV_PERSIST, Client::OnConnCleanupEvent, callback_arg);
-//    if (NULL == callback_arg->cleanup_event)
+//    if (nullptr == callback_arg->cleanup_event)
 //    {
 //        const int err = errno;
 //        LOG_ERROR("failed to create http conn cleanup timer, errno: " << err << ", err msg: " << strerror(err));
@@ -140,12 +140,12 @@ void Client::HTTPReqErrorCallback(evhttp_request_error err, void* arg)
 
 Client::Client() : peer_(), callback_arg_set_()
 {
-    client_center_ = NULL;
-    client_center_ctx_ = NULL;
-    evhttp_conn_ = NULL;
-    sctx_ = NULL;
-    buf_event_ = NULL;
-    evhttps_conn_ = NULL;
+    client_center_ = nullptr;
+    client_center_ctx_ = nullptr;
+    evhttp_conn_ = nullptr;
+    sctx_ = nullptr;
+    buf_event_ = nullptr;
+    evhttps_conn_ = nullptr;
 }
 
 Client::~Client()
@@ -169,7 +169,7 @@ void Client::Release()
 
 int Client::Initialize(const void* ctx)
 {
-    if (NULL == ctx)
+    if (nullptr == ctx)
     {
         return -1;
     }
@@ -187,22 +187,22 @@ void Client::Finalize()
 
     callback_arg_set_.clear();
 
-    if (evhttp_conn_ != NULL)
+    if (evhttp_conn_ != nullptr)
     {
         evhttp_connection_free(evhttp_conn_);
-        evhttp_conn_ = NULL;
+        evhttp_conn_ = nullptr;
     }
 
-    if (evhttps_conn_ != NULL)
+    if (evhttps_conn_ != nullptr)
     {
         evhttp_connection_free(evhttps_conn_); // 看libevent源码，evhttp_connection_free中会释放buf_event_
-        evhttps_conn_ = NULL;
+        evhttps_conn_ = nullptr;
     }
 
-    if (sctx_ != NULL)
+    if (sctx_ != nullptr)
     {
         SSL_CTX_free(sctx_);
-        sctx_ = NULL;
+        sctx_ = nullptr;
     }
 }
 
@@ -237,7 +237,7 @@ TransID Client::Get(const GetParams& params, const AsyncCtx* async_ctx)
     trans_ctx.timeout_sec = 0;
     trans_ctx.passback = 0;
 
-    if (async_ctx != NULL)
+    if (async_ctx != nullptr)
     {
         trans_ctx.sink = async_ctx->sink;
         trans_ctx.data = (char*) async_ctx->data;
@@ -251,7 +251,7 @@ TransID Client::Get(const GetParams& params, const AsyncCtx* async_ctx)
     }
 
     // 这里没有用total_retry参数，使用http自己的max_retry机制
-    if (DoHTTPReq(trans_id, params.uri, params.uri_len, params.need_encode, params.headers, NULL, 0, params.https) != 0)
+    if (DoHTTPReq(trans_id, params.uri, params.uri_len, params.need_encode, params.headers, nullptr, 0, params.https) != 0)
     {
         client_center_ctx_->trans_center->CancelTrans(trans_id);
         return INVALID_TRANS_ID;
@@ -268,7 +268,7 @@ TransID Client::Post(const PostParams& params, const AsyncCtx* async_ctx)
     trans_ctx.timeout_sec = 0;
     trans_ctx.passback = 0;
 
-    if (async_ctx != NULL)
+    if (async_ctx != nullptr)
     {
         trans_ctx.sink = async_ctx->sink;
         trans_ctx.data = (char*) async_ctx->data;
@@ -301,7 +301,7 @@ void Client::OnHTTPReqDone(TransID trans_id, const Peer& peer, bool https, struc
     LOG_TRACE("http code: " << status_code);
 
     TransCtx* trans_ctx = client_center_ctx_->trans_center->GetTransCtx(trans_id);
-    if (NULL == trans_ctx)
+    if (nullptr == trans_ctx)
     {
         LOG_WARN("failed to get trans ctx by trans id: " << trans_id << ", maybe canceled");
         return;
@@ -313,7 +313,7 @@ void Client::OnHTTPReqDone(TransID trans_id, const Peer& peer, bool https, struc
     if (0 == status_code)
 #endif
     {
-        if (trans_ctx->sink != NULL)
+        if (trans_ctx->sink != nullptr)
         {
             trans_ctx->sink->OnTimeout(trans_id, peer, trans_ctx->data, trans_ctx->len);
         }
@@ -322,15 +322,15 @@ void Client::OnHTTPReqDone(TransID trans_id, const Peer& peer, bool https, struc
         return;
     }
 
-    char* status_line = NULL; // req->response_code_line;
+    char* status_line = nullptr; // req->response_code_line;
     (void) status_line;
 
     HeaderMap headers;
 
     struct evkeyvalq* input_headers = evhttp_request_get_input_headers(evhttp_req);
-    if (input_headers != NULL)
+    if (input_headers != nullptr)
     {
-        for (struct evkeyval* header = input_headers->tqh_first; header != NULL; header = header->next.tqe_next)
+        for (struct evkeyval* header = input_headers->tqh_first; header != nullptr; header = header->next.tqe_next)
         {
             headers.insert(
                 HeaderMap::value_type(header->key, header->value));
@@ -339,7 +339,7 @@ void Client::OnHTTPReqDone(TransID trans_id, const Peer& peer, bool https, struc
 
     struct evbuffer* input_buf = evhttp_request_get_input_buffer(evhttp_req);
     const size_t rsp_body_len = evbuffer_get_length(input_buf);
-    char* rsp_body = NULL;
+    char* rsp_body = nullptr;
 
     if (rsp_body_len > 0)
     {
@@ -348,7 +348,7 @@ void Client::OnHTTPReqDone(TransID trans_id, const Peer& peer, bool https, struc
         rsp_body[rsp_body_len] = '\0';
     }
 
-    if (trans_ctx->sink != NULL)
+    if (trans_ctx->sink != nullptr)
     {
         Rsp http_rsp;
         http_rsp.https = https;
@@ -358,12 +358,12 @@ void Client::OnHTTPReqDone(TransID trans_id, const Peer& peer, bool https, struc
         http_rsp.rsp_body = rsp_body;
         http_rsp.rsp_body_len = rsp_body_len;
 
-        trans_ctx->sink->OnRecvRsp(trans_id, peer, &http_rsp, trans_ctx->data, trans_ctx->len);
+        trans_ctx->sink->OnRecvHTTPRsp(trans_id, peer, &http_rsp, trans_ctx->data, trans_ctx->len);
     }
 
     client_center_ctx_->trans_center->CancelTrans(trans_id);
 
-    if (rsp_body != NULL)
+    if (rsp_body != nullptr)
     {
         delete[] rsp_body;
     }
@@ -372,8 +372,8 @@ void Client::OnHTTPReqDone(TransID trans_id, const Peer& peer, bool https, struc
 int Client::CreateHTTPConn(const Peer& peer)
 {
     // header size和body size的大小均不限制，重连间隔初始为2秒，以后每次都翻倍。
-    evhttp_conn_ = evhttp_connection_base_new(client_center_ctx_->thread_ev_base, NULL, peer.addr.c_str(), peer.port);
-    if (NULL == evhttp_conn_)
+    evhttp_conn_ = evhttp_connection_base_new(client_center_ctx_->thread_ev_base, nullptr, peer.addr.c_str(), peer.port);
+    if (nullptr == evhttp_conn_)
     {
         const int err = errno;
         LOG_ERROR("failed to create evhttp conn to " << peer << ", errno: " << err << ", err msg: " << strerror(err));
@@ -406,7 +406,7 @@ int Client::CreateHTTPSConn(const Peer& peer)
     /* An OpenSSL context holds data that new SSL connections will
      * be created from. */
     sctx_ = SSL_CTX_new(SSLv23_client_method());
-    if (NULL == sctx_)
+    if (nullptr == sctx_)
     {
         const int err = errno;
         LOG_ERROR("SSL_CTX_new failed, errno: " << err << ", err msg: " << strerror(err));;
@@ -415,13 +415,13 @@ int Client::CreateHTTPSConn(const Peer& peer)
 
     /* Find the certificate authority (which we will use to
      * validate the server) and add it to the context. */
-//    SSL_CTX_load_verify_locations(sctx, "certificate-authorities.pem", NULL); // TODO 这个应该是客户端的校验，这里先注释掉
+//    SSL_CTX_load_verify_locations(sctx, "certificate-authorities.pem", nullptr); // TODO 这个应该是客户端的校验，这里先注释掉
 
-    SSL_CTX_set_verify(sctx_, SSL_VERIFY_NONE, NULL); // 如果为SSL_VERIFY_PEER表示客户端会做校验
+    SSL_CTX_set_verify(sctx_, SSL_VERIFY_NONE, nullptr); // 如果为SSL_VERIFY_PEER表示客户端会做校验
 
     /* Create a new SSL connection from our SSL context */
     SSL* ssl = SSL_new(sctx_);
-    if (NULL == ssl)
+    if (nullptr == ssl)
     {
         const int err = errno;
         LOG_ERROR("SSL_new failed, errno: " << err << ", err msg: " << strerror(err));
@@ -431,7 +431,7 @@ int Client::CreateHTTPSConn(const Peer& peer)
     /* Now wrap the SSL connection in an SSL bufferevent */
     buf_event_ = bufferevent_openssl_socket_new(client_center_ctx_->thread_ev_base, -1, ssl, BUFFEREVENT_SSL_CONNECTING,
                  0 | BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS);
-    if (NULL == buf_event_)
+    if (nullptr == buf_event_)
     {
         const int err = errno;
         LOG_ERROR("failed to create buffer event openssl socket, errno: " << err << ", err msg: " << strerror(err));
@@ -444,7 +444,7 @@ int Client::CreateHTTPSConn(const Peer& peer)
     // header size和body size的大小均不限制，重连间隔初始为2秒，以后每次都翻倍。
     evhttps_conn_ = evhttp_connection_base_bufferevent_new(client_center_ctx_->thread_ev_base, 0, buf_event_,
                     peer.addr.c_str(), peer.port);
-    if (NULL == evhttps_conn_)
+    if (nullptr == evhttps_conn_)
     {
         const int err = errno;
         LOG_ERROR("failed to create evhttps conn to " << peer << ", errno: " << err << ", err msg: " << strerror(err));
@@ -475,7 +475,7 @@ int Client::CreateHTTPSConn(const Peer& peer)
 int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_encode, const HeaderMap* headers,
                       const void* data, size_t data_len, bool https)
 {
-    if (NULL == uri)
+    if (nullptr == uri)
     {
         return -1;
     }
@@ -484,10 +484,10 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
               << ", need encode: " << need_encode << ", data len: " << data_len << ", https: " << https);
 
     char* req_uri = (char*) uri;
-    char* encoded_uri = NULL;
-    CallbackArg* callback_arg = NULL;
-    struct evhttp_request* evhttp_req = NULL;
-    struct evkeyvalq* output_headers = NULL;
+    char* encoded_uri = nullptr;
+    CallbackArg* callback_arg = nullptr;
+    struct evhttp_request* evhttp_req = nullptr;
+    struct evkeyvalq* output_headers = nullptr;
     evhttp_cmd_type cmd_type = EVHTTP_REQ_GET;
     struct evhttp_connection* evhttp_conn = (https ? evhttps_conn_ : evhttp_conn_);
 
@@ -498,7 +498,7 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
     if (need_encode)
     {
         encoded_uri = evhttp_uriencode(uri, uri_len, 0);
-        if (NULL == encoded_uri)
+        if (nullptr == encoded_uri)
         {
             LOG_ERROR("failed to encode uri: " << uri << ", len: " << uri_len);
             return -1;
@@ -508,7 +508,7 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
     }
 
     callback_arg = CallbackArg::Create();
-    if (NULL == callback_arg)
+    if (nullptr == callback_arg)
     {
         const int err = errno;
         LOG_ERROR("failed to create callback arg, errno: " << err << ", err msg: " << strerror(err));
@@ -522,7 +522,7 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
     LOG_TRACE("before evhttp_request_new");
 
     evhttp_req = evhttp_request_new(Client::HTTPReqDoneCallback, callback_arg); // 处理完成后libevent会自动释放req
-    if (NULL == evhttp_req)
+    if (nullptr == evhttp_req)
     {
         const int err = errno;
         LOG_ERROR("failed to create evhttp req, errno: " << err << ", err msg: " << strerror(err));
@@ -539,7 +539,7 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
     // http headers
     output_headers = evhttp_request_get_output_headers(evhttp_req);
 
-    if (headers != NULL)
+    if (headers != nullptr)
     {
         for (HeaderMap::const_iterator it = headers->begin(); it != headers->end(); ++it)
         {
@@ -561,16 +561,16 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
     // MUST respond with a 400 (Bad Request) status code to any HTTP/1.1 request message which lacks a Host header field.
     evhttp_add_header(output_headers, "Host", host_stream.str().c_str());
 
-    for (struct evkeyval* header = output_headers->tqh_first; header != NULL; header = header->next.tqe_next)
+    for (struct evkeyval* header = output_headers->tqh_first; header != nullptr; header = header->next.tqe_next)
     {
         LOG_TRACE(header->key << ": " << header->value);
     }
 
     // http body
-    if (data != NULL && data_len > 0)
+    if (data != nullptr && data_len > 0)
     {
         // 有些web服务器需要根据Content-Type对post内容做解析，所以这里必须加上Content-Type
-        if (NULL == evhttp_find_header(output_headers, "Content-Type"))
+        if (nullptr == evhttp_find_header(output_headers, "Content-Type"))
         {
             evhttp_add_header(output_headers, "Content-Type", "application/x-www-form-urlencoded");
         }
@@ -578,7 +578,7 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
         cmd_type = EVHTTP_REQ_POST;
 
         struct evbuffer* output_buf = evhttp_request_get_output_buffer(evhttp_req);
-        if (NULL == output_buf)
+        if (nullptr == output_buf)
         {
             LOG_ERROR("failed to get output buf");
             goto err_out;
@@ -614,7 +614,7 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
               << ", evhttp req: " << evhttp_req << ", flags: " << evhttp_req->flags
               << ", callback_arg: " << callback_arg);
 
-    if (need_encode && encoded_uri != NULL)
+    if (need_encode && encoded_uri != nullptr)
     {
         free(encoded_uri);
     }
@@ -623,17 +623,17 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
     return 0;
 
 err_out:
-    if (need_encode && (encoded_uri != NULL))
+    if (need_encode && (encoded_uri != nullptr))
     {
         free(encoded_uri);
     }
 
-    if (callback_arg != NULL)
+    if (callback_arg != nullptr)
     {
         callback_arg->Release();
     }
 
-    if (evhttp_req != NULL)
+    if (evhttp_req != nullptr)
     {
         evhttp_request_free(evhttp_req);
     }

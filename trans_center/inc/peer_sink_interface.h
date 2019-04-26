@@ -54,7 +54,7 @@ public:
      * @param data
      * @param len
      */
-    virtual void OnConnected(TransID trans_id, const Peer& peer, const void* data, size_t len) = 0;
+    virtual void OnConnected(TransID trans_id, const Peer& peer, const void* data, size_t len) {}
 
     /**
      * @brief OnClosed 对端关闭了连接(TCP,HTTP)
@@ -63,7 +63,7 @@ public:
      * @param data
      * @param len
      */
-    virtual void OnClosed(TransID trans_id, const Peer& peer, const void* data, size_t len) = 0;
+    virtual void OnClosed(TransID trans_id, const Peer& peer, const void* data, size_t len) {}
 
     /**
      * @brief OnRecvRsp threads, proto tcp
@@ -76,9 +76,9 @@ public:
      * @param len
      */
     virtual void OnRecvRsp(TransID trans_id, const Peer& peer, const ::proto::MsgHead& msg_head,
-                           const void* msg_body, size_t msg_body_len, const void* data, size_t len) = 0;
+                           const void* msg_body, size_t msg_body_len, const void* data, size_t len) {}
 
-    virtual void OnRecvRsp(TransID trans_id, const Peer& peer, const http::Rsp* http_rsp, const void* data, size_t len) = 0;
+    virtual void OnRecvHTTPRsp(TransID trans_id, const Peer& peer, const http::Rsp* http_rsp, const void* data, size_t len) {}
 
     /**
      * @brief OnTimeout 超时对端未响应。threads, proto tcp
@@ -87,7 +87,7 @@ public:
      * @param data
      * @param len
      */
-    virtual void OnTimeout(TransID trans_id, const Peer& peer, const void* data, size_t len) = 0;
+    virtual void OnTimeout(TransID trans_id, const Peer& peer, const void* data, size_t len) {}
 };
 
 struct AsyncCtx

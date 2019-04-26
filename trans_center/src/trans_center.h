@@ -3,7 +3,7 @@
 
 #include <set>
 #include "hash_container.h"
-#include "need_rsp_msg_mgr.h"
+#include "rsp_msg_mgr.h"
 
 namespace trans_center
 {
@@ -30,7 +30,8 @@ public:
     TransCtx* GetTransCtx(TransID trans_id) const override;
     void OnConnected(const Peer& peer) override;
     void OnClosed(const Peer& peer) override;
-    void OnRecvRsp(TransID trans_id, const ::proto::MsgHead& msg_head, const void* msg_body, size_t msg_body_len) override;
+    void OnRecvRsp(TransID trans_id, const ::proto::MsgHead& msg_head,
+                   const void* msg_body, size_t msg_body_len) override;
 
 public:
     void RemoveTrans(TransID trans_id);
@@ -51,7 +52,7 @@ private:
     typedef std::map<Peer, TransIDSet> PeerTransIDMap;
     PeerTransIDMap peer_trans_id_map_;
 
-    NeedRspMsgMgr need_rsp_msg_mgr_;
+    RspMsgMgr rsp_msg_mgr_;
 };
 }
 

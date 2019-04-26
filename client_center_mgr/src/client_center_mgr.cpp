@@ -20,7 +20,7 @@ const char* ClientCenterMgr::GetVersion() const
 
 const char* ClientCenterMgr::GetLastErrMsg() const
 {
-    return NULL;
+    return nullptr;
 }
 
 void ClientCenterMgr::Release()
@@ -56,10 +56,10 @@ void ClientCenterMgr::Freeze()
 tcp::proto::ClientCenterInterface* ClientCenterMgr::CreateProtoTCPClientCenter(const tcp::proto::ClientCenterCtx* ctx)
 {
     tcp::proto::ClientCenter* client_center = tcp::proto::ClientCenter::Create();
-    if (NULL == client_center)
+    if (nullptr == client_center)
     {
         LOG_ERROR("failed to alloc memory");
-        return NULL;
+        return nullptr;
     }
 
     int ret = -1;
@@ -88,7 +88,7 @@ tcp::proto::ClientCenterInterface* ClientCenterMgr::CreateProtoTCPClientCenter(c
     {
         proto_tcp_client_center_set_.erase(client_center);
         SAFE_DESTROY(client_center);
-        return NULL;
+        return nullptr;
     }
 
     return client_center;
@@ -97,10 +97,10 @@ tcp::proto::ClientCenterInterface* ClientCenterMgr::CreateProtoTCPClientCenter(c
 http::ClientCenterInterface* ClientCenterMgr::CreateHTTPClientCenter(const http::ClientCenterCtx* ctx)
 {
     http::ClientCenter* client_center = http::ClientCenter::Create();
-    if (NULL == client_center)
+    if (nullptr == client_center)
     {
         LOG_ERROR("failed to alloc memory");
-        return NULL;
+        return nullptr;
     }
 
     int ret = -1;
@@ -129,7 +129,7 @@ http::ClientCenterInterface* ClientCenterMgr::CreateHTTPClientCenter(const http:
     {
         http_client_center_set_.erase(client_center);
         SAFE_DESTROY(client_center);
-        return NULL;
+        return nullptr;
     }
 
     return client_center;

@@ -345,6 +345,71 @@ int Scheduler::SendToHTTPWSThread(const ConnGUID* conn_guid, const proto::MsgHea
     return SendToThread(THREAD_TYPE_HTTP_WS, conn_guid, msg_head, msg_body, msg_body_len, http_ws_thread_idx);
 }
 
+TransID Scheduler::SendToServer(const Peer& peer, const proto::MsgHead& msg_head, const void* msg_body, size_t msg_body_len, const AsyncCtx* async_ctx)
+{
+    switch (peer.type)
+    {
+        case PEER_TYPE_PROTO_TCP:
+        {
+            tcp::proto::ClientInterface* tcp_client = thread_sink_->GetProtoTCPClientCenter()->GetClient(peer);
+            if (nullptr == tcp_client)
+            {
+                tcp_client = thread_sink_->GetProtoTCPClientCenter()->CreateClient(peer);
+                if (nullptr == tcp_client)
+                {
+                    return INVALID_TRANS_ID;
+                }
+
+                tcp_client->AddNfySink(thread_sink_);
+            }
+
+            return tcp_client->Send(msg_head, msg_body, msg_body_len, async_ctx);
+        }
+        break;
+
+        default:
+        {
+            return INVALID_TRANS_ID;
+        }
+        break;
+    }
+}
+
+TransID Scheduler::HTTPGet(const Peer& peer, const http::GetParams& params, const AsyncCtx* async_ctx)
+{
+    http::ClientInterface* http_client = thread_sink_->GetHTTPClientCenter()->GetClient(peer);
+    if (nullptr == http_client)
+    {
+        http_client = thread_sink_->GetHTTPClientCenter()->CreateClient(peer);
+        if (nullptr == http_client)
+        {
+            return INVALID_TRANS_ID;
+        }
+    }
+
+    return http_client->Get(params, async_ctx);
+}
+
+TransID Scheduler::HTTPPost(const Peer& peer, const http::PostParams& params, const AsyncCtx* async_ctx)
+{
+    http::ClientInterface* http_client = thread_sink_->GetHTTPClientCenter()->GetClient(peer);
+    if (nullptr == http_client)
+    {
+        http_client = thread_sink_->GetHTTPClientCenter()->CreateClient(peer);
+        if (nullptr == http_client)
+        {
+            return INVALID_TRANS_ID;
+        }
+    }
+
+    return http_client->Post(params, async_ctx);
+}
+
+void Scheduler::CancelTrans(TransID trans_id)
+{
+    thread_sink_->GetTransCenter()->CancelTrans(trans_id);
+}
+
 int Scheduler::GetScheduleWorkThreadIdx(int work_thread_idx)
 {
     const int work_thread_count = related_thread_groups_->work_thread_group->GetThreadCount();

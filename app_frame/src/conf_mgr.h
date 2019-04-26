@@ -332,6 +332,36 @@ public:
         return udp_logic_so_group_;
     }
 
+    int GetPeerRspCheckInterval() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return peer_rsp_check_interval_;
+    }
+
+    int GetPeerProtoTCPConnIntervalSec() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return peer_proto_tcp_conn_interval_sec_;
+    }
+
+    int GetPeerProtoTCPConnIntervalUsec() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return peer_proto_tcp_conn_interval_usec_;
+    }
+
+    int GetPeerHTTPConnTimeout() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return peer_http_conn_timeout_;
+    }
+
+    int GetPeerHTTPConnMaxRetry() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return peer_http_conn_max_retry_;
+    }
+
 private:
     int LoadEnableCPUProfiling()
     {
@@ -975,6 +1005,56 @@ private:
         return 0;
     }
 
+    int LoadPeerRspCheckInterval()
+    {
+        if (conf_center_->GetConf(peer_rsp_check_interval_, PEER_RSP_CHECK_INTERVAL_XPATH, true, 1) != 0)
+        {
+            LOG_ERROR("failed to get " << PEER_RSP_CHECK_INTERVAL_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadPeerProtoTCPConnIntervalSec()
+    {
+        if (conf_center_->GetConf(peer_proto_tcp_conn_interval_sec_, PEER_PROTO_TCP_CONN_INTERVAL_SEC_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << PEER_PROTO_TCP_CONN_INTERVAL_SEC_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadPeerProtoTCPConnIntervalUsec()
+    {
+        if (conf_center_->GetConf(peer_proto_tcp_conn_interval_usec_, PEER_PROTO_TCP_CONN_INTERVAL_USEC_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << PEER_PROTO_TCP_CONN_INTERVAL_USEC_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadPeerHTTPConnTimeout()
+    {
+        if (conf_center_->GetConf(peer_http_conn_timeout_, PEER_HTTP_CONN_TIMEOUT_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << PEER_HTTP_CONN_TIMEOUT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadPeerHTTPConnMaxRetry()
+    {
+        if (conf_center_->GetConf(peer_http_conn_max_retry_, PEER_HTTP_CONN_MAX_RETRY_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << PEER_HTTP_CONN_MAX_RETRY_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
 private:
     ThreadRWLock rwlock_;
     bool enable_cpu_profiling_;
@@ -1028,6 +1108,11 @@ private:
     int udp_thread_count_;
     std::string udp_common_logic_so_;
     StrGroup udp_logic_so_group_;
+    int peer_rsp_check_interval_;
+    int peer_proto_tcp_conn_interval_sec_;
+    int peer_proto_tcp_conn_interval_usec_;
+    int peer_http_conn_timeout_;
+    int peer_http_conn_max_retry_;
 };
 }
 

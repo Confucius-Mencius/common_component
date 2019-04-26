@@ -1,5 +1,5 @@
-#ifndef TRANS_CENTER_SRC_NEED_RSP_MSG_MGR_H_
-#define TRANS_CENTER_SRC_NEED_RSP_MSG_MGR_H_
+#ifndef TRANS_CENTER_SRC_RSP_MSG_MGR_H_
+#define TRANS_CENTER_SRC_RSP_MSG_MGR_H_
 
 #include "record_timeout_mgr.h"
 #include "trans.h"
@@ -8,11 +8,11 @@ namespace trans_center
 {
 class TransCenter;
 
-class NeedRspMsgMgr : public RecordTimeoutMgr<TransID, std::hash<TransID>, Trans*>
+class RspMsgMgr : public RecordTimeoutMgr<TransID, std::hash<TransID>, Trans*>
 {
 public:
-    NeedRspMsgMgr();
-    virtual ~NeedRspMsgMgr();
+    RspMsgMgr();
+    virtual ~RspMsgMgr();
 
     void SetTransCenter(TransCenter* trans_center)
     {
@@ -28,4 +28,4 @@ private:
 };
 }
 
-#endif // TRANS_CENTER_SRC_NEED_RSP_MSG_MGR_H_
+#endif // TRANS_CENTER_SRC_RSP_MSG_MGR_H_

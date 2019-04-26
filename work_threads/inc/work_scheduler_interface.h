@@ -1,7 +1,9 @@
 #ifndef WORK_THREADS_INC_WORK_SCHEDULER_INTERFACE_H_
 #define WORK_THREADS_INC_WORK_SCHEDULER_INTERFACE_H_
 
-#include <stddef.h>
+#include "peer.h"
+#include "trans_center_interface.h"
+#include "http_client_center_interface.h"
 
 struct ConnGUID;
 
@@ -101,6 +103,37 @@ public:
      */
     virtual int SendToHTTPWSThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
                                    const void* msg_body, size_t msg_body_len, int http_ws_thread_idx) = 0;
+
+    /**
+     * @brief 发送tcp/udp消息给其它服务器
+     * @param peer
+     * @param params
+     * @return
+     */
+    virtual TransID SendToServer(const Peer& peer, const ::proto::MsgHead& msg_head,
+                                 const void* msg_body, size_t msg_body_len, const AsyncCtx* async_ctx) = 0;
+
+    /**
+     * @brief 向其它web服务器发起http get请求
+     * @param peer
+     * @param params
+     * @return
+     */
+    virtual TransID HTTPGet(const Peer& peer, const http::GetParams& params, const AsyncCtx* async_ctx) = 0;
+
+    /**
+     * @brief 向其它web服务器发起http post请求
+     * @param peer
+     * @param params
+     * @return
+     */
+    virtual TransID HTTPPost(const Peer& peer, const http::PostParams& params, const AsyncCtx* async_ctx) = 0;
+
+    /**
+     * @brief 取消异步事务
+     * @param trans_id
+     */
+    virtual void CancelTrans(TransID trans_id) = 0;
 };
 }
 

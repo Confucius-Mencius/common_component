@@ -197,7 +197,6 @@ Client::Client() : peer_(), bufevent_set_(), cache_msg_map_(), cache_msg_trans_i
 {
     client_center_ = nullptr;
     client_center_ctx_ = nullptr;
-    send_buf_ = nullptr;
     connected_ = false;
     buf_event_ = nullptr;
     reconnect_failed_count_ = 0;
@@ -230,15 +229,6 @@ int Client::Initialize(const void* ctx)
     }
 
     client_center_ctx_ = (ClientCenterCtx*) ctx;
-
-    send_buf_ = (char*) malloc(TOTAL_MSG_LEN_FIELD_LEN + MIN_TOTAL_MSG_LEN + client_center_ctx_->max_msg_body_len + 1);
-    if (nullptr == send_buf_)
-    {
-        const int err = errno;
-        LOG_ERROR("failed to create send buf, errno: " << err << ", err msg: " << strerror(err));
-        return -1;
-    }
-
     return 0;
 }
 
@@ -250,12 +240,6 @@ void Client::Finalize()
     }
 
     bufevent_set_.clear();
-
-    if (send_buf_ != nullptr)
-    {
-        free(send_buf_);
-        send_buf_ = nullptr;
-    }
 }
 
 int Client::Activate()
@@ -310,12 +294,6 @@ void Client::RemoveNfySink(NfySinkInterface* sink)
 // 这样也会引入cache msg的量如果达到一定的值就需要缓存到磁盘上去，以及定时发送cache msg等机制。
 TransID Client::Send(const ::proto::MsgHead& msg_head, const void* msg_body, size_t msg_body_len, const AsyncCtx* async_ctx)
 {
-    if (msg_body_len > client_center_ctx_->max_msg_body_len)
-    {
-        LOG_ERROR("msg body len too large: " << msg_body_len << ", limit is: " << client_center_ctx_->max_msg_body_len);
-        return INVALID_TRANS_ID;
-    }
-
     TransCtx trans_ctx;
     trans_ctx.peer = peer_;
     trans_ctx.passback = msg_head.passback;
@@ -334,19 +312,30 @@ TransID Client::Send(const ::proto::MsgHead& msg_head, const void* msg_body, siz
         return trans_id;
     }
 
+    std::unique_ptr<char[]> buf(new char[TOTAL_MSG_LEN_FIELD_LEN + MIN_TOTAL_MSG_LEN + msg_body_len + 1]);
+    if (nullptr == buf)
+    {
+        const int err = errno;
+        LOG_ERROR("failed to create send buf, errno: " << err << ", err msg: " << strerror(err));
+        client_center_ctx_->trans_center->CancelTrans(trans_id);
+        return -1;
+    }
+
+    char* send_buf = buf.get();
+
     ::proto::MsgHead trans_msg_head = msg_head;
     trans_msg_head.passback = trans_id;
 
     size_t data_len = 0;
 
-    if (client_center_ctx_->msg_codec->EncodeMsg(&send_buf_, data_len, trans_msg_head, msg_body, msg_body_len) != 0)
+    if (client_center_ctx_->msg_codec->EncodeMsg(&send_buf, data_len, trans_msg_head, msg_body, msg_body_len) != 0)
     {
         client_center_ctx_->trans_center->CancelTrans(trans_id);
         return INVALID_TRANS_ID;
     }
 
     LOG_TRACE("data len: " << data_len);
-    send_buf_[data_len] = '\0';
+    send_buf[data_len] = '\0';
 
     if (!connected_)
     {
@@ -355,7 +344,7 @@ TransID Client::Send(const ::proto::MsgHead& msg_head, const void* msg_body, siz
         // 将消息推到cache队列中，待连接建立后立即发送
         CacheMsg cache_msg;
         cache_msg.msg_head = trans_msg_head;
-        cache_msg.msg_body.assign(send_buf_, data_len);
+        cache_msg.msg_body.assign(send_buf, data_len);
 
         if (async_ctx != nullptr)
         {
@@ -370,7 +359,7 @@ TransID Client::Send(const ::proto::MsgHead& msg_head, const void* msg_body, siz
     }
     else
     {
-        InnerSend(trans_msg_head, send_buf_, data_len, async_ctx != nullptr ? async_ctx->total_retries : 0);
+        InnerSend(trans_msg_head, send_buf, data_len, async_ctx != nullptr ? async_ctx->total_retries : 0);
     }
 
     return trans_id;

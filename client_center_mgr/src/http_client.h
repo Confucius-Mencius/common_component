@@ -89,21 +89,21 @@ private:
 
         CallbackArg()
         {
-            http_client = NULL;
+            http_client = nullptr;
             https = false;
             trans_id = INVALID_TRANS_ID;
-//            cleanup_event = NULL;
+//            cleanup_event = nullptr;
         }
 
         CREATE_FUNC(CallbackArg)
 
         void Release()
         {
-//            if (cleanup_event != NULL)
+//            if (cleanup_event != nullptr)
 //            {
 //                event_del(cleanup_event);
 //                event_free(cleanup_event);
-//                cleanup_event = NULL;
+//                cleanup_event = nullptr;
 //            }
 
             delete this;

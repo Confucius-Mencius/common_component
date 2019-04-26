@@ -32,7 +32,7 @@ void ClientCenter::Release()
 
 int ClientCenter::Initialize(const void* ctx)
 {
-    if (NULL == ctx)
+    if (nullptr == ctx)
     {
         return -1;
     }
@@ -59,11 +59,11 @@ void ClientCenter::Freeze()
 ClientInterface* ClientCenter::CreateClient(const Peer& peer)
 {
     Client* client = Client::Create();
-    if (NULL == client)
+    if (nullptr == client)
     {
         const int err = errno;
         LOG_ERROR("failed to create client, errno: " << err << ", err msg: " << strerror(err));
-        return NULL;
+        return nullptr;
     }
 
     client->SetClientCenter(this);
@@ -95,7 +95,7 @@ ClientInterface* ClientCenter::CreateClient(const Peer& peer)
     {
         client_map_.erase(peer);
         SAFE_DESTROY(client);
-        return NULL;
+        return nullptr;
     }
 
     return client;
@@ -119,7 +119,7 @@ ClientInterface* ClientCenter::GetClient(const Peer& peer)
         return it->second;
     }
 
-    return NULL;
+    return nullptr;
 }
 }
 }

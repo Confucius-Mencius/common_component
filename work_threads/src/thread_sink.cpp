@@ -6,11 +6,14 @@
 
 namespace work
 {
-ThreadSink::ThreadSink() : common_logic_loader_(), logic_item_vec_(), msg_codec_(), scheduler_(), msg_dispatcher_()
+ThreadSink::ThreadSink() : common_logic_loader_(), logic_item_vec_(), msg_codec_(), scheduler_(), msg_dispatcher_(),
+    trans_center_loader_(), client_center_mgr_loader_()
 {
     threads_ctx_ = nullptr;
     work_thread_group_ = nullptr;
     common_logic_ = nullptr;
+    trans_center_ = nullptr;
+    client_center_mgr_ = nullptr;
 }
 
 ThreadSink::~ThreadSink()
@@ -45,6 +48,8 @@ void ThreadSink::Release()
 
     logic_item_vec_.clear();
     SAFE_RELEASE_MODULE(common_logic_, common_logic_loader_);
+    SAFE_RELEASE_MODULE(client_center_mgr_, client_center_mgr_loader_);
+    SAFE_RELEASE_MODULE(trans_center_, trans_center_loader_);
 
     delete this;
 }
@@ -71,6 +76,16 @@ int ThreadSink::OnInitialize(ThreadInterface* thread, const void* ctx)
         return -1;
     }
 
+    if (LoadTransCenter() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadClientCenterMgr() != 0)
+    {
+        return -1;
+    }
+
     if (LoadCommonLogic() != 0)
     {
         return -1;
@@ -92,6 +107,9 @@ void ThreadSink::OnFinalize()
     }
 
     SAFE_FINALIZE(common_logic_);
+    SAFE_FINALIZE(client_center_mgr_);
+    SAFE_FINALIZE(trans_center_);
+
     scheduler_.Finalize();
     ThreadSinkInterface::OnFinalize();
 }
@@ -99,6 +117,46 @@ void ThreadSink::OnFinalize()
 int ThreadSink::OnActivate()
 {
     if (ThreadSinkInterface::OnActivate() != 0)
+    {
+        return -1;
+    }
+
+    if (SAFE_ACTIVATE_FAILED(trans_center_))
+    {
+        return -1;
+    }
+
+    if (SAFE_ACTIVATE_FAILED(client_center_mgr_))
+    {
+        return -1;
+    }
+
+    tcp::proto::ClientCenterCtx proto_tcp_client_center_ctx;
+    proto_tcp_client_center_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
+    proto_tcp_client_center_ctx.msg_codec = &msg_codec_;
+    proto_tcp_client_center_ctx.timer_axis = self_thread_->GetTimerAxis();
+    proto_tcp_client_center_ctx.trans_center = trans_center_;
+    proto_tcp_client_center_ctx.reconnect_interval =
+    {
+        threads_ctx_->app_frame_conf_mgr->GetPeerProtoTCPConnIntervalSec(),
+        threads_ctx_->app_frame_conf_mgr->GetPeerProtoTCPConnIntervalUsec()
+    };
+
+    proto_tcp_client_center_ = client_center_mgr_->CreateProtoTCPClientCenter(&proto_tcp_client_center_ctx);
+    if (nullptr == proto_tcp_client_center_)
+    {
+        return -1;
+    }
+
+    http::ClientCenterCtx http_client_center_ctx;
+    http_client_center_ctx.thread_ev_base = self_thread_->GetThreadEvBase();
+    http_client_center_ctx.timer_axis = self_thread_->GetTimerAxis();
+    http_client_center_ctx.trans_center = trans_center_;
+    http_client_center_ctx.http_conn_timeout = threads_ctx_->app_frame_conf_mgr->GetPeerHTTPConnTimeout();
+    http_client_center_ctx.http_conn_max_retry = threads_ctx_->app_frame_conf_mgr->GetPeerHTTPConnMaxRetry();
+
+    http_client_center_ = client_center_mgr_->CreateHTTPClientCenter(&http_client_center_ctx);
+    if (nullptr == http_client_center_)
     {
         return -1;
     }
@@ -127,6 +185,9 @@ void ThreadSink::OnFreeze()
     }
 
     SAFE_FREEZE(common_logic_);
+    SAFE_FREEZE(client_center_mgr_);
+    SAFE_FREEZE(trans_center_);
+
     ThreadSinkInterface::OnFreeze();
 }
 
@@ -250,6 +311,17 @@ bool ThreadSink::CanExit() const
     return (can_exit != 0);
 }
 
+void ThreadSink::OnRecvNfy(const Peer& peer, const proto::MsgHead& msg_head, const void* msg_body, size_t msg_body_len)
+{
+    if (0 == msg_dispatcher_.DispatchMsg(nullptr, msg_head, msg_body, msg_body_len))
+    {
+        LOG_TRACE("dispatch msg ok, msg id: " << msg_head.msg_id);
+        return;
+    }
+
+    LOG_ERROR("failed to dispatch msg, msg id: " << msg_head.msg_id);
+}
+
 int ThreadSink::LoadCommonLogic()
 {
     const std::string& common_logic_so = threads_ctx_->conf.common_logic_so;
@@ -358,6 +430,66 @@ int ThreadSink::LoadLogicGroup()
         }
 
         LOG_ALWAYS("load logic so " << logic_item.logic_so_path << " end");
+    }
+
+    return 0;
+}
+
+int ThreadSink::LoadTransCenter()
+{
+    char trans_center_so_path[MAX_PATH_LEN + 1] = "";
+    StrPrintf(trans_center_so_path, sizeof(trans_center_so_path), "%s/libtrans_center.so",
+              threads_ctx_->common_component_dir);
+
+    if (trans_center_loader_.Load(trans_center_so_path) != 0)
+    {
+        LOG_ERROR(trans_center_loader_.GetLastErrMsg());
+        return -1;
+    }
+
+    trans_center_ = (TransCenterInterface*) trans_center_loader_.GetModuleInterface();
+    if (nullptr == trans_center_)
+    {
+        LOG_ERROR(trans_center_loader_.GetLastErrMsg());
+        return -1;
+    }
+
+    TransCenterCtx trans_center_ctx;
+    trans_center_ctx.timer_axis = self_thread_->GetTimerAxis();
+    trans_center_ctx.rsp_check_interval = threads_ctx_->app_frame_conf_mgr->GetPeerRspCheckInterval();
+
+    if (trans_center_->Initialize(&trans_center_ctx) != 0)
+    {
+        LOG_ERROR("failed to initialize trans center");
+        return -1;
+    }
+
+    return 0;
+}
+
+int ThreadSink::LoadClientCenterMgr()
+{
+    char client_center_mgr_so_path[MAX_PATH_LEN + 1] = "";
+    StrPrintf(client_center_mgr_so_path, sizeof(client_center_mgr_so_path), "%s/libclient_center_mgr.so",
+              threads_ctx_->common_component_dir);
+
+    if (client_center_mgr_loader_.Load(client_center_mgr_so_path) != 0)
+    {
+        LOG_ERROR(client_center_mgr_loader_.GetLastErrMsg());
+        return -1;
+    }
+
+    client_center_mgr_ = (ClientCenterMgrInterface*) client_center_mgr_loader_.GetModuleInterface();
+    if (nullptr == client_center_mgr_)
+    {
+        LOG_ERROR(client_center_mgr_loader_.GetLastErrMsg());
+        return -1;
+    }
+
+    if (client_center_mgr_->Initialize(nullptr) != 0)
+    {
+        LOG_ERROR("failed to initialize client center mgr");
+        return -1;
     }
 
     return 0;

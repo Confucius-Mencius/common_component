@@ -40,6 +40,8 @@ set(TIMER_AXIS_INC_DIR ${PROJECT_SOURCE_DIR}/../timer_axis/inc)
 set(THREAD_CENTER_INC_DIR ${PROJECT_SOURCE_DIR}/../thread_center/inc)
 set(APP_FRAME_INC_DIR ${PROJECT_SOURCE_DIR}/../app_frame/inc)
 set(PROTO_MSG_CODEC_INC_DIR ${PROJECT_SOURCE_DIR}/../proto_msg_codec/inc)
+set(TRANS_CENTER_INC_DIR ${PROJECT_SOURCE_DIR}/../trans_center/inc)
+set(CLIENT_CENTER_MGR_INC_DIR ${PROJECT_SOURCE_DIR}/../client_center_mgr/inc)
 
 ###############################################################################
 # project inc dir
