@@ -1,5 +1,5 @@
 #include "the_http_parser.h"
-#include "common_logic.h"
+#include "http_ws_logic.h"
 #include "log_util.h"
 #include "mpart_body_processor.h"
 #include "singleton.h"

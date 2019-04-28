@@ -12,8 +12,8 @@ struct TransCtx
     int timeout_sec;
     ::proto::Passback passback;
     PeerSinkInterface* sink;
-    char* data;
-    size_t len;
+    char* data; // 回调时使用的异步数据，可以是一个对象的指针，也可以是一块内存区
+    size_t len; // 如果data是一个对象的指针，len为0；如果时一块内存区，len为内存区的长度
 
     TransCtx() : peer()
     {

@@ -54,7 +54,7 @@ public:
      * @param data
      * @param len
      */
-    virtual void OnConnected(TransID trans_id, const Peer& peer, const void* data, size_t len) {}
+    virtual void OnConnected(TransID trans_id, const Peer& peer, void* data, size_t len) {}
 
     /**
      * @brief OnClosed 对端关闭了连接(TCP,HTTP)
@@ -63,7 +63,7 @@ public:
      * @param data
      * @param len
      */
-    virtual void OnClosed(TransID trans_id, const Peer& peer, const void* data, size_t len) {}
+    virtual void OnClosed(TransID trans_id, const Peer& peer, void* data, size_t len) {}
 
     /**
      * @brief OnRecvRsp threads, proto tcp
@@ -76,9 +76,9 @@ public:
      * @param len
      */
     virtual void OnRecvRsp(TransID trans_id, const Peer& peer, const ::proto::MsgHead& msg_head,
-                           const void* msg_body, size_t msg_body_len, const void* data, size_t len) {}
+                           const void* msg_body, size_t msg_body_len, void* data, size_t len) {}
 
-    virtual void OnRecvHTTPRsp(TransID trans_id, const Peer& peer, const http::Rsp* http_rsp, const void* data, size_t len) {}
+    virtual void OnRecvHTTPRsp(TransID trans_id, const Peer& peer, const http::Rsp* http_rsp, void* data, size_t len) {}
 
     /**
      * @brief OnTimeout 超时对端未响应。threads, proto tcp
@@ -87,7 +87,7 @@ public:
      * @param data
      * @param len
      */
-    virtual void OnTimeout(TransID trans_id, const Peer& peer, const void* data, size_t len) {}
+    virtual void OnTimeout(TransID trans_id, const Peer& peer, void* data, size_t len) {}
 };
 
 struct AsyncCtx
@@ -95,8 +95,8 @@ struct AsyncCtx
     int total_retries; // 重试次数，必须>=0
     int timeout_sec; // 需要回复的请求应该设置这个超时时间为>0；不需要回复或者需要回复但不管超时的时候为-1即可
     PeerSinkInterface* sink;
-    const void* data;
-    size_t len;
+    void* data; // 回调时使用的异步数据，可以是一个对象的指针，也可以是一块内存区
+    size_t len; // 如果data是一个对象的指针，len为0；如果时一块内存区，len为内存区的长度
 
     AsyncCtx()
     {

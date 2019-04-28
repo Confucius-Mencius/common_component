@@ -1,5 +1,5 @@
-#ifndef HTTP_WS_THREADS_SRC_TCP_LOGIC_COMMON_LOGIC_H_
-#define HTTP_WS_THREADS_SRC_TCP_LOGIC_COMMON_LOGIC_H_
+#ifndef HTTP_WS_THREADS_SRC_TCP_LOGIC_HTTP_WS_LOGIC_H_
+#define HTTP_WS_THREADS_SRC_TCP_LOGIC_HTTP_WS_LOGIC_H_
 
 #include "http_msg_dispatcher.h"
 #include "http_ws_logic_args.h"
@@ -110,4 +110,4 @@ private:
 };
 }
 
-#endif // HTTP_WS_THREADS_SRC_TCP_LOGIC_COMMON_LOGIC_H_
+#endif // HTTP_WS_THREADS_SRC_TCP_LOGIC_HTTP_WS_LOGIC_H_

@@ -1,4 +1,4 @@
-#include "common_logic.h"
+#include "proto_logic.h"
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
@@ -217,12 +217,13 @@ void ProtoLogic::OnClientClosed(const ConnGUID* conn_guid)
 
 void ProtoLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
 {
-    LOG_DEBUG("ProtoCommonLogic::OnRecvClientData, " << *conn_guid << ", data: " << data << ", len: " << len);
+    const ConnGUID the_conn_guid = *conn_guid;
+    LOG_DEBUG("ProtoCommonLogic::OnRecvClientData, " << the_conn_guid << ", data: " << data << ", len: " << len);
 
-    ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_guid->conn_id);
+    ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(the_conn_guid.conn_id);
     if (nullptr == conn)
     {
-        LOG_ERROR("failed to get conn by id, " << *conn_guid);
+        LOG_ERROR("failed to get conn by id, " << the_conn_guid);
         return;
     }
 
@@ -245,16 +246,16 @@ void ProtoLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* data, s
                 msg_head.Reset();
                 msg_head.msg_id = err_msg_id;
 
-                scheduler_.SendToClient(conn_guid, msg_head, nullptr, 0);
+                scheduler_.SendToClient(&the_conn_guid, msg_head, nullptr, 0);
 
-                LOG_INFO("close proto tcp conn, " << *conn_guid << ", err msg id: " << err_msg_id);
-                scheduler_.CloseClient(conn_guid); // 服务器主动关闭连接
+                LOG_INFO("close proto tcp conn, " << the_conn_guid << ", err msg id: " << err_msg_id);
+                scheduler_.CloseClient(&the_conn_guid); // 服务器主动关闭连接
 
                 return;
             }
 
             // 将该client加入一个按上一次接收到不完整消息的时间升序排列的列表,收到完整消息则从列表中移除.如果一段时间后任没有收到完整消息,则主动关闭连接
-            part_msg_mgr_.UpsertRecord(conn, *conn_guid, proto_logic_args_.app_frame_conf_mgr->GetProtoPartMsgConnLife());
+            part_msg_mgr_.UpsertRecord(conn, the_conn_guid, proto_logic_args_.app_frame_conf_mgr->GetProtoPartMsgConnLife());
             break;
         }
 
@@ -270,7 +271,7 @@ void ProtoLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* data, s
             msg_head.Reset();
             msg_head.msg_id = err_msg_id;
 
-            scheduler_.SendToClient(conn_guid, msg_head, nullptr, 0);
+            scheduler_.SendToClient(&the_conn_guid, msg_head, nullptr, 0);
             return;
         }
 
@@ -279,16 +280,23 @@ void ProtoLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* data, s
         const size_t left = dl - TOTAL_MSG_LEN_FIELD_LEN - total_msg_len;
         if (left > 0)
         {
-            d.assign(dp + total_msg_len + total_msg_len, left); // TODO 重叠assign是否安全？
+            d.assign(dp + TOTAL_MSG_LEN_FIELD_LEN + total_msg_len, left); // TODO 重叠assign是否安全？
+
+            std::string& d1 = conn->GetData();
+            dp = d1.data();
+            dl = d1.size();
         }
         else
         {
+            // conn可能在消息处理器中被关闭销毁了，这里需要确认
+            ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(the_conn_guid.conn_id);
+            if (conn != nullptr)
+            {
+                conn->ClearData();
+            }
+
             break;
         }
-
-        std::string& d1 = conn->GetData();
-        dp = d1.data();
-        dl = d1.size();
     }
 }
 
@@ -384,6 +392,7 @@ int ProtoLogic::LoadProtoTCPCommonLogic()
     logic_ctx.timer_axis = logic_ctx_.timer_axis;
     logic_ctx.conn_center = logic_ctx_.conn_center;
     logic_ctx.scheduler = &scheduler_;
+    logic_ctx.msg_codec = &msg_codec_;
     logic_ctx.msg_dispatcher = &msg_dispatcher_;
     logic_ctx.common_logic = proto_tcp_common_logic_;
     logic_ctx.thread_ev_base = logic_ctx_.thread_ev_base;
@@ -448,6 +457,7 @@ int ProtoLogic::LoadProtoTCPLogicGroup()
         logic_ctx.timer_axis = logic_ctx_.timer_axis;
         logic_ctx.conn_center = logic_ctx_.conn_center;
         logic_ctx.scheduler = &scheduler_;
+        logic_ctx.msg_codec = &msg_codec_;
         logic_ctx.msg_dispatcher = &msg_dispatcher_;
         logic_ctx.common_logic = proto_tcp_common_logic_;
         logic_ctx.thread_ev_base = logic_ctx_.thread_ev_base;

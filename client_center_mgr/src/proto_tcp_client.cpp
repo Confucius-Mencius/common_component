@@ -180,16 +180,17 @@ void Client::ReadCallback(struct bufferevent* buf_event, void* arg)
         const size_t left = dl - TOTAL_MSG_LEN_FIELD_LEN - total_msg_len;
         if (left > 0)
         {
-            d.assign(dp + total_msg_len + total_msg_len, left); // TODO 重叠assign是否安全？
+            d.assign(dp + TOTAL_MSG_LEN_FIELD_LEN + total_msg_len, left); // TODO 重叠assign是否安全？
+
+            std::string& d1 = client->GetRecvedData();
+            dp = d1.data();
+            dl = d1.size();
         }
         else
         {
+            client->ClearRecvedData();
             break;
         }
-
-        std::string& d1 = client->GetRecvedData();
-        dp = d1.data();
-        dl = d1.size();
     }
 }
 

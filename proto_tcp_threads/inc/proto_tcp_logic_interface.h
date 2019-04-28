@@ -17,6 +17,7 @@ class LogicInterface;
 
 namespace proto
 {
+class MsgCodec;
 class MsgDispatcherInterface;
 }
 
@@ -38,6 +39,7 @@ struct LogicCtx
     TimerAxisInterface* timer_axis;
     ConnCenterInterface* conn_center;
     SchedulerInterface* scheduler;
+    ::proto::MsgCodec* msg_codec;
     ::proto::MsgDispatcherInterface* msg_dispatcher;
     CommonLogicInterface* common_logic;
     struct event_base* thread_ev_base;
@@ -54,6 +56,7 @@ struct LogicCtx
         timer_axis = nullptr;
         conn_center = nullptr;
         scheduler = nullptr;
+        msg_codec = nullptr;
         msg_dispatcher = nullptr;
         common_logic = nullptr;
         thread_ev_base = nullptr;

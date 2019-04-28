@@ -39,8 +39,17 @@ public:
 
         trans->trans_ctx_.sink = ctx->sink;
 
-        if (nullptr == ctx->data || 0 == ctx->len)
+        if (nullptr == ctx->data || ctx->len < 1)
         {
+            // 没有异步数据需要暂存
+            return trans;
+        }
+
+        if (0 == ctx->len)
+        {
+            // 记录对象指针
+            trans->trans_ctx_.data = ctx->data;
+            trans->trans_ctx_.len = 0;
             return trans;
         }
 
@@ -62,7 +71,7 @@ public:
 
     void Release()
     {
-        if (trans_ctx_.data != nullptr)
+        if (trans_ctx_.data != nullptr && trans_ctx_.len > 0)
         {
             delete[] trans_ctx_.data;
             trans_ctx_.data = nullptr;

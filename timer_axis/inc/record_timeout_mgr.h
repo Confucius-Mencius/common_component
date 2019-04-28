@@ -62,7 +62,10 @@ public:
 
     virtual void Freeze()
     {
-        timer_axis_->KillTimer(this, EXPIRE_CHECK_TIMER_ID);
+        if (timer_axis_ != nullptr)
+        {
+            timer_axis_->KillTimer(this, EXPIRE_CHECK_TIMER_ID);
+        }
     }
 
     ///////////////////////// TimerSinkInterface /////////////////////////

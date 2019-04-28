@@ -1,4 +1,4 @@
-#include "common_logic.h"
+#include "global_logic.h"
 #include "file_util.h"
 #include "log_util.h"
 #include "mem_util.h"

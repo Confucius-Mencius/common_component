@@ -148,14 +148,8 @@ public:
     {
     }
 
-private:
-    virtual void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len)
-    {
-    }
-
-    virtual void OnTask(const ConnGUID* conn_guid, ThreadInterface* source_thread, const void* data, size_t len)
-    {
-    }
+    virtual void OnRecvClientData(const ConnGUID* conn_guid, const void* data, size_t len) final {}
+    virtual void OnTask(const ConnGUID* conn_guid, ThreadInterface* source_thread, const void* data, size_t len) final {}
 };
 }
 

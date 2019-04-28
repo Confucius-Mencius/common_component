@@ -4,7 +4,7 @@
 #include <openssl/pem.h>
 #include <openssl/bio.h>
 #include <openssl/evp.h>
-#include "common_logic.h"
+#include "http_ws_logic.h"
 #include "hex_dump.h"
 #include "log_util.h"
 #include "the_http_parser.h"
