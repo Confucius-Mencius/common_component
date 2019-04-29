@@ -277,6 +277,5 @@ void ConnCenter::OnTimeout(const ConnID& k, BaseConn* const& v, int timeout_sec)
 {
     LOG_TRACE("ConnMgr::OnTimeout, key: " << k << ", val: " << v << ", timeout: " << timeout_sec);
     thread_sink_->OnClientClosed(v);
-    Clear(v);
 }
 }

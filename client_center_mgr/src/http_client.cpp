@@ -19,15 +19,15 @@ namespace http
 void Client::HTTPConnClosedCallback(struct evhttp_connection* evhttp_conn, void* arg)
 {
     Client* client = static_cast<Client*>(arg);
-    LOG_TRACE("Client::HTTPConnClosedCallback, evhttp conn: " << evhttp_conn << ", client: " << client << ", "
-              << client->peer_);
+    LOG_TRACE("Client::HTTPConnClosedCallback, evhttp conn: " << evhttp_conn
+              << ", client: " << client << ", " << client->peer_);
 }
 
 void Client::HTTPSConnClosedCallback(struct evhttp_connection* evhttp_conn, void* arg)
 {
     Client* client = static_cast<Client*>(arg);
-    LOG_TRACE("Client::HTTPConnClosedCallback, evhttp conn: " << evhttp_conn << ", client: " << client << ", "
-              << client->peer_);
+    LOG_TRACE("Client::HTTPConnClosedCallback, evhttp conn: " << evhttp_conn
+              << ", client: " << client << ", " << client->peer_);
 }
 
 void Client::HTTPReqDoneCallback(struct evhttp_request* evhttp_req, void* arg)
@@ -143,7 +143,7 @@ Client::Client() : peer_(), callback_arg_set_()
     client_center_ = nullptr;
     client_center_ctx_ = nullptr;
     evhttp_conn_ = nullptr;
-    sctx_ = nullptr;
+    ssl_ctx_ = nullptr;
     buf_event_ = nullptr;
     evhttps_conn_ = nullptr;
 }
@@ -199,10 +199,10 @@ void Client::Finalize()
         evhttps_conn_ = nullptr;
     }
 
-    if (sctx_ != nullptr)
+    if (ssl_ctx_ != nullptr)
     {
-        SSL_CTX_free(sctx_);
-        sctx_ = nullptr;
+        SSL_CTX_free(ssl_ctx_);
+        ssl_ctx_ = nullptr;
     }
 }
 
@@ -380,17 +380,17 @@ int Client::CreateHTTPConn(const Peer& peer)
         return -1;
     }
 
-    if (client_center_ctx_->http_conn_timeout > 0)
-    {
-        LOG_TRACE("http conn timeout: " << client_center_ctx_->http_conn_timeout);
-        // timeout跟keep alive相关，在这段时间内如果没有消息传递，则关闭连接 TODO 待验证
-        evhttp_connection_set_timeout(evhttp_conn_, client_center_ctx_->http_conn_timeout);
-    }
-
     if (client_center_ctx_->http_conn_max_retry > 0)
     {
-        LOG_TRACE("http conn max retry: " << client_center_ctx_->http_conn_max_retry);
+        LOG_DEBUG("http conn max retry: " << client_center_ctx_->http_conn_max_retry);
         evhttp_connection_set_retries(evhttp_conn_, client_center_ctx_->http_conn_max_retry);
+    }
+
+    if (client_center_ctx_->http_conn_timeout > 0)
+    {
+        LOG_DEBUG("http conn timeout: " << client_center_ctx_->http_conn_timeout);
+        // timeout跟keep alive相关，在这段时间内如果没有消息传递，则关闭连接 TODO 待验证
+        evhttp_connection_set_timeout(evhttp_conn_, client_center_ctx_->http_conn_timeout);
     }
 
     // 观察libevent的处理流程，发现一段时间后该连接上没有数据传输则会进到回调中。回调中不用做任何处理，下次请求仍可以复用该连接。
@@ -405,8 +405,8 @@ int Client::CreateHTTPSConn(const Peer& peer)
 {
     /* An OpenSSL context holds data that new SSL connections will
      * be created from. */
-    sctx_ = SSL_CTX_new(SSLv23_client_method());
-    if (nullptr == sctx_)
+    ssl_ctx_ = SSL_CTX_new(SSLv23_client_method());
+    if (nullptr == ssl_ctx_)
     {
         const int err = errno;
         LOG_ERROR("SSL_CTX_new failed, errno: " << err << ", err msg: " << strerror(err));;
@@ -417,10 +417,10 @@ int Client::CreateHTTPSConn(const Peer& peer)
      * validate the server) and add it to the context. */
 //    SSL_CTX_load_verify_locations(sctx, "certificate-authorities.pem", nullptr); // TODO 这个应该是客户端的校验，这里先注释掉
 
-    SSL_CTX_set_verify(sctx_, SSL_VERIFY_NONE, nullptr); // 如果为SSL_VERIFY_PEER表示客户端会做校验
+    SSL_CTX_set_verify(ssl_ctx_, SSL_VERIFY_NONE, nullptr); // 如果为SSL_VERIFY_PEER表示客户端会做校验
 
     /* Create a new SSL connection from our SSL context */
-    SSL* ssl = SSL_new(sctx_);
+    SSL* ssl = SSL_new(ssl_ctx_);
     if (nullptr == ssl)
     {
         const int err = errno;
@@ -438,11 +438,13 @@ int Client::CreateHTTPSConn(const Peer& peer)
         return -1;
     }
 
+    bufferevent_openssl_set_allow_dirty_shutdown(buf_event_, 1);
+
     /* Newly-added function in libevent 2.1 which allows us to specify
      * our own bufferevent (e. g. one with SSL) when creating a new
      * HTTP connection.  Sorry, not available in libevent 2.0. */
     // header size和body size的大小均不限制，重连间隔初始为2秒，以后每次都翻倍。
-    evhttps_conn_ = evhttp_connection_base_bufferevent_new(client_center_ctx_->thread_ev_base, 0, buf_event_,
+    evhttps_conn_ = evhttp_connection_base_bufferevent_new(client_center_ctx_->thread_ev_base, nullptr, buf_event_,
                     peer.addr.c_str(), peer.port);
     if (nullptr == evhttps_conn_)
     {
@@ -451,17 +453,17 @@ int Client::CreateHTTPSConn(const Peer& peer)
         return -1;
     }
 
-    if (client_center_ctx_->http_conn_timeout > 0)
-    {
-        LOG_TRACE("https conn timeout: " << client_center_ctx_->http_conn_timeout);
-        // timeout跟keep alive相关，在这段时间内如果没有消息传递，则关闭连接 TODO 待验证
-        evhttp_connection_set_timeout(evhttps_conn_, client_center_ctx_->http_conn_timeout);
-    }
-
     if (client_center_ctx_->http_conn_max_retry > 0)
     {
-        LOG_TRACE("https conn max retry: " << client_center_ctx_->http_conn_max_retry);
+        LOG_DEBUG("https conn max retry: " << client_center_ctx_->http_conn_max_retry);
         evhttp_connection_set_retries(evhttps_conn_, client_center_ctx_->http_conn_max_retry);
+    }
+
+    if (client_center_ctx_->http_conn_timeout > 0)
+    {
+        LOG_DEBUG("https conn timeout: " << client_center_ctx_->http_conn_timeout);
+        // timeout跟keep alive相关，在这段时间内如果没有消息传递，则关闭连接 TODO 待验证
+        evhttp_connection_set_timeout(evhttps_conn_, client_center_ctx_->http_conn_timeout);
     }
 
     // 观察libevent的处理流程，发现一段时间后该连接上没有数据传输则会进到回调中。回调中不用做任何处理，下次请求仍可以复用该连接。
@@ -481,7 +483,7 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
     }
 
     LOG_TRACE("trans id: " << trans_id << ", " << peer_ << ", uri: " << uri << ", uri len: " << uri_len
-              << ", need encode: " << need_encode << ", data len: " << data_len << ", https: " << https);
+              << ", need encode: " << need_encode << ", data len: " << data_len);
 
     char* req_uri = (char*) uri;
     char* encoded_uri = nullptr;
@@ -519,8 +521,6 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
     callback_arg->https = https;
     callback_arg->trans_id = trans_id;
 
-    LOG_TRACE("before evhttp_request_new");
-
     evhttp_req = evhttp_request_new(Client::HTTPReqDoneCallback, callback_arg); // 处理完成后libevent会自动释放req
     if (nullptr == evhttp_req)
     {
@@ -528,8 +528,6 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
         LOG_ERROR("failed to create evhttp req, errno: " << err << ", err msg: " << strerror(err));
         goto err_out;
     }
-
-    LOG_TRACE("after evhttp_request_new");
 
 #if LIBEVENT_VERSION_NUMBER >= 0x2010500
     // 注意：注册这个回调纯粹为了观察libevent的处理流程，无实际意义
@@ -543,7 +541,7 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
     {
         for (HeaderMap::const_iterator it = headers->begin(); it != headers->end(); ++it)
         {
-            if (it->first == "Host" || it->first == "HOST")
+            if (0 == strcasecmp(it->first.c_str(), "host"))
             {
                 continue;
             }
@@ -563,7 +561,7 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
 
     for (struct evkeyval* header = output_headers->tqh_first; header != nullptr; header = header->next.tqe_next)
     {
-        LOG_TRACE(header->key << ": " << header->value);
+        LOG_DEBUG(header->key << ": " << header->value);
     }
 
     // http body
@@ -572,7 +570,7 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
         // 有些web服务器需要根据Content-Type对post内容做解析，所以这里必须加上Content-Type
         if (nullptr == evhttp_find_header(output_headers, "Content-Type"))
         {
-            evhttp_add_header(output_headers, "Content-Type", "application/x-www-form-urlencoded");
+            evhttp_add_header(output_headers, "Content-Type", "application/x-www-form-urlencoded"); // TODO 默认的content type怎么设？
         }
 
         cmd_type = EVHTTP_REQ_POST;
@@ -598,8 +596,6 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
         evhttp_add_header(output_headers, "Content-Length", data_len_buf);
     }
 
-    LOG_TRACE("before evhttp_make_request");
-
     if (evhttp_make_request(evhttp_conn, evhttp_req, cmd_type, req_uri) != 0)
     {
         const int err = errno;
@@ -607,9 +603,7 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
         goto err_out;
     }
 
-    LOG_TRACE("after evhttp_make_request");
-
-    LOG_TRACE("http version, major: " << (int) evhttp_req->major << ", minor: " << (int) evhttp_req->minor
+    LOG_DEBUG("http version, major: " << (int) evhttp_req->major << ", minor: " << (int) evhttp_req->minor
               << ", evhttp conn: " << evhttp_conn << ", flags: " << evhttp_connection_get_flags(evhttp_conn)
               << ", evhttp req: " << evhttp_req << ", flags: " << evhttp_req->flags
               << ", callback_arg: " << callback_arg);

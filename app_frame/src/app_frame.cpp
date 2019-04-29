@@ -76,7 +76,7 @@ int AppFrame::Initialize(const void* ctx)
 
     app_frame_ctx_ = *(static_cast<const AppFrameCtx*>(ctx));
     srand(time(nullptr));
-    // OpenSSLInitialize(); // TODO 初始化openssl，保证只有一次调用 参考libwebsockets中的方法
+    OpenSSLInitialize(); // TODO 初始化openssl，保证只有一次调用 可以参考libwebsockets中的实现
 
     if (pthread_mutex_init(&g_app_frame_threads_sync_mutex, nullptr) != 0)
     {
@@ -173,7 +173,7 @@ void AppFrame::Finalize()
     pthread_mutex_destroy(&g_app_frame_threads_sync_mutex);
     pthread_cond_destroy(&g_app_frame_threads_sync_cond);
 
-    // OpenSSLFinalize();
+    OpenSSLFinalize();
 }
 
 int AppFrame::Activate()

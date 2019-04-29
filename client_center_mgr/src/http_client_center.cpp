@@ -64,7 +64,7 @@ ClientInterface* ClientCenter::CreateClient(const Peer& peer)
         return nullptr;
     }
 
-//    client->SetClientCenter(this);
+    client->SetClientCenter(this);
     client->SetPeer(peer);
 
     int ret = -1;

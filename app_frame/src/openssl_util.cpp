@@ -121,6 +121,7 @@ void OpenSSLInitialize()
     CRYPTO_set_mem_functions(zero_malloc, realloc, free);
 
     SSL_library_init();
+    ERR_load_crypto_strings();
     SSL_load_error_strings();
     thread_setup();
     OpenSSL_add_all_algorithms();
@@ -133,8 +134,8 @@ void OpenSSLFinalize()
     thread_cleanup();
     ENGINE_cleanup();
     CONF_modules_unload(1);
-    ERR_free_strings();
     EVP_cleanup();
+    ERR_free_strings();
     CRYPTO_cleanup_all_ex_data();
     sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
 }

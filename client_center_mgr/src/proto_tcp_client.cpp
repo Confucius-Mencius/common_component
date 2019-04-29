@@ -340,7 +340,7 @@ TransID Client::Send(const ::proto::MsgHead& msg_head, const void* msg_body, siz
 
     if (!connected_)
     {
-        LOG_TRACE("not connected, " << peer_ << ", cache the msg first");
+        LOG_TRACE("not connected, " << peer_ << ", cache msg first");
 
         // 将消息推到cache队列中，待连接建立后立即发送
         CacheMsg cache_msg;
@@ -607,7 +607,7 @@ int Client::AddCacheMsg(TransID trans_id, const Client::CacheMsg& cache_msg)
 
 void Client::SendCacheMsg()
 {
-    LOG_TRACE("send cache msg");
+    LOG_TRACE("send cached msg");
 
     for (TransIDList::iterator it_cache_msg_trans_id = cache_msg_trans_id_list_.begin();
             it_cache_msg_trans_id != cache_msg_trans_id_list_.end();)

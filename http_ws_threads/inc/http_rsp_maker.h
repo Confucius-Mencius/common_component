@@ -4,10 +4,6 @@
 #include <http_parser.h>
 #include "http_ws.h"
 
-namespace tcp
-{
-namespace http_ws
-{
 namespace http
 {
 class RspMaker
@@ -28,7 +24,7 @@ public:
 
     RspMaker& SetContentType(const std::string& content_type)
     {
-        headers_.insert(HeaderMap::value_type("Content-Type", content_type));
+        headers_.insert(tcp::http_ws::http::HeaderMap::value_type("Content-Type", content_type));
         return *this;
     }
 
@@ -36,11 +32,11 @@ public:
     {
         if (on)
         {
-            headers_.insert(HeaderMap::value_type("Connection",  "Keep-Alive"));
+            headers_.insert(tcp::http_ws::http::HeaderMap::value_type("Connection",  "Keep-Alive"));
         }
         else
         {
-            headers_.insert(HeaderMap::value_type("Connection", "close"));
+            headers_.insert(tcp::http_ws::http::HeaderMap::value_type("Connection", "close"));
         }
 
         return *this;
@@ -48,14 +44,14 @@ public:
 
     RspMaker& SetNoCache()
     {
-        headers_.insert(HeaderMap::value_type("Cache-Control", "no-cache"));
-        headers_.insert(HeaderMap::value_type("Pragma", "no-cache"));
+        headers_.insert(tcp::http_ws::http::HeaderMap::value_type("Cache-Control", "no-cache"));
+        headers_.insert(tcp::http_ws::http::HeaderMap::value_type("Pragma", "no-cache"));
         return *this;
     }
 
     RspMaker& AddHeader(const std::string& name, const std::string& value)
     {
-        headers_.insert(HeaderMap::value_type(name, value));
+        headers_.insert(tcp::http_ws::http::HeaderMap::value_type(name, value));
         return *this;
     }
 
@@ -72,9 +68,9 @@ public:
         }
 
         n = snprintf(buf, sizeof(buf), "%lu", len);
-        headers_.insert(HeaderMap::value_type("Content-Length", std::string(buf, n)));
+        headers_.insert(tcp::http_ws::http::HeaderMap::value_type("Content-Length", std::string(buf, n)));
 
-        for (HeaderMap::const_iterator it = headers_.cbegin(); it != headers_.cend(); ++it)
+        for (tcp::http_ws::http::HeaderMap::const_iterator it = headers_.cbegin(); it != headers_.cend(); ++it)
         {
             n = snprintf(buf, sizeof(buf), "%s: %s\r\n", it->first.c_str(), it->second.c_str());
             rsp.append(buf, n);
@@ -88,10 +84,8 @@ public:
 
 private:
     http_status status_code_;
-    HeaderMap headers_;
+    tcp::http_ws::http::HeaderMap headers_;
 };
-}
-}
 }
 
 #endif // HTTP_WS_THREADS_INC_HTTP_RSP_MAKER_H_

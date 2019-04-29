@@ -114,7 +114,7 @@ private:
     CallbackArgSet callback_arg_set_;
 
     // https conn
-    SSL_CTX* sctx_;
+    SSL_CTX* ssl_ctx_;
     struct bufferevent* buf_event_;
     struct evhttp_connection* evhttps_conn_;
 };
