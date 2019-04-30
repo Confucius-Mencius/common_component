@@ -44,6 +44,8 @@ void Req::Reset()
 
 void Req::ParseURL(const char* at, size_t length)
 {
+    // TODO URL decode
+
     this->URL.assign(at, length);
 
     struct http_parser_url u;
