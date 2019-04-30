@@ -10,8 +10,10 @@ namespace tcp
 {
 void NormalConn::ReadCallback(evutil_socket_t sock_fd, short events, void* arg)
 {
-    LOG_TRACE("events occured on socket, fd: " << sock_fd << ", events: "
-              << setiosflags(std::ios::showbase) << std::hex << events);
+    log4cplus::tostringstream tmp;
+    tmp << std::hex << std::showbase << events;
+
+    LOG_TRACE("events occured on socket, fd: " << sock_fd << ", events: " << tmp.str());
 
     ThreadSink* thread_sink = static_cast<NormalConn*>(arg)->thread_sink_;
     ConnCenter* conn_center = thread_sink->GetConnCenter();
@@ -121,8 +123,10 @@ void NormalConn::ReadCallback(evutil_socket_t sock_fd, short events, void* arg)
 
 void NormalConn::WriteCallback(evutil_socket_t sock_fd, short events, void* arg)
 {
-    LOG_TRACE("events occured on socket, fd: " << sock_fd << ", events: "
-              << setiosflags(std::ios::showbase) << std::hex << events);
+    log4cplus::tostringstream tmp;
+    tmp << std::hex << std::showbase << events;
+
+    LOG_TRACE("events occured on socket, fd: " << sock_fd << ", events: " << tmp.str());
 
     // 在read事件中处理close事件
 //    if (events & EV_CLOSED)

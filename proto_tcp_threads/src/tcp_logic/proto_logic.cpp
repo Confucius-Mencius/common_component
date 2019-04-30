@@ -277,24 +277,23 @@ void ProtoLogic::OnRecvClientData(const ConnGUID* conn_guid, const void* data, s
 
         OnClientMsg(conn->GetConnGUID(), msg_head, msg_body, msg_body_len);
 
+        // 消息处理器中可能已经关闭了连接，这里要先判断
+        conn = logic_ctx_.conn_center->GetConnByID(the_conn_guid.conn_id);
+        if (nullptr == conn)
+        {
+            break;
+        }
+
         const size_t left = dl - TOTAL_MSG_LEN_FIELD_LEN - total_msg_len;
         if (left > 0)
         {
             d.assign(dp + TOTAL_MSG_LEN_FIELD_LEN + total_msg_len, left); // TODO 重叠assign是否安全？
-
-            std::string& d1 = conn->GetData();
-            dp = d1.data();
-            dl = d1.size();
+            dp = d.data();
+            dl = d.size();
         }
         else
         {
-            // conn可能在消息处理器中被关闭销毁了，这里需要确认
-            ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(the_conn_guid.conn_id);
-            if (conn != nullptr)
-            {
-                conn->ClearData();
-            }
-
+            conn->ClearData();
             break;
         }
     }
@@ -488,7 +487,6 @@ void ProtoLogic::OnClientMsg(const ConnGUID* conn_guid, const ::proto::MsgHead& 
 
     if (0 == msg_dispatcher_.DispatchMsg(conn_guid, msg_head, msg_body, msg_body_len))
     {
-        LOG_TRACE("dispatch msg ok, " << *conn_guid << ", msg id: " << msg_head.msg_id);
         return;
     }
 

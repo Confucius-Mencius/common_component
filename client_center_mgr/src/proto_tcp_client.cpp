@@ -20,8 +20,12 @@ void Client::EventCallback(struct bufferevent* buf_event, short events, void* ar
     const int err = EVUTIL_SOCKET_ERROR();
     const evutil_socket_t fd = bufferevent_getfd(buf_event);
     Client* client = static_cast<Client*>(arg);
-    LOG_TRACE("Client::EventCallback, socket fd: " << fd << ", events: " << setiosflags(std::ios::showbase) << std::hex
-              << events << ", client: " << client << ", " << client->peer_);
+
+    log4cplus::tostringstream tmp;
+    tmp << std::hex << std::showbase << events;
+
+    LOG_TRACE("Client::EventCallback, socket fd: " << fd << ", events: " << tmp.str()
+              << ", client: " << client << ", " << client->peer_);
 
     do
     {

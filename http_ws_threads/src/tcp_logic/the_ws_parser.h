@@ -50,9 +50,9 @@ public:
     int CheckUpgrade(const http::Req& http_req);
     std::string MakeHandshake();
 
-    void SetTCPCommonLogic(tcp::HTTPWSLogic* http_ws_tcp_common_logic)
+    void SetHTTPWSLogic(tcp::HTTPWSLogic* http_ws_logic)
     {
-        http_ws_tcp_common_logic_ = http_ws_tcp_common_logic;
+        http_ws_logic_ = http_ws_logic;
     }
 
     void SetConnID(ConnID conn_id)
@@ -70,7 +70,7 @@ private:
     std::string key_;
     std::string protocol_;
 
-    tcp::HTTPWSLogic* http_ws_tcp_common_logic_;
+    tcp::HTTPWSLogic* http_ws_logic_;
     ConnID conn_id_;
 
     struct websocket_parser parser_;

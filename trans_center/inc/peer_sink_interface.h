@@ -93,7 +93,7 @@ public:
 struct AsyncCtx
 {
     int total_retries; // 发送失败时重试次数，必须>=0。http请求不使用该字段
-    int timeout_sec; // 需要回复的请求应该设置这个超时时间为>0；不需要回复或者需要回复但不管超时的时候为-1即可。http请求不使用该字段，http超时在配置文件中
+    int timeout_sec; // 需要回复的请求应该设置这个超时时间为>0；不需要回复或者需要回复但不管超时的时候为-1即可。
     PeerSinkInterface* sink;
     void* data; // 回调时使用的异步数据，可以是一个对象的指针，也可以是一块内存区
     size_t len; // 如果data是一个对象的指针，len为0；如果时一块内存区，len为内存区的长度

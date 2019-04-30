@@ -192,9 +192,9 @@ void HTTPWSLogic::OnClientConnected(const ConnGUID* conn_guid)
     }
 
     http_conn_ctx->conn = conn;
-    http_conn_ctx->http_parser.SetTCPCommonLogic(this);
+    http_conn_ctx->http_parser.SetHTTPWSLogic(this);
     http_conn_ctx->http_parser.SetConnID(conn_guid->conn_id);
-    http_conn_ctx->ws_parser.SetTCPCommonLogic(this);
+    http_conn_ctx->ws_parser.SetHTTPWSLogic(this);
     http_conn_ctx->ws_parser.SetConnID(conn_guid->conn_id);
 
     if (!http_conn_ctx_map_.insert(HTTPConnCtxMap::value_type(conn_guid->conn_id, http_conn_ctx)).second)
@@ -325,7 +325,7 @@ void HTTPWSLogic::OnTimer(TimerID timer_id, void* data, size_t len, int times)
     }
 }
 
-void HTTPWSLogic::OnHTTPReq(ConnID conn_id, const tcp::http_ws::http::Req& http_req)
+void HTTPWSLogic::OnHTTPReq(bool& conn_closed, ConnID conn_id, const tcp::http_ws::http::Req& http_req)
 {
     ConnInterface* conn = logic_ctx_.conn_center->GetConnByID(conn_id);
     if (nullptr == conn)
@@ -342,7 +342,7 @@ void HTTPWSLogic::OnHTTPReq(ConnID conn_id, const tcp::http_ws::http::Req& http_
         return;
     }
 
-    LOG_TRACE("dispatch http req ok, path: " << http_req.Path << ", method: " << http_method_str(http_req.Method));
+    conn_closed = (nullptr == logic_ctx_.conn_center->GetConnByID(conn_id));
 }
 
 void HTTPWSLogic::OnUpgrade(ConnID conn_id, const tcp::http_ws::http::Req& http_req, const char* data, size_t len)
@@ -386,7 +386,7 @@ void HTTPWSLogic::OnUpgrade(ConnID conn_id, const tcp::http_ws::http::Req& http_
     }
 }
 
-void HTTPWSLogic::OnWSMsg(ConnID conn_id, int opcode, const char* data, size_t len)
+void HTTPWSLogic::OnWSMsg(bool& conn_closed, ConnID conn_id, int opcode, const char* data, size_t len)
 {
     HTTPConnCtxMap::iterator it = http_conn_ctx_map_.find(conn_id);
     if (it == http_conn_ctx_map_.end())
@@ -413,6 +413,8 @@ void HTTPWSLogic::OnWSMsg(ConnID conn_id, int opcode, const char* data, size_t l
             {
                 it->logic->OnWSMsg(conn_guid, frame_type, data, len);
             }
+
+            conn_closed = (nullptr == logic_ctx_.conn_center->GetConnByID(conn_id));
         }
         break;
 

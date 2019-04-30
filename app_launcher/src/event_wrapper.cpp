@@ -12,8 +12,10 @@ static const uint32_t inotify_watch_mask =
 
 void EventWrapper::OnInotifyReadEvent(evutil_socket_t fd, short events, void* arg)
 {
-    LOG_TRACE("EventWrapper::OnInotifyReadEvent, fd: " << fd
-              << ", events: " << setiosflags(std::ios::showbase) << std::hex << events);
+    log4cplus::tostringstream tmp;
+    tmp << std::hex << std::showbase << events;
+
+    LOG_TRACE("EventWrapper::OnInotifyReadEvent, fd: " << fd << ", events: " << tmp.str());
 
     EventWrapper* event_wrapper = static_cast<EventWrapper*>(arg);
     AppLauncher* app_launcher = event_wrapper->app_launcher_;
@@ -61,8 +63,10 @@ void EventWrapper::OnInotifyReadEvent(evutil_socket_t fd, short events, void* ar
         {
             ievent = (const struct inotify_event*) ptr;
 
-            LOG_DEBUG("inotify mask: " << setiosflags(std::ios::showbase) << std::hex << ievent->mask
-                      << ", len: " << ievent->len << ", wd: " << ievent->wd);
+            log4cplus::tostringstream tmp;
+            tmp << std::hex << std::showbase << ievent->mask;
+
+            LOG_DEBUG("inotify mask: " << tmp.str() << ", len: " << ievent->len << ", wd: " << ievent->wd);
 
             if (ievent->len > 0)
             {

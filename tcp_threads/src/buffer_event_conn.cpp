@@ -15,8 +15,10 @@ void BufferEventConn::EventCallback(struct bufferevent* buffer_event, short even
     const evutil_socket_t sock_fd = bufferevent_getfd(buffer_event);
     ThreadSink* thread_sink = static_cast<BufferEventConn*>(arg)->thread_sink_;
 
-    LOG_TRACE("events occured on socket, fd: " << sock_fd << ", events: "
-              << setiosflags(std::ios::showbase) << std::hex << events);
+    log4cplus::tostringstream tmp;
+    tmp << std::hex << std::showbase << events;
+
+    LOG_TRACE("events occured on socket, fd: " << sock_fd << ", events: " << tmp.str());
 
     BaseConn* conn = static_cast<BaseConn*>(thread_sink->GetConnCenter()->GetConnBySockFD(sock_fd));
     if (nullptr == conn)

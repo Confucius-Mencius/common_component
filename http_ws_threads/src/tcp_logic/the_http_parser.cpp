@@ -238,7 +238,7 @@ private:
 
 Parser::Parser() : http_req_(), last_header_name_()
 {
-    http_ws_tcp_common_logic_ = nullptr;
+    http_ws_logic_ = nullptr;
     conn_id_ = INVALID_CONN_ID;
 
     http_parser_init(&parser_, HTTP_REQUEST);
@@ -260,9 +260,9 @@ int Parser::Execute(const char* buffer, size_t count)
     {
         LOG_TRACE("** upgrade to websocket **");
 
-        if (http_ws_tcp_common_logic_ != nullptr)
+        if (http_ws_logic_ != nullptr)
         {
-            http_ws_tcp_common_logic_->OnUpgrade(conn_id_, http_req_, buffer + n, count - n);
+            http_ws_logic_->OnUpgrade(conn_id_, http_req_, buffer + n, count - n);
         }
 
         return 0;
@@ -276,15 +276,20 @@ int Parser::Execute(const char* buffer, size_t count)
 
     if (complete_)
     {
-        if (http_ws_tcp_common_logic_ != nullptr)
+        bool conn_closed = false;
+
+        if (http_ws_logic_ != nullptr)
         {
-            http_ws_tcp_common_logic_->OnHTTPReq(conn_id_, http_req_);
+            http_ws_logic_->OnHTTPReq(conn_closed, conn_id_, http_req_);
         }
 
-        // 反复使用
-        http_req_.Reset();
-        last_header_name_ = "";
-        complete_ = false;
+        // 反复使用。消息处理器中可能已经关闭了连接，这里要先判断
+        if (!conn_closed)
+        {
+            http_req_.Reset();
+            last_header_name_ = "";
+            complete_ = false;
+        }
     }
 
     return 0;
@@ -295,9 +300,9 @@ int Parser::OnMessageBegin(http_parser* parser)
     LOG_TRACE("Parser::OnMessageBegin");
     Parser* hp = static_cast<Parser*>(parser->data);
 
-    if (hp->http_ws_tcp_common_logic_ != nullptr)
+    if (hp->http_ws_logic_ != nullptr)
     {
-        hp->http_ws_tcp_common_logic_->RecordPartMsg(hp->conn_id_);
+        hp->http_ws_logic_->RecordPartMsg(hp->conn_id_);
     }
 
     return 0;
@@ -310,9 +315,9 @@ int Parser::OnURL(http_parser* parser, const char* at, size_t length)
     Parser* hp = static_cast<Parser*>(parser->data);
     hp->http_req_.ParseURL(at, length);
 
-    if (hp->http_ws_tcp_common_logic_ != nullptr)
+    if (hp->http_ws_logic_ != nullptr)
     {
-        hp->http_ws_tcp_common_logic_->RecordPartMsg(hp->conn_id_);
+        hp->http_ws_logic_->RecordPartMsg(hp->conn_id_);
     }
 
     return 0;
@@ -325,9 +330,9 @@ int Parser::OnHeaderField(http_parser* parser, const char* at, size_t length)
     Parser* hp = static_cast<Parser*>(parser->data);
     hp->last_header_name_.assign(at, length);
 
-    if (hp->http_ws_tcp_common_logic_ != nullptr)
+    if (hp->http_ws_logic_ != nullptr)
     {
-        hp->http_ws_tcp_common_logic_->RecordPartMsg(hp->conn_id_);
+        hp->http_ws_logic_->RecordPartMsg(hp->conn_id_);
     }
 
     return 0;
@@ -340,9 +345,9 @@ int Parser::OnHeaderValue(http_parser* parser, const char* at, size_t length)
     Parser* hp = static_cast<Parser*>(parser->data);
     hp->http_req_.AddHeader(hp->last_header_name_, std::string(at, length));
 
-    if (hp->http_ws_tcp_common_logic_ != nullptr)
+    if (hp->http_ws_logic_ != nullptr)
     {
-        hp->http_ws_tcp_common_logic_->RecordPartMsg(hp->conn_id_);
+        hp->http_ws_logic_->RecordPartMsg(hp->conn_id_);
     }
 
     return 0;
@@ -379,9 +384,9 @@ int Parser::OnHeadersComplete(http_parser* parser)
         }
     }
 
-    if (hp->http_ws_tcp_common_logic_ != nullptr)
+    if (hp->http_ws_logic_ != nullptr)
     {
-        hp->http_ws_tcp_common_logic_->RecordPartMsg(hp->conn_id_);
+        hp->http_ws_logic_->RecordPartMsg(hp->conn_id_);
     }
 
     return 0;
@@ -395,9 +400,9 @@ int Parser::OnBody(http_parser* parser, const char* at, size_t length)
     Parser* hp = static_cast<Parser*>(parser->data);
     hp->http_req_.AppendBody(at, length);
 
-    if (hp->http_ws_tcp_common_logic_ != nullptr)
+    if (hp->http_ws_logic_ != nullptr)
     {
-        hp->http_ws_tcp_common_logic_->RecordPartMsg(hp->conn_id_);
+        hp->http_ws_logic_->RecordPartMsg(hp->conn_id_);
     }
 
     return 0;

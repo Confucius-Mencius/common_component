@@ -55,9 +55,9 @@ public:
     ///////////////////////// TimerSinkInterface /////////////////////////
     void OnTimer(TimerID timer_id, void* data, size_t len, int times);
 
-    void OnHTTPReq(ConnID conn_id, const tcp::http_ws::http::Req& http_req);
+    void OnHTTPReq(bool& conn_closed, ConnID conn_id, const tcp::http_ws::http::Req& http_req);
     void OnUpgrade(ConnID conn_id, const tcp::http_ws::http::Req& http_req, const char* data, size_t len);
-    void OnWSMsg(ConnID conn_id, int opcode, const char* data, size_t len);
+    void OnWSMsg(bool& conn_closed, ConnID conn_id, int opcode, const char* data, size_t len);
 
     void RecordPartMsg(ConnID conn_id);
 

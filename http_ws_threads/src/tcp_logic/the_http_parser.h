@@ -74,9 +74,9 @@ public:
     Parser();
     ~Parser();
 
-    void SetTCPCommonLogic(tcp::HTTPWSLogic* http_ws_tcp_common_logic)
+    void SetHTTPWSLogic(tcp::HTTPWSLogic* http_ws_logic)
     {
-        http_ws_tcp_common_logic_ = http_ws_tcp_common_logic;
+        http_ws_logic_ = http_ws_logic;
     }
 
     void SetConnID(ConnID conn_id)
@@ -96,7 +96,7 @@ public:
     static int mpart_body_process(struct http_parser* parser, const char* at, size_t length);
 
 private:
-    tcp::HTTPWSLogic* http_ws_tcp_common_logic_;
+    tcp::HTTPWSLogic* http_ws_logic_;
     ConnID conn_id_;
 
     struct http_parser parser_;

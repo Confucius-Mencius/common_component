@@ -231,10 +231,9 @@ void Client::Freeze()
 
 TransID Client::Get(const GetParams& params, const AsyncCtx* async_ctx)
 {
-    // 这里把timeout设置为0，使用http自己的timeout机制
     TransCtx trans_ctx;
     trans_ctx.peer = peer_;
-    trans_ctx.timeout_sec = 0;
+    trans_ctx.timeout_sec = async_ctx->timeout_sec;
     trans_ctx.passback = 0;
 
     if (async_ctx != nullptr)
@@ -262,10 +261,9 @@ TransID Client::Get(const GetParams& params, const AsyncCtx* async_ctx)
 
 TransID Client::Post(const PostParams& params, const AsyncCtx* async_ctx)
 {
-    // 这里把timeout设置为0，使用http自己的timeout机制
     TransCtx trans_ctx;
     trans_ctx.peer = peer_;
-    trans_ctx.timeout_sec = 0;
+    trans_ctx.timeout_sec = async_ctx->timeout_sec;
     trans_ctx.passback = 0;
 
     if (async_ctx != nullptr)
@@ -380,10 +378,13 @@ int Client::CreateHTTPConn(const Peer& peer)
         return -1;
     }
 
-    if (client_center_ctx_->http_conn_max_retry > 0)
+    if (client_center_ctx_->http_conn_max_retry > 0 || -1 == client_center_ctx_->http_conn_max_retry)
     {
         LOG_DEBUG("http conn max retry: " << client_center_ctx_->http_conn_max_retry);
-        evhttp_connection_set_retries(evhttp_conn_, client_center_ctx_->http_conn_max_retry);
+        evhttp_connection_set_retries(evhttp_conn_, client_center_ctx_->http_conn_max_retry); // -1 repeats indefinitely
+
+        struct timeval tv = { 1, 0 };
+        evhttp_connection_set_initial_retry_tv(evhttp_conn_, &tv);
     }
 
     if (client_center_ctx_->http_conn_timeout > 0)
@@ -396,7 +397,8 @@ int Client::CreateHTTPConn(const Peer& peer)
     // 观察libevent的处理流程，发现一段时间后该连接上没有数据传输则会进到回调中。回调中不用做任何处理，下次请求仍可以复用该连接。
     evhttp_connection_set_closecb(evhttp_conn_, Client::HTTPConnClosedCallback, this);
 
-    LOG_TRACE("evhttp conn: " << evhttp_conn_ << ", flags: " << evhttp_connection_get_flags(evhttp_conn_));
+    LOG_TRACE("evhttp conn: " << evhttp_conn_ << ", flags: " << evhttp_connection_get_flags(evhttp_conn_)
+              << ", socket fd: " << evhttp_connection_get_fd(evhttp_conn_));
     return 0;
 }
 
@@ -457,6 +459,9 @@ int Client::CreateHTTPSConn(const Peer& peer)
     {
         LOG_DEBUG("https conn max retry: " << client_center_ctx_->http_conn_max_retry);
         evhttp_connection_set_retries(evhttps_conn_, client_center_ctx_->http_conn_max_retry);
+
+        struct timeval tv = { 1, 0 };
+        evhttp_connection_set_initial_retry_tv(evhttp_conn_, &tv);
     }
 
     if (client_center_ctx_->http_conn_timeout > 0)
@@ -469,7 +474,8 @@ int Client::CreateHTTPSConn(const Peer& peer)
     // 观察libevent的处理流程，发现一段时间后该连接上没有数据传输则会进到回调中。回调中不用做任何处理，下次请求仍可以复用该连接。
     evhttp_connection_set_closecb(evhttps_conn_, Client::HTTPSConnClosedCallback, this);
 
-    LOG_TRACE("evhttps conn: " << evhttps_conn_ << ", flags: " << evhttp_connection_get_flags(evhttps_conn_));
+    LOG_TRACE("evhttps conn: " << evhttps_conn_ << ", flags: " << evhttp_connection_get_flags(evhttps_conn_)
+              << ", socket fd: " << evhttp_connection_get_fd(evhttps_conn_));
     return 0;
 }
 #endif
@@ -564,6 +570,8 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
         LOG_DEBUG(header->key << ": " << header->value);
     }
 
+    // TODO Connection: close和Connection: keep-alive请求头和回复头的处理流程
+
     // http body
     if (data != nullptr && data_len > 0)
     {
@@ -603,7 +611,7 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
         goto err_out;
     }
 
-    LOG_DEBUG("http version, major: " << (int) evhttp_req->major << ", minor: " << (int) evhttp_req->minor
+    LOG_DEBUG("http version major: " << (int) evhttp_req->major << ", minor: " << (int) evhttp_req->minor
               << ", evhttp conn: " << evhttp_conn << ", flags: " << evhttp_connection_get_flags(evhttp_conn)
               << ", evhttp req: " << evhttp_req << ", flags: " << evhttp_req->flags
               << ", callback_arg: " << callback_arg);
