@@ -249,7 +249,7 @@ void Client::Finalize()
 
 int Client::Activate()
 {
-    if (StartConnectTimer() != 0)
+    if (Connect() != 0)
     {
         return -1;
     }
@@ -377,7 +377,6 @@ void Client::Close()
 
 void Client::OnTimer(TimerID timer_id, void* data, size_t len, int times)
 {
-    LOG_TRACE("in connect timer");
     Connect();
 }
 
@@ -419,10 +418,10 @@ void Client::SetConnected(bool flag, struct bufferevent* buf_event)
         {
             ++reconnect_failed_count_;
 
-            if (30 == reconnect_failed_count_)
+            if (client_center_ctx_->reconnect_limit == reconnect_failed_count_)
             {
-                // 重连30次都失败，销毁
-                LOG_ERROR("failed to connect " << peer_ << " after 30 times retry, destroy the client");
+                // 重连100次都失败，销毁
+                LOG_ERROR("failed to connect " << peer_ << " after " << reconnect_failed_count_ << " times retry, destroy the conn");
                 client_center_->RemoveClient(peer_);
                 return;
             }

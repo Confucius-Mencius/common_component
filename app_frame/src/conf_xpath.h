@@ -55,8 +55,9 @@ const char UDP_THREAD_COUNT_XPATH[] = "/conf/udp/thread_count";
 const char UDP_COMMON_LOGIC_SO_XPATH[] = "/conf/udp/common_logic_so";
 const char UDP_LOGIC_SO_XPATH[] = "/conf/udp/logic_so_group/logic_so";
 const char PEER_RSP_CHECK_INTERVAL_XPATH[] = "/conf/peer/rsp_check_interval";
-const char PEER_PROTO_TCP_CONN_INTERVAL_SEC_XPATH[] = "/conf/peer/tcp/proto/conn_interval/sec";
-const char PEER_PROTO_TCP_CONN_INTERVAL_USEC_XPATH[] = "/conf/peer/tcp/proto/conn_interval/usec";
+const char PEER_PROTO_TCP_RECONN_INTERVAL_SEC_XPATH[] = "/conf/peer/tcp/proto/reconn_interval/sec";
+const char PEER_PROTO_TCP_RECONN_INTERVAL_USEC_XPATH[] = "/conf/peer/tcp/proto/reconn_interval/usec";
+const char PEER_PROTO_TCP_RECONN_LIMIT_XPATH[] = "/conf/peer/tcp/proto/reconn_limit";
 const char PEER_HTTP_CONN_TIMEOUT_XPATH[] = "/conf/peer/http/conn_timeout";
 const char PEER_HTTP_CONN_MAX_RETRY_XPATH[] = "/conf/peer/http/conn_max_retry";
 }

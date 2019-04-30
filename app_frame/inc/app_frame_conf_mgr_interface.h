@@ -64,8 +64,9 @@ public:
     virtual std::string GetUDPCommonLogicSo() = 0;
     virtual StrGroup GetUDPLogicSoGroup() = 0;
     virtual int GetPeerRspCheckInterval() = 0;
-    virtual int GetPeerProtoTCPConnIntervalSec() = 0;
-    virtual int GetPeerProtoTCPConnIntervalUsec() = 0;
+    virtual int GetPeerProtoTCPReconnIntervalSec() = 0;
+    virtual int GetPeerProtoTCPReconnIntervalUsec() = 0;
+    virtual int GetPeerProtoTCPReconnLimit() = 0;
     virtual int GetPeerHTTPConnTimeout() = 0;
     virtual int GetPeerHTTPConnMaxRetry() = 0;
 };

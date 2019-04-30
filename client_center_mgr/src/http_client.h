@@ -24,8 +24,6 @@ class Client : public ModuleInterface, public ClientInterface
     static void HTTPReqErrorCallback(evhttp_request_error err, void* arg);
 #endif
 
-//    static void OnConnCleanupEvent(int sock_fd, short which, void* arg);
-
 public:
     Client();
     virtual ~Client();
@@ -62,14 +60,11 @@ public:
     void OnHTTPReqDone(TransID trans_id, const Peer& peer, bool https, struct evhttp_request* evhttp_req);
 
 private:
-    int CreateHTTPConn(const Peer& peer);
-
-#if LIBEVENT_VERSION_NUMBER >= 0x2010500
-    int CreateHTTPSConn(const Peer& peer);
-#endif
+    struct evhttp_connection* CreateHTTPConn();
+    struct evhttp_connection* CreateHTTPSConn();
 
     /**
-     * encoded_uri  形如："/index.php?id=1"
+     * encoded_uri 形如："/index.php?id=1"
      */
     int DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_encode, const HeaderMap* headers,
                   const void* data, size_t len, bool https);
@@ -78,34 +73,26 @@ private:
     ClientCenter* client_center_;
     const ClientCenterCtx* client_center_ctx_;
     Peer peer_;
-    struct evhttp_connection* evhttp_conn_;
 
     struct CallbackArg
     {
         Client* http_client;
         bool https;
+        struct bufferevent* buf_event;
         TransID trans_id;
-//        struct event* cleanup_event;
 
         CallbackArg()
         {
             http_client = nullptr;
             https = false;
+            buf_event = nullptr;
             trans_id = INVALID_TRANS_ID;
-//            cleanup_event = nullptr;
         }
 
         CREATE_FUNC(CallbackArg)
 
         void Release()
         {
-//            if (cleanup_event != nullptr)
-//            {
-//                event_del(cleanup_event);
-//                event_free(cleanup_event);
-//                cleanup_event = nullptr;
-//            }
-
             delete this;
         }
     };
@@ -113,10 +100,9 @@ private:
     typedef std::set<CallbackArg*> CallbackArgSet;
     CallbackArgSet callback_arg_set_;
 
-    // https conn
+    // https
     SSL_CTX* ssl_ctx_;
-    struct bufferevent* buf_event_;
-    struct evhttp_connection* evhttps_conn_;
+    SSL* ssl_;
 };
 }
 

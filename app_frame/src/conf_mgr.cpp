@@ -66,8 +66,9 @@ int ConfMgr::Load()
     udp_common_logic_so_ = "";
     udp_logic_so_group_.clear();
     peer_rsp_check_interval_ = 0;
-    peer_proto_tcp_conn_interval_sec_ = 0;
-    peer_proto_tcp_conn_interval_usec_ = 0;
+    peer_proto_tcp_reconn_interval_sec_ = 0;
+    peer_proto_tcp_reconn_interval_usec_ = 0;
+    peer_proto_tcp_reconn_limit_ = 0;
     peer_http_conn_timeout_ = 0;
     peer_http_conn_max_retry_ = 0;
 
@@ -331,12 +332,17 @@ int ConfMgr::Load()
         return -1;
     }
 
-    if (LoadPeerProtoTCPConnIntervalSec() != 0)
+    if (LoadPeerProtoTCPReconnIntervalSec() != 0)
     {
         return -1;
     }
 
-    if (LoadPeerProtoTCPConnIntervalUsec() != 0)
+    if (LoadPeerProtoTCPReconnIntervalUsec() != 0)
+    {
+        return -1;
+    }
+
+    if (LoadPeerProtoTCPReconnLimit() != 0)
     {
         return -1;
     }

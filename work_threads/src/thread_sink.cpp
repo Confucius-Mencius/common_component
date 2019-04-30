@@ -138,9 +138,11 @@ int ThreadSink::OnActivate()
     proto_tcp_client_center_ctx.trans_center = trans_center_;
     proto_tcp_client_center_ctx.reconnect_interval =
     {
-        threads_ctx_->app_frame_conf_mgr->GetPeerProtoTCPConnIntervalSec(),
-        threads_ctx_->app_frame_conf_mgr->GetPeerProtoTCPConnIntervalUsec()
+        threads_ctx_->app_frame_conf_mgr->GetPeerProtoTCPReconnIntervalSec(),
+        threads_ctx_->app_frame_conf_mgr->GetPeerProtoTCPReconnIntervalUsec()
     };
+
+    proto_tcp_client_center_ctx.reconnect_limit = threads_ctx_->app_frame_conf_mgr->GetPeerProtoTCPReconnLimit();
 
     proto_tcp_client_center_ = client_center_mgr_->CreateProtoTCPClientCenter(&proto_tcp_client_center_ctx);
     if (nullptr == proto_tcp_client_center_)

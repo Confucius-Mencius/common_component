@@ -338,16 +338,22 @@ public:
         return peer_rsp_check_interval_;
     }
 
-    int GetPeerProtoTCPConnIntervalSec() override
+    int GetPeerProtoTCPReconnIntervalSec() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return peer_proto_tcp_conn_interval_sec_;
+        return peer_proto_tcp_reconn_interval_sec_;
     }
 
-    int GetPeerProtoTCPConnIntervalUsec() override
+    int GetPeerProtoTCPReconnIntervalUsec() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return peer_proto_tcp_conn_interval_usec_;
+        return peer_proto_tcp_reconn_interval_usec_;
+    }
+
+    int GetPeerProtoTCPReconnLimit() override
+    {
+        AUTO_THREAD_RLOCK(rwlock_);
+        return peer_proto_tcp_reconn_limit_;
     }
 
     int GetPeerHTTPConnTimeout() override
@@ -1015,21 +1021,31 @@ private:
         return 0;
     }
 
-    int LoadPeerProtoTCPConnIntervalSec()
+    int LoadPeerProtoTCPReconnIntervalSec()
     {
-        if (conf_center_->GetConf(peer_proto_tcp_conn_interval_sec_, PEER_PROTO_TCP_CONN_INTERVAL_SEC_XPATH, true, 0) != 0)
+        if (conf_center_->GetConf(peer_proto_tcp_reconn_interval_sec_, PEER_PROTO_TCP_RECONN_INTERVAL_SEC_XPATH, true, 0) != 0)
         {
-            LOG_ERROR("failed to get " << PEER_PROTO_TCP_CONN_INTERVAL_SEC_XPATH << ": " << conf_center_->GetLastErrMsg());
+            LOG_ERROR("failed to get " << PEER_PROTO_TCP_RECONN_INTERVAL_SEC_XPATH << ": " << conf_center_->GetLastErrMsg());
             return -1;
         }
         return 0;
     }
 
-    int LoadPeerProtoTCPConnIntervalUsec()
+    int LoadPeerProtoTCPReconnIntervalUsec()
     {
-        if (conf_center_->GetConf(peer_proto_tcp_conn_interval_usec_, PEER_PROTO_TCP_CONN_INTERVAL_USEC_XPATH, true, 0) != 0)
+        if (conf_center_->GetConf(peer_proto_tcp_reconn_interval_usec_, PEER_PROTO_TCP_RECONN_INTERVAL_USEC_XPATH, true, 0) != 0)
         {
-            LOG_ERROR("failed to get " << PEER_PROTO_TCP_CONN_INTERVAL_USEC_XPATH << ": " << conf_center_->GetLastErrMsg());
+            LOG_ERROR("failed to get " << PEER_PROTO_TCP_RECONN_INTERVAL_USEC_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadPeerProtoTCPReconnLimit()
+    {
+        if (conf_center_->GetConf(peer_proto_tcp_reconn_limit_, PEER_PROTO_TCP_RECONN_LIMIT_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << PEER_PROTO_TCP_RECONN_LIMIT_XPATH << ": " << conf_center_->GetLastErrMsg());
             return -1;
         }
         return 0;
@@ -1109,8 +1125,9 @@ private:
     std::string udp_common_logic_so_;
     StrGroup udp_logic_so_group_;
     int peer_rsp_check_interval_;
-    int peer_proto_tcp_conn_interval_sec_;
-    int peer_proto_tcp_conn_interval_usec_;
+    int peer_proto_tcp_reconn_interval_sec_;
+    int peer_proto_tcp_reconn_interval_usec_;
+    int peer_proto_tcp_reconn_limit_;
     int peer_http_conn_timeout_;
     int peer_http_conn_max_retry_;
 };

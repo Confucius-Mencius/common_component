@@ -24,6 +24,7 @@ struct ClientCenterCtx
     TimerAxisInterface* timer_axis;
     TransCenterInterface* trans_center;
     struct timeval reconnect_interval; /**< 重连间隔 */
+    int reconnect_limit;
 
     ClientCenterCtx()
     {
@@ -32,6 +33,7 @@ struct ClientCenterCtx
         timer_axis = nullptr;
         trans_center = nullptr;
         reconnect_interval.tv_sec = reconnect_interval.tv_usec = 0;
+        reconnect_limit = 0;
     }
 };
 

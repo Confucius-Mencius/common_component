@@ -74,7 +74,7 @@ void Threads::Freeze()
 
 int Threads::CreateThreadGroup()
 {
-    if (tcp_threads_->CreateThreadGroup("http-ws thread") != 0)
+    if (tcp_threads_->CreateThreadGroup("http&ws thread") != 0)
     {
         return -1;
     }

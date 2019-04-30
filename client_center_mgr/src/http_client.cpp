@@ -8,12 +8,6 @@
 #include "log_util.h"
 #include "str_util.h"
 
-//
-// evhttp_connection对象只能异步释放，参见https://github.com/libevent/libevent/issues/115
-// If you wanted to free the connection object you could do so after the base is done dispatching,
-// or you could use the http_request_done to queue the free operation on another thread or event processor to have it free'd asynchronously.
-//
-
 namespace http
 {
 void Client::HTTPConnClosedCallback(struct evhttp_connection* evhttp_conn, void* arg)
@@ -39,7 +33,7 @@ void Client::HTTPReqDoneCallback(struct evhttp_request* evhttp_req, void* arg)
 
     if (nullptr == evhttp_req)
     {
-        // 对端在处理req时挂掉或者超时后还未返回,则会走到这里
+        // 对端在处理req时挂掉,则会走到这里；对端关闭连接也会走到这里
         LOG_TRACE("evhttp req is null");
 
 #if LIBEVENT_VERSION_NUMBER >= 0x2010500
@@ -47,7 +41,7 @@ void Client::HTTPReqDoneCallback(struct evhttp_request* evhttp_req, void* arg)
         {
             unsigned long osl_err = 0;
             bool printed_err = false;
-            while ((osl_err = bufferevent_get_openssl_error(callback_arg->http_client->buf_event_)))
+            while ((osl_err = bufferevent_get_openssl_error(callback_arg->buf_event)))
             {
                 char buf[128] = "";
                 ERR_error_string_n(osl_err, buf, sizeof(buf));
@@ -89,29 +83,6 @@ void Client::HTTPReqDoneCallback(struct evhttp_request* evhttp_req, void* arg)
     callback_arg->http_client->callback_arg_set_.erase(callback_arg);
     callback_arg->Release();
 
-    // 添加一个定时器,异步释放evhttp_connection对象
-//    struct timeval tv;
-//    interval.tv_sec = 0;
-//    interval.tv_usec = 1000;
-//
-//    struct event_base* ev_base = callback_arg->http_client->client_center_ctx_->thread_ev_base;
-//
-//    callback_arg->cleanup_event = event_new(ev_base, -1, EV_PERSIST, Client::OnConnCleanupEvent, callback_arg);
-//    if (nullptr == callback_arg->cleanup_event)
-//    {
-//        const int err = errno;
-//        LOG_ERROR("failed to create http conn cleanup timer, errno: " << err << ", err msg: " << strerror(err));
-//        return;
-//    }
-//
-//    if (event_add(callback_arg->cleanup_event, &interval) != 0)
-//    {
-//        const int err = errno;
-//        LOG_ERROR("failed to add http conn cleanup timer, errno: " << err << ", err msg: " << strerror(err));
-//        event_free(callback_arg->cleanup_event);
-//        return;
-//    }
-
     // 看libevent源码，回调完后会自动释放evhttp_req。
 }
 
@@ -122,30 +93,12 @@ void Client::HTTPReqErrorCallback(evhttp_request_error err, void* arg)
 }
 #endif
 
-//void Client::OnConnCleanupEvent(int sock_fd, short which, void* arg)
-//{
-//    // 定时器socket fd为-1，which为1，表示定时器到了
-//    CallbackArg* callback_arg = (CallbackArg*) arg;
-//    Client* client = callback_arg->http_client;
-//    LOG_TRACE("Client::OnConnCleanupEvent, which: " << which << ", client: " << client);
-//
-//    client->callback_arg_set_.erase(callback_arg);
-//    callback_arg->Release();
-//
-//    if (0 == client->callback_arg_set_.size())
-//    {
-//        client->client_center_->RemoveClient(client->peer_);
-//    }
-//}
-
 Client::Client() : peer_(), callback_arg_set_()
 {
     client_center_ = nullptr;
     client_center_ctx_ = nullptr;
-    evhttp_conn_ = nullptr;
     ssl_ctx_ = nullptr;
-    buf_event_ = nullptr;
-    evhttps_conn_ = nullptr;
+    ssl_ = nullptr;
 }
 
 Client::~Client()
@@ -175,6 +128,32 @@ int Client::Initialize(const void* ctx)
     }
 
     client_center_ctx_ = (ClientCenterCtx*) ctx;
+
+    /* An OpenSSL context holds data that new SSL connections will
+     * be created from. */
+    ssl_ctx_ = SSL_CTX_new(SSLv23_client_method());
+    if (nullptr == ssl_ctx_)
+    {
+        const int err = errno;
+        LOG_ERROR("SSL_CTX_new failed, errno: " << err << ", err msg: " << strerror(err));;
+        return -1;
+    }
+
+    /* Find the certificate authority (which we will use to
+     * validate the server) and add it to the context. */
+//    SSL_CTX_load_verify_locations(sctx, "certificate-authorities.pem", nullptr); // TODO 这个应该是客户端的校验，这里先注释掉
+
+    SSL_CTX_set_verify(ssl_ctx_, SSL_VERIFY_NONE, nullptr); // 如果为SSL_VERIFY_PEER表示客户端会做校验
+
+    /* Create a new SSL connection from our SSL context */
+    ssl_ = SSL_new(ssl_ctx_);
+    if (nullptr == ssl_)
+    {
+        const int err = errno;
+        LOG_ERROR("SSL_new failed, errno: " << err << ", err msg: " << strerror(err));
+        return -1;
+    }
+
     return 0;
 }
 
@@ -187,18 +166,6 @@ void Client::Finalize()
 
     callback_arg_set_.clear();
 
-    if (evhttp_conn_ != nullptr)
-    {
-        evhttp_connection_free(evhttp_conn_);
-        evhttp_conn_ = nullptr;
-    }
-
-    if (evhttps_conn_ != nullptr)
-    {
-        evhttp_connection_free(evhttps_conn_); // 看libevent源码，evhttp_connection_free中会释放buf_event_
-        evhttps_conn_ = nullptr;
-    }
-
     if (ssl_ctx_ != nullptr)
     {
         SSL_CTX_free(ssl_ctx_);
@@ -208,20 +175,6 @@ void Client::Finalize()
 
 int Client::Activate()
 {
-    if (CreateHTTPConn(peer_) != 0)
-    {
-        return -1;
-    }
-
-#if LIBEVENT_VERSION_NUMBER >= 0x2010500
-    if (CreateHTTPSConn(peer_) != 0)
-    {
-        return -1;
-    }
-#else
-    LOG_WARN("do not support https");
-#endif
-
     return 0;
 }
 
@@ -367,118 +320,102 @@ void Client::OnHTTPReqDone(TransID trans_id, const Peer& peer, bool https, struc
     }
 }
 
-int Client::CreateHTTPConn(const Peer& peer)
+struct evhttp_connection* Client::CreateHTTPConn()
 {
     // header size和body size的大小均不限制，重连间隔初始为2秒，以后每次都翻倍。
-    evhttp_conn_ = evhttp_connection_base_new(client_center_ctx_->thread_ev_base, nullptr, peer.addr.c_str(), peer.port);
-    if (nullptr == evhttp_conn_)
+    struct evhttp_connection* evhttp_conn = evhttp_connection_base_new(
+            client_center_ctx_->thread_ev_base, nullptr, peer_.addr.c_str(), peer_.port);
+    if (nullptr == evhttp_conn)
     {
         const int err = errno;
-        LOG_ERROR("failed to create evhttp conn to " << peer << ", errno: " << err << ", err msg: " << strerror(err));
-        return -1;
+        LOG_ERROR("failed to create evhttp conn to " << peer_ << ", errno: " << err << ", err msg: " << strerror(err));
+        return nullptr;
     }
 
     if (client_center_ctx_->http_conn_max_retry > 0 || -1 == client_center_ctx_->http_conn_max_retry)
     {
         LOG_DEBUG("http conn max retry: " << client_center_ctx_->http_conn_max_retry);
-        evhttp_connection_set_retries(evhttp_conn_, client_center_ctx_->http_conn_max_retry); // -1 repeats indefinitely
+        evhttp_connection_set_retries(evhttp_conn, client_center_ctx_->http_conn_max_retry); // -1 repeats indefinitely
 
         struct timeval tv = { 1, 0 };
-        evhttp_connection_set_initial_retry_tv(evhttp_conn_, &tv);
+        evhttp_connection_set_initial_retry_tv(evhttp_conn, &tv);
     }
 
     if (client_center_ctx_->http_conn_timeout > 0)
     {
         LOG_DEBUG("http conn timeout: " << client_center_ctx_->http_conn_timeout);
         // timeout跟keep alive相关，在这段时间内如果没有消息传递，则关闭连接 TODO 待验证
-        evhttp_connection_set_timeout(evhttp_conn_, client_center_ctx_->http_conn_timeout);
+        evhttp_connection_set_timeout(evhttp_conn, client_center_ctx_->http_conn_timeout);
     }
 
     // 观察libevent的处理流程，发现一段时间后该连接上没有数据传输则会进到回调中。回调中不用做任何处理，下次请求仍可以复用该连接。
-    evhttp_connection_set_closecb(evhttp_conn_, Client::HTTPConnClosedCallback, this);
+    evhttp_connection_set_closecb(evhttp_conn, Client::HTTPConnClosedCallback, this);
 
-    LOG_TRACE("evhttp conn: " << evhttp_conn_ << ", flags: " << evhttp_connection_get_flags(evhttp_conn_)
-              << ", socket fd: " << evhttp_connection_get_fd(evhttp_conn_));
-    return 0;
+    /* Tell libevent to free the connection when the request finishes */
+    evhttp_connection_free_on_completion(evhttp_conn);
+
+    return evhttp_conn;
 }
 
-#if LIBEVENT_VERSION_NUMBER >= 0x2010500
-int Client::CreateHTTPSConn(const Peer& peer)
+struct evhttp_connection* Client::CreateHTTPSConn()
 {
-    /* An OpenSSL context holds data that new SSL connections will
-     * be created from. */
-    ssl_ctx_ = SSL_CTX_new(SSLv23_client_method());
-    if (nullptr == ssl_ctx_)
-    {
-        const int err = errno;
-        LOG_ERROR("SSL_CTX_new failed, errno: " << err << ", err msg: " << strerror(err));;
-        return -1;
-    }
-
-    /* Find the certificate authority (which we will use to
-     * validate the server) and add it to the context. */
-//    SSL_CTX_load_verify_locations(sctx, "certificate-authorities.pem", nullptr); // TODO 这个应该是客户端的校验，这里先注释掉
-
-    SSL_CTX_set_verify(ssl_ctx_, SSL_VERIFY_NONE, nullptr); // 如果为SSL_VERIFY_PEER表示客户端会做校验
-
-    /* Create a new SSL connection from our SSL context */
-    SSL* ssl = SSL_new(ssl_ctx_);
-    if (nullptr == ssl)
-    {
-        const int err = errno;
-        LOG_ERROR("SSL_new failed, errno: " << err << ", err msg: " << strerror(err));
-        return -1;
-    }
-
+#if LIBEVENT_VERSION_NUMBER >= 0x2010500
     /* Now wrap the SSL connection in an SSL bufferevent */
-    buf_event_ = bufferevent_openssl_socket_new(client_center_ctx_->thread_ev_base, -1, ssl, BUFFEREVENT_SSL_CONNECTING,
-                 0 | BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS);
-    if (nullptr == buf_event_)
+    struct bufferevent* buf_event = bufferevent_openssl_socket_new(
+                                        client_center_ctx_->thread_ev_base, -1, ssl_,
+                                        BUFFEREVENT_SSL_CONNECTING,
+                                        BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS);
+    if (nullptr == buf_event)
     {
         const int err = errno;
         LOG_ERROR("failed to create buffer event openssl socket, errno: " << err << ", err msg: " << strerror(err));
-        return -1;
+        return nullptr;
     }
 
-    bufferevent_openssl_set_allow_dirty_shutdown(buf_event_, 1);
+    bufferevent_openssl_set_allow_dirty_shutdown(buf_event, 1);
 
     /* Newly-added function in libevent 2.1 which allows us to specify
      * our own bufferevent (e. g. one with SSL) when creating a new
      * HTTP connection.  Sorry, not available in libevent 2.0. */
     // header size和body size的大小均不限制，重连间隔初始为2秒，以后每次都翻倍。
-    evhttps_conn_ = evhttp_connection_base_bufferevent_new(client_center_ctx_->thread_ev_base, nullptr, buf_event_,
-                    peer.addr.c_str(), peer.port);
-    if (nullptr == evhttps_conn_)
+    struct evhttp_connection* evhttp_conn = evhttp_connection_base_bufferevent_new(client_center_ctx_->thread_ev_base, nullptr, buf_event,
+                                            peer_.addr.c_str(), peer_.port);
+    if (nullptr == evhttp_conn)
     {
         const int err = errno;
-        LOG_ERROR("failed to create evhttps conn to " << peer << ", errno: " << err << ", err msg: " << strerror(err));
-        return -1;
+        LOG_ERROR("failed to create evhttps conn to " << peer_ << ", errno: " << err << ", err msg: " << strerror(err));
+        bufferevent_free(buf_event);
+        return nullptr;
     }
 
     if (client_center_ctx_->http_conn_max_retry > 0)
     {
         LOG_DEBUG("https conn max retry: " << client_center_ctx_->http_conn_max_retry);
-        evhttp_connection_set_retries(evhttps_conn_, client_center_ctx_->http_conn_max_retry);
+        evhttp_connection_set_retries(evhttp_conn, client_center_ctx_->http_conn_max_retry);
 
         struct timeval tv = { 1, 0 };
-        evhttp_connection_set_initial_retry_tv(evhttp_conn_, &tv);
+        evhttp_connection_set_initial_retry_tv(evhttp_conn, &tv);
     }
 
     if (client_center_ctx_->http_conn_timeout > 0)
     {
         LOG_DEBUG("https conn timeout: " << client_center_ctx_->http_conn_timeout);
         // timeout跟keep alive相关，在这段时间内如果没有消息传递，则关闭连接 TODO 待验证
-        evhttp_connection_set_timeout(evhttps_conn_, client_center_ctx_->http_conn_timeout);
+        evhttp_connection_set_timeout(evhttp_conn, client_center_ctx_->http_conn_timeout);
     }
 
     // 观察libevent的处理流程，发现一段时间后该连接上没有数据传输则会进到回调中。回调中不用做任何处理，下次请求仍可以复用该连接。
-    evhttp_connection_set_closecb(evhttps_conn_, Client::HTTPSConnClosedCallback, this);
+    evhttp_connection_set_closecb(evhttp_conn, Client::HTTPSConnClosedCallback, this);
 
-    LOG_TRACE("evhttps conn: " << evhttps_conn_ << ", flags: " << evhttp_connection_get_flags(evhttps_conn_)
-              << ", socket fd: " << evhttp_connection_get_fd(evhttps_conn_));
-    return 0;
-}
+    /* Tell libevent to free the connection when the request finishes */
+    // 看libevent源码，evhttp_connection_free中会释放buf_event_
+    evhttp_connection_free_on_completion(evhttp_conn);
+
+    return evhttp_conn;
+#else
+    return nullptr;
 #endif
+}
 
 int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_encode, const HeaderMap* headers,
                       const void* data, size_t data_len, bool https)
@@ -497,7 +434,14 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
     struct evhttp_request* evhttp_req = nullptr;
     struct evkeyvalq* output_headers = nullptr;
     evhttp_cmd_type cmd_type = EVHTTP_REQ_GET;
-    struct evhttp_connection* evhttp_conn = (https ? evhttps_conn_ : evhttp_conn_);
+
+    struct evhttp_connection* evhttp_conn = (https ? CreateHTTPSConn() : CreateHTTPConn());
+    if (nullptr == evhttp_conn)
+    {
+        return -1;
+    }
+
+    LOG_DEBUG("evhttp conn: " << evhttp_conn);
 
     std::stringstream host_stream;
     host_stream.str("");
@@ -525,6 +469,7 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
 
     callback_arg->http_client = this;
     callback_arg->https = https;
+    callback_arg->buf_event = evhttp_connection_get_bufferevent(evhttp_conn);
     callback_arg->trans_id = trans_id;
 
     evhttp_req = evhttp_request_new(Client::HTTPReqDoneCallback, callback_arg); // 处理完成后libevent会自动释放req
@@ -612,7 +557,7 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
     }
 
     LOG_DEBUG("http version major: " << (int) evhttp_req->major << ", minor: " << (int) evhttp_req->minor
-              << ", evhttp conn: " << evhttp_conn << ", flags: " << evhttp_connection_get_flags(evhttp_conn)
+              << ", evhttp conn: " << evhttp_conn
               << ", evhttp req: " << evhttp_req << ", flags: " << evhttp_req->flags
               << ", callback_arg: " << callback_arg);
 
