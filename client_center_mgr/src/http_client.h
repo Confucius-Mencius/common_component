@@ -24,6 +24,8 @@ class Client : public ModuleInterface, public ClientInterface
     static void HTTPReqErrorCallback(evhttp_request_error err, void* arg);
 #endif
 
+    static void OnConnCleanupEvent(int sock_fd, short which, void* arg);
+
 public:
     Client();
     virtual ~Client();
@@ -78,21 +80,36 @@ private:
     {
         Client* http_client;
         bool https;
-        struct bufferevent* buf_event;
+        struct evhttp_connection* evhttp_conn;
         TransID trans_id;
+        struct event* cleanup_event;
 
         CallbackArg()
         {
             http_client = nullptr;
             https = false;
-            buf_event = nullptr;
+            evhttp_conn = nullptr;
             trans_id = INVALID_TRANS_ID;
+            cleanup_event = nullptr;
         }
 
         CREATE_FUNC(CallbackArg)
 
         void Release()
         {
+            if (evhttp_conn != nullptr)
+            {
+                evhttp_connection_free(evhttp_conn);
+                evhttp_conn = nullptr;
+            }
+
+            if (cleanup_event != nullptr)
+            {
+                event_del(cleanup_event);
+                event_free(cleanup_event);
+                cleanup_event = nullptr;
+            }
+
             delete this;
         }
     };

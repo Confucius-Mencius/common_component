@@ -5,8 +5,15 @@
 #include <openssl/err.h>
 #endif
 
+#include "http_client_center.h"
 #include "log_util.h"
 #include "str_util.h"
+
+//
+// evhttp_connection对象只能异步释放，参见https://github.com/libevent/libevent/issues/115
+// If you wanted to free the connection object you could do so after the base is done dispatching,
+// or you could use the http_request_done to queue the free operation on another thread or event processor to have it free'd asynchronously.
+//
 
 namespace http
 {
@@ -33,7 +40,7 @@ void Client::HTTPReqDoneCallback(struct evhttp_request* evhttp_req, void* arg)
 
     if (nullptr == evhttp_req)
     {
-        // 对端在处理req时挂掉,则会走到这里；对端关闭连接也会走到这里
+        // 对端在处理req时挂掉或者超时后还未返回,则会走到这里。对端关闭连接也会走到这里
         LOG_TRACE("evhttp req is null");
 
 #if LIBEVENT_VERSION_NUMBER >= 0x2010500
@@ -41,7 +48,8 @@ void Client::HTTPReqDoneCallback(struct evhttp_request* evhttp_req, void* arg)
         {
             unsigned long osl_err = 0;
             bool printed_err = false;
-            while ((osl_err = bufferevent_get_openssl_error(callback_arg->buf_event)))
+            while ((osl_err = bufferevent_get_openssl_error(
+                                  evhttp_connection_get_bufferevent(callback_arg->evhttp_conn))))
             {
                 char buf[128] = "";
                 ERR_error_string_n(osl_err, buf, sizeof(buf));
@@ -68,7 +76,8 @@ void Client::HTTPReqDoneCallback(struct evhttp_request* evhttp_req, void* arg)
         {
             if (trans_ctx->sink != nullptr)
             {
-                trans_ctx->sink->OnClosed(trans_id, callback_arg->http_client->GetPeer(), trans_ctx->data, trans_ctx->len);
+                trans_ctx->sink->OnClosed(trans_id, callback_arg->http_client->GetPeer(),
+                                          trans_ctx->data, trans_ctx->len);
             }
 
             callback_arg->http_client->client_center_ctx_->trans_center->CancelTrans(trans_id);
@@ -76,12 +85,38 @@ void Client::HTTPReqDoneCallback(struct evhttp_request* evhttp_req, void* arg)
     }
     else
     {
-        callback_arg->http_client->OnHTTPReqDone(callback_arg->trans_id, callback_arg->http_client->GetPeer(),
-                callback_arg->https, evhttp_req);
+        callback_arg->http_client->OnHTTPReqDone(callback_arg->trans_id,
+                callback_arg->http_client->GetPeer(), callback_arg->https, evhttp_req);
     }
 
-    callback_arg->http_client->callback_arg_set_.erase(callback_arg);
-    callback_arg->Release();
+    // 添加一个定时器,异步释放evhttp_connection对象
+    const struct timeval interval = { 0, 1000 };
+
+    struct event_base* ev_base = callback_arg->http_client->client_center_ctx_->thread_ev_base;
+
+    callback_arg->cleanup_event = event_new(ev_base, -1, EV_PERSIST, Client::OnConnCleanupEvent, callback_arg);
+    if (nullptr == callback_arg->cleanup_event)
+    {
+        const int err = errno;
+        LOG_ERROR("failed to create http conn cleanup timer, errno: " << err << ", err msg: " << strerror(err));
+
+        callback_arg->http_client->callback_arg_set_.erase(callback_arg);
+        callback_arg->Release();
+
+        return;
+    }
+
+    if (event_add(callback_arg->cleanup_event, &interval) != 0)
+    {
+        const int err = errno;
+        LOG_ERROR("failed to add http conn cleanup timer, errno: " << err << ", err msg: " << strerror(err));
+        event_free(callback_arg->cleanup_event);
+
+        callback_arg->http_client->callback_arg_set_.erase(callback_arg);
+        callback_arg->Release();
+
+        return;
+    }
 
     // 看libevent源码，回调完后会自动释放evhttp_req。
 }
@@ -92,6 +127,22 @@ void Client::HTTPReqErrorCallback(evhttp_request_error err, void* arg)
     LOG_TRACE("Client::HTTPReqErrorCallback, err: " << err << ", arg: " << arg);
 }
 #endif
+
+void Client::OnConnCleanupEvent(int sock_fd, short which, void* arg)
+{
+    // 定时器socket fd为-1，which为1，表示定时器到了
+    CallbackArg* callback_arg = static_cast<CallbackArg*>(arg);
+    Client* client = callback_arg->http_client;
+    LOG_TRACE("Client::OnConnCleanupEvent, which: " << which << ", client: " << client);
+
+    client->callback_arg_set_.erase(callback_arg);
+    callback_arg->Release();
+
+    if (0 == client->callback_arg_set_.size())
+    {
+        client->client_center_->RemoveClient(client->peer_);
+    }
+}
 
 Client::Client() : peer_(), callback_arg_set_()
 {
@@ -165,6 +216,12 @@ void Client::Finalize()
     }
 
     callback_arg_set_.clear();
+
+    if (ssl_ != nullptr)
+    {
+        SSL_free(ssl_);
+        ssl_ = nullptr;
+    }
 
     if (ssl_ctx_ != nullptr)
     {
@@ -351,9 +408,6 @@ struct evhttp_connection* Client::CreateHTTPConn()
     // 观察libevent的处理流程，发现一段时间后该连接上没有数据传输则会进到回调中。回调中不用做任何处理，下次请求仍可以复用该连接。
     evhttp_connection_set_closecb(evhttp_conn, Client::HTTPConnClosedCallback, this);
 
-    /* Tell libevent to free the connection when the request finishes */
-    evhttp_connection_free_on_completion(evhttp_conn);
-
     return evhttp_conn;
 }
 
@@ -361,6 +415,7 @@ struct evhttp_connection* Client::CreateHTTPSConn()
 {
 #if LIBEVENT_VERSION_NUMBER >= 0x2010500
     /* Now wrap the SSL connection in an SSL bufferevent */
+    // 看libevent源码，evhttp_connection_free中会释放buf_event
     struct bufferevent* buf_event = bufferevent_openssl_socket_new(
                                         client_center_ctx_->thread_ev_base, -1, ssl_,
                                         BUFFEREVENT_SSL_CONNECTING,
@@ -407,10 +462,6 @@ struct evhttp_connection* Client::CreateHTTPSConn()
     // 观察libevent的处理流程，发现一段时间后该连接上没有数据传输则会进到回调中。回调中不用做任何处理，下次请求仍可以复用该连接。
     evhttp_connection_set_closecb(evhttp_conn, Client::HTTPSConnClosedCallback, this);
 
-    /* Tell libevent to free the connection when the request finishes */
-    // 看libevent源码，evhttp_connection_free中会释放buf_event_
-    evhttp_connection_free_on_completion(evhttp_conn);
-
     return evhttp_conn;
 #else
     return nullptr;
@@ -431,33 +482,14 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
     char* req_uri = (char*) uri;
     char* encoded_uri = nullptr;
     CallbackArg* callback_arg = nullptr;
+    struct evhttp_connection* evhttp_conn = nullptr;
     struct evhttp_request* evhttp_req = nullptr;
     struct evkeyvalq* output_headers = nullptr;
     evhttp_cmd_type cmd_type = EVHTTP_REQ_GET;
 
-    struct evhttp_connection* evhttp_conn = (https ? CreateHTTPSConn() : CreateHTTPConn());
-    if (nullptr == evhttp_conn)
-    {
-        return -1;
-    }
-
-    LOG_DEBUG("evhttp conn: " << evhttp_conn);
-
     std::stringstream host_stream;
     host_stream.str("");
     host_stream << peer_.addr << ":" << peer_.port;
-
-    if (need_encode)
-    {
-        encoded_uri = evhttp_uriencode(uri, uri_len, 0);
-        if (nullptr == encoded_uri)
-        {
-            LOG_ERROR("failed to encode uri: " << uri << ", len: " << uri_len);
-            return -1;
-        }
-
-        req_uri = encoded_uri;
-    }
 
     callback_arg = CallbackArg::Create();
     if (nullptr == callback_arg)
@@ -467,10 +499,29 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
         goto err_out;
     }
 
+    evhttp_conn = (https ? CreateHTTPSConn() : CreateHTTPConn());
+    if (nullptr == evhttp_conn)
+    {
+        goto err_out;
+    }
+
+    LOG_DEBUG("evhttp conn: " << evhttp_conn);
     callback_arg->http_client = this;
     callback_arg->https = https;
-    callback_arg->buf_event = evhttp_connection_get_bufferevent(evhttp_conn);
+    callback_arg->evhttp_conn = evhttp_conn;
     callback_arg->trans_id = trans_id;
+
+    if (need_encode)
+    {
+        encoded_uri = evhttp_uriencode(uri, uri_len, 0);
+        if (nullptr == encoded_uri)
+        {
+            LOG_ERROR("failed to encode uri: " << uri << ", len: " << uri_len);
+            goto err_out;
+        }
+
+        req_uri = encoded_uri;
+    }
 
     evhttp_req = evhttp_request_new(Client::HTTPReqDoneCallback, callback_arg); // 处理完成后libevent会自动释放req
     if (nullptr == evhttp_req)
@@ -570,6 +621,11 @@ int Client::DoHTTPReq(TransID trans_id, const char* uri, int uri_len, bool need_
     return 0;
 
 err_out:
+    if (evhttp_req != nullptr)
+    {
+        evhttp_request_free(evhttp_req);
+    }
+
     if (need_encode && (encoded_uri != nullptr))
     {
         free(encoded_uri);
@@ -578,11 +634,6 @@ err_out:
     if (callback_arg != nullptr)
     {
         callback_arg->Release();
-    }
-
-    if (evhttp_req != nullptr)
-    {
-        evhttp_request_free(evhttp_req);
     }
 
     return -1;
