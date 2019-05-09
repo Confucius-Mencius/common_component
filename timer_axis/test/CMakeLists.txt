@@ -9,7 +9,8 @@ set(EXE_NAME ${TEST_NAME})
 # include/link dir
 include_directories(${PROJ_INC_DIR} ${LOG_ENGINE_INC_DIR} ${BASE_INC_DIR} ${LIBEVENT_INC_DIR}
         ${LOG4CPLUS_INC_DIR} ${GTEST_INC_DIR})
-link_directories(${BASE_LIB_DIR} ${LIBEVENT_LIB_DIR} ${LOG4CPLUS_LIB_DIR} ${GTEST_LIB_DIR})
+link_directories(${BASE_LIB_DIR} ${LIBEVENT_LIB_DIR} ${LOG4CPLUS_LIB_DIR} ${OPENSSL_LIB_DIR}
+        ${GTEST_LIB_DIR})
 
 ###############################################################################
 # target
@@ -20,7 +21,7 @@ add_executable(${EXE_NAME} ${HEADERS} ${CUR_DIR_SRCS})
 ###############################################################################
 # library dependence
 target_link_libraries(${EXE_NAME} ${BASE_LIB_NAME} ${LIBEVENT_LIB_NAME} ${LOG4CPLUS_LIB_NAME}
-        ${GTEST_LIB_NAME} pthread)
+        ${OPENSSL_LIB_NAME} ${GTEST_LIB_NAME} pthread)
 
 ###############################################################################
 # output dir
