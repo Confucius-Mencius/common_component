@@ -1,5 +1,5 @@
-#ifndef _mpart_body_processor_h
-#define _mpart_body_processor_h
+#ifndef WEB_THREADS_SRC_TCP_LOGIC_MPART_BODY_PROCESSOR_H_
+#define WEB_THREADS_SRC_TCP_LOGIC_MPART_BODY_PROCESSOR_H_
 
 //TODO
 
@@ -85,4 +85,4 @@ void mpart_body_processor_free(mpart_body_processor* p);
 }
 }
 
-#endif
+#endif // WEB_THREADS_SRC_TCP_LOGIC_MPART_BODY_PROCESSOR_H_
