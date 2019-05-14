@@ -163,14 +163,7 @@ include(${THIRD_PARTY_DIR}/cmake/common_define.cmake)
 
 # 下列几个库的include和lib路径有修改，需要覆盖common_define.cmake中的值
 set(LIBXML2_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libxml2/include/libxml2)
-set(IMAGE_MAGICK_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/image_magick/include/ImageMagick-6)
 set(ZOOKEEPER_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/zookeeper/include/zookeeper)
-set(MYSQL_CLIENT_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/mysql_client/include/mysql)
-set(MYSQL_CLIENT_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/mysql_client/lib/mysql)
-# set(LIBBSON_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libbson/include/libbson-1.0)
-set(MONGO_C_DRIVER_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/mongo_c_driver/include/libmongoc-1.0)
-set(MONGO_CXX_DRIVER_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/mongo_cxx_driver/include/mongocxx/v_noabi ${MONGO_C_DRIVER_INC_DIR} ${THIRD_PARTY_INSTALL_PREFIX}/mongo_cxx_driver/include/bsoncxx/v_noabi ${LIBBSON_INC_DIR})
-set(LIBWEBSOCKETS_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/libwebsockets/lib64)
 
 if (${LINUX_DISTRO} MATCHES "CentOS")
     set(JSONCPP_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/jsoncpp/lib64)

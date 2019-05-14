@@ -17,7 +17,7 @@ namespace app_frame
 {
 AppFrame::AppFrame() : app_frame_ctx_(), conf_mgr_(), global_threads_loader_(),
     work_threads_loader_(), burden_threads_loader_(), tcp_threads_loader_(),
-    proto_tcp_threads_loader_(), http_ws_threads_loader_()
+    proto_tcp_threads_loader_(), web_threads_loader_()
 {
     release_free_mem_date_ = 0;
     app_frame_threads_count_ = 0;
@@ -26,7 +26,7 @@ AppFrame::AppFrame() : app_frame_ctx_(), conf_mgr_(), global_threads_loader_(),
     burden_threads_ = nullptr;
     tcp_threads_ = nullptr;
     proto_tcp_threads_ = nullptr;
-    http_ws_threads_ = nullptr;
+    web_threads_ = nullptr;
 }
 
 AppFrame::~AppFrame()
@@ -45,7 +45,7 @@ const char* AppFrame::GetLastErrMsg() const
 
 void AppFrame::Release()
 {
-    SAFE_RELEASE_MODULE(http_ws_threads_, http_ws_threads_loader_);
+    SAFE_RELEASE_MODULE(web_threads_, web_threads_loader_);
     SAFE_RELEASE_MODULE(proto_tcp_threads_, proto_tcp_threads_loader_);
     SAFE_RELEASE_MODULE(tcp_threads_, tcp_threads_loader_);
     SAFE_RELEASE_MODULE(burden_threads_, burden_threads_loader_);
@@ -140,7 +140,7 @@ int AppFrame::Initialize(const void* ctx)
         return -1;
     }
 
-    if (LoadHTTPWSThreads() != 0)
+    if (LoadWebThreads() != 0)
     {
         return -1;
     }
@@ -161,7 +161,7 @@ int AppFrame::Initialize(const void* ctx)
 
 void AppFrame::Finalize()
 {
-    SAFE_FINALIZE(http_ws_threads_);
+    SAFE_FINALIZE(web_threads_);
     SAFE_FINALIZE(proto_tcp_threads_);
     SAFE_FINALIZE(tcp_threads_);
     SAFE_FINALIZE(burden_threads_);
@@ -204,7 +204,7 @@ int AppFrame::Activate()
         return -1;
     }
 
-    if (SAFE_ACTIVATE_FAILED(http_ws_threads_))
+    if (SAFE_ACTIVATE_FAILED(web_threads_))
     {
         return -1;
     }
@@ -252,9 +252,9 @@ int AppFrame::Activate()
         }
     }
 
-    if (http_ws_threads_ != nullptr)
+    if (web_threads_ != nullptr)
     {
-        if (http_ws_threads_->GetTCPThreadGroup()->Start() != 0)
+        if (web_threads_->GetTCPThreadGroup()->Start() != 0)
         {
             return -1;
         }
@@ -274,7 +274,7 @@ int AppFrame::Activate()
 
 void AppFrame::Freeze()
 {
-    SAFE_FREEZE(http_ws_threads_);
+    SAFE_FREEZE(web_threads_);
     SAFE_FREEZE(proto_tcp_threads_);
     SAFE_FREEZE(tcp_threads_);
     SAFE_FREEZE(burden_threads_);
@@ -315,11 +315,11 @@ int AppFrame::NotifyStop()
         }
     }
 
-    if (http_ws_threads_ != nullptr)
+    if (web_threads_ != nullptr)
     {
-        if (http_ws_threads_->GetTCPThreadGroup() != nullptr)
+        if (web_threads_->GetTCPThreadGroup() != nullptr)
         {
-            http_ws_threads_->GetTCPThreadGroup()->NotifyStop();
+            web_threads_->GetTCPThreadGroup()->NotifyStop();
         }
     }
 
@@ -383,9 +383,9 @@ int AppFrame::NotifyReload()
         proto_tcp_threads_->GetTCPThreadGroup()->NotifyReload();
     }
 
-    if (http_ws_threads_ != nullptr)
+    if (web_threads_ != nullptr)
     {
-        http_ws_threads_->GetTCPThreadGroup()->NotifyReload();
+        web_threads_->GetTCPThreadGroup()->NotifyReload();
     }
 
 //    if (udp_threads_ != nullptr)
@@ -430,9 +430,9 @@ bool AppFrame::CanExit() const
         LOG_ALWAYS("proto tcp threads can exit: " << can_exit);
     }
 
-    if (http_ws_threads_ != nullptr)
+    if (web_threads_ != nullptr)
     {
-        can_exit &= (http_ws_threads_->GetTCPThreadGroup()->CanExit() ? 1 : 0);
+        can_exit &= (web_threads_->GetTCPThreadGroup()->CanExit() ? 1 : 0);
         LOG_ALWAYS("http-ws threads can exit: " << can_exit);
     }
 
@@ -477,10 +477,10 @@ int AppFrame::NotifyExitAndJoin()
         proto_tcp_threads_->GetTCPThreadGroup()->Join();
     }
 
-    if (http_ws_threads_ != nullptr)
+    if (web_threads_ != nullptr)
     {
-        http_ws_threads_->GetTCPThreadGroup()->NotifyExit();
-        http_ws_threads_->GetTCPThreadGroup()->Join();
+        web_threads_->GetTCPThreadGroup()->NotifyExit();
+        web_threads_->GetTCPThreadGroup()->Join();
     }
 
 //    if (udp_threads_ != nullptr && udp_threads_->GetUdpThreadGroup() != nullptr)
@@ -514,7 +514,7 @@ int AppFrame::LoadAndCheckConf()
 
     bool tcp_exist = false;
     bool proto_tcp_exist = false;
-    bool http_ws_exist = false;
+    bool web_exist = false;
 
 //    bool udp_exist = false;
 
@@ -572,23 +572,23 @@ int AppFrame::LoadAndCheckConf()
 
     ////////////////////////////////////////////////////////////////////////////////
     // http-ws
-    if (conf_mgr_.GetHTTPWSAddr().length() > 0)
+    if (conf_mgr_.GetWebAddr().length() > 0)
     {
-        http_ws_exist = true;
+        web_exist = true;
 
-        if (0 == conf_mgr_.GetHTTPWSThreadCount())
+        if (0 == conf_mgr_.GetWebThreadCount())
         {
             LOG_ERROR("there must be at least one http-ws thread");
             return -1;
         }
 
-        LOG_ALWAYS("http-ws thread count: " << conf_mgr_.GetHTTPWSThreadCount());
-        app_frame_threads_count_ += conf_mgr_.GetHTTPWSThreadCount();
+        LOG_ALWAYS("http-ws thread count: " << conf_mgr_.GetWebThreadCount());
+        app_frame_threads_count_ += conf_mgr_.GetWebThreadCount();
 
         if (0 == conf_mgr_.GetWorkThreadCount())
         {
             // 当没有work thread时，io logic group必须存在
-            if (0 == conf_mgr_.GetHTTPWSLogicSoGroup().size())
+            if (0 == conf_mgr_.GetWebLogicSoGroup().size())
             {
                 LOG_ERROR("there is no work thread, so there must be at least one http-ws logic so");
                 return -1;
@@ -665,7 +665,7 @@ int AppFrame::LoadAndCheckConf()
     }
 
     // tcp、http、udp可以同时存在，也可以只有一个存在，不能都不存在 TODO
-    if (!tcp_exist && !proto_tcp_exist && !http_ws_exist)
+    if (!tcp_exist && !proto_tcp_exist && !web_exist)
     {
         LOG_ERROR("there must be one tcp or proto tcp or http-ws or udp io module");
         return -1;
@@ -912,27 +912,27 @@ int AppFrame::LoadProtoTCPThreads()
     return 0;
 }
 
-int AppFrame::LoadHTTPWSThreads()
+int AppFrame::LoadWebThreads()
 {
-    if (0 == conf_mgr_.GetHTTPWSThreadCount())
+    if (0 == conf_mgr_.GetWebThreadCount())
     {
         return 0;
     }
 
-    char http_ws_threads_so_path[MAX_PATH_LEN] = "";
-    StrPrintf(http_ws_threads_so_path, sizeof(http_ws_threads_so_path), "%s/libhttp_ws_threads.so",
+    char web_threads_so_path[MAX_PATH_LEN] = "";
+    StrPrintf(web_threads_so_path, sizeof(web_threads_so_path), "%s/libweb_threads.so",
               app_frame_ctx_.common_component_dir);
 
-    if (http_ws_threads_loader_.Load(http_ws_threads_so_path) != 0)
+    if (web_threads_loader_.Load(web_threads_so_path) != 0)
     {
-        LOG_ERROR(http_ws_threads_loader_.GetLastErrMsg());
+        LOG_ERROR(web_threads_loader_.GetLastErrMsg());
         return -1;
     }
 
-    http_ws_threads_ = static_cast<tcp::http_ws::ThreadsInterface*>(http_ws_threads_loader_.GetModuleInterface());
-    if (nullptr == http_ws_threads_)
+    web_threads_ = static_cast<tcp::web::ThreadsInterface*>(web_threads_loader_.GetModuleInterface());
+    if (nullptr == web_threads_)
     {
-        LOG_ERROR(http_ws_threads_loader_.GetLastErrMsg());
+        LOG_ERROR(web_threads_loader_.GetLastErrMsg());
         return -1;
     }
 
@@ -950,7 +950,7 @@ int AppFrame::LoadHTTPWSThreads()
     threads_ctx.app_frame_threads_sync_cond = &g_app_frame_threads_sync_cond;
     // conf和logic_args字段由proto tcp threads内部填写
 
-    if (http_ws_threads_->Initialize(&threads_ctx) != 0)
+    if (web_threads_->Initialize(&threads_ctx) != 0)
     {
         return -1;
     }
@@ -1048,9 +1048,9 @@ int AppFrame::CreateAllThreads()
         }
     }
 
-    if (conf_mgr_.GetHTTPWSThreadCount() > 0)
+    if (conf_mgr_.GetWebThreadCount() > 0)
     {
-        if (http_ws_threads_->CreateThreadGroup() != 0)
+        if (web_threads_->CreateThreadGroup() != 0)
         {
             return -1;
         }
@@ -1097,9 +1097,9 @@ void AppFrame::SetThreadsRelationship()
             related_thread_groups.proto_tcp_thread_group = proto_tcp_threads_->GetTCPThreadGroup();
         }
 
-        if (http_ws_threads_ != nullptr)
+        if (web_threads_ != nullptr)
         {
-            related_thread_groups.http_ws_thread_group = http_ws_threads_->GetTCPThreadGroup();
+            related_thread_groups.web_thread_group = web_threads_->GetTCPThreadGroup();
         }
 
         global_threads_->SetRelatedThreadGroups(&related_thread_groups);
@@ -1132,9 +1132,9 @@ void AppFrame::SetThreadsRelationship()
             related_thread_groups.proto_tcp_thread_group = proto_tcp_threads_->GetTCPThreadGroup();
         }
 
-        if (http_ws_threads_ != nullptr)
+        if (web_threads_ != nullptr)
         {
-            related_thread_groups.http_ws_thread_group = http_ws_threads_->GetTCPThreadGroup();
+            related_thread_groups.web_thread_group = web_threads_->GetTCPThreadGroup();
         }
 
 //        if (udp_threads_ != nullptr)
@@ -1196,7 +1196,7 @@ void AppFrame::SetThreadsRelationship()
         proto_tcp_threads_->SetRelatedThreadGroups(&related_thread_groups);
     }
 
-    if (http_ws_threads_ != nullptr)
+    if (web_threads_ != nullptr)
     {
         tcp::RelatedThreadGroups related_thread_groups;
 
@@ -1211,7 +1211,7 @@ void AppFrame::SetThreadsRelationship()
             related_thread_groups.work_thread_group = work_threads_->GetWorkThreadGroup();
         }
 
-        http_ws_threads_->SetRelatedThreadGroups(&related_thread_groups);
+        web_threads_->SetRelatedThreadGroups(&related_thread_groups);
     }
 
 //    if (udp_threads_ != nullptr)

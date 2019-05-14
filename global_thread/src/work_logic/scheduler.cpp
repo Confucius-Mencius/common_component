@@ -87,22 +87,22 @@ int Scheduler::SendToProtoTCPThread(const ConnGUID* conn_guid, const ::proto::Ms
     }
 }
 
-int Scheduler::SendToHTTPWSThread(const ConnGUID* conn_guid, const proto::MsgHead& msg_head,
-                                  const void* msg_body, size_t msg_body_len, int http_ws_thread_idx)
+int Scheduler::SendToWebThread(const ConnGUID* conn_guid, const proto::MsgHead& msg_head,
+                               const void* msg_body, size_t msg_body_len, int web_thread_idx)
 {
-    if (-1 == http_ws_thread_idx)
+    if (-1 == web_thread_idx)
     {
         // 广播
-        for (int i = 0; i < related_thread_groups_->http_ws_thread_group->GetThreadCount(); ++i)
+        for (int i = 0; i < related_thread_groups_->web_thread_group->GetThreadCount(); ++i)
         {
-            work_scheduler_->SendToHTTPWSThread(conn_guid, msg_head, msg_body, msg_body_len, i);
+            work_scheduler_->SendToWebThread(conn_guid, msg_head, msg_body, msg_body_len, i);
         }
 
         return 0;
     }
     else
     {
-        return work_scheduler_->SendToHTTPWSThread(conn_guid, msg_head, msg_body, msg_body_len, http_ws_thread_idx);
+        return work_scheduler_->SendToWebThread(conn_guid, msg_head, msg_body, msg_body_len, web_thread_idx);
     }
 }
 }

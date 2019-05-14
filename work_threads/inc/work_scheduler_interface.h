@@ -93,16 +93,16 @@ public:
                                      const void* msg_body, size_t msg_body_len, int proto_tcp_thread_idx) = 0;
 
     /**
-     * @brief SendToHTTPWSThread
+     * @brief SendToWebThread
      * @param conn_guid
      * @param msg_head
      * @param msg_body
      * @param msg_body_len
-     * @param http_ws_thread_idx 为-1则由框架自行调度一个http-ws tcp线程
+     * @param web_thread_idx 为-1则由框架自行调度一个http-ws tcp线程
      * @return
      */
-    virtual int SendToHTTPWSThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
-                                   const void* msg_body, size_t msg_body_len, int http_ws_thread_idx) = 0;
+    virtual int SendToWebThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                                const void* msg_body, size_t msg_body_len, int web_thread_idx) = 0;
 
     /**
      * @brief 发送tcp/udp消息给其它服务器

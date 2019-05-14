@@ -73,7 +73,7 @@ struct RelatedThreadGroups
     ThreadGroupInterface* burden_thread_group;
     ThreadGroupInterface* tcp_thread_group;
     ThreadGroupInterface* proto_tcp_thread_group;
-    ThreadGroupInterface* http_ws_thread_group;
+    ThreadGroupInterface* web_thread_group;
 
     RelatedThreadGroups()
     {

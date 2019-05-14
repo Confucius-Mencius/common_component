@@ -218,70 +218,70 @@ public:
         return proto_tcp_logic_so_group_;
     }
 
-    bool HTTPWSUseBufferevent() override
+    bool WebUseBufferevent() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return http_ws_use_bufferevent_;
+        return web_use_bufferevent_;
     }
 
-    int GetHTTPWSPartMsgCheckInterval() override
+    int GetWebPartMsgCheckInterval() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return http_ws_part_msg_check_interval_;
+        return web_part_msg_check_interval_;
     }
 
-    int GetHTTPWSPartMsgConnLife() override
+    int GetWebPartMsgConnLife() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return http_ws_part_msg_conn_life_;
+        return web_part_msg_conn_life_;
     }
 
-    std::string GetHTTPWSAddr() override
+    std::string GetWebAddr() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return http_ws_addr_;
+        return web_addr_;
     }
 
-    int GetHTTPWSPort() override
+    int GetWebPort() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return http_ws_port_;
+        return web_port_;
     }
 
-    int GetHTTPWSSecurityPort() override
+    int GetWebSecurityPort() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return http_ws_security_port_;
+        return web_security_port_;
     }
 
-    std::string GetHTTPWSCertificateChainFilePath() override
+    std::string GetWebCertificateChainFilePath() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return http_ws_certificate_chain_file_path_;
+        return web_certificate_chain_file_path_;
     }
 
-    std::string GetHTTPWSPrivateKeyFilePath() override
+    std::string GetWebPrivateKeyFilePath() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return http_ws_private_key_file_path_;
+        return web_private_key_file_path_;
     }
 
-    int GetHTTPWSThreadCount() override
+    int GetWebThreadCount() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return http_ws_thread_count_;
+        return web_thread_count_;
     }
 
-    std::string GetHTTPWSCommonLogicSo() override
+    std::string GetWebCommonLogicSo() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return http_ws_common_logic_so_;
+        return web_common_logic_so_;
     }
 
-    StrGroup GetHTTPWSLogicSoGroup() override
+    StrGroup GetWebLogicSoGroup() override
     {
         AUTO_THREAD_RLOCK(rwlock_);
-        return http_ws_logic_so_group_;
+        return web_logic_so_group_;
     }
 
     int GetUDPInactiveConnCheckIntervalSec() override
@@ -773,142 +773,142 @@ private:
         return 0;
     }
 
-    int LoadHTTPWSUseBufferevent()
+    int LoadWebUseBufferevent()
     {
-        int http_ws_use_bufferevent = 0;
-        if (conf_center_->GetConf(http_ws_use_bufferevent, HTTP_WS_USE_BUFFEREVENT_XPATH, true, 1) != 0)
+        int web_use_bufferevent = 0;
+        if (conf_center_->GetConf(web_use_bufferevent, WEB_USE_BUFFEREVENT_XPATH, true, 1) != 0)
         {
-            LOG_ERROR("failed to get " << HTTP_WS_USE_BUFFEREVENT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            LOG_ERROR("failed to get " << WEB_USE_BUFFEREVENT_XPATH << ": " << conf_center_->GetLastErrMsg());
             return -1;
         }
-        http_ws_use_bufferevent_ = (http_ws_use_bufferevent != 0);
+        web_use_bufferevent_ = (web_use_bufferevent != 0);
         return 0;
     }
 
-    int LoadHTTPWSPartMsgCheckInterval()
+    int LoadWebPartMsgCheckInterval()
     {
-        if (conf_center_->GetConf(http_ws_part_msg_check_interval_, HTTP_WS_PART_MSG_CHECK_INTERVAL_XPATH, true, 5) != 0)
+        if (conf_center_->GetConf(web_part_msg_check_interval_, WEB_PART_MSG_CHECK_INTERVAL_XPATH, true, 5) != 0)
         {
-            LOG_ERROR("failed to get " << HTTP_WS_PART_MSG_CHECK_INTERVAL_XPATH << ": " << conf_center_->GetLastErrMsg());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LoadHTTPWSPartMsgConnLife()
-    {
-        if (conf_center_->GetConf(http_ws_part_msg_conn_life_, HTTP_WS_PART_MSG_CONN_LIFE_XPATH, true, 60) != 0)
-        {
-            LOG_ERROR("failed to get " << HTTP_WS_PART_MSG_CONN_LIFE_XPATH << ": " << conf_center_->GetLastErrMsg());
+            LOG_ERROR("failed to get " << WEB_PART_MSG_CHECK_INTERVAL_XPATH << ": " << conf_center_->GetLastErrMsg());
             return -1;
         }
         return 0;
     }
 
-    int LoadHTTPWSAddr()
+    int LoadWebPartMsgConnLife()
     {
-        char* http_ws_addr = nullptr;
-        if (conf_center_->GetConf(&http_ws_addr, HTTP_WS_ADDR_XPATH, true, "") != 0)
+        if (conf_center_->GetConf(web_part_msg_conn_life_, WEB_PART_MSG_CONN_LIFE_XPATH, true, 60) != 0)
         {
-            LOG_ERROR("failed to get " << HTTP_WS_ADDR_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&http_ws_addr);
-            return -1;
-        }
-        http_ws_addr_ = http_ws_addr;
-        conf_center_->ReleaseConf(&http_ws_addr);
-        return 0;
-    }
-
-    int LoadHTTPWSPort()
-    {
-        if (conf_center_->GetConf(http_ws_port_, HTTP_WS_PORT_XPATH, true, 0) != 0)
-        {
-            LOG_ERROR("failed to get " << HTTP_WS_PORT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            LOG_ERROR("failed to get " << WEB_PART_MSG_CONN_LIFE_XPATH << ": " << conf_center_->GetLastErrMsg());
             return -1;
         }
         return 0;
     }
 
-    int LoadHTTPWSSecurityPort()
+    int LoadWebAddr()
     {
-        if (conf_center_->GetConf(http_ws_security_port_, HTTP_WS_SECURITY_PORT_XPATH, true, 0) != 0)
+        char* web_addr = nullptr;
+        if (conf_center_->GetConf(&web_addr, WEB_ADDR_XPATH, true, "") != 0)
         {
-            LOG_ERROR("failed to get " << HTTP_WS_SECURITY_PORT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            LOG_ERROR("failed to get " << WEB_ADDR_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&web_addr);
+            return -1;
+        }
+        web_addr_ = web_addr;
+        conf_center_->ReleaseConf(&web_addr);
+        return 0;
+    }
+
+    int LoadWebPort()
+    {
+        if (conf_center_->GetConf(web_port_, WEB_PORT_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << WEB_PORT_XPATH << ": " << conf_center_->GetLastErrMsg());
             return -1;
         }
         return 0;
     }
 
-    int LoadHTTPWSCertificateChainFilePath()
+    int LoadWebSecurityPort()
     {
-        char* http_ws_certificate_chain_file_path = nullptr;
-        if (conf_center_->GetConf(&http_ws_certificate_chain_file_path, HTTP_WS_CERTIFICATE_CHAIN_FILE_PATH_XPATH, true, "") != 0)
+        if (conf_center_->GetConf(web_security_port_, WEB_SECURITY_PORT_XPATH, true, 0) != 0)
         {
-            LOG_ERROR("failed to get " << HTTP_WS_CERTIFICATE_CHAIN_FILE_PATH_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&http_ws_certificate_chain_file_path);
-            return -1;
-        }
-        http_ws_certificate_chain_file_path_ = http_ws_certificate_chain_file_path;
-        conf_center_->ReleaseConf(&http_ws_certificate_chain_file_path);
-        return 0;
-    }
-
-    int LoadHTTPWSPrivateKeyFilePath()
-    {
-        char* http_ws_private_key_file_path = nullptr;
-        if (conf_center_->GetConf(&http_ws_private_key_file_path, HTTP_WS_PRIVATE_KEY_FILE_PATH_XPATH, true, "") != 0)
-        {
-            LOG_ERROR("failed to get " << HTTP_WS_PRIVATE_KEY_FILE_PATH_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&http_ws_private_key_file_path);
-            return -1;
-        }
-        http_ws_private_key_file_path_ = http_ws_private_key_file_path;
-        conf_center_->ReleaseConf(&http_ws_private_key_file_path);
-        return 0;
-    }
-
-    int LoadHTTPWSThreadCount()
-    {
-        if (conf_center_->GetConf(http_ws_thread_count_, HTTP_WS_THREAD_COUNT_XPATH, true, 0) != 0)
-        {
-            LOG_ERROR("failed to get " << HTTP_WS_THREAD_COUNT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            LOG_ERROR("failed to get " << WEB_SECURITY_PORT_XPATH << ": " << conf_center_->GetLastErrMsg());
             return -1;
         }
         return 0;
     }
 
-    int LoadHTTPWSCommonLogicSo()
+    int LoadWebCertificateChainFilePath()
     {
-        char* http_ws_common_logic_so = nullptr;
-        if (conf_center_->GetConf(&http_ws_common_logic_so, HTTP_WS_COMMON_LOGIC_SO_XPATH, true, "") != 0)
+        char* web_certificate_chain_file_path = nullptr;
+        if (conf_center_->GetConf(&web_certificate_chain_file_path, WEB_CERTIFICATE_CHAIN_FILE_PATH_XPATH, true, "") != 0)
         {
-            LOG_ERROR("failed to get " << HTTP_WS_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&http_ws_common_logic_so);
+            LOG_ERROR("failed to get " << WEB_CERTIFICATE_CHAIN_FILE_PATH_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&web_certificate_chain_file_path);
             return -1;
         }
-        http_ws_common_logic_so_ = http_ws_common_logic_so;
-        conf_center_->ReleaseConf(&http_ws_common_logic_so);
+        web_certificate_chain_file_path_ = web_certificate_chain_file_path;
+        conf_center_->ReleaseConf(&web_certificate_chain_file_path);
         return 0;
     }
 
-    int LoadHTTPWSLogicSoGroup()
+    int LoadWebPrivateKeyFilePath()
     {
-        char** http_ws_logic_so = nullptr;
+        char* web_private_key_file_path = nullptr;
+        if (conf_center_->GetConf(&web_private_key_file_path, WEB_PRIVATE_KEY_FILE_PATH_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << WEB_PRIVATE_KEY_FILE_PATH_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&web_private_key_file_path);
+            return -1;
+        }
+        web_private_key_file_path_ = web_private_key_file_path;
+        conf_center_->ReleaseConf(&web_private_key_file_path);
+        return 0;
+    }
+
+    int LoadWebThreadCount()
+    {
+        if (conf_center_->GetConf(web_thread_count_, WEB_THREAD_COUNT_XPATH, true, 0) != 0)
+        {
+            LOG_ERROR("failed to get " << WEB_THREAD_COUNT_XPATH << ": " << conf_center_->GetLastErrMsg());
+            return -1;
+        }
+        return 0;
+    }
+
+    int LoadWebCommonLogicSo()
+    {
+        char* web_common_logic_so = nullptr;
+        if (conf_center_->GetConf(&web_common_logic_so, WEB_COMMON_LOGIC_SO_XPATH, true, "") != 0)
+        {
+            LOG_ERROR("failed to get " << WEB_COMMON_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&web_common_logic_so);
+            return -1;
+        }
+        web_common_logic_so_ = web_common_logic_so;
+        conf_center_->ReleaseConf(&web_common_logic_so);
+        return 0;
+    }
+
+    int LoadWebLogicSoGroup()
+    {
+        char** web_logic_so = nullptr;
         int n = 0;
-        if (conf_center_->GetConf(&http_ws_logic_so, n, HTTP_WS_LOGIC_SO_XPATH, true, "") != 0)
+        if (conf_center_->GetConf(&web_logic_so, n, WEB_LOGIC_SO_XPATH, true, "") != 0)
         {
-            LOG_ERROR("failed to get " << HTTP_WS_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
-            conf_center_->ReleaseConf(&http_ws_logic_so, n);
+            LOG_ERROR("failed to get " << WEB_LOGIC_SO_XPATH << ": " << conf_center_->GetLastErrMsg());
+            conf_center_->ReleaseConf(&web_logic_so, n);
             return -1;
         }
         for (int i = 0; i < n; ++i)
         {
-            if (strlen(http_ws_logic_so[i]) > 0)
+            if (strlen(web_logic_so[i]) > 0)
             {
-                http_ws_logic_so_group_.push_back(http_ws_logic_so[i]);
+                web_logic_so_group_.push_back(web_logic_so[i]);
             }
         }
-        conf_center_->ReleaseConf(&http_ws_logic_so, n);
+        conf_center_->ReleaseConf(&web_logic_so, n);
         return 0;
     }
 
@@ -1105,17 +1105,17 @@ private:
     int proto_tcp_thread_count_;
     std::string proto_tcp_common_logic_so_;
     StrGroup proto_tcp_logic_so_group_;
-    bool http_ws_use_bufferevent_;
-    int http_ws_part_msg_check_interval_;
-    int http_ws_part_msg_conn_life_;
-    std::string http_ws_addr_;
-    int http_ws_port_;
-    int http_ws_security_port_;
-    std::string http_ws_certificate_chain_file_path_;
-    std::string http_ws_private_key_file_path_;
-    int http_ws_thread_count_;
-    std::string http_ws_common_logic_so_;
-    StrGroup http_ws_logic_so_group_;
+    bool web_use_bufferevent_;
+    int web_part_msg_check_interval_;
+    int web_part_msg_conn_life_;
+    std::string web_addr_;
+    int web_port_;
+    int web_security_port_;
+    std::string web_certificate_chain_file_path_;
+    std::string web_private_key_file_path_;
+    int web_thread_count_;
+    std::string web_common_logic_so_;
+    StrGroup web_logic_so_group_;
     int udp_inactive_conn_check_interval_sec_;
     int udp_inactive_conn_check_interval_usec_;
     int udp_inactive_conn_life_;

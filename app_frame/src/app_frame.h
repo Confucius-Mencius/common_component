@@ -9,7 +9,7 @@
 #include "burden_threads_interface.h"
 #include "tcp_threads_interface.h"
 #include "proto_tcp_threads_interface.h"
-#include "http_ws_threads_interface.h"
+#include "web_threads_interface.h"
 
 namespace app_frame
 {
@@ -52,7 +52,7 @@ private:
     int LoadTCPThreads();
     int LoadProtoTCPThreads();
 
-    int LoadHTTPWSThreads();
+    int LoadWebThreads();
 //    int LoadUdpThreads();
     int CreateAllThreads();
     void SetThreadsRelationship();
@@ -78,8 +78,8 @@ private:
     ModuleLoader proto_tcp_threads_loader_;
     tcp::proto::ThreadsInterface* proto_tcp_threads_;
 
-    ModuleLoader http_ws_threads_loader_;
-    tcp::http_ws::ThreadsInterface* http_ws_threads_;
+    ModuleLoader web_threads_loader_;
+    tcp::web::ThreadsInterface* web_threads_;
 
 //    ModuleLoader udp_threads_loader_;
 //    udp::ThreadsInterface* udp_threads_;

@@ -20,7 +20,7 @@ enum IOType
     IO_TYPE_MIN = 0,
     IO_TYPE_TCP = IO_TYPE_MIN,
     IO_TYPE_PROTO_TCP,
-    IO_TYPE_HTTP_WS,
+    IO_TYPE_WEB_TCP,
     IO_TYPE_UDP,
     IO_TYPE_MAX,
 };

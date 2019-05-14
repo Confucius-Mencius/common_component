@@ -58,8 +58,8 @@ public:
     virtual int SendToProtoTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
                                      const void* msg_body, size_t msg_body_len, int proto_tcp_thread_idx) = 0;
 
-    virtual int SendToHTTPWSThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
-                                   const void* msg_body, size_t msg_body_len, int http_ws_thread_idx) = 0;
+    virtual int SendToWebThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                                const void* msg_body, size_t msg_body_len, int web_thread_idx) = 0;
 };
 }
 

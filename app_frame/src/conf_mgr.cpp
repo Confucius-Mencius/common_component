@@ -46,17 +46,17 @@ int ConfMgr::Load()
     proto_tcp_thread_count_ = 0;
     proto_tcp_common_logic_so_ = "";
     proto_tcp_logic_so_group_.clear();
-    http_ws_use_bufferevent_ = false;
-    http_ws_part_msg_check_interval_ = 0;
-    http_ws_part_msg_conn_life_ = 0;
-    http_ws_addr_ = "";
-    http_ws_port_ = 0;
-    http_ws_security_port_ = 0;
-    http_ws_certificate_chain_file_path_ = "";
-    http_ws_private_key_file_path_ = "";
-    http_ws_thread_count_ = 0;
-    http_ws_common_logic_so_ = "";
-    http_ws_logic_so_group_.clear();
+    web_use_bufferevent_ = false;
+    web_part_msg_check_interval_ = 0;
+    web_part_msg_conn_life_ = 0;
+    web_addr_ = "";
+    web_port_ = 0;
+    web_security_port_ = 0;
+    web_certificate_chain_file_path_ = "";
+    web_private_key_file_path_ = "";
+    web_thread_count_ = 0;
+    web_common_logic_so_ = "";
+    web_logic_so_group_.clear();
     udp_inactive_conn_check_interval_sec_ = 0;
     udp_inactive_conn_check_interval_usec_ = 0;
     udp_inactive_conn_life_ = 0;
@@ -232,57 +232,57 @@ int ConfMgr::Load()
         return -1;
     }
 
-    if (LoadHTTPWSUseBufferevent() != 0)
+    if (LoadWebUseBufferevent() != 0)
     {
         return -1;
     }
 
-    if (LoadHTTPWSPartMsgCheckInterval() != 0)
+    if (LoadWebPartMsgCheckInterval() != 0)
     {
         return -1;
     }
 
-    if (LoadHTTPWSPartMsgConnLife() != 0)
+    if (LoadWebPartMsgConnLife() != 0)
     {
         return -1;
     }
 
-    if (LoadHTTPWSAddr() != 0)
+    if (LoadWebAddr() != 0)
     {
         return -1;
     }
 
-    if (LoadHTTPWSPort() != 0)
+    if (LoadWebPort() != 0)
     {
         return -1;
     }
 
-    if (LoadHTTPWSSecurityPort() != 0)
+    if (LoadWebSecurityPort() != 0)
     {
         return -1;
     }
 
-    if (LoadHTTPWSCertificateChainFilePath() != 0)
+    if (LoadWebCertificateChainFilePath() != 0)
     {
         return -1;
     }
 
-    if (LoadHTTPWSPrivateKeyFilePath() != 0)
+    if (LoadWebPrivateKeyFilePath() != 0)
     {
         return -1;
     }
 
-    if (LoadHTTPWSThreadCount() != 0)
+    if (LoadWebThreadCount() != 0)
     {
         return -1;
     }
 
-    if (LoadHTTPWSCommonLogicSo() != 0)
+    if (LoadWebCommonLogicSo() != 0)
     {
         return -1;
     }
 
-    if (LoadHTTPWSLogicSoGroup() != 0)
+    if (LoadWebLogicSoGroup() != 0)
     {
         return -1;
     }

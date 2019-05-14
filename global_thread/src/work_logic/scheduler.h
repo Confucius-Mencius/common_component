@@ -32,8 +32,8 @@ public:
                         const void* msg_body, size_t msg_body_len, int tcp_thread_idx) override;
     int SendToProtoTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
                              const void* msg_body, size_t msg_body_len, int proto_tcp_thread_idx) override;
-    int SendToHTTPWSThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
-                           const void* msg_body, size_t msg_body_len, int http_ws_thread_idx) override;
+    int SendToWebThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+                        const void* msg_body, size_t msg_body_len, int web_thread_idx) override;
 
 private:
     work::SchedulerInterface* work_scheduler_;
