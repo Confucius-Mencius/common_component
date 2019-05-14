@@ -22,7 +22,7 @@ void HTTPParserTest::TearDown()
 }
 
 /**
- * @brief 取单条配置，包括配置在node和attrib两种情况
+ * @brief
  * @details
  *  - Set Up:
 

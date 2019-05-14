@@ -76,7 +76,6 @@ struct mpart_body_processor
 
     mpart_body_processor() : last_header_name()
     {
-
     }
 };
 
