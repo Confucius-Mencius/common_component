@@ -96,7 +96,7 @@ size_t url_decode(char* s, size_t len)
     }
 
     *dest = '\0';
-    return dest - s;
+    return (dest - s);
 }
 
 void url_free(char* s)
