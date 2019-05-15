@@ -3,6 +3,7 @@
 #include "log_util.h"
 #include "mpart_body_processor.h"
 #include "singleton.h"
+#include "web_util.h"
 
 namespace tcp
 {
@@ -17,6 +18,7 @@ Req::Req() : ClientIP(), URL(), Schema(), Host(), Path(), Query(), Queries(),
     MajorVersion = 1;
     MinorVersion = 1;
     Port = 0;
+    need_urldecode = false;
 }
 
 Req::~Req()
@@ -40,12 +42,11 @@ void Req::Reset()
     UserInfo.clear();
     Headers.clear();
     Body.clear();
+    need_urldecode = false;
 }
 
 void Req::ParseURL(const char* at, size_t length)
 {
-    // TODO URL decode
-
     this->URL.assign(at, length);
 
     struct http_parser_url u;
@@ -84,8 +85,7 @@ void Req::ParseURL(const char* at, size_t length)
     if (u.field_set & (1 << UF_QUERY))
     {
         this->Query = this->URL.substr(u.field_data[UF_QUERY].off, u.field_data[UF_QUERY].len);
-        LOG_DEBUG("query: " << this->Query);
-        ParseQuery(Query.data(), Query.size());
+        LOG_DEBUG("origin query: " << this->Query);
     }
 
     if (u.field_set & (1 << UF_FRAGMENT))
@@ -101,23 +101,21 @@ void Req::ParseURL(const char* at, size_t length)
     }
 }
 
-void Req::ParseQuery(const char* at, size_t length)
+void Req::ParseQuery()
 {
-    this->Query.assign(at, length);
-
     char* str1, *str2, *token, *subtoken;
     char* saveptr1, *saveptr2;
     int j;
 
-    std::unique_ptr<char[]> query(new char[length + 1]);
+    std::unique_ptr<char[]> query(new char[this->Query.size() + 1]);
     if (nullptr == query)
     {
         LOG_ERROR("failed to alloc memory");
         return;
     }
 
-    memcpy(query.get(), at, length);
-    query[length] = '\0';
+    memcpy(query.get(), this->Query.data(), this->Query.size());
+    query[this->Query.size()] = '\0';
 
     for (j = 1, str1 = query.get(); ; ++j, str1 = NULL)
     {
@@ -278,6 +276,32 @@ int Parser::Execute(const char* buffer, size_t count)
 
     if (complete_)
     {
+        if (http_req_.need_urldecode)
+        {
+            if (http_req_.Query.size() > 0)
+            {
+                // 对query要做url decode
+                std::string query = http_req_.Query;
+                const size_t len = url_decode((char*) query.data(), query.size());
+                http_req_.Query.assign(query.data(), len);
+                LOG_DEBUG("decoded query: " << http_req_.Query);
+            }
+
+            if (http_req_.Body.size() > 0)
+            {
+                // 对body要做url decode
+                std::string body = http_req_.Body;
+                const size_t len = url_decode((char*) body.data(), body.size());
+                http_req_.Body.assign(body.data(), len);
+                LOG_DEBUG("decoded body: " << http_req_.Body);
+            }
+        }
+
+        if (http_req_.Query.size() > 0)
+        {
+            http_req_.ParseQuery();
+        }
+
         bool conn_closed = false;
 
         if (web_logic_ != nullptr)
@@ -377,7 +401,11 @@ int Parser::OnHeadersComplete(http_parser* parser)
     HeaderMap::const_iterator it = hp->http_req_.Headers.find("Content-Type");
     if (it != hp->http_req_.Headers.end())
     {
-        if (0 == strncasecmp(it->second.c_str(), "multipart/form-data", strlen("multipart/form-data")))
+        if (0 == strncasecmp(it->second.c_str(), "application/x-www-form-urlencoded", strlen("application/x-www-form-urlencoded")))
+        {
+            hp->http_req_.need_urldecode = true;
+        }
+        else if (0 == strncasecmp(it->second.c_str(), "multipart/form-data", strlen("multipart/form-data")))
         {
             hp->http_req_._s.body_processor = mpart_body_processor_init(&(hp->http_req_));
             hp->http_req_._s.free_body_parser_func = (free_body_parser) mpart_body_processor_free;

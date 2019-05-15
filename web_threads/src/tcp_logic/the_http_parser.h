@@ -46,12 +46,13 @@ struct Req
     std::string UserInfo;
     HeaderMap Headers;
     std::string Body;
+    bool need_urldecode;
     struct http_request_state _s;
 
     void Reset();
 
     void ParseURL(const char* at, size_t length);
-    void ParseQuery(const char* at, size_t length);
+    void ParseQuery();
 
     void AddHeader(const std::string& name, const std::string& value)
     {

@@ -53,7 +53,7 @@ void HTTPParserTest::Test001()
 void HTTPParserTest::Test002()
 {
     const char post_req[] =
-        "POST /post_identity_body_world?q=search#hey HTTP/1.1\r\n"
+        "POST /post_identity_body_world?q=search&xx=100#hey HTTP/1.1\r\n"
         "Accept: /\r\n"
         "Transfer-Encoding: identity\r\n"
         "Content-Length: 5\r\n"
@@ -91,16 +91,30 @@ void HTTPParserTest::Test005()
         "Content-Type:application/x-www-form-urlencoded\r\n"
         "Accept-Encoding: gzip, deflate\r\n"
         "Host: w.sohu.com\r\n"
-        "Content-Length: 21\r\n"
+        "Content-Length: 88\r\n"
         "Connection: Keep-Alive\r\n"
         "Cache-Control: no-cache\r\n"
         "\r\n"
-        "txt1=hello&txt2=world";
+        "txt1%3dhello%26txt2%3dworld%26a%3d%e4%bd%a0%e5%a5%bd%ef%bc%8c%e4%b8%96%e7%95%8c%ef%bc%81"; // "txt1=hello&txt2=world&a=你好，世界！"
 
     http_parser_.Execute(post_req, strlen(post_req));
 }
 
 void HTTPParserTest::Test006()
+{
+    const char post_req[] =
+        "GET /xx?txt1%3dhello%26txt2%3dworld%26a%3d%e4%bd%a0%e5%a5%bd%ef%bc%8c%e4%b8%96%e7%95%8c%ef%bc%81 HTTP/1.1\r\n" // "txt1=hello&txt2=world&a=你好，世界！"
+        "Content-Type:application/x-www-form-urlencoded\r\n"
+        "Accept-Encoding: gzip, deflate\r\n"
+        "Host: w.sohu.com\r\n"
+        "Connection: Keep-Alive\r\n"
+        "Cache-Control: no-cache\r\n"
+        "\r\n";
+
+    http_parser_.Execute(post_req, strlen(post_req));
+}
+
+void HTTPParserTest::Test007()
 {
     const char post_req[] =
         "POST /t2/upload.do HTTP/1.1\r\n"
@@ -135,7 +149,7 @@ ADD_TEST_F(HTTPParserTest, Test001);
 ADD_TEST_F(HTTPParserTest, Test002);
 ADD_TEST_F(HTTPParserTest, Test003);
 ADD_TEST_F(HTTPParserTest, Test004);
-//ADD_TEST_F(HTTPParserTest, Test005); TODO
-//ADD_TEST_F(HTTPParserTest, Test006);
+ADD_TEST_F(HTTPParserTest, Test005);
+ADD_TEST_F(HTTPParserTest, Test006);
 }
 }
