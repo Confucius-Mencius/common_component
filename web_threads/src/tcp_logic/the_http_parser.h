@@ -26,28 +26,11 @@ struct http_request_state
     int socket_fd;
 };
 
-struct Req
+class Req
 {
+public:
     Req();
     ~Req();
-
-    http_method Method;
-    unsigned short MajorVersion;
-    unsigned short MinorVersion;
-    std::string ClientIP;
-    std::string URL;
-    std::string Schema;
-    std::string Host;
-    uint16_t Port;
-    std::string Path;
-    std::string Query;
-    QueryMap Queries;
-    std::string Fragment;
-    std::string UserInfo;
-    HeaderMap Headers;
-    std::string Body;
-    bool need_urldecode;
-    struct http_request_state _s;
 
     void Reset();
 
@@ -67,6 +50,25 @@ struct Req
     }
 
     std::string Dump();
+
+private:
+    http_method Method;
+    unsigned short MajorVersion;
+    unsigned short MinorVersion;
+    std::string ClientIP;
+    std::string URL;
+    std::string Schema;
+    std::string Host;
+    uint16_t Port;
+    std::string Path;
+    std::string Query;
+    QueryMap Queries;
+    std::string Fragment;
+    std::string UserInfo;
+    HeaderMap Headers;
+    std::string Body;
+    bool url_decode;
+    struct http_request_state _s;
 };
 
 class Parser

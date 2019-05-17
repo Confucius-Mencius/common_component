@@ -16,8 +16,8 @@
 //空格" "被转换为加号"+"。
 //其他每个字节都被表示成"%xy"格式的由3个字符组成的字符串，编码为UTF-8。就是每个字节(十六进制）前加一个'%'
 
-char* url_encode(int& encoded_len, const char* s, size_t len); // 返回的字符串要调用url_free释放
-size_t url_decode(char* s, size_t len);
-void url_free(char* s); // 释放url_encode返回的字符串
+char* URLEncode(int& encoded_len, const char* s, size_t len); // 返回的字符串要调用url_free释放
+size_t URLDecode(char* s, size_t len);
+void URLFree(char* s); // 释放url_encode返回的字符串
 
 #endif // WEB_THREADS_SRC_TCP_LOGIC_WEB_UTIL_H_

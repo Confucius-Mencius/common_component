@@ -7,7 +7,7 @@ static unsigned char hexchars[] = "0123456789abcdef";
  * 16进制数转换成10进制数
  * 如：0xE4=14*16+4=228
  */
-static int htoi(char* s)
+static int _htoi(char* s)
 {
     int value;
     int c;
@@ -29,7 +29,7 @@ static int htoi(char* s)
     return (value);
 }
 
-char* url_encode(int& encoded_len, const char* s, size_t len)
+char* URLEncode(int& encoded_len, const char* s, size_t len)
 {
     register unsigned char c;
     unsigned char* to, *start;
@@ -69,7 +69,7 @@ char* url_encode(int& encoded_len, const char* s, size_t len)
     return (char*) start;
 }
 
-size_t url_decode(char* s, size_t len)
+size_t URLDecode(char* s, size_t len)
 {
     char* dest = s;
     char* data = s;
@@ -82,7 +82,7 @@ size_t url_decode(char* s, size_t len)
         }
         else if (*data == '%' && len >= 2 && isxdigit((int) * (data + 1)) && isxdigit((int) * (data + 2)))
         {
-            *dest = (char) htoi(data + 1);
+            *dest = (char) _htoi(data + 1);
             data += 2;
             len -= 2;
         }
@@ -99,7 +99,7 @@ size_t url_decode(char* s, size_t len)
     return (dest - s);
 }
 
-void url_free(char* s)
+void URLFree(char* s)
 {
     if (s != nullptr)
     {

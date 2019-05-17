@@ -18,7 +18,7 @@ Req::Req() : ClientIP(), URL(), Schema(), Host(), Path(), Query(), Queries(),
     MajorVersion = 1;
     MinorVersion = 1;
     Port = 0;
-    need_urldecode = false;
+    url_decode = false;
 }
 
 Req::~Req()
@@ -42,7 +42,7 @@ void Req::Reset()
     UserInfo.clear();
     Headers.clear();
     Body.clear();
-    need_urldecode = false;
+    url_decode = false;
 }
 
 void Req::ParseURL(const char* at, size_t length)
@@ -276,13 +276,13 @@ int Parser::Execute(const char* buffer, size_t count)
 
     if (complete_)
     {
-        if (http_req_.need_urldecode)
+        if (http_req_.url_decode)
         {
             if (http_req_.Query.size() > 0)
             {
                 // 对query要做url decode
                 std::string query = http_req_.Query;
-                const size_t len = url_decode((char*) query.data(), query.size());
+                const size_t len = URLDecode((char*) query.data(), query.size());
                 http_req_.Query.assign(query.data(), len);
                 LOG_DEBUG("decoded query: " << http_req_.Query);
             }
@@ -291,7 +291,7 @@ int Parser::Execute(const char* buffer, size_t count)
             {
                 // 对body要做url decode
                 std::string body = http_req_.Body;
-                const size_t len = url_decode((char*) body.data(), body.size());
+                const size_t len = URLDecode((char*) body.data(), body.size());
                 http_req_.Body.assign(body.data(), len);
                 LOG_DEBUG("decoded body: " << http_req_.Body);
             }
@@ -403,7 +403,7 @@ int Parser::OnHeadersComplete(http_parser* parser)
     {
         if (0 == strncasecmp(it->second.c_str(), "application/x-www-form-urlencoded", strlen("application/x-www-form-urlencoded")))
         {
-            hp->http_req_.need_urldecode = true;
+            hp->http_req_.url_decode = true;
         }
         else if (0 == strncasecmp(it->second.c_str(), "multipart/form-data", strlen("multipart/form-data")))
         {
