@@ -11,13 +11,13 @@ namespace web
 {
 namespace http
 {
-Req::Req() : ClientIP(), URL(), Schema(), Host(), Path(), Query(), Queries(),
-    Fragment(), UserInfo(), Headers(), Body()
+Req::Req() : client_ip(), url(), schema(), host(), path(), query(), queries(),
+    fragment(), user_info(), headers(), body(), state()
 {
-    Method = HTTP_GET;
-    MajorVersion = 1;
-    MinorVersion = 1;
-    Port = 0;
+    method = HTTP_GET;
+    major_version = 1;
+    minor_version = 1;
+    port = 0;
     url_decode = false;
 }
 
@@ -27,77 +27,78 @@ Req::~Req()
 
 void Req::Reset()
 {
-    Method = HTTP_GET;
-    MajorVersion = 0;
-    MinorVersion = 0;
-    ClientIP = "";
-    URL.clear();
-    Schema.clear();
-    Host.clear();
-    Port = 0;
-    Path.clear();
-    Query.clear();
-    Queries.clear();
-    Fragment.clear();
-    UserInfo.clear();
-    Headers.clear();
-    Body.clear();
+    method = HTTP_GET;
+    major_version = 0;
+    minor_version = 0;
+    client_ip = "";
+    url.clear();
+    schema.clear();
+    host.clear();
+    port = 0;
+    path.clear();
+    query.clear();
+    queries.clear();
+    fragment.clear();
+    user_info.clear();
+    headers.clear();
     url_decode = false;
+    body.clear();
+    state.Reset();
 }
 
 void Req::ParseURL(const char* at, size_t length)
 {
-    this->URL.assign(at, length);
+    this->url.assign(at, length);
 
     struct http_parser_url u;
     http_parser_url_init(&u);
 
-    if (http_parser_parse_url(this->URL.c_str(), this->URL.length(), 0, &u) != 0)
+    if (http_parser_parse_url(this->url.c_str(), this->url.length(), 0, &u) != 0)
     {
-        LOG_ERROR("parse url error: " << this->URL);
+        LOG_ERROR("parse url error: " << this->url);
         return;
     }
 
     if (u.field_set & (1 << UF_SCHEMA))
     {
-        this->Schema = this->URL.substr(u.field_data[UF_SCHEMA].off, u.field_data[UF_SCHEMA].len);
-        LOG_DEBUG("schema: " << this->Schema);
+        this->schema = this->url.substr(u.field_data[UF_SCHEMA].off, u.field_data[UF_SCHEMA].len);
+        LOG_DEBUG("schema: " << this->schema);
     }
 
     if (u.field_set & (1 << UF_HOST))
     {
-        this->Host = this->URL.substr(u.field_data[UF_HOST].off, u.field_data[UF_HOST].len);
-        LOG_DEBUG("host: " << this->Host);
+        this->host = this->url.substr(u.field_data[UF_HOST].off, u.field_data[UF_HOST].len);
+        LOG_DEBUG("host: " << this->host);
     }
 
     if (u.field_set & (1 << UF_PORT))
     {
-        this->Port = u.port;
-        LOG_DEBUG("port: " << this->Port);
+        this->port = u.port;
+        LOG_DEBUG("port: " << this->port);
     }
 
     if (u.field_set & (1 << UF_PATH))
     {
-        this->Path = this->URL.substr(u.field_data[UF_PATH].off, u.field_data[UF_PATH].len);
-        LOG_DEBUG("path: " << this->Path);
+        this->path = this->url.substr(u.field_data[UF_PATH].off, u.field_data[UF_PATH].len);
+        LOG_DEBUG("path: " << this->path);
     }
 
     if (u.field_set & (1 << UF_QUERY))
     {
-        this->Query = this->URL.substr(u.field_data[UF_QUERY].off, u.field_data[UF_QUERY].len);
-        LOG_DEBUG("origin query: " << this->Query);
+        this->query = this->url.substr(u.field_data[UF_QUERY].off, u.field_data[UF_QUERY].len);
+        LOG_DEBUG("origin query: " << this->query);
     }
 
     if (u.field_set & (1 << UF_FRAGMENT))
     {
-        this->Fragment = this->URL.substr(u.field_data[UF_FRAGMENT].off, u.field_data[UF_FRAGMENT].len);
-        LOG_DEBUG("fragment: " << this->Fragment);
+        this->fragment = this->url.substr(u.field_data[UF_FRAGMENT].off, u.field_data[UF_FRAGMENT].len);
+        LOG_DEBUG("fragment: " << this->fragment);
     }
 
     if (u.field_set & (1 << UF_USERINFO))
     {
-        this->UserInfo = this->URL.substr(u.field_data[UF_USERINFO].off, u.field_data[UF_USERINFO].len);
-        LOG_DEBUG("user info: " << this->UserInfo);
+        this->user_info = this->url.substr(u.field_data[UF_USERINFO].off, u.field_data[UF_USERINFO].len);
+        LOG_DEBUG("user info: " << this->user_info);
     }
 }
 
@@ -107,15 +108,15 @@ void Req::ParseQuery()
     char* saveptr1, *saveptr2;
     int j;
 
-    std::unique_ptr<char[]> query(new char[this->Query.size() + 1]);
+    std::unique_ptr<char[]> query(new char[this->query.size() + 1]);
     if (nullptr == query)
     {
         LOG_ERROR("failed to alloc memory");
         return;
     }
 
-    memcpy(query.get(), this->Query.data(), this->Query.size());
-    query[this->Query.size()] = '\0';
+    memcpy(query.get(), this->query.data(), this->query.size());
+    query[this->query.size()] = '\0';
 
     for (j = 1, str1 = query.get(); ; ++j, str1 = NULL)
     {
@@ -147,14 +148,14 @@ void Req::ParseQuery()
         }
 
         LOG_DEBUG("query key: " << key << ", value: " << value);
-        this->Queries.insert(QueryMap::value_type(key, value));
+        this->queries.insert(QueryMap::value_type(key, value));
     }
 }
 
 void Req::ParseClientIP()
 {
-    HeaderMap::const_iterator it =  this->Headers.find("X-Forwarded-For");
-    if (it != this->Headers.cend())
+    HeaderMap::const_iterator it =  this->headers.find("X-Forwarded-For");
+    if (it != this->headers.cend())
     {
         const char* x_forwarded_for = it->second.c_str();
         LOG_DEBUG("X-Forwarded-For: " << x_forwarded_for);
@@ -162,11 +163,11 @@ void Req::ParseClientIP()
         const char* p = strchr(x_forwarded_for, ',');
         if (nullptr == p)
         {
-            this->ClientIP.assign(x_forwarded_for);
+            this->client_ip.assign(x_forwarded_for);
         }
         else
         {
-            this->ClientIP.assign(x_forwarded_for, p - x_forwarded_for);
+            this->client_ip.assign(x_forwarded_for, p - x_forwarded_for);
         }
     }
 }
@@ -176,28 +177,28 @@ std::string Req::Dump()
     char buf[1024] = "";
     int n = 0;
 
-    if (this->Path.empty())
+    if (this->path.empty())
     {
-        this->Path = "/";
+        this->path = "/";
     }
 
-    if (Query.empty())
+    if (query.empty())
     {
         n = snprintf(buf, sizeof(buf), "%s %s HTTP/%d.%d\r\n",
-                     http_method_str(this->Method), this->Path.c_str(),
-                     this->MajorVersion, this->MinorVersion);
+                     http_method_str(this->method), this->path.c_str(),
+                     this->major_version, this->minor_version);
     }
     else
     {
         n = snprintf(buf, sizeof(buf), "%s %s?%s HTTP/%d.%d\r\n",
-                     http_method_str(this->Method), this->Path.c_str(), this->Query.c_str(),
-                     this->MajorVersion, this->MinorVersion);
+                     http_method_str(this->method), this->path.c_str(), this->query.c_str(),
+                     this->major_version, this->minor_version);
     }
 
     std::string s(buf, n);
 
-    HeaderMap::const_iterator it = this->Headers.cbegin();
-    while (it != this->Headers.cend())
+    HeaderMap::const_iterator it = this->headers.cbegin();
+    while (it != this->headers.cend())
     {
         int n = snprintf(buf, sizeof(buf), "%s: %s\r\n", it->first.c_str(), it->second.c_str());
         s.append(buf, n);
@@ -205,7 +206,7 @@ std::string Req::Dump()
     }
 
     s.append("\r\n");
-    s.append(this->Body);
+    s.append(this->body);
 
     return s;
 }
@@ -278,26 +279,26 @@ int Parser::Execute(const char* buffer, size_t count)
     {
         if (http_req_.url_decode)
         {
-            if (http_req_.Query.size() > 0)
+            if (http_req_.query.size() > 0)
             {
                 // 对query要做url decode
-                std::string query = http_req_.Query;
+                std::string query = http_req_.query;
                 const size_t len = URLDecode((char*) query.data(), query.size());
-                http_req_.Query.assign(query.data(), len);
-                LOG_DEBUG("decoded query: " << http_req_.Query);
+                http_req_.query.assign(query.data(), len);
+                LOG_DEBUG("decoded query: " << http_req_.query);
             }
 
-            if (http_req_.Body.size() > 0)
+            if (http_req_.body.size() > 0)
             {
                 // 对body要做url decode
-                std::string body = http_req_.Body;
+                std::string body = http_req_.body;
                 const size_t len = URLDecode((char*) body.data(), body.size());
-                http_req_.Body.assign(body.data(), len);
-                LOG_DEBUG("decoded body: " << http_req_.Body);
+                http_req_.body.assign(body.data(), len);
+                LOG_DEBUG("decoded body: " << http_req_.body);
             }
         }
 
-        if (http_req_.Query.size() > 0)
+        if (http_req_.query.size() > 0)
         {
             http_req_.ParseQuery();
         }
@@ -388,29 +389,51 @@ int Parser::OnHeadersComplete(http_parser* parser)
     LOG_TRACE("Parser::OnHeadersComplete");
     Parser* hp = static_cast<Parser*>(parser->data);
 
-    hp->http_req_.Method = (http_method) parser->method;
-    hp->http_req_.MajorVersion = parser->http_major;
-    hp->http_req_.MinorVersion = parser->http_minor;
+    hp->http_req_.method = (http_method) parser->method;
+    hp->http_req_.major_version = parser->http_major;
+    hp->http_req_.minor_version = parser->http_minor;
     hp->http_req_.ParseClientIP();
 
-    LOG_DEBUG("method: " << hp->http_req_.Method
-              << ", major version: " << hp->http_req_.MajorVersion
-              << ", minor version: " << hp->http_req_.MinorVersion
-              << ", client ip: " << hp->http_req_.ClientIP);
+    LOG_DEBUG("method: " << hp->http_req_.method
+              << ", major version: " << hp->http_req_.major_version
+              << ", minor version: " << hp->http_req_.minor_version
+              << ", client ip: " << hp->http_req_.client_ip);
 
-    HeaderMap::const_iterator it = hp->http_req_.Headers.find("Content-Type");
-    if (it != hp->http_req_.Headers.end())
+    HeaderMap::const_iterator it = hp->http_req_.headers.find("Content-Type");
+    if (it != hp->http_req_.headers.end())
     {
         if (0 == strncasecmp(it->second.c_str(), "application/x-www-form-urlencoded", strlen("application/x-www-form-urlencoded")))
         {
+            // Content-Type:application/x-www-from-urlencoded时，
+            // 会将表单内的数据转换为键值对，形如name=java&age=23，并做urlencode。
+            // GET请求时作为query，POST请求时放在body中。
             hp->http_req_.url_decode = true;
         }
         else if (0 == strncasecmp(it->second.c_str(), "multipart/form-data", strlen("multipart/form-data")))
         {
-            hp->http_req_._s.body_processor = mpart_body_processor_init(&(hp->http_req_));
-            hp->http_req_._s.free_body_parser_func = (free_body_parser) mpart_body_processor_free;
+            // Content-Type:multipart/form-data时，
+            // 会将表单的数据处理为一条消息，用分隔符分开。既可以上传键值对，也可以同时上传文件。
+            // 每部分中，Content-Type表示类型，Content-Disposition表示一些描述信息。
+            // 形如：
+            //Content-Type: multipart/form-data; boundary=${bound}
+            //
+            //--${bound}
+            //Content-Disposition: form-data; name="file000"; filename="HTTP协议详解.pdf"
+            //Content-Type: application/octet-stream
+            //
+            //file content
+            //
+            //--${bound}
+            //Content-Disposition: form-data; name="Upload"
+            //
+            //Submit Query
+            //
+            //--${bound}--
+            //
+            hp->http_req_.state.body_processor = MPartBodyProcessorInit(&(hp->http_req_));
+            hp->http_req_.state.free_body_parser_func = (FreeBodyParser) MPartBodyProcessorFree;
 
-            const_cast<struct http_parser_settings*>(HTTPParserSettings->Get())->on_body = Parser::mpart_body_process;
+            const_cast<struct http_parser_settings*>(HTTPParserSettings->Get())->on_body = Parser::MPartBodyProcess;
         }
     }
 
@@ -449,11 +472,11 @@ int Parser::OnMessageComplete(http_parser* parser)
     return 0;
 }
 
-int Parser::mpart_body_process(http_parser* parser, const char* at, size_t length)
+int Parser::MPartBodyProcess(http_parser* parser, const char* at, size_t length)
 {
     Parser* hp = static_cast<Parser*>(parser->data);
-    mpart_body_processor* processor = (mpart_body_processor*) hp->http_req_._s.body_processor;
-    hp->http_req_._s.parsed += multipart_parser_execute(processor->parser, at, length);
+    MPartBodyProcessor* processor = (MPartBodyProcessor*) hp->http_req_.state.body_processor;
+    hp->http_req_.state.parsed += multipart_parser_execute(processor->parser, at, length);
 
     return 0;
 }

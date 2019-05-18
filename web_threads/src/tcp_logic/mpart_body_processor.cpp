@@ -33,7 +33,7 @@ static multipart_parser_settings settings =
 
 static int header_field_cb(struct multipart_parser* p, const char* buf, size_t len)
 {
-    mpart_body_processor* processor = (mpart_body_processor*) p->data;
+    MPartBodyProcessor* processor = (MPartBodyProcessor*) p->data;
     processor->last_header_name.assign(buf, len);
 
     return 0;
@@ -41,7 +41,7 @@ static int header_field_cb(struct multipart_parser* p, const char* buf, size_t l
 
 static int header_value_cb(struct multipart_parser* p, const char* buf, size_t len)
 {
-    mpart_body_processor* processor = (mpart_body_processor*)p->data;
+    MPartBodyProcessor* processor = (MPartBodyProcessor*)p->data;
 
     std::string header_value(buf, len);
     processor->part_headers.insert(HeaderMap::value_type(processor->last_header_name, header_value));
@@ -51,7 +51,7 @@ static int header_value_cb(struct multipart_parser* p, const char* buf, size_t l
 
 static int headers_complete_cb(struct multipart_parser* p)
 {
-    mpart_body_processor* processor = (mpart_body_processor*)p->data;
+    MPartBodyProcessor* processor = (MPartBodyProcessor*)p->data;
 //    Req* http_req = processor->http_req;
 
     HeaderMap::const_iterator it = processor->part_headers.find("Content-Disposition");
@@ -99,7 +99,7 @@ static int part_data_cb(struct multipart_parser* p, const char* buf, size_t len)
 
 static int part_data_begin_cb(struct multipart_parser* p)
 {
-    mpart_body_processor* processor = (mpart_body_processor*)p->data;
+    MPartBodyProcessor* processor = (MPartBodyProcessor*)p->data;
     processor->last_header_name.clear();
     processor->part_headers.clear();
 
@@ -108,7 +108,7 @@ static int part_data_begin_cb(struct multipart_parser* p)
 
 static int part_data_end_cb(struct multipart_parser* p)
 {
-    mpart_body_processor* processor = (mpart_body_processor*)p->data;
+    MPartBodyProcessor* processor = (MPartBodyProcessor*)p->data;
 //    Req* request = (Req*)processor->http_req;
 
 //    params_map_add(request->params, processor->current_param);
@@ -201,9 +201,10 @@ void ParseAttr(AttrMap& attrs, const char* str)
 
     free(original_ptr);
 }
-static std::string get_boundary(const Req* http_req)
+
+static std::string GetBoundary(const Req* http_req)
 {
-    HeaderMap::const_iterator it = http_req->Headers.find("Content-Type");
+    HeaderMap::const_iterator it = http_req->headers.find("Content-Type");
     const std::string& content_type = it->second;
     LOG_DEBUG("content type: " << content_type);
 
@@ -220,20 +221,26 @@ static std::string get_boundary(const Req* http_req)
     return "--" + it_boundary->second;
 }
 
-mpart_body_processor* mpart_body_processor_init(const Req* http_req)
+MPartBodyProcessor* MPartBodyProcessorInit(const Req* http_req)
 {
-    mpart_body_processor* processor = new mpart_body_processor;
-    const std::string boundary = get_boundary(http_req);
+    MPartBodyProcessor* processor = new MPartBodyProcessor();
+    if (nullptr == processor)
+    {
+        LOG_ERROR("failed to alloc memory");
+        return nullptr;
+    }
+
+    const std::string boundary = GetBoundary(http_req);
 
     processor->http_req = const_cast<Req*>(http_req);
     processor->parser = multipart_parser_init(boundary.c_str(), &settings);
     processor->parser->data = processor;
-    processor->current_param = NULL;
+    processor->current_param = nullptr;
 
     return processor;
 }
 
-void mpart_body_processor_free(mpart_body_processor* processor)
+void MPartBodyProcessorFree(MPartBodyProcessor* processor)
 {
     multipart_parser_free(processor->parser);
     delete processor;

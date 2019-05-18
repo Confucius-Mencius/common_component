@@ -80,29 +80,29 @@ Parser::~Parser()
 
 int Parser::CheckUpgrade(const http::Req& http_req)
 {
-    http::HeaderMap::const_iterator it = http_req.Headers.find("Upgrade");
-    if (it == http_req.Headers.cend() || (it->second != "websocket" && it->second != "WebSocket" && it->second != "Websocket"))
+    http::HeaderMap::const_iterator it = http_req.headers.find("Upgrade");
+    if (it == http_req.headers.cend() || (it->second != "websocket" && it->second != "WebSocket" && it->second != "Websocket"))
     {
         LOG_ERROR("should have header: { Upgrade: websocket }");
         return -1;
     }
 
-    it = http_req.Headers.find("Connection");
-    if (it == http_req.Headers.cend() || (it->second != "Upgrade" && it->second != "upgrade"))
+    it = http_req.headers.find("Connection");
+    if (it == http_req.headers.cend() || (it->second != "Upgrade" && it->second != "upgrade"))
     {
         LOG_ERROR("should have header: { Connection: Upgrade }");
         return -1;
     }
 
-    it = http_req.Headers.find("Sec-WebSocket-Version");
-    if (it == http_req.Headers.cend() || it->second != "13") // 13表示RFC6455
+    it = http_req.headers.find("Sec-WebSocket-Version");
+    if (it == http_req.headers.cend() || it->second != "13") // 13表示RFC6455
     {
         LOG_ERROR("should have header: { Sec-Websocket-Version: 13 }");
         return -1;
     }
 
-    it = http_req.Headers.find("Sec-WebSocket-Key");
-    if (it == http_req.Headers.cend())
+    it = http_req.headers.find("Sec-WebSocket-Key");
+    if (it == http_req.headers.cend())
     {
         LOG_ERROR("no Sec-Websocket-Key header");
         return -1;
@@ -110,8 +110,8 @@ int Parser::CheckUpgrade(const http::Req& http_req)
 
     this->key_ = it->second;
 
-    it = http_req.Headers.find("Sec-WebSocket-Protocol");
-    if (it != http_req.Headers.cend())
+    it = http_req.headers.find("Sec-WebSocket-Protocol");
+    if (it != http_req.headers.cend())
     {
         LOG_DEBUG("Sec-WebSocket-Protocol: " << it->second);
         this->protocol_ = it->second;
@@ -250,7 +250,6 @@ int Parser::OnFrameEnd(websocket_parser* parser)
         wsp->payloads_.append(wsp->body_);
     }
 
-    bool conn_closed = false;
 
     if (wsp->fin_)
     {
@@ -271,6 +270,8 @@ int Parser::OnFrameEnd(websocket_parser* parser)
             uint16_t cc = *((uint16_t*) s);
             LOG_DEBUG("close code: " << cc);
         }
+
+        bool conn_closed = false;
 
         if (wsp->web_logic_ != nullptr)
         {

@@ -59,10 +59,10 @@ void MsgDispatcher::DetachMsgHandler(const char* path)
 
 int MsgDispatcher::DispatchMsg(const ConnInterface* conn, const Req& http_req)
 {
-    MsgHandlerMap::iterator it = msg_handler_map_.find(http_req.Path);
+    MsgHandlerMap::iterator it = msg_handler_map_.find(http_req.path);
     if (it == msg_handler_map_.end())
     {
-        LOG_WARN("failed to get msg handler, path: " << http_req.Path);
+        LOG_WARN("failed to get msg handler, path: " << http_req.path);
         return -1;
     }
 
@@ -72,16 +72,16 @@ int MsgDispatcher::DispatchMsg(const ConnInterface* conn, const Req& http_req)
 
     const ConnGUID* conn_guid = conn->GetConnGUID();
 
-    if (HTTP_GET == http_req.Method)
+    if (HTTP_GET == http_req.method)
     {
-        it->second->OnGet(conn_guid, http_req.ClientIP.empty() ? conn->GetClientIP() : http_req.ClientIP.c_str(),
-                          http_req.Queries, http_req.Headers);
+        it->second->OnGet(conn_guid, http_req.client_ip.empty() ? conn->GetClientIP() : http_req.client_ip.c_str(),
+                          http_req.queries, http_req.headers);
     }
-    else if (HTTP_POST == http_req.Method)
+    else if (HTTP_POST == http_req.method)
     {
-        it->second->OnPost(conn_guid, http_req.ClientIP.empty() ? conn->GetClientIP() : http_req.ClientIP.c_str(),
-                           http_req.Queries, http_req.Headers,
-                           http_req.Body.data(), http_req.Body.size());
+        it->second->OnPost(conn_guid, http_req.client_ip.empty() ? conn->GetClientIP() : http_req.client_ip.c_str(),
+                           http_req.queries, http_req.headers,
+                           http_req.body.data(), http_req.body.size());
     }
 
     struct timeval end_time;

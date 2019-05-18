@@ -61,7 +61,8 @@ struct Peer
 
     friend std::ostream& operator<<(std::ostream& os, const Peer& instance)
     {
-        os << "peer => { type: " << instance.type << ", addr: " << instance.addr << ", port: " << instance.port << " }";
+        os << "peer => {type: " << instance.type << ", addr: " << instance.addr
+           << ", port: " << instance.port << "}";
         return os;
     }
 };

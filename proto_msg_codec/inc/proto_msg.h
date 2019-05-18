@@ -77,7 +77,7 @@ struct MsgHead
 
     friend std::ostream& operator<<(std::ostream& os, const MsgHead& instance)
     {
-        os << "msg head => { passback: " << instance.passback << ", msg id: " << instance.msg_id << " }";
+        os << "msg head => {passback: " << instance.passback << ", msg id: " << instance.msg_id << "}";
         return os;
     }
 };

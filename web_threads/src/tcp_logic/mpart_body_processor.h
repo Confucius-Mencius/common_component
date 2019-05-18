@@ -12,7 +12,7 @@ namespace http
 {
 struct Req;
 
-struct param_entry
+struct ParamEntry
 {
     char* name;
     char* val;
@@ -20,7 +20,7 @@ struct param_entry
     FILE* file;
 };
 
-struct mpart_body_processor
+struct MPartBodyProcessor
 {
     Req* http_req;
     struct multipart_parser* parser;
@@ -28,15 +28,20 @@ struct mpart_body_processor
     // headers of current part - don't try to use it outside callbacks it's reset on every part
     HeaderMap part_headers;
     std::string last_header_name;
-    param_entry* current_param;
+    ParamEntry* current_param;
 
-    mpart_body_processor() : last_header_name()
+    MPartBodyProcessor() : part_headers(), last_header_name()
     {
+        http_req = nullptr;
+        parser = nullptr;
+        current_param = nullptr;
     }
+
+    ~MPartBodyProcessor() {}
 };
 
-mpart_body_processor* mpart_body_processor_init(const Req* http_req);
-void mpart_body_processor_free(mpart_body_processor* p);
+MPartBodyProcessor* MPartBodyProcessorInit(const Req* http_req);
+void MPartBodyProcessorFree(MPartBodyProcessor* processor);
 }
 }
 }

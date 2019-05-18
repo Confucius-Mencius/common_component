@@ -338,7 +338,7 @@ void WebLogic::OnHTTPReq(bool& conn_closed, ConnID conn_id, const tcp::web::http
 
     if (http_msg_dispatcher_.DispatchMsg(conn, http_req) != 0)
     {
-        LOG_ERROR("failed to dispatch http req, path: " << http_req.Path << ", method: " << http_method_str(http_req.Method));
+        LOG_ERROR("failed to dispatch http req, path: " << http_req.path << ", method: " << http_method_str(http_req.method));
         return;
     }
 

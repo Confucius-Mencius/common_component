@@ -50,7 +50,7 @@ char* URLEncode(int& encoded_len, const char* s, size_t len)
         else if ((c < '0' && c != '.' && c != '-' && c != '*')
                  || (c < 'A' && c > '9')
                  || (c > 'Z' && c < 'a' && c != '_')
-                 || (c > 'z')) // ~可以排除
+                 || (c > 'z')) // 在标准实现中，~也可以排除。（这里没有）
         {
             to[0] = '%';
             to[1] = hexchars[c >> 4]; // 将二进制转换成十六进制表示

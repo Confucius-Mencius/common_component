@@ -13,22 +13,60 @@ namespace web
 {
 namespace http
 {
-typedef void (*free_body_parser) (void*);
+typedef void (*FreeBodyParser) (void*);
 
-struct http_request_state
+struct HTTPRequestState
 {
     void* body_processor;
-    free_body_parser free_body_parser_func;
-
+    FreeBodyParser free_body_parser_func;
     char* last_header_name;
     int parsed; // parsed / content_length就是进度
     int content_length;
     int socket_fd;
+
+    HTTPRequestState()
+    {
+        body_processor = nullptr;
+        free_body_parser_func = nullptr;
+        last_header_name = nullptr;
+        parsed = 0;
+        content_length = 0;
+        socket_fd = -1;
+    }
+
+    ~HTTPRequestState() {}
+
+    void Reset()
+    {
+        body_processor = nullptr;
+        free_body_parser_func = nullptr;
+        last_header_name = nullptr;
+        parsed = 0;
+        content_length = 0;
+        socket_fd = -1;
+    }
 };
 
-class Req
+struct Req
 {
-public:
+    http_method method; // 1:get 3:post
+    unsigned short major_version;
+    unsigned short minor_version;
+    std::string client_ip;
+    std::string url;
+    std::string schema;
+    std::string host;
+    uint16_t port;
+    std::string path;
+    std::string query;
+    QueryMap queries;
+    std::string fragment;
+    std::string user_info;
+    HeaderMap headers;
+    bool url_decode;
+    std::string body;
+    struct HTTPRequestState state;
+
     Req();
     ~Req();
 
@@ -39,36 +77,17 @@ public:
 
     void AddHeader(const std::string& name, const std::string& value)
     {
-        this->Headers.insert(HeaderMap::value_type(name, value));
+        this->headers.insert(HeaderMap::value_type(name, value));
     }
 
     void ParseClientIP();
 
     void AppendBody(const char* buffer, size_t count)
     {
-        this->Body.append(buffer, count);
+        this->body.append(buffer, count);
     }
 
     std::string Dump();
-
-private:
-    http_method Method;
-    unsigned short MajorVersion;
-    unsigned short MinorVersion;
-    std::string ClientIP;
-    std::string URL;
-    std::string Schema;
-    std::string Host;
-    uint16_t Port;
-    std::string Path;
-    std::string Query;
-    QueryMap Queries;
-    std::string Fragment;
-    std::string UserInfo;
-    HeaderMap Headers;
-    std::string Body;
-    bool url_decode;
-    struct http_request_state _s;
 };
 
 class Parser
@@ -95,8 +114,8 @@ public:
     static int OnHeaderValue(struct http_parser* parser, const char* at, size_t length); // 解析http header的value调用
     static int OnHeadersComplete(struct http_parser* parser); // 解析完成http header调用
     static int OnBody(struct http_parser* parser, const char* at, size_t length); // 解析http body调用
-    static int OnMessageComplete(struct http_parser* parser); // 解析完成调用
-    static int mpart_body_process(struct http_parser* parser, const char* at, size_t length);
+    static int OnMessageComplete(struct http_parser* parser); // 解析整个http请求完成调用
+    static int MPartBodyProcess(struct http_parser* parser, const char* at, size_t length);
 
 private:
     tcp::WebLogic* web_logic_;
