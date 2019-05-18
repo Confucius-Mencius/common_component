@@ -31,27 +31,29 @@ static multipart_parser_settings settings =
     .on_body_end = body_end_cb
 };
 
-static int header_field_cb(struct multipart_parser* p, const char* buf, size_t len)
+static int header_field_cb(struct multipart_parser* parser, const char* at, size_t length)
 {
-    MPartBodyProcessor* processor = (MPartBodyProcessor*) p->data;
-    processor->last_header_name.assign(buf, len);
+    LOG_TRACE("Parser::OnMessageBegin");
+
+    MPartBodyProcessor* processor = (MPartBodyProcessor*) parser->data;
+    processor->last_header_name.assign(at, length);
 
     return 0;
 }
 
-static int header_value_cb(struct multipart_parser* p, const char* buf, size_t len)
+static int header_value_cb(struct multipart_parser* parser, const char* at, size_t length)
 {
-    MPartBodyProcessor* processor = (MPartBodyProcessor*)p->data;
+    MPartBodyProcessor* processor = (MPartBodyProcessor*)parser->data;
 
-    std::string header_value(buf, len);
+    std::string header_value(at, length);
     processor->part_headers.insert(HeaderMap::value_type(processor->last_header_name, header_value));
 
     return 0;
 }
 
-static int headers_complete_cb(struct multipart_parser* p)
+static int headers_complete_cb(struct multipart_parser* parser)
 {
-    MPartBodyProcessor* processor = (MPartBodyProcessor*)p->data;
+    MPartBodyProcessor* processor = (MPartBodyProcessor*)parser->data;
 //    Req* http_req = processor->http_req;
 
     HeaderMap::const_iterator it = processor->part_headers.find("Content-Disposition");
@@ -87,9 +89,9 @@ static int headers_complete_cb(struct multipart_parser* p)
     return 0;
 }
 
-static int part_data_cb(struct multipart_parser* p, const char* buf, size_t len)
+static int part_data_cb(struct multipart_parser* parser, const char* at, size_t length)
 {
-    if (len != 0)
+    if (length != 0)
     {
 //        mpart_body_processor* processor = (mpart_body_processor*)p->data;
 //        param_entry_append(processor->current_param, buf, len);
@@ -97,18 +99,18 @@ static int part_data_cb(struct multipart_parser* p, const char* buf, size_t len)
     return 0;
 }
 
-static int part_data_begin_cb(struct multipart_parser* p)
+static int part_data_begin_cb(struct multipart_parser* parser)
 {
-    MPartBodyProcessor* processor = (MPartBodyProcessor*)p->data;
+    MPartBodyProcessor* processor = (MPartBodyProcessor*)parser->data;
     processor->last_header_name.clear();
     processor->part_headers.clear();
 
     return 0;
 }
 
-static int part_data_end_cb(struct multipart_parser* p)
+static int part_data_end_cb(struct multipart_parser* parser)
 {
-    MPartBodyProcessor* processor = (MPartBodyProcessor*)p->data;
+    MPartBodyProcessor* processor = (MPartBodyProcessor*)parser->data;
 //    Req* request = (Req*)processor->http_req;
 
 //    params_map_add(request->params, processor->current_param);
@@ -118,34 +120,34 @@ static int part_data_end_cb(struct multipart_parser* p)
     return 0;
 }
 
-static int body_end_cb(struct multipart_parser* p)
+static int body_end_cb(struct multipart_parser* parser)
 {
     return 0;
 }
 
-static char* str_trim(char* str)
+// 去掉字符串首尾的space
+static char* str_trim(char* s)
 {
     char* end;
 
-    while (isspace(*str))
+    while (isspace(*s))
     {
-        str++;
+        ++s;
     }
 
-    if (*str == 0)
+    if (*s == '\0')
     {
-        return str;
+        return s;
     }
 
-    end = str + strlen(str) - 1;
-    while (end > str && isspace(*end))
+    end = s + strlen(s) - 1;
+    while (end > s && isspace(*end))
     {
-        end--;
+        --end;
     }
 
-    *(end + 1) = 0;
-
-    return str;
+    *(end + 1) = '\0';
+    return s;
 }
 
 static bool is_quote(char c)
@@ -153,53 +155,52 @@ static bool is_quote(char c)
     return (c == '"' || c == '\'');
 }
 
-static char* str_strip_quotes(char* str)
+// 去掉字符串首尾的引号（包括单引号和双引号）
+static char* str_trim_quotes(char* s)
 {
     char* end;
 
-    while (is_quote(*str))
+    while (is_quote(*s))
     {
-        str++;
+        ++s;
     }
 
-    if (*str == 0)
+    if (*s == '\0')
     {
-        return str;
+        return s;
     }
 
-    end = str + strlen(str) - 1;
-    while (end > str && is_quote(*end))
+    end = s + strlen(s) - 1;
+    while (end > s && is_quote(*end))
     {
-        end--;
+        --end;
     }
 
-    *(end + 1) = 0;
-
-    return str;
+    *(end + 1) = '\0';
+    return s;
 }
 
 typedef std::map<std::string, std::string> AttrMap;
 
 void ParseAttr(AttrMap& attrs, const char* str)
 {
-    char* pair, *name, *value, *header_str, *original_ptr;
-    header_str = strdup(str);
-    original_ptr = header_str;
+    const std::string s(str);
+    char* header_str = (char*) s.c_str();
 
     while (isspace(*header_str))
     {
         header_str++;
     }
 
-    while ((pair = strsep(&header_str, ";")) && pair != NULL)
+    char* pair, *name, *value;
+
+    while ((pair = strsep(&header_str, ";")) && pair != nullptr)
     {
         name = strsep(&pair, "=");
         value = strsep(&pair, "=");
 
-        attrs.insert(AttrMap::value_type(str_trim(name), str_trim(str_strip_quotes(value))));
+        attrs.insert(AttrMap::value_type(str_trim(name), str_trim(str_trim_quotes(value))));
     }
-
-    free(original_ptr);
 }
 
 static std::string GetBoundary(const Req* http_req)
@@ -214,6 +215,7 @@ static std::string GetBoundary(const Req* http_req)
     AttrMap::const_iterator it_boundary = attrs.find("boundary");
     if (it_boundary == attrs.end())
     {
+        LOG_ERROR("failed to get boundary from " << content_type);
         return "";
     }
 

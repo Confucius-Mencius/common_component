@@ -15,7 +15,7 @@ namespace http
 {
 typedef void (*FreeBodyParser) (void*);
 
-struct HTTPRequestState
+struct ReqState
 {
     void* body_processor;
     FreeBodyParser free_body_parser_func;
@@ -24,7 +24,7 @@ struct HTTPRequestState
     int content_length;
     int socket_fd;
 
-    HTTPRequestState()
+    ReqState()
     {
         body_processor = nullptr;
         free_body_parser_func = nullptr;
@@ -34,7 +34,7 @@ struct HTTPRequestState
         socket_fd = -1;
     }
 
-    ~HTTPRequestState() {}
+    ~ReqState() {}
 
     void Reset()
     {
@@ -65,7 +65,7 @@ struct Req
     HeaderMap headers;
     bool url_decode;
     std::string body;
-    struct HTTPRequestState state;
+    struct ReqState req_state;
 
     Req();
     ~Req();
@@ -115,7 +115,7 @@ public:
     static int OnHeadersComplete(struct http_parser* parser); // 解析完成http header调用
     static int OnBody(struct http_parser* parser, const char* at, size_t length); // 解析http body调用
     static int OnMessageComplete(struct http_parser* parser); // 解析整个http请求完成调用
-    static int MPartBodyProcess(struct http_parser* parser, const char* at, size_t length);
+    static int OnMPartBody(struct http_parser* parser, const char* at, size_t length);
 
 private:
     tcp::WebLogic* web_logic_;

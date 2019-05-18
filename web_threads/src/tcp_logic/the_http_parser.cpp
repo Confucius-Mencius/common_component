@@ -12,7 +12,7 @@ namespace web
 namespace http
 {
 Req::Req() : client_ip(), url(), schema(), host(), path(), query(), queries(),
-    fragment(), user_info(), headers(), body(), state()
+    fragment(), user_info(), headers(), body(), req_state()
 {
     method = HTTP_GET;
     major_version = 1;
@@ -43,7 +43,7 @@ void Req::Reset()
     headers.clear();
     url_decode = false;
     body.clear();
-    state.Reset();
+    req_state.Reset();
 }
 
 void Req::ParseURL(const char* at, size_t length)
@@ -430,10 +430,12 @@ int Parser::OnHeadersComplete(http_parser* parser)
             //
             //--${bound}--
             //
-            hp->http_req_.state.body_processor = MPartBodyProcessorInit(&(hp->http_req_));
-            hp->http_req_.state.free_body_parser_func = (FreeBodyParser) MPartBodyProcessorFree;
+            // 初始化multipart processor
+            hp->http_req_.req_state.body_processor = MPartBodyProcessorInit(&(hp->http_req_));
+            hp->http_req_.req_state.free_body_parser_func = (FreeBodyParser) MPartBodyProcessorFree;
 
-            const_cast<struct http_parser_settings*>(HTTPParserSettings->Get())->on_body = Parser::MPartBodyProcess;
+            // 接管http parser的on_body回调
+            const_cast<struct http_parser_settings*>(HTTPParserSettings->Get())->on_body = Parser::OnMPartBody;
         }
     }
 
@@ -472,11 +474,11 @@ int Parser::OnMessageComplete(http_parser* parser)
     return 0;
 }
 
-int Parser::MPartBodyProcess(http_parser* parser, const char* at, size_t length)
+int Parser::OnMPartBody(http_parser* parser, const char* at, size_t length)
 {
     Parser* hp = static_cast<Parser*>(parser->data);
-    MPartBodyProcessor* processor = (MPartBodyProcessor*) hp->http_req_.state.body_processor;
-    hp->http_req_.state.parsed += multipart_parser_execute(processor->parser, at, length);
+    MPartBodyProcessor* processor = (MPartBodyProcessor*) hp->http_req_.req_state.body_processor;
+    hp->http_req_.req_state.parsed += multipart_parser_execute(processor->parser, at, length);
 
     return 0;
 }

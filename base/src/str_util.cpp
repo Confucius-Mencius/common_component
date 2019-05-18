@@ -61,12 +61,12 @@ bool StrNoCaseEQ(const char* str1, const char* str2, size_t min_buf_size)
 
 bool StrEndWith(const std::string& str, const std::string& tail)
 {
-    return str.compare(str.size() - tail.size(), tail.size(), tail) == 0;
+    return (0 == str.compare(str.size() - tail.size(), tail.size(), tail));
 }
 
 bool StrBeginWith(const std::string& str, const std::string& head)
 {
-    return str.compare(0, head.size(), head) == 0;
+    return (0 == str.compare(0, head.size(), head));
 }
 
 int StrPrintf(char* buf, size_t buf_size, const char* fmt, ...)
@@ -96,7 +96,7 @@ int StrPrintf(char* buf, size_t buf_size, const char* fmt, ...)
     return n;
 }
 
-int StrTrim(char* buf, int buf_size, const char* str, int len, const char* delims)
+int StrTrim(char* buf, size_t buf_size, const char* str, size_t len, const char* delims)
 {
     std::string result;
     result.assign(str, len);
@@ -120,7 +120,7 @@ int StrTrim(char* buf, int buf_size, const char* str, int len, const char* delim
     return StrPrintf(buf, buf_size, "%s", result.c_str());
 }
 
-int StrReplace(char* buf, int buf_size, const char* str, const char* search, const char* replace)
+int StrReplace(char* buf, size_t buf_size, const char* str, const char* search, const char* replace)
 {
     const std::string search_s(search);
     const std::string replace_s(replace);
@@ -139,7 +139,7 @@ int StrReplace(char* buf, int buf_size, const char* str, const char* search, con
     return StrPrintf(buf, buf_size, "%s", result.c_str());
 }
 
-void StrReverse(char str[], int len)
+void StrReverse(char str[], size_t len)
 {
     int i, j;
     char c;
@@ -152,7 +152,7 @@ void StrReverse(char str[], int len)
     }
 }
 
-int MatchWithAsteriskW(const char* str, int len1, const char* pattern, int len2)
+int MatchWithAsteriskW(const char* str, size_t len1, const char* pattern, size_t len2)
 {
     if (nullptr == str || nullptr == pattern)
     {
@@ -160,7 +160,7 @@ int MatchWithAsteriskW(const char* str, int len1, const char* pattern, int len2)
     }
 
     int mark = 0; // 用于分段标记，'*'分隔的字符串
-    int p1 = 0, p2 = 0;
+    size_t p1 = 0, p2 = 0;
 
     while (p1 < len1 && p2 < len2)
     {

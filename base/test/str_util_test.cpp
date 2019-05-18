@@ -310,6 +310,12 @@ void StrTrimTest()
     int n2 = StrTrim(buf2, sizeof(buf2), s2, StrLen(s2, sizeof(s2)));
     EXPECT_GT(n2, 0);
     EXPECT_STREQ("a \r \n    \t b \t c", buf2);
+
+    char s3[] = "\"' a b \t \"'";
+    char buf3[24] = "";
+    int n3 = StrTrim(buf3, sizeof(buf3), s3, StrLen(s3, sizeof(s3)), "\"'");
+    EXPECT_GT(n3, 0);
+    EXPECT_STREQ(" a b \t ", buf3);
 }
 
 void StrReplaceTest()

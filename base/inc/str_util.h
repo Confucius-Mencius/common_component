@@ -109,15 +109,15 @@ bool StrBeginWith(const std::string& str, const std::string& head);
 int StrPrintf(char* buf, size_t buf_size, const char* fmt, ...);
 
 /**
- * @brief 去掉字符串两边的空白
+ * @brief 去掉字符串两边的空白（或指定字符集）
  * @param buf
  * @param buf_size
  * @param str
  * @param len
- * @param delims 空白符号列表
+ * @param delims 空白符号列表（或指定字符集）
  * @return
  */
-int StrTrim(char* buf, int buf_size, const char* str, int len, const char* delims = " \t\r\n");
+int StrTrim(char* buf, size_t buf_size, const char* str, size_t len, const char* delims = " \t\r\n");
 
 /**
  * @brief 替换字符串中的子串
@@ -128,14 +128,14 @@ int StrTrim(char* buf, int buf_size, const char* str, int len, const char* delim
  * @param replace 替换成
  * @return
  */
-int StrReplace(char* buf, int buf_size, const char* str, const char* search, const char* replace);
+int StrReplace(char* buf, size_t buf_size, const char* str, const char* search, const char* replace);
 
 /**
  * @brief StrReverse 颠倒
  * @param str
  * @param len
  */
-void StrReverse(char str[], int len);
+void StrReverse(char str[], size_t len);
 
 /**
  * @brief 通配符匹配算法
@@ -145,7 +145,7 @@ void StrReverse(char str[], int len);
  * @param len2 pattern len
  * @return =0表示匹配成功，否则失败
  */
-int MatchWithAsteriskW(const char* str, int len1, const char* pattern, int len2);
+int MatchWithAsteriskW(const char* str, size_t len1, const char* pattern, size_t len2);
 
 /** @} Module_StrUtil */
 /** @} Module_Base */
