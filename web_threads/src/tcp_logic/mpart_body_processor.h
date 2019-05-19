@@ -20,29 +20,37 @@ struct ParamEntry
     FILE* file;
 };
 
-// TODO 调通后转成c++风格
-struct MPartBodyProcessor
+class MPartBodyProcessor
 {
-    Req* http_req;
-    struct multipart_parser* parser;
+public:
+    MPartBodyProcessor();
+    ~MPartBodyProcessor();
 
-    // headers of current part - don't try to use it outside callbacks it's reset on every part
-    HeaderMap part_headers;
-    std::string last_header_name;
-    ParamEntry* current_param;
+    int Initialize(Req* http_req);
+    void Finalize();
 
-    MPartBodyProcessor() : part_headers(), last_header_name()
+    static int OnPartDataBegin(struct multipart_parser* parser);
+    static int OnHeaderField(struct multipart_parser* parser, const char* at, size_t length);
+    static int OnHeaderValue(struct multipart_parser* parser, const char* at, size_t length);
+    static int OnHeadersComplete(struct multipart_parser* parser);
+    static int OnPartData(struct multipart_parser* parser, const char* at, size_t length);
+    static int OnPartDataEnd(struct multipart_parser* parser);
+    static int OnBodyEnd(struct multipart_parser* parser);
+
+    struct multipart_parser* GetParser()
     {
-        http_req = nullptr;
-        parser = nullptr;
-        current_param = nullptr;
+        return parser_;
     }
 
-    ~MPartBodyProcessor() {}
-};
+private:
+    Req* http_req_;
+    struct multipart_parser* parser_;
 
-MPartBodyProcessor* MPartBodyProcessorInit(const Req* http_req);
-void MPartBodyProcessorFree(MPartBodyProcessor* processor);
+    // headers of current part - don't try to use it outside callbacks it's reset on every part
+    HeaderMap part_headers_;
+    std::string last_header_name_;
+    ParamEntry* current_param_;
+};
 }
 }
 }

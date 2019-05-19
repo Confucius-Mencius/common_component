@@ -12,7 +12,7 @@ namespace web
 namespace http
 {
 Req::Req() : client_ip(), url(), schema(), host(), path(), query(), queries(),
-    fragment(), user_info(), headers(), body(), req_state()
+    fragment(), user_info(), headers(), body(), mpart_body_ctx()
 {
     method = HTTP_GET;
     major_version = 1;
@@ -43,7 +43,7 @@ void Req::Reset()
     headers.clear();
     url_decode = false;
     body.clear();
-    req_state.Reset();
+    mpart_body_ctx.Reset();
 }
 
 void Req::ParseURL(const char* at, size_t length)
@@ -430,9 +430,12 @@ int Parser::OnHeadersComplete(http_parser* parser)
             //
             //--${bound}--
             //
-            // 初始化multipart processor
-            hp->http_req_.req_state.body_processor = MPartBodyProcessorInit(&(hp->http_req_));
-            hp->http_req_.req_state.free_body_parser_func = (FreeBodyParser) MPartBodyProcessorFree;
+
+            if (hp->http_req_.mpart_body_ctx.processor.Initialize(&(hp->http_req_)) != 0)
+            {
+                hp->http_req_.mpart_body_ctx.processor.Finalize();
+                return -1;
+            }
 
             // 接管http parser的on_body回调
             const_cast<struct http_parser_settings*>(HTTPParserSettings->Get())->on_body = Parser::OnMPartBody;
@@ -477,8 +480,9 @@ int Parser::OnMessageComplete(http_parser* parser)
 int Parser::OnMPartBody(http_parser* parser, const char* at, size_t length)
 {
     Parser* hp = static_cast<Parser*>(parser->data);
-    MPartBodyProcessor* processor = (MPartBodyProcessor*) hp->http_req_.req_state.body_processor;
-    hp->http_req_.req_state.parsed += multipart_parser_execute(processor->parser, at, length);
+    hp->http_req_.mpart_body_ctx.parsed += multipart_parser_execute(
+            hp->http_req_.mpart_body_ctx.processor.GetParser(),
+            at, length);
 
     return 0;
 }

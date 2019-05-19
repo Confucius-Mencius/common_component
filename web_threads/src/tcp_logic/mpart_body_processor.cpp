@@ -4,6 +4,7 @@
 //#include <sys/types.h>
 //#include <sys/stat.h>
 #include "log_util.h"
+#include "singleton.h"
 #include "the_http_parser.h"
 
 namespace tcp
@@ -12,119 +13,6 @@ namespace web
 {
 namespace http
 {
-static int header_field_cb(struct multipart_parser* p, const char* buf, size_t len);
-static int header_value_cb(struct multipart_parser* p, const char* buf, size_t len);
-static int part_data_cb(struct multipart_parser* p, const char* buf, size_t len);
-static int part_data_begin_cb(struct multipart_parser* p);
-static int headers_complete_cb(struct multipart_parser* p);
-static int part_data_end_cb(struct multipart_parser* p);
-static int body_end_cb(struct multipart_parser* p);
-
-static multipart_parser_settings settings =
-{
-    .on_header_field = header_field_cb,
-    .on_header_value = header_value_cb,
-    .on_part_data = part_data_cb,
-    .on_part_data_begin = part_data_begin_cb,
-    .on_headers_complete = headers_complete_cb,
-    .on_part_data_end = part_data_end_cb,
-    .on_body_end = body_end_cb
-};
-
-static int header_field_cb(struct multipart_parser* parser, const char* at, size_t length)
-{
-    LOG_TRACE("Parser::OnMessageBegin");
-
-    MPartBodyProcessor* processor = (MPartBodyProcessor*) parser->data;
-    processor->last_header_name.assign(at, length);
-
-    return 0;
-}
-
-static int header_value_cb(struct multipart_parser* parser, const char* at, size_t length)
-{
-    MPartBodyProcessor* processor = (MPartBodyProcessor*)parser->data;
-
-    std::string header_value(at, length);
-    processor->part_headers.insert(HeaderMap::value_type(processor->last_header_name, header_value));
-
-    return 0;
-}
-
-static int headers_complete_cb(struct multipart_parser* parser)
-{
-    MPartBodyProcessor* processor = (MPartBodyProcessor*)parser->data;
-//    Req* http_req = processor->http_req;
-
-    HeaderMap::const_iterator it = processor->part_headers.find("Content-Disposition");
-    const std::string& content_disposition = it->second;
-
-    if (0 == strcasecmp(content_disposition.c_str(), "form-data;"))
-    {
-//        attrs_map_parse(cd_attrs_map, content_disposition + strlen("form-data;")); // 先;再=
-
-//        char* name = attrs_map_get(cd_attrs_map, "name");
-//        char* filename = attrs_map_get(cd_attrs_map, "filename");
-//        bool is_file = (filename != NULL);
-
-//        str_sanitize(filename);
-
-//        processor->current_param = param_entry_init(name, NULL, is_file);
-
-//        if (is_file)
-//        {
-//            char* upload_folder_path = http_request_uploads_path(http_req);
-//            mkdir(upload_folder_path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
-//            char* file_path = malloc_str(strlen(upload_folder_path) + strlen("/") + strlen(filename));
-//            sprintf(file_path, "%s/%s", upload_folder_path, filename);
-
-//            processor->current_param->file = fopen(file_path, "a");
-
-//            free(upload_folder_path);
-//            free(file_path);
-//        }
-    }
-
-    return 0;
-}
-
-static int part_data_cb(struct multipart_parser* parser, const char* at, size_t length)
-{
-    if (length != 0)
-    {
-//        mpart_body_processor* processor = (mpart_body_processor*)p->data;
-//        param_entry_append(processor->current_param, buf, len);
-    }
-    return 0;
-}
-
-static int part_data_begin_cb(struct multipart_parser* parser)
-{
-    MPartBodyProcessor* processor = (MPartBodyProcessor*)parser->data;
-    processor->last_header_name.clear();
-    processor->part_headers.clear();
-
-    return 0;
-}
-
-static int part_data_end_cb(struct multipart_parser* parser)
-{
-    MPartBodyProcessor* processor = (MPartBodyProcessor*)parser->data;
-//    Req* request = (Req*)processor->http_req;
-
-//    params_map_add(request->params, processor->current_param);
-
-    processor->part_headers.clear();
-
-    return 0;
-}
-
-static int body_end_cb(struct multipart_parser* parser)
-{
-    return 0;
-}
-
 // 去掉字符串首尾的space
 static char* str_trim(char* s)
 {
@@ -223,29 +111,179 @@ static std::string GetBoundary(const Req* http_req)
     return "--" + it_boundary->second;
 }
 
-MPartBodyProcessor* MPartBodyProcessorInit(const Req* http_req)
+class MPartParserSettings
 {
-    MPartBodyProcessor* processor = new MPartBodyProcessor();
-    if (nullptr == processor)
+public:
+    MPartParserSettings()
     {
-        LOG_ERROR("failed to alloc memory");
-        return nullptr;
+        settings_.on_header_field = MPartBodyProcessor::OnHeaderField;
+        settings_.on_header_value = MPartBodyProcessor::OnHeaderValue;
+        settings_.on_part_data = MPartBodyProcessor::OnPartData;
+        settings_.on_part_data_begin = MPartBodyProcessor::OnPartDataBegin;
+        settings_.on_headers_complete = MPartBodyProcessor::OnHeadersComplete;
+        settings_.on_part_data_end = MPartBodyProcessor::OnPartDataEnd;
+        settings_.on_body_end = MPartBodyProcessor::OnBodyEnd;
     }
 
-    const std::string boundary = GetBoundary(http_req);
+    const struct multipart_parser_settings* Get() const
+    {
+        return &settings_;
+    }
 
-    processor->http_req = const_cast<Req*>(http_req);
-    processor->parser = multipart_parser_init(boundary.c_str(), &settings);
-    processor->parser->data = processor;
-    processor->current_param = nullptr;
+private:
+    struct multipart_parser_settings settings_;
+};
 
-    return processor;
+#define TheMPartParserSettings Singleton<MPartParserSettings>::Instance()
+
+MPartBodyProcessor::MPartBodyProcessor() : part_headers_(), last_header_name_()
+{
+    http_req_ = nullptr;
+    parser_ = nullptr;
+    current_param_ = nullptr;
 }
 
-void MPartBodyProcessorFree(MPartBodyProcessor* processor)
+MPartBodyProcessor::~MPartBodyProcessor()
 {
-    multipart_parser_free(processor->parser);
-    delete processor;
+    Finalize();
+}
+
+int MPartBodyProcessor::Initialize(Req* http_req)
+{
+    const std::string boundary = GetBoundary(http_req);
+    if (boundary.empty())
+    {
+        return -1;
+    }
+
+    http_req_ = http_req;
+
+    parser_ = multipart_parser_init(boundary.c_str(), TheMPartParserSettings->Get());
+    if (nullptr == parser_)
+    {
+        LOG_ERROR("multipart_parser_init failed");
+        return -1;
+    }
+
+    parser_->data = this;
+    current_param_ = nullptr;
+
+    return 0;
+}
+
+void MPartBodyProcessor::Finalize()
+{
+    if (parser_ != nullptr)
+    {
+        multipart_parser_free(parser_);
+        parser_ = nullptr;
+    }
+}
+
+int MPartBodyProcessor::OnPartDataBegin(multipart_parser* parser)
+{
+    LOG_TRACE("MPartBodyProcessor::OnPartDataBegin");
+    MPartBodyProcessor* processor = (MPartBodyProcessor*) parser->data;
+
+    processor->last_header_name_.clear();
+    processor->part_headers_.clear();
+
+    return 0;
+}
+
+int MPartBodyProcessor::OnHeaderField(multipart_parser* parser, const char* at, size_t length)
+{
+    LOG_TRACE("MPartBodyProcessor::OnHeaderField, " << std::string(at, length));
+
+    MPartBodyProcessor* processor = (MPartBodyProcessor*) parser->data;
+    processor->last_header_name_.assign(at, length);
+
+    return 0;
+}
+
+int MPartBodyProcessor::OnHeaderValue(multipart_parser* parser, const char* at, size_t length)
+{
+    LOG_TRACE("MPartBodyProcessor::OnHeaderValue, " << std::string(at, length));
+    MPartBodyProcessor* processor = (MPartBodyProcessor*) parser->data;
+
+    std::string header_value(at, length);
+    processor->part_headers_.insert(HeaderMap::value_type(processor->last_header_name_, header_value));
+
+    return 0;
+}
+
+int MPartBodyProcessor::OnHeadersComplete(multipart_parser* parser)
+{
+    LOG_TRACE("MPartBodyProcessor::OnHeadersComplete");
+    MPartBodyProcessor* processor = (MPartBodyProcessor*) parser->data;
+
+    //    Req* http_req = processor->http_req;
+
+    HeaderMap::const_iterator it = processor->part_headers_.find("Content-Disposition");
+    const std::string& content_disposition = it->second;
+
+    if (0 == strcasecmp(content_disposition.c_str(), "form-data;"))
+    {
+        //        attrs_map_parse(cd_attrs_map, content_disposition + strlen("form-data;")); // 先;再=
+
+        //        char* name = attrs_map_get(cd_attrs_map, "name");
+        //        char* filename = attrs_map_get(cd_attrs_map, "filename");
+        //        bool is_file = (filename != NULL);
+
+        //        str_sanitize(filename);
+
+        //        processor->current_param = param_entry_init(name, NULL, is_file);
+
+        //        if (is_file)
+        //        {
+        //            char* upload_folder_path = http_request_uploads_path(http_req);
+        //            mkdir(upload_folder_path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+        //            char* file_path = malloc_str(strlen(upload_folder_path) + strlen("/") + strlen(filename));
+        //            sprintf(file_path, "%s/%s", upload_folder_path, filename);
+
+        //            processor->current_param->file = fopen(file_path, "a");
+
+        //            free(upload_folder_path);
+        //            free(file_path);
+        //        }
+    }
+
+    return 0;
+}
+
+int MPartBodyProcessor::OnPartData(multipart_parser* parser, const char* at, size_t length)
+{
+    LOG_TRACE("MPartBodyProcessor::OnPartData, " << std::string(at, length));
+//    MPartBodyProcessor2* processor = (MPartBodyProcessor2*) parser->data;
+
+    if (length != 0)
+    {
+//        param_entry_append(processor->current_param, buf, len);
+    }
+
+    return 0;
+}
+
+int MPartBodyProcessor::OnPartDataEnd(multipart_parser* parser)
+{
+    LOG_TRACE("MPartBodyProcessor::OnPartDataEnd");
+    MPartBodyProcessor* processor = (MPartBodyProcessor*) parser->data;
+
+    //    Req* request = (Req*)processor->http_req;
+
+    //    params_map_add(request->params, processor->current_param);
+
+    processor->part_headers_.clear();
+
+    return 0;
+}
+
+int MPartBodyProcessor::OnBodyEnd(multipart_parser* parser)
+{
+    LOG_TRACE("MPartBodyProcessor::OnBodyEnd");
+
+    return 0;
 }
 }
 }

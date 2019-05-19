@@ -3,6 +3,7 @@
 
 #include <http_parser.h>
 #include "conn.h"
+#include "mpart_body_processor.h"
 #include "web.h"
 
 namespace tcp
@@ -15,32 +16,25 @@ namespace http
 {
 typedef void (*FreeBodyParser) (void*);
 
-struct ReqState
+struct MPartBodyCtx
 {
-    void* body_processor;
-    FreeBodyParser free_body_parser_func;
-    char* last_header_name;
+    MPartBodyProcessor processor;
+
     int parsed; // parsed / content_length就是进度
     int content_length;
     int socket_fd;
 
-    ReqState()
+    MPartBodyCtx()
     {
-        body_processor = nullptr;
-        free_body_parser_func = nullptr;
-        last_header_name = nullptr;
         parsed = 0;
         content_length = 0;
         socket_fd = -1;
     }
 
-    ~ReqState() {}
+    ~MPartBodyCtx() {}
 
     void Reset()
     {
-        body_processor = nullptr;
-        free_body_parser_func = nullptr;
-        last_header_name = nullptr;
         parsed = 0;
         content_length = 0;
         socket_fd = -1;
@@ -65,7 +59,7 @@ struct Req
     HeaderMap headers;
     bool url_decode;
     std::string body;
-    struct ReqState req_state;
+    struct MPartBodyCtx mpart_body_ctx;
 
     Req();
     ~Req();
