@@ -316,9 +316,6 @@ int Parser::Execute(const char* buffer, size_t count)
             http_req_.Reset();
             last_header_name_ = "";
             complete_ = false;
-
-            // 恢复回调
-            const_cast<struct http_parser_settings*>(HTTPParserSettings->Get())->on_body = Parser::OnBody;
         }
     }
 
@@ -329,6 +326,9 @@ int Parser::OnMessageBegin(http_parser* parser)
 {
     LOG_TRACE("Parser::OnMessageBegin");
     Parser* hp = static_cast<Parser*>(parser->data);
+
+    // 恢复回调
+    const_cast<struct http_parser_settings*>(HTTPParserSettings->Get())->on_body = Parser::OnBody;
 
     if (hp->web_logic_ != nullptr)
     {

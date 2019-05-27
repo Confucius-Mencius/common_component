@@ -14,7 +14,7 @@ namespace web
 namespace http
 {
 // 去掉字符串首尾的space
-static char* str_trim(char* s)
+static char* StrTrimSpace(char* s)
 {
     char* end;
 
@@ -38,17 +38,17 @@ static char* str_trim(char* s)
     return s;
 }
 
-static bool is_quote(char c)
+static bool IsQuote(char c)
 {
     return (c == '"' || c == '\'');
 }
 
 // 去掉字符串首尾的引号（包括单引号和双引号）
-static char* str_trim_quotes(char* s)
+static char* StrTrimQuotes(char* s)
 {
     char* end;
 
-    while (is_quote(*s))
+    while (IsQuote(*s))
     {
         ++s;
     }
@@ -59,7 +59,7 @@ static char* str_trim_quotes(char* s)
     }
 
     end = s + strlen(s) - 1;
-    while (end > s && is_quote(*end))
+    while (end > s && IsQuote(*end))
     {
         --end;
     }
@@ -87,7 +87,7 @@ void ParseAttr(AttrMap& attrs, const char* str)
         name = strsep(&pair, "=");
         value = strsep(&pair, "=");
 
-        attrs.insert(AttrMap::value_type(str_trim(name), str_trim(str_trim_quotes(value))));
+        attrs.insert(AttrMap::value_type(StrTrimSpace(name), StrTrimSpace(StrTrimQuotes(value))));
     }
 }
 
@@ -220,6 +220,11 @@ int MPartBodyProcessor::OnHeadersComplete(multipart_parser* parser)
     //    Req* http_req = processor->http_req;
 
     HeaderMap::const_iterator it = processor->part_headers_.find("Content-Disposition");
+    if (it == processor->part_headers_.end())
+    {
+        return 0;
+    }
+
     const std::string& content_disposition = it->second;
 
     if (0 == strcasecmp(content_disposition.c_str(), "form-data;"))
@@ -282,7 +287,6 @@ int MPartBodyProcessor::OnPartDataEnd(multipart_parser* parser)
 int MPartBodyProcessor::OnBodyEnd(multipart_parser* parser)
 {
     LOG_TRACE("MPartBodyProcessor::OnBodyEnd");
-
     return 0;
 }
 }

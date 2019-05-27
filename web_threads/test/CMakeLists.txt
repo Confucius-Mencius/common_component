@@ -2,7 +2,7 @@
 # author: BrentHuang (guang11cheng@qq.com)
 ###############################################################################
 
-set(TEST_NAME http_parser_test)
+set(TEST_NAME ${PROJ_NAME}_test)
 set(EXE_NAME ${TEST_NAME})
 
 ###############################################################################

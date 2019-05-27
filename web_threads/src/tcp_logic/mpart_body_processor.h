@@ -29,6 +29,7 @@ public:
     int Initialize(Req* http_req);
     void Finalize();
 
+    // Returning a value other than 0 from the callbacks will abort message processing.
     static int OnPartDataBegin(struct multipart_parser* parser);
     static int OnHeaderField(struct multipart_parser* parser, const char* at, size_t length);
     static int OnHeaderValue(struct multipart_parser* parser, const char* at, size_t length);
