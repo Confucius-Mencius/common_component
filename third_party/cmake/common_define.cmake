@@ -74,3 +74,7 @@ set(HIREDIS_LIB_NAME hiredis)
 set(ZOOKEEPER_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/zookeeper/include)
 set(ZOOKEEPER_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/zookeeper/lib)
 set(ZOOKEEPER_LIB_NAME zookeeper_mt)
+
+set(AWS_SDK_CPP_INC_DIR ${THIRD_PARTY_INSTALL_PREFIX}/aws_sdk_cpp/include)
+set(AWS_SDK_CPP_LIB_DIR ${THIRD_PARTY_INSTALL_PREFIX}/aws_sdk_cpp/lib)
+set(AWS_SDK_CPP_LIB_NAME aws-cpp-sdk-sts aws-cpp-sdk-s3)
