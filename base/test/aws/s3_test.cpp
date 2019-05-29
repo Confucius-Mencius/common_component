@@ -1,61 +1,219 @@
-#include "allocator_test.h"
-#include <memory>
+#include "s3_test.h"
+#include <fstream>
+#include <aws/core/auth/AWSCredentialsProvider.h>
+#include <aws/s3/model/Bucket.h>
+#include <aws/s3/model/PutObjectRequest.h>
+#include <aws/s3/model/ListObjectsRequest.h>
+#include <aws/s3/model/Object.h>
+#include <aws/s3/model/GetObjectRequest.h>
+#include <aws/s3/model/DeleteObjectRequest.h>
 
-//allocator类是一个模板类，定义在头文件memory中，用于内存的分配、释放、管理，它帮助我们将内存分配和对象构造分离开来。
-//具体地说，allocator类将内存的分配和对象的构造解耦，分别用allocate和construct两个函数完成，
-//同样将内存的释放和对象的析构销毁解耦，分别用deallocate和destroy函数完成。
-//allocator类分配的内存是未构造的，为了使用已经分配好的内存，我们必须使用construct构造对象。如果使用未构造的内存，其行为是未定义的。
-//只能对真正构造了的对象进行destroy操作，用户必须保证在调用deallocate函数回收内存前对这块内存上的每个元素调用destroy函数。
+//https://docs.aws.amazon.com/sdk-for-cpp/v1/developer-guide/examples-s3.html
 
-namespace cpp11_allocator_test
+//AWSAccessKeyId=AKIAIDDB2PURAO76V64A
+//AWSSecretKey=erP8zvQV6GPiZjjxmw9gM9OyKtpSbVhwk3uVCaKY
+
+namespace aws_test
 {
-class Example
+S3Test::S3Test()
 {
-public:
-    Example() : a(0)
+    s3_client_ = nullptr;
+}
+
+S3Test::~S3Test()
+{
+
+}
+
+void S3Test::SetUp()
+{
+    options_.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Trace;
+    Aws::InitAPI(options_);
+
+    Aws::Client::ClientConfiguration conf;
+    conf.region = Aws::Region::US_EAST_1;
+    conf.endpointOverride = "s3.amazonaws.com"; // "s3.ap-northeast-2.amazonaws.com";
+    conf.scheme = Aws::Http::Scheme::HTTP;
+    conf.verifySSL = false;
+
+    Aws::Auth::AWSCredentials cred("AKIAIDDB2PURAO76V64A", "erP8zvQV6GPiZjjxmw9gM9OyKtpSbVhwk3uVCaKY");
+
+    s3_client_ = new Aws::S3::S3Client(cred, conf, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false);
+    if (nullptr == s3_client_)
     {
-        std::cout << "example default constructor..." << std::endl;
+        FAIL();
+    }
+}
+
+void S3Test::TearDown()
+{
+    if (s3_client_ != nullptr)
+    {
+        delete s3_client_;
     }
 
-    Example(int x) : a(x)
+    Aws::ShutdownAPI(options_);
+}
+
+// 列出桶
+void S3Test::Test001()
+{
+    auto outcome = s3_client_->ListBuckets();
+    if (outcome.IsSuccess())
     {
-        std::cout << "example constructor..." << std::endl;
+        auto buckets = outcome.GetResult().GetBuckets();
+        for (auto const& bucket : buckets)
+        {
+            std::cout << bucket.GetName() << "\t" << bucket.GetCreationDate().ToLocalTimeString(Aws::Utils::DateFormat::RFC822) << std::endl;
+        }
+    }
+    else
+    {
+        std::cout << "ListBuckets error: "
+                  << outcome.GetError().GetExceptionName() << " - "
+                  << outcome.GetError().GetMessage() << std::endl;
     }
 
-    ~Example()
+}
+
+// 上传文件
+void S3Test::Test002()
+{
+    // Assign these values before running the program
+    const Aws::String bucket_name = "store.cxsw3d";
+    const Aws::String object_key = "cpp1";
+    const std::string file_path = "./test_server_conf.xml";
+
+    // Put the file into the S3 bucket
+    if (PutS3Object(bucket_name, object_key, file_path))
     {
-        std::cout << "example destructor..." << std::endl;
+        std::cout << "Put file " << file_path
+                  << " to S3 bucket " << bucket_name
+                  << " as object " << object_key << std::endl;
+    }
+}
+
+// 列出文件
+void S3Test::Test003()
+{
+    const Aws::String bucket_name = "store.cxsw3d";
+    std::cout << "Objects in S3 bucket: " << bucket_name << std::endl;
+
+    Aws::S3::Model::ListObjectsRequest object_request;
+    object_request.WithBucket(bucket_name);
+
+    auto outcome = s3_client_->ListObjects(object_request);
+    if (outcome.IsSuccess())
+    {
+        Aws::Vector<Aws::S3::Model::Object> objects =
+            outcome.GetResult().GetContents();
+
+        for (auto const& object : objects)
+        {
+            std::cout << "* " << object.GetKey() << std::endl;
+        }
+    }
+    else
+    {
+        std::cout << "ListObjects error: " <<
+                  outcome.GetError().GetExceptionName() << " " <<
+                  outcome.GetError().GetMessage() << std::endl;
+    }
+}
+
+// 下载文件
+void S3Test::Test004()
+{
+    // Assign these values before running the program
+    const Aws::String bucket_name = "store.cxsw3d";
+    const Aws::String object_key = "cpp1";  // For demo, set to a text file
+
+    Aws::S3::Model::GetObjectRequest object_request;
+    object_request.WithBucket(bucket_name).WithKey(object_key);
+
+    // Get the object
+    auto outcome = s3_client_->GetObject(object_request);
+    if (outcome.IsSuccess())
+    {
+        // Get an Aws::IOStream reference to the retrieved file
+        auto& retrieved_file = outcome.GetResultWithOwnership().GetBody();
+
+        // Output the first line of the retrieved text file
+        std::cout << "Beginning of file contents:\n";
+        char file_data[255] = { 0 };
+        retrieved_file.getline(file_data, 254);
+        std::cout << file_data << std::endl;
+    }
+    else
+    {
+        auto error = outcome.GetError();
+        std::cout << "ERROR: " << error.GetExceptionName() << ": "
+                  << error.GetMessage() << std::endl;
+    }
+}
+
+// 删除文件
+void S3Test::Test005()
+{
+    const Aws::String bucket_name = "store.cxsw3d";
+    const Aws::String object_key  = "cpp1";
+
+    std::cout << "Deleting" << object_key << " from S3 bucket: " <<
+              bucket_name << std::endl;
+
+    Aws::S3::Model::DeleteObjectRequest object_request;
+    object_request.WithBucket(bucket_name).WithKey(object_key);
+
+    auto outcome = s3_client_->DeleteObject(object_request);
+    if (outcome.IsSuccess())
+    {
+        std::cout << "Done!" << std::endl;
+    }
+    else
+    {
+        std::cout << "DeleteObject error: " <<
+                  outcome.GetError().GetExceptionName() << " " <<
+                  outcome.GetError().GetMessage() << std::endl;
+    }
+}
+
+bool S3Test::PutS3Object(const Aws::String& bucket_name, const Aws::String& object_key, const std::string& file_path)
+{
+    // Verify file_name exists
+    if (!file_exists(file_path))
+    {
+        std::cout << "ERROR: NoSuchFile: The specified file does not exist"
+                  << std::endl;
+        return false;
     }
 
-    int a;
-};
+    Aws::S3::Model::PutObjectRequest object_request;
+
+    object_request.WithBucket(bucket_name).WithKey(object_key);
+
+    const std::shared_ptr<Aws::IOStream> input_data =
+        Aws::MakeShared<Aws::FStream>("CXSW3DAllocationTag",
+                                      file_path.c_str(),
+                                      std::ios_base::in | std::ios_base::binary);
+    object_request.SetBody(input_data);
+
+    // Put the object
+    auto outcome = s3_client_->PutObject(object_request);
+    if (!outcome.IsSuccess())
+    {
+        auto error = outcome.GetError();
+        std::cout << "ERROR: " << error.GetExceptionName() << ": "
+                  << error.GetMessage() << std::endl;
+        return false;
+    }
+
+    return true;
 }
 
-AllocatorTest::AllocatorTest()
-{
-
+ADD_TEST_F(S3Test, Test001)
+ADD_TEST_F(S3Test, Test002)
+ADD_TEST_F(S3Test, Test003)
+ADD_TEST_F(S3Test, Test004)
+ADD_TEST_F(S3Test, Test005)
 }
 
-AllocatorTest::~AllocatorTest()
-{
-
-}
-
-void AllocatorTest::Test001()
-{
-    std::cout << __cplusplus << std::endl;
-
-    std::allocator<cpp11_allocator_test::Example> alloc;
-    cpp11_allocator_test::Example* p = alloc.allocate(2);
-    alloc.construct(p, cpp11_allocator_test::Example());
-    std::cout << p->a << std::endl;
-    alloc.destroy(p);
-
-    alloc.construct(p + 1, cpp11_allocator_test::Example(3));
-    std::cout << (p + 1)->a << std::endl;
-    alloc.destroy(p + 1);
-
-    alloc.deallocate(p, 2);
-}
-
-ADD_TEST_F(AllocatorTest, Test001);

@@ -10,8 +10,8 @@ set(EXE_NAME ${TEST_NAME})
 
 ###############################################################################
 # include/link dir
-include_directories(${PROJ_INC_DIR} ${LIBUUID_INC_DIR} ${SPDLOG_INC_DIR} ${GTEST_INC_DIR})
-link_directories(${BASE_LIB_DIR} ${LIBUUID_LIB_DIR} ${GTEST_LIB_DIR} ${GPERFTOOLS_LIB_DIR})
+include_directories(${PROJ_INC_DIR} ${LIBUUID_INC_DIR} ${AWS_SDK_CPP_INC_DIR} ${GTEST_INC_DIR})
+link_directories(${BASE_LIB_DIR} ${LIBUUID_LIB_DIR} ${AWS_SDK_CPP_LIB_DIR} ${GTEST_LIB_DIR} ${GPERFTOOLS_LIB_DIR})
 
 ###############################################################################
 # target and linked library
@@ -22,7 +22,7 @@ aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/aws AWS_TEST_SRCS)
 
 add_executable(${EXE_NAME} ${HEADERS} ${CUR_DIR_SRCS} ${CPP11_TEST_SRCS} ${AWS_TEST_SRCS})
 
-target_link_libraries(${EXE_NAME} ${BASE_LIB_NAME} ${LIBUUID_LIB_NAME} ${GTEST_LIB_NAME}
+target_link_libraries(${EXE_NAME} ${BASE_LIB_NAME} ${LIBUUID_LIB_NAME} ${AWS_SDK_CPP_LIB_NAME} ${GTEST_LIB_NAME}
         pthread ${GPERFTOOLS_LIB_NAME})
 
 ###############################################################################

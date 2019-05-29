@@ -11,7 +11,7 @@ CreateVersionFile(${CMAKE_CURRENT_SOURCE_DIR} ${PROJ_NAME} ${LIB_NAME})
 
 ###############################################################################
 # include/link dir
-include_directories(${PROJ_INC_DIR} ${LIBUUID_INC_DIR} ${SPDLOG_INC_DIR})
+include_directories(${PROJ_INC_DIR} ${LIBUUID_INC_DIR})
 link_directories(${LIBUUID_LIB_DIR} ${GPERFTOOLS_LIB_DIR})
 
 ###############################################################################
