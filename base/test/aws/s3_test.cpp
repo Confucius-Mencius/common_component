@@ -7,11 +7,15 @@
 #include <aws/s3/model/Object.h>
 #include <aws/s3/model/GetObjectRequest.h>
 #include <aws/s3/model/DeleteObjectRequest.h>
+#include <aws/s3/model/MultipartUpload.h>
 
 //https://docs.aws.amazon.com/sdk-for-cpp/v1/developer-guide/examples-s3.html
 
 //AWSAccessKeyId=AKIAIDDB2PURAO76V64A
 //AWSSecretKey=erP8zvQV6GPiZjjxmw9gM9OyKtpSbVhwk3uVCaKY
+
+// TODO 有个异步的例子
+//http://www.mindg.cn/?p=363
 
 namespace aws_test
 {
@@ -31,10 +35,8 @@ void S3Test::SetUp()
     Aws::InitAPI(options_);
 
     Aws::Client::ClientConfiguration conf;
-    conf.region = Aws::Region::US_EAST_1;
-    conf.endpointOverride = "s3.amazonaws.com"; // "s3.ap-northeast-2.amazonaws.com";
-    conf.scheme = Aws::Http::Scheme::HTTP;
-    conf.verifySSL = false;
+    conf.region = Aws::Region::AP_NORTHEAST_2;
+    conf.endpointOverride = "s3.ap-northeast-2.amazonaws.com";
 
     Aws::Auth::AWSCredentials cred("AKIAIDDB2PURAO76V64A", "erP8zvQV6GPiZjjxmw9gM9OyKtpSbVhwk3uVCaKY");
 
@@ -110,7 +112,7 @@ void S3Test::Test003()
 
         for (auto const& object : objects)
         {
-            std::cout << "* " << object.GetKey() << std::endl;
+            std::cout << "* " << object.GetKey() << " " << object.GetSize() << std::endl;
         }
     }
     else
@@ -158,7 +160,7 @@ void S3Test::Test005()
     const Aws::String bucket_name = "store.cxsw3d";
     const Aws::String object_key  = "cpp1";
 
-    std::cout << "Deleting" << object_key << " from S3 bucket: " <<
+    std::cout << "Deleting " << object_key << " from S3 bucket: " <<
               bucket_name << std::endl;
 
     Aws::S3::Model::DeleteObjectRequest object_request;
