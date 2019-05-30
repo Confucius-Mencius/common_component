@@ -66,6 +66,11 @@ void STSTest::Test001()
     }
 }
 
+void STSTest::Test002()
+{
+    // 异步
+}
+
 ADD_TEST_F(STSTest, Test001)
 }
 
