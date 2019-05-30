@@ -7,8 +7,6 @@
 #include <aws/s3/model/Object.h>
 #include <aws/s3/model/GetObjectRequest.h>
 #include <aws/s3/model/DeleteObjectRequest.h>
-#include <aws/s3/model/MultipartUpload.h>
-#include <aws/transfer/TransferManager.h>
 
 //https://docs.aws.amazon.com/sdk-for-cpp/v1/developer-guide/examples-s3.html
 
@@ -20,6 +18,8 @@
 
 namespace aws_test
 {
+std::condition_variable S3Test::upload_variable_;
+
 S3Test::S3Test()
 {
     s3_client_ = nullptr;
@@ -39,7 +39,8 @@ void S3Test::SetUp()
     conf.region = Aws::Region::AP_NORTHEAST_2;
     conf.endpointOverride = "s3.ap-northeast-2.amazonaws.com";
 
-    Aws::Auth::AWSCredentials cred("AKIAIDDB2PURAO76V64A", "erP8zvQV6GPiZjjxmw9gM9OyKtpSbVhwk3uVCaKY");
+//  Aws::Auth::AWSCredentials cred("AKIAIDDB2PURAO76V64A", "erP8zvQV6GPiZjjxmw9gM9OyKtpSbVhwk3uVCaKY");
+    Aws::Auth::AWSCredentials cred("ASIAT55XXI3L2HWWFBZ7", "nGrQUg6vKHfnMpPuQ7aSIuEM9LkdYr+tR5rSxt2K", "AgoGb3JpZ2luEMj//////////wEaDmFwLW5vcnRoZWFzdC0yIoACmXcqDHh05P2P8VlZUT/Sw2zGiVAlOhfQkyAjfZIHUoaErzTPlj1G5RhRpqVOS4clenxdWPJSJaMS0FVh1e/YpI98S0787+YAQMGZrajxwXK5eclqcaLV74Cbl3KRKh6PSM7mbtdGjGEhfsvt+XNDy4E8vYp6FGHH667wfLTpgLG/iJ4+iKCpu6cA4Jk7KAnrXEJ5QE/K/yNozfk+8hXeMIwgWOwOkR5PUK2d1h8Ba7HsVTxyRXMVqZV4cIT1OdMT7HEK2Mj54Y2L7Wz2lR58QYr8p1pGaQyVhIziL1lKz1uKlbqaSJE+AVFNrL0UreYHOkxfJnaMrb8yXu5lQPNXdCq3AQh1EAAaDDI3MDQzMTM3MzAxNSIMkGpiOKaBsdIGMTV0KpQBDAlkueJJNXu+AM6g59RbF9p7lzJ/EDE4Z9XLnP12sXcYvjVfIRBdcZDeviJE7l0GXcXL46xHOoFEsc7adSRn1oSmyXboLl51RVJ55LzWDflbChh0N4k25cXfr6ZSf61pT1VNDY3ng5kpx1yXTfJoKZ3S3ASXzoCZx3pApC39WlfAr+JL6doiXgVkeFI/M4+YQyrOMzCxhr/nBQ==");
 
     s3_client_ = new Aws::S3::S3Client(cred, conf, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false);
     if (nullptr == s3_client_)
@@ -183,48 +184,26 @@ void S3Test::Test005()
 // 异步上传
 void S3Test::Test006()
 {
+    const Aws::String bucket_name = "store.cxsw3d";
+    const Aws::String object_key = "cpp1";
+    const std::string file_path = "./test_server_conf.xml";
+
     // Put the file into the S3 bucket asynchronously
-            std::unique_lock<std::mutex> lock(upload_mutex);
-            if (put_s3_object_async(s3Client,
-                                    bucket_name,
-                                    object_name,
-                                    file_name)) {
-                // While the upload is in progress, we can perform other tasks.
-                // For this example, we just wait for the upload to finish.
-                std::cout << "main: Waiting for file upload to complete..."
-                    << std::endl;
-                upload_variable.wait(lock);
+    std::unique_lock<std::mutex> lock(upload_mutex_);
+    if (PutS3ObjectAsync(bucket_name,
+                         object_key,
+                         file_path))
+    {
+        // While the upload is in progress, we can perform other tasks.
+        // For this example, we just wait for the upload to finish.
+        std::cout << "main: Waiting for file upload to complete..."
+                  << std::endl;
+        upload_variable_.wait(lock);
 
-                // The upload has finished. The S3Client object can be cleaned up
-                // now. We can also terminate the program if we wish.
-                std::cout << "main: File upload completed" << std::endl;
-            }
-}
-
-// transfer方式
-void S3Test::Test007()
-{
-    // https://aws.amazon.com/cn/blogs/aws/aws-sdk-for-c-now-ready-for-production-use/
-
-    Aws::Transfer::TransferManagerConfiguration transferConfig;
-        transferConfig.s3Client = s3Client;
-
-        transferConfig.transferStatusUpdatedCallback =
-           [](const TransferManager*, const TransferHandle& handle)
-           { std::cout << "Transfer Status = " << static_cast(handle.GetStatus()) << "\n"; }
-
-        transferConfig.uploadProgressCallback =
-            [](const TransferManager*, const TransferHandle& handle)
-            { std::cout << "Upload Progress: " << handle.GetBytesTransferred() << " of " << handle.GetBytesTotalSize() << " bytes\n";};
-
-        transferConfig.downloadProgressCallback =
-            [](const TransferManager*, const TransferHandle& handle)
-            { std::cout << "Download Progress: " << handle.GetBytesTransferred() << " of " << handle.GetBytesTotalSize() << " bytes\n"; };
-
-        Aws::Transfer::TransferManager transferManager(transferConfig);
-        auto transferHandle = transferManager.UploadFile("/user/aws/giantFile", "aws_cpp_ga", "giantFile",
-                                                         "text/plain", Aws::Map<Aws::String, Aws::String>());
-        transferHandle.WaitUntilFinished();
+        // The upload has finished. The S3Client object can be cleaned up
+        // now. We can also terminate the program if we wish.
+        std::cout << "main: File upload completed" << std::endl;
+    }
 }
 
 bool S3Test::PutS3Object(const Aws::String& bucket_name, const Aws::String& object_key, const std::string& file_path)
@@ -257,56 +236,60 @@ bool S3Test::PutS3Object(const Aws::String& bucket_name, const Aws::String& obje
         return false;
     }
 
+    std::cout << outcome.GetResult().GetVersionId() << std::endl; // url: https://s3.ap-northeast-2.amazonaws.com/store.cxsw3d/Hello.stl
+
     return true;
 }
 
-void S3Test::put_object_async_finished(const Aws::S3::S3Client *client, const Aws::S3::Model::PutObjectRequest &request, const Aws::S3::Model::PutObjectOutcome &outcome, const std::shared_ptr<const Aws::Client::AsyncCallerContext> &context)
+void S3Test::PutObjectAsyncFinished(const Aws::S3::S3Client* client, const Aws::S3::Model::PutObjectRequest& request,
+                                    const Aws::S3::Model::PutObjectOutcome& outcome, const std::shared_ptr<const Aws::Client::AsyncCallerContext>& context)
 {
     // Output operation status
-        if (outcome.IsSuccess()) {
-            std::cout << "put_object_async_finished: Finished uploading "
-                << context->GetUUID() << std::endl;
-        }
-        else {
-            auto error = outcome.GetError();
-            std::cout << "ERROR: " << error.GetExceptionName() << ": "
-                << error.GetMessage() << std::endl;
-        }
+    if (outcome.IsSuccess())
+    {
+        std::cout << "put_object_async_finished: Finished uploading "
+                  << context->GetUUID() << std::endl;
+    }
+    else
+    {
+        auto error = outcome.GetError();
+        std::cout << "ERROR: " << error.GetExceptionName() << ": "
+                  << error.GetMessage() << std::endl;
+    }
 
-        // Notify the thread that started the operation
-        upload_variable.notify_one();
+    // Notify the thread that started the operation
+    upload_variable_.notify_one();
 }
 
-bool S3Test::put_s3_object_async(const Aws::S3::S3Client &s3_client, const Aws::String &s3_bucket_name, const Aws::String &s3_object_name, const std::string &file_name)
+bool S3Test::PutS3ObjectAsync(const Aws::String& bucket_name, const Aws::String& object_key, const std::string& file_path)
 {
     // Verify file_name exists
-        if (!file_exists(file_name)) {
-            std::cout << "ERROR: NoSuchFile: The specified file does not exist"
-                << std::endl;
-            return false;
-        }
+    if (!FileExists(file_path))
+    {
+        std::cout << "ERROR: NoSuchFile: The specified file does not exist"
+                  << std::endl;
+        return false;
+    }
 
-        // Set up request
-        Aws::S3::Model::PutObjectRequest object_request;
+    // Set up request
+    Aws::S3::Model::PutObjectRequest object_request;
+    object_request.WithBucket(bucket_name).WithKey(object_key);
 
-        object_request.SetBucket(s3_bucket_name);
-        object_request.SetKey(s3_object_name);
-        const std::shared_ptr<Aws::IOStream> input_data =
-            Aws::MakeShared<Aws::FStream>("SampleAllocationTag",
-                file_name.c_str(),
-                std::ios_base::in | std::ios_base::binary);
-        object_request.SetBody(input_data);
+    const std::shared_ptr<Aws::IOStream> input_data =
+        Aws::MakeShared<Aws::FStream>("SampleAllocationTag",
+                                      file_path.c_str(),
+                                      std::ios_base::in | std::ios_base::binary);
+    object_request.SetBody(input_data);
 
-        // Set up AsyncCallerContext. Pass the S3 object name to the callback.
-        auto context =
-            Aws::MakeShared<Aws::Client::AsyncCallerContext>("PutObjectAllocationTag");
-        context->SetUUID(s3_object_name);
+    // Set up AsyncCallerContext. Pass the S3 object name to the callback.
+    auto context = Aws::MakeShared<Aws::Client::AsyncCallerContext>("PutObjectAllocationTag");
+    context->SetUUID(object_key);
 
-        // Put the object asynchronously
-        s3_client.PutObjectAsync(object_request,
-                                 put_object_async_finished,
-                                 context);
-        return true;
+    // Put the object asynchronously
+    s3_client_->PutObjectAsync(object_request,
+                               S3Test::PutObjectAsyncFinished,
+                               context);
+    return true;
 }
 
 ADD_TEST_F(S3Test, Test001)
@@ -314,5 +297,6 @@ ADD_TEST_F(S3Test, Test002)
 ADD_TEST_F(S3Test, Test003)
 ADD_TEST_F(S3Test, Test004)
 ADD_TEST_F(S3Test, Test005)
+ADD_TEST_F(S3Test, Test006)
 }
 
