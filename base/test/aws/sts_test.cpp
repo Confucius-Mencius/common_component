@@ -59,10 +59,11 @@ void STSTest::Test001()
     }
     else
     {
+        // 剩余有效时间: credentials.GetExpiration().Millis() - time(NULL) * 1000
         sleep(5);
         auto credentials = outcome.GetResult().GetCredentials();
         std::cout << credentials.GetAccessKeyId() << "\n" << credentials.GetSecretAccessKey() << "\n"
-                  << credentials.GetSessionToken() << "\n" << credentials.GetExpiration().Millis() / 1000 - time(NULL) << "\n" << std::endl;
+                  << credentials.GetSessionToken() << "\n" << credentials.GetExpiration().Millis() - time(NULL) * 1000 << "\n" << std::endl;
     }
 }
 

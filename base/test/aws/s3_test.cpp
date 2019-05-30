@@ -228,11 +228,12 @@ bool S3Test::PutS3Object(const Aws::String& bucket_name, const Aws::String& obje
 
     // Put the object
     auto outcome = s3_client_->PutObject(object_request);
-    if (!outcome.IsSuccess())
+    if (!outcome.IsSuccess()) // TODO 根据错误类型做重试
     {
         auto error = outcome.GetError();
-        std::cout << "ERROR: " << error.GetExceptionName() << ": "
-                  << error.GetMessage() << std::endl;
+
+        std::cout << "ERROR: " << error.GetExceptionName() << ", "
+                  << error.GetMessage() << ", " << (int) error.GetResponseCode() << std::endl;
         return false;
     }
 
