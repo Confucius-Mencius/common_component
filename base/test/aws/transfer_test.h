@@ -29,6 +29,7 @@ private:
 private:
     Aws::SDKOptions options_;
     Aws::S3::S3Client* s3_client_;
+    std::shared_ptr<Aws::Utils::Threading::Executor> m_executor;
 };
 }
 

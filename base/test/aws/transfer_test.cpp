@@ -2,12 +2,30 @@
 #include <fstream>
 #include <aws/core/auth/AWSCredentialsProvider.h>
 #include <aws/transfer/TransferManager.h>
+#include <aws/core/utils/threading/Executor.h>
+#include <aws/core/utils/HashingUtils.h>
 
 namespace aws_test
 {
-TransferTest::TransferTest()
+static const char* ALLOCATION_TAG = "TransferTests";
+
+static bool AreFilesSame(const Aws::String& fileName, const Aws::String& fileName2)
+{
+    Aws::FStream inFile1(fileName.c_str(), std::ios::binary | std::ios::in);
+    Aws::FStream inFile2(fileName2.c_str(), std::ios::binary | std::ios::in);
+
+    if (!inFile1.good() || !inFile2.good())
+    {
+        return false;
+    }
+
+    return HashingUtils::CalculateSHA256(inFile1) == HashingUtils::CalculateSHA256(inFile2);
+}
+
+TransferTest::TransferTest() : options_()
 {
     s3_client_ = nullptr;
+    m_executor = nullptr;
 }
 
 TransferTest::~TransferTest()
@@ -31,6 +49,8 @@ void TransferTest::SetUp()
     {
         FAIL();
     }
+
+    m_executor = Aws::MakeShared<Aws::Utils::Threading::PooledThreadExecutor>(ALLOCATION_TAG, 4);
 }
 
 void TransferTest::TearDown()

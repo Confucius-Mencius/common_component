@@ -18,6 +18,7 @@ public:
     virtual void TearDown();
 
     void Test001();
+    void Test002();
 
 private:
     inline bool FileExists(const std::string& name)
