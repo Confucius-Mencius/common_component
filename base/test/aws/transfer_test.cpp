@@ -19,11 +19,12 @@ static bool AreFilesSame(const Aws::String& fileName, const Aws::String& fileNam
         return false;
     }
 
-    return HashingUtils::CalculateSHA256(inFile1) == HashingUtils::CalculateSHA256(inFile2);
+    return Aws::Utils::HashingUtils::CalculateSHA256(inFile1) == Aws::Utils::HashingUtils::CalculateSHA256(inFile2);
 }
 
 TransferTest::TransferTest() : options_()
 {
+    AreFilesSame("1", "2");
     s3_client_ = nullptr;
     m_executor = nullptr;
 }
