@@ -1,14 +1,11 @@
 #include "the_ws_parser.h"
 #include <string.h>
-#include <openssl/sha.h>
-#include <openssl/pem.h>
-#include <openssl/bio.h>
-#include <openssl/evp.h>
-#include "web_logic.h"
 #include "hex_dump.h"
+#include "openssl_util.h"
 #include "log_util.h"
-#include "the_http_parser.h"
 #include "singleton.h"
+#include "the_http_parser.h"
+#include "web_logic.h"
 
 namespace tcp
 {
@@ -16,28 +13,6 @@ namespace web
 {
 namespace ws
 {
-static int Base64Encode(unsigned char* out, const unsigned char* in, int len)
-{
-    BIO* b64, *bio;
-    BUF_MEM* bptr = NULL;
-    size_t size = 0;
-
-    b64 = BIO_new(BIO_f_base64());
-    bio = BIO_new(BIO_s_mem());
-    bio = BIO_push(b64, bio);
-
-    BIO_write(bio, in, len);
-    BIO_flush(bio);
-
-    BIO_get_mem_ptr(bio, &bptr);
-    memcpy(out, bptr->data, bptr->length);
-    out[bptr->length] = '\0';
-    size = bptr->length;
-
-    BIO_free_all(bio);
-    return size;
-}
-
 class ParserSettings
 {
 public:
