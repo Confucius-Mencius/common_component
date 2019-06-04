@@ -39,7 +39,7 @@ void S3Test::SetUp()
     conf.region = Aws::Region::AP_NORTHEAST_2;
     conf.endpointOverride = "s3.ap-northeast-2.amazonaws.com";
 
-  Aws::Auth::AWSCredentials cred("AKIAIDDB2PURAO76V64A", "erP8zvQV6GPiZjjxmw9gM9OyKtpSbVhwk3uVCaKY");
+    Aws::Auth::AWSCredentials cred("AKIAIDDB2PURAO76V64A", "erP8zvQV6GPiZjjxmw9gM9OyKtpSbVhwk3uVCaKY");
 //    Aws::Auth::AWSCredentials cred("ASIAT55XXI3L2HWWFBZ7", "nGrQUg6vKHfnMpPuQ7aSIuEM9LkdYr+tR5rSxt2K", "AgoGb3JpZ2luEMj//////////wEaDmFwLW5vcnRoZWFzdC0yIoACmXcqDHh05P2P8VlZUT/Sw2zGiVAlOhfQkyAjfZIHUoaErzTPlj1G5RhRpqVOS4clenxdWPJSJaMS0FVh1e/YpI98S0787+YAQMGZrajxwXK5eclqcaLV74Cbl3KRKh6PSM7mbtdGjGEhfsvt+XNDy4E8vYp6FGHH667wfLTpgLG/iJ4+iKCpu6cA4Jk7KAnrXEJ5QE/K/yNozfk+8hXeMIwgWOwOkR5PUK2d1h8Ba7HsVTxyRXMVqZV4cIT1OdMT7HEK2Mj54Y2L7Wz2lR58QYr8p1pGaQyVhIziL1lKz1uKlbqaSJE+AVFNrL0UreYHOkxfJnaMrb8yXu5lQPNXdCq3AQh1EAAaDDI3MDQzMTM3MzAxNSIMkGpiOKaBsdIGMTV0KpQBDAlkueJJNXu+AM6g59RbF9p7lzJ/EDE4Z9XLnP12sXcYvjVfIRBdcZDeviJE7l0GXcXL46xHOoFEsc7adSRn1oSmyXboLl51RVJ55LzWDflbChh0N4k25cXfr6ZSf61pT1VNDY3ng5kpx1yXTfJoKZ3S3ASXzoCZx3pApC39WlfAr+JL6doiXgVkeFI/M4+YQyrOMzCxhr/nBQ==");
 
     s3_client_ = new Aws::S3::S3Client(cred, conf, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false);

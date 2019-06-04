@@ -1,5 +1,6 @@
 #include "the_ws_parser.h"
 #include <string.h>
+#include <openssl/sha.h>
 #include "hex_dump.h"
 #include "openssl_util.h"
 #include "log_util.h"
