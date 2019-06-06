@@ -7,9 +7,10 @@
 namespace proto
 {
 typedef int32_t Passback; /**< Passback类型 */
-typedef int32_t MsgID; /**< MsgId类型 */
+typedef int32_t MsgID; /**< MsgID类型 */
 
-#define NFY_PASSBACK ((int32_t) 0x80000000)
+#define NFY_PASSBACK ((int32_t) 0x80000000) // 标识nfy消息
+#define NAN_PASSBACK ((int32_t) 0) // 无意义，不用关注的passback
 
 // 特殊的msg id
 #define MSG_ID_OK                   0
