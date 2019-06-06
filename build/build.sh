@@ -63,6 +63,8 @@ while getopts "b:c:r:h" opt; do
                 echo "----------" ${PROJ} "----------"
 
                 cd ${CODE_BASE_DIR}
+                export LD_LIBRARY_PATH=/opt/third_party/${OPTARG}/libevent/lib:/opt/third_party/${OPTARG}/curl/lib:/opt/third_party/${OPTARG}/openssl/lib:/opt/third_party/${OPTARG}/libxml2/lib:/opt/third_party/${OPTARG}/libuuid/lib
+                echo "----------" ${LD_LIBRARY_PATH}
                 BuildProj ${PROJ} ${SCRIPT_PATH}/../${PROJ} ${BUILD_PARENT_DIR}/${PROJ} ${BUILD_TYPE} ${COMMON_COMPONENT_INSTALL_PREFIX} ${RUN_TEST}
 
                 cd ${CODE_BASE_DIR}

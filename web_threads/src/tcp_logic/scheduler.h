@@ -35,7 +35,7 @@ public:
                            const void* msg_body, size_t msg_body_len) override;
     int SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
                          const void* msg_body, size_t msg_body_len, int work_thread_idx) override;
-    int SendToTCPThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
+    int SendToWebThread(const ConnGUID* conn_guid, const ::proto::MsgHead& msg_head,
                         const void* msg_body, size_t msg_body_len, int tcp_thread_idx) override;
 
 private:

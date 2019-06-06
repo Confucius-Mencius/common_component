@@ -59,7 +59,7 @@ int Scheduler::SendToWorkThread(const ConnGUID* conn_guid, const ::proto::MsgHea
     return SendToThread(THREAD_TYPE_WORK, conn_guid, msg_head, msg_body, msg_body_len, work_thread_idx);
 }
 
-int Scheduler::SendToTCPThread(const ConnGUID* conn_guid, const proto::MsgHead& msg_head,
+int Scheduler::SendToWebThread(const ConnGUID* conn_guid, const proto::MsgHead& msg_head,
                                const void* msg_body, size_t msg_body_len, int tcp_thread_idx)
 {
     return SendToThread(THREAD_TYPE_TCP, conn_guid, msg_head, msg_body, msg_body_len, tcp_thread_idx);
