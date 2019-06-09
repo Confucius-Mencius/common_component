@@ -11,7 +11,8 @@ CreateVersionFile(${CMAKE_CURRENT_SOURCE_DIR} ${PROJ_NAME} ${LIB_NAME})
 
 ###############################################################################
 # include/link dir
-include_directories(${PROJ_INC_DIR} ${BASE_INC_DIR} ${LOG4CPLUS_INC_DIR} ${GPERFTOOLS_INC_DIR})
+include_directories(${PROJ_INC_DIR} ${BASE_INC_DIR} ${LOG4CPLUS_INC_DIR}
+        ${GPERFTOOLS_INC_DIR})
 link_directories(${BASE_LIB_DIR} ${LOG4CPLUS_LIB_DIR} ${GPERFTOOLS_LIB_DIR})
 
 ###############################################################################
@@ -22,7 +23,8 @@ add_library(${LIB_NAME} SHARED ${HEADERS} ${CUR_DIR_SRCS})
 
 ###############################################################################
 # library dependence
-target_link_libraries(${LIB_NAME} ${BASE_LIB_NAME} ${LOG4CPLUS_LIB_NAME} ${GPERFTOOLS_LIB_NAME})
+target_link_libraries(${LIB_NAME} ${BASE_LIB_NAME} ${LOG4CPLUS_LIB_NAME}
+        ${GPERFTOOLS_LIB_NAME})
 
 ###############################################################################
 # output dir
